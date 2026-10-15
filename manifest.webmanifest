@@ -1,0 +1,17 @@
+{
+  "name": "塔の戦闘試作",
+  "short_name": "塔の試作",
+  "description": "サイバーパンク風ローグライク・カードゲームの戦闘試作",
+  "lang": "ja",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#131117",
+  "theme_color": "#131117",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

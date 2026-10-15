@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>塔の戦闘試作</title>
+<meta name="theme-color" content="#131117">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<style>html,body{margin:0}[hidden]{display:none!important}</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=M+PLUS+1+Code:wght@400;700&display=swap">
+<style>
+/* Layout: one-screen landscape console. Timeline strip on top (the thing you read), field in the middle, hand rail at the bottom. Sodium-lamp amber marks time, teal is the android, red is the tower. */
+:root{
+  --bg:#131117; --panel:#1e1b24; --panel-2:#26222e; --line:#3b3545;
+  --fg:#ece6dc; --dim:#9b93a5;
+  --time:#f0a43a; --me:#56d4c4; --foe:#ff5a6e; --just:#ffe27a;
+  --f-disp:"Chakra Petch","M PLUS 1 Code","Hiragino Sans","Noto Sans JP",system-ui,sans-serif;
+  --f-body:"M PLUS 1 Code","Hiragino Sans","Noto Sans JP",system-ui,sans-serif;
+  color-scheme:dark;
+}
+html,body{height:100%}
+body{
+  background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:12px;line-height:1.4;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));
+  padding-right:max(16px, env(safe-area-inset-right, 0px));
+  padding-block:6px;box-sizing:border-box;overflow-x:hidden;
+  -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;
+}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible{outline:2px solid var(--time);outline-offset:2px}
+#app{height:100%;max-width:1100px;margin:0 auto;display:grid;grid-template-rows:auto 1fr auto;gap:6px}
+
+/* timeline */
+.tl{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:4px 10px 2px}
+.tl-head{display:flex;align-items:center;gap:10px;font-family:var(--f-disp);font-size:11px;letter-spacing:.08em;color:var(--dim)}
+.tl-head .t{color:var(--time);font-weight:700;font-variant-numeric:tabular-nums}
+.tl-head #pred{flex:1;min-width:0;color:var(--fg);letter-spacing:0;font-family:var(--f-body);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tl-head #pred .j{color:var(--just);font-weight:700}
+.tl-head #pred .w{color:var(--foe)}
+.icon-btn{border:1px solid var(--line);background:var(--panel-2);border-radius:4px;padding:0 8px;height:20px;font-size:11px}
+.track{position:relative;padding:0 14px}
+.inner{position:relative}
+.tick{position:absolute;top:0;bottom:0;width:0;border-left:1px dashed #2e2936}
+.tick span{position:absolute;bottom:-1px;left:0;transform:translateX(-50%);font-family:var(--f-disp);font-size:9px;color:var(--dim);font-variant-numeric:tabular-nums}
+.tick.now{border-left:2px solid var(--time)}
+.tick.now span{color:var(--time);font-weight:700}
+.bar{position:absolute;left:0;height:15px;border-radius:2px;font-size:10px;line-height:15px;padding-left:4px;white-space:nowrap;overflow:visible;transition:width .25s}
+.bar span{position:relative;z-index:1}
+.bar.prev{background:color-mix(in srgb,var(--me) 22%,transparent);border-right:2px solid var(--me);color:var(--me)}
+.bar.cast{background:color-mix(in srgb,var(--me) 45%,transparent);border-right:2px solid var(--me);color:#e9fffb}
+.mk{position:absolute;transform:translateX(-50%);height:15px;min-width:26px;padding:0 4px;border-radius:3px;background:#3a1e27;border:1px solid var(--foe);color:#ffd3d9;font-family:var(--f-disp);font-size:10px;line-height:13px;text-align:center;white-space:nowrap;transition:left .25s}
+.mk b{margin-left:3px;font-weight:700}
+.mk.later{opacity:.45}
+.mk.ch{background:#3a3013;border-color:var(--just);color:var(--just)}
+.mk.danger{box-shadow:0 0 0 2px color-mix(in srgb,var(--foe) 55%,transparent)}
+.mk.tie{box-shadow:0 0 0 2px var(--me)}
+.mk.justable{background:var(--just);color:#2a2108;box-shadow:0 0 10px var(--just);animation:pulse .8s ease-in-out infinite alternate}
+.mk.over::after{content:"›";margin-left:2px}
+@keyframes pulse{to{box-shadow:0 0 2px var(--just)}}
+
+/* field */
+.field{display:grid;grid-template-columns:minmax(140px,190px) 1fr;grid-template-rows:1fr auto;gap:6px;min-height:0}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 8px;min-width:0}
+.me{border-color:color-mix(in srgb,var(--me) 45%,var(--line))}
+.who{font-family:var(--f-disp);font-weight:700;font-size:12px;letter-spacing:.04em;display:flex;justify-content:space-between;gap:6px}
+.who small{font-weight:500;color:var(--dim);font-size:10px}
+.hpbar{height:6px;background:#0d0c10;border-radius:3px;margin:5px 0 2px;overflow:hidden}
+.hpbar i{display:block;height:100%;transition:width .3s}
+.me .hpbar i{background:var(--me)}
+.foe .hpbar i{background:var(--foe)}
+.nums{display:flex;justify-content:space-between;font-variant-numeric:tabular-nums;font-size:11px;color:var(--dim)}
+.nums b{color:var(--fg)}
+.shield{margin-top:4px;font-size:11px}
+.shield b{color:var(--me);font-family:var(--f-disp);font-size:14px}
+.foes{display:flex;gap:6px;justify-content:flex-end;min-width:0}
+.foe{flex:0 1 210px;min-width:0;text-align:left;border:1px solid var(--line);background:var(--panel);border-radius:6px;padding:6px 8px}
+.foe.tg{border-color:var(--foe);box-shadow:0 0 0 1px var(--foe) inset}
+.foe.dead{opacity:.35}
+.intent{margin-top:4px;font-size:11px;padding:2px 5px;border-radius:3px;background:#2b1a21;color:#ffd3d9;display:flex;justify-content:space-between;gap:6px}
+.intent.ch{background:#332a12;color:var(--just)}
+.intent b{font-family:var(--f-disp);font-size:13px}
+.log{font-size:11px;color:var(--dim);display:flex;flex-direction:column;gap:1px;padding:4px 8px;max-height:44px;overflow:hidden}
+.log div:first-child{color:var(--fg)}
+.log .just{color:var(--just)} .log .bad{color:var(--foe)} .log .good{color:var(--me)}
+
+/* hand */
+.handwrap{display:flex;gap:8px;align-items:stretch;min-width:0}
+.hand{flex:1;min-width:0;display:flex;gap:6px;overflow-x:auto;padding:6px 2px 2px}
+.card{flex:0 0 clamp(82px,12vw,118px);height:96px;border:1px solid var(--line);background:linear-gradient(180deg,var(--panel-2),var(--panel));border-radius:6px;padding:5px 6px;display:flex;flex-direction:column;gap:3px;text-align:left;transition:transform .15s,border-color .15s;position:relative}
+.card.sel{transform:translateY(-5px);border-color:var(--me);box-shadow:0 4px 14px color-mix(in srgb,var(--me) 30%,transparent)}
+.card:disabled{opacity:.5;cursor:default}
+.cost{font-family:var(--f-disp);font-weight:700;font-size:16px;color:var(--time);line-height:1}
+.cost small{font-size:9px;color:var(--dim);margin-left:2px;font-weight:500}
+.cname{font-weight:700;font-size:12px}
+.ctext{font-size:10.5px;color:var(--dim);line-height:1.35}
+.side{flex:0 0 auto;display:flex;flex-direction:column;gap:4px;justify-content:center;padding-top:6px;min-width:96px}
+.redraw{border:1px solid var(--time);background:color-mix(in srgb,var(--time) 12%,var(--panel));border-radius:6px;padding:6px 8px;text-align:left}
+.redraw b{display:block;font-family:var(--f-disp);color:var(--time);font-size:13px}
+.redraw:disabled{opacity:.45;cursor:default}
+.piles{font-size:10.5px;color:var(--dim);font-variant-numeric:tabular-nums}
+.hint{font-size:10.5px;color:var(--me);min-height:14px}
+
+.float{position:fixed;transform:translate(-50%,-50%);pointer-events:none;font-family:var(--f-disp);font-weight:700;font-size:18px;animation:rise .9s ease-out forwards;z-index:20;text-shadow:0 0 6px #000}
+.float.bad{color:var(--foe)} .float.good{color:var(--me)} .float.just{color:var(--just);font-size:22px} .float.dim{color:var(--dim)}
+@keyframes rise{from{opacity:1;margin-top:0}to{opacity:0;margin-top:-28px}}
+
+#ov{position:fixed;inset:0;background:color-mix(in srgb,#000 65%,transparent);display:flex;align-items:center;justify-content:center;z-index:30;padding:16px}
+#ov[hidden]{display:none!important}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 18px;max-width:560px;width:100%;max-height:100%;overflow:auto}
+.box h2{font-family:var(--f-disp);font-size:18px;margin:0 0 8px;letter-spacing:.04em;text-wrap:balance}
+.box ul{margin:0 0 10px;padding-left:18px;display:flex;flex-direction:column;gap:3px}
+.box .tag{color:var(--dim);font-size:10.5px}
+.box .row{display:flex;gap:8px;flex-wrap:wrap}
+.btn{border:1px solid var(--time);background:var(--time);color:#22170a;font-weight:700;border-radius:5px;padding:6px 14px}
+.btn.ghost{background:transparent;color:var(--time)}
+.rot{display:none;font-size:11px;color:var(--time);text-align:center}
+@media (orientation:portrait){
+  .rot{display:block}
+  #app{height:auto;min-height:100%}
+  .field{grid-template-columns:1fr}
+  .foes{justify-content:stretch}
+  .foe{flex:1 1 0}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div id="app">
+  <section class="tl" aria-label="タイムライン">
+    <div class="rot">横画面で遊ぶ想定です</div>
+    <div class="tl-head">
+      <span>TIMELINE</span>
+      <span class="t" id="tnow">T+0</span>
+      <span id="pred"></span>
+      <span id="floorname"></span>
+      <button class="icon-btn" id="helpBtn" type="button">ルール</button>
+    </div>
+    <div class="track" id="track"></div>
+  </section>
+
+  <section class="field">
+    <div class="panel me" id="me"></div>
+    <div class="foes" id="foes"></div>
+    <div class="panel log" id="log" aria-live="polite"></div>
+  </section>
+
+  <section class="handwrap">
+    <div class="hand" id="hand"></div>
+    <div class="side">
+      <div class="hint" id="hint"></div>
+      <button class="redraw" id="redraw" type="button"></button>
+      <div class="piles" id="piles"></div>
+    </div>
+  </section>
+</div>
+
+<div id="ov" hidden><div class="box" id="ovbox"></div></div>
+
+<script>
+const WIN = 12;
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const TICK = RM ? 120 : 340;
+const $ = s => document.querySelector(s);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+const CARDS = {
+  jab:   {name:'ジャブ',     cost:1, tgt:true,  text:'3ダメージ',               fx:t=>hit(t,3)},
+  slash: {name:'スラッシュ', cost:2, tgt:true,  text:'7ダメージ',               fx:t=>hit(t,7)},
+  blow:  {name:'過負荷打撃', cost:4, tgt:true,  text:'16ダメージ',              fx:t=>hit(t,16)},
+  pulse: {name:'EMPパルス',  cost:3, tgt:false, text:'敵全員に5ダメージ',       fx:()=>alive().forEach(e=>hit(e,5))},
+  guard: {name:'障壁展開',   cost:1, tgt:false, text:'シールド+5',              fx:()=>{S.block+=5;pop('#me','+5 盾','good');}},
+  hack:  {name:'遅延ハック', cost:1, tgt:true,  text:'対象の次の行動を2遅らせる', fx:t=>{t.r+=2;pop(foeSel(t),'遅延+2','good');log(`${t.name}の行動を2遅らせた`,'good');}},
+};
+const DECK = ['jab','jab','jab','slash','slash','blow','pulse','guard','guard','guard','hack','hack'];
+
+const FLOORS = [
+  {name:'第1層 搬入ゲート', foes:[
+    {name:'警備ドローンA', tag:'A', hp:12, start:3, pat:[{n:'射撃',d:3,dl:3}]},
+    {name:'警備ドローンB', tag:'B', hp:12, start:4, pat:[{n:'射撃',d:3,dl:3}]},
+  ]},
+  {name:'第2層 処理区画', foes:[
+    {name:'処刑ユニット', tag:'X', hp:24, start:3, pat:[{n:'殴打',d:4,dl:3},{n:'殴打',d:4,dl:3},{n:'粉砕砲',d:12,dl:4,ch:true}]},
+    {name:'警備ドローン', tag:'D', hp:12, start:4, pat:[{n:'射撃',d:3,dl:4}]},
+  ]},
+  {name:'第3層 中枢', foes:[
+    {name:'管理AI ウォーデン', tag:'W', hp:40, start:3, pat:[{n:'照射',d:4,dl:3},{n:'照射',d:4,dl:2},{n:'消去プロトコル',d:18,dl:5,ch:true}]},
+    {name:'随伴ドローン', tag:'D', hp:10, start:2, pat:[{n:'射撃',d:2,dl:3}]},
+  ]},
+];
+
+let S;
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function alive(){return S.foes.filter(e=>e.alive);}
+function cur(e){return e.pat[e.idx];}
+function foeSel(e){return `.foe[data-i="${e.i}"]`;}
+
+function newRun(){S={floor:0,hp:50,max:50};startFloor();}
+function startFloor(){
+  const F = FLOORS[S.floor];
+  S.floorHp = S.hp; S.block = 0; S.T = 0; S.over = false; S.busy = false; S.sel = null; S.cast = null; S.logs = [];
+  S.foes = F.foes.map((f,i)=>({...f,maxHp:f.hp,idx:0,r:f.start,alive:true,i}));
+  S.draw = shuffle(DECK.map((k,id)=>({k,id}))); S.disc = []; S.hand = [];
+  drawN(5);
+  log(`${F.name}に侵入`);
+  $('#ov').hidden = true;
+  render();
+}
+function drawN(n){
+  for(let i=0;i<n;i++){
+    if(!S.draw.length){S.draw = shuffle(S.disc); S.disc = [];}
+    if(!S.draw.length) break;
+    S.hand.push(S.draw.pop());
+  }
+}
+function log(t,cls=''){S.logs.unshift({t,cls}); S.logs.length = Math.min(S.logs.length,6);}
+function pop(sel,text,cls){
+  const el = document.querySelector(sel); if(!el) return;
+  const r = el.getBoundingClientRect();
+  const s = document.createElement('div');
+  s.className = 'float '+cls; s.textContent = text;
+  s.style.left = (r.left + r.width/2)+'px'; s.style.top = (r.top + r.height*0.4)+'px';
+  document.body.appendChild(s); setTimeout(()=>s.remove(), 950);
+}
+function hit(e,n){
+  if(!e || !e.alive) return;
+  e.hp -= n; pop(foeSel(e), '-'+n, 'bad');
+  if(e.hp <= 0){e.hp = 0; e.alive = false; log(`${e.name}を破壊`,'good');}
+}
+function advance(e){e.idx = (e.idx+1) % e.pat.length; e.r = e.pat[e.idx].dl;}
+function enemyAct(e){
+  const a = cur(e);
+  const ab = Math.min(S.block, a.d); S.block -= ab;
+  const hpd = a.d - ab; S.hp -= hpd;
+  log(`${e.name}の${a.n}: ${a.d}ダメージ` + (ab ? `(盾で${ab}防御)` : ''), hpd ? 'bad' : '');
+  pop('#me', hpd ? '-'+hpd : '防御', hpd ? 'bad' : 'dim');
+  advance(e);
+  return hpd;
+}
+
+// 時間を c 進める。card があれば完了時に効果が出る。
+async function spend(c, card, target, label){
+  S.busy = true; S.sel = null;
+  let cancelled = false;
+  S.cast = {name: label, left: c};
+  render();
+  for(let step=1; step<=c; step++){
+    S.T++; alive().forEach(e=>e.r--); S.cast.left = c-step;
+    render(); await sleep(TICK);
+    if(card && step === c){
+      for(const e of alive()){
+        if(e.r <= 0 && cur(e).ch){
+          log(`JUST! ${e.name}の${cur(e).n}を潰した`,'just');
+          pop(foeSel(e),'JUST','just'); advance(e);
+        }
+      }
+      const def = CARDS[card.k];
+      if(def.tgt && (!target || !target.alive)) log(`${def.name}: 対象がいない`);
+      else def.fx(target);
+      S.cast = null; render(); await sleep(TICK*0.7);
+    }
+    for(const e of alive()){
+      if(e.r > 0) continue;
+      const hpd = enemyAct(e);
+      if(card && step < c && hpd > 0 && !cancelled){
+        cancelled = true;
+        log(`${CARDS[card.k].name}は中断された`,'bad');
+        setTimeout(()=>pop('.me .who','中断','bad'), 120);
+      }
+      render();
+      if(S.hp <= 0){S.hp = 0; S.cast = null; S.busy = false; lose(); return false;}
+      await sleep(TICK*0.7);
+    }
+    if(cancelled || !alive().length) break;
+  }
+  S.cast = null;
+  if(card) S.disc.push(card);
+  S.busy = false;
+  if(!alive().length){win(); return false;}
+  render();
+  return true;
+}
+
+async function useCard(i, target){
+  const card = S.hand.splice(i,1)[0];
+  const def = CARDS[card.k];
+  log(`${def.name}を使用(時間${def.cost})`);
+  const ok = await spend(def.cost, card, target, def.name);
+  if(ok && !S.hand.length){drawN(5); log('手札を使い切った: 時間0で引き直し','good'); render();}
+}
+async function redraw(){
+  if(S.busy || S.over) return;
+  const n = S.hand.length;
+  S.disc.push(...S.hand); S.hand = []; S.sel = null;
+  log(`引き直し(時間${n})`);
+  let ok = true;
+  if(n > 0) ok = await spend(n, null, null, '引き直し');
+  if(ok){drawN(5); render();}
+}
+
+function win(){
+  S.over = true; render();
+  const last = S.floor === FLOORS.length-1;
+  showOv(last
+    ? `<h2>塔の試作を踏破</h2><p>残りHP ${S.hp}/${S.max}・経過時間 ${S.T}</p><div class="row"><button class="btn" id="ovA" type="button">最初から</button></div>`
+    : `<h2>${FLOORS[S.floor].name} 突破</h2><p>残りHP ${S.hp}/${S.max}。次の層の前にHPを15修復します。</p><div class="row"><button class="btn" id="ovA" type="button">次の層へ</button></div>`);
+  $('#ovA').onclick = () => { if(last) newRun(); else {S.floor++; S.hp = Math.min(S.max, S.hp+15); startFloor();} };
+}
+function lose(){
+  S.over = true; render();
+  showOv(`<h2>機能停止</h2><p>${FLOORS[S.floor].name}で倒れました。</p><div class="row"><button class="btn" id="ovA" type="button">この層をやり直す</button><button class="btn ghost" id="ovB" type="button">最初から</button></div>`);
+  $('#ovA').onclick = () => {S.hp = S.floorHp; startFloor();};
+  $('#ovB').onclick = newRun;
+}
+function showOv(html){$('#ovbox').innerHTML = html; $('#ov').hidden = false;}
+function help(){
+  showOv(`<h2>ルール</h2><ul>
+    <li>ターンはない。時間はカードを使ったときだけ進む。カードのコスト=かかる時間。</li>
+    <li>上のバーは敵の行動予定。左端が今で、右に行くほど先。薄いのは次の次以降。</li>
+    <li>カードの効果は、かかる時間が終わった時点で出る。</li>
+    <li>使用中に敵の攻撃でHPが減ると、カードは中断される。時間はそこで止まり、カードは捨て札へ。シールドで全部防げば中断されない。<span class="tag">(試作の仮ルール)</span></li>
+    <li>完了時刻と敵の行動がぴったり同じなら、自分が先に動く。金色の溜め技なら、そのまま潰せる(JUST)。</li>
+    <li>引き直し: 残っている手札の枚数ぶん時間を払い、5枚引く。使い切ったら時間0で自動的に引く。</li>
+    <li>カードをタップで選ぶと、完了位置がバーに出る。もう一度タップするか敵をタップで使用。</li>
+  </ul><div class="row"><button class="btn" id="ovA" type="button">閉じる</button></div>`);
+  $('#ovA').onclick = () => { $('#ov').hidden = true; };
+}
+
+function upcoming(e){
+  const out = []; let t = e.r, i = e.idx;
+  out.push({t, a:e.pat[i], over: t > WIN});
+  while(out.length < 4){
+    i = (i+1) % e.pat.length; t += e.pat[i].dl;
+    if(t > WIN) break;
+    out.push({t, a:e.pat[i]});
+  }
+  return out;
+}
+const rowTop = i => 3 + i*18;
+
+function render(){
+  const selDef = S.sel != null ? CARDS[S.hand[S.sel].k] : null;
+  const c = selDef ? selDef.cost : null;
+
+  // timeline
+  let h = '';
+  for(let t=0;t<=WIN;t++) h += `<div class="tick${t===0?' now':''}" style="left:${t/WIN*100}%"><span>${t===0?'NOW':t}</span></div>`;
+  if(S.cast) h += `<div class="bar cast" style="top:${rowTop(0)}px;width:${Math.min(S.cast.left,WIN)/WIN*100}%"><span>${S.cast.name}</span></div>`;
+  else if(c != null) h += `<div class="bar prev" style="top:${rowTop(0)}px;width:${c/WIN*100}%"><span>${selDef.name}</span></div>`;
+  let danger = 0, justName = null, tie = false;
+  S.foes.forEach((e,row)=>{
+    if(!e.alive) return;
+    upcoming(e).forEach((m,k)=>{
+      let cls = 'mk';
+      if(m.a.ch) cls += ' ch';
+      if(k > 0) cls += ' later';
+      if(m.over) cls += ' over';
+      if(c != null && !S.cast){
+        if(m.t < c){cls += ' danger'; danger++;}
+        else if(m.t === c){ if(m.a.ch){cls += ' justable'; justName = m.a.n;} else {cls += ' tie'; tie = true;} }
+      }
+      h += `<div class="${cls}" style="left:${Math.min(m.t,WIN)/WIN*100}%;top:${rowTop(row+1)}px">${e.tag}<b>${m.a.d}</b></div>`;
+    });
+  });
+  $('#track').innerHTML = `<div class="inner" style="height:${rowTop(S.foes.length+1)+12}px">${h}</div>`;
+  $('#tnow').textContent = 'T+'+S.T;
+  $('#floorname').textContent = FLOORS[S.floor].name;
+  let pred = '';
+  if(c != null){
+    pred = `完了まで時間${c}`;
+    if(danger) pred += ` ・ <span class="w">途中で敵が${danger}回動く</span>`;
+    if(justName) pred += ` ・ <span class="j">JUST: ${justName}を潰せる</span>`;
+    else if(tie) pred += ' ・ 同時: 自分が先';
+  }
+  $('#pred').innerHTML = pred;
+
+  // player
+  $('#me').innerHTML = `<div class="who">K-7 <small>アンドロイド</small></div>
+    <div class="hpbar"><i style="width:${S.hp/S.max*100}%"></i></div>
+    <div class="nums"><span>HP</span><b>${S.hp} / ${S.max}</b></div>
+    <div class="shield">シールド <b>${S.block}</b></div>`;
+
+  // foes
+  const needTarget = selDef && selDef.tgt && alive().length > 1;
+  $('#foes').innerHTML = S.foes.map(e=>{
+    const a = cur(e);
+    return `<button type="button" class="foe${e.alive?'':' dead'}${needTarget&&e.alive?' tg':''}" data-i="${e.i}" ${e.alive?'':'disabled'}>
+      <div class="who">${e.tag} ${e.name}</div>
+      <div class="hpbar"><i style="width:${e.hp/e.maxHp*100}%"></i></div>
+      <div class="nums"><span>HP</span><b>${e.hp} / ${e.maxHp}</b></div>
+      ${e.alive ? `<div class="intent${a.ch?' ch':''}"><span>次: ${a.n} ${a.d}${a.ch?' (溜め)':''}</span><span>あと<b>${e.r}</b></span></div>` : '<div class="intent">破壊</div>'}
+    </button>`;
+  }).join('');
+
+  // log
+  $('#log').innerHTML = S.logs.slice(0,3).map(l=>`<div class="${l.cls}">${l.t}</div>`).join('');
+
+  // hand
+  const lock = S.busy || S.over;
+  $('#hand').innerHTML = S.hand.map((cd,i)=>{
+    const d = CARDS[cd.k];
+    return `<button type="button" class="card${S.sel===i?' sel':''}" data-i="${i}" ${lock?'disabled':''}>
+      <span class="cost">${d.cost}<small>時間</small></span>
+      <span class="cname">${d.name}</span>
+      <span class="ctext">${d.text}</span></button>`;
+  }).join('');
+  const n = S.hand.length;
+  $('#redraw').innerHTML = `<b>引き直し</b>時間 ${n} を払う`;
+  $('#redraw').disabled = lock;
+  $('#piles').textContent = `山札 ${S.draw.length} ・ 捨て札 ${S.disc.length}`;
+  $('#hint').textContent = selDef ? (needTarget ? '敵をタップして使用' : 'もう一度タップで使用') : '';
+}
+
+$('#hand').addEventListener('click', ev=>{
+  const b = ev.target.closest('.card'); if(!b || S.busy || S.over) return;
+  const i = +b.dataset.i;
+  if(S.sel === i){
+    const def = CARDS[S.hand[i].k];
+    if(!def.tgt) useCard(i, null);
+    else if(alive().length === 1) useCard(i, alive()[0]);
+  } else { S.sel = i; render(); }
+});
+$('#foes').addEventListener('click', ev=>{
+  const b = ev.target.closest('.foe'); if(!b || S.busy || S.over || S.sel == null) return;
+  const def = CARDS[S.hand[S.sel].k]; if(!def.tgt) return;
+  const e = S.foes[+b.dataset.i]; if(!e.alive) return;
+  useCard(S.sel, e);
+});
+$('#redraw').addEventListener('click', redraw);
+$('#helpBtn').addEventListener('click', help);
+
+newRun();
+help();
+</script>
+
+<script>
+// オフライン用のサービスワーカー登録
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js'));
+}
+</script>
+</body>
+</html>

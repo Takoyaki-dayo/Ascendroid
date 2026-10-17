@@ -1,6 +1,6 @@
 // 塔の戦闘試作 サービスワーカー
 // 更新するときは VERSION を上げる(Claudeがpushのたびに上げる)
-const VERSION = 'v1';
+const VERSION = 'v2';
 const CACHE = 'tower-' + VERSION;
 const CORE = [
   './',

@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>塔の戦闘試作</title>
-<meta name="theme-color" content="#131117">
+<title>塔の戦闘試作2</title>
+<meta name="theme-color" content="#0f0e13">
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png">
@@ -12,431 +12,844 @@
 <style>html,body{margin:0}[hidden]{display:none!important}</style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=M+PLUS+1+Code:wght@400;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Chakra+Petch:wght@500;600;700&display=swap">
 <style>
-/* Layout: one-screen landscape console. Timeline strip on top (the thing you read), field in the middle, hand rail at the bottom. Sodium-lamp amber marks time, teal is the android, red is the tower. */
+/* Layout: a fixed 844x390 phone-landscape stage scaled to fit. The timeline is the board: "now" at left by the android, enemy lanes flow right-to-left toward it.
+   Color carries meaning only: amber = time, teal = self, red = threat, violet = opportunity (charge/JUST). Everything else stays low-chroma. */
 :root{
-  --bg:#131117; --panel:#1e1b24; --panel-2:#26222e; --line:#3b3545;
-  --fg:#ece6dc; --dim:#9b93a5;
-  --time:#f0a43a; --me:#56d4c4; --foe:#ff5a6e; --just:#ffe27a;
-  --f-disp:"Chakra Petch","M PLUS 1 Code","Hiragino Sans","Noto Sans JP",system-ui,sans-serif;
-  --f-body:"M PLUS 1 Code","Hiragino Sans","Noto Sans JP",system-ui,sans-serif;
+  --bg:#0f0e13; --lane:rgba(255,255,255,.03); --panel:#18161f; --panel2:#141219; --line:#2c2836; --grid:#24212d;
+  --fg:#e9e6ef; --fg2:#c9c3d3; --dim:#8a8496; --dim2:#5f5a6b;
+  --time:#f2a33a; --time-dim:#7d6c4d; --me:#3fd0c0; --foe:#ff4d5e; --foe2:#ff8a95; --just:#b48cff;
+  --f-body:"BIZ UDPGothic","Hiragino Sans","Noto Sans JP",system-ui,sans-serif;
+  --f-num:"Chakra Petch","BIZ UDPGothic",system-ui,sans-serif;
   color-scheme:dark;
 }
 html,body{height:100%}
 body{
-  background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:12px;line-height:1.4;
+  margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body);overflow:hidden;box-sizing:border-box;
   padding-left:max(16px, env(safe-area-inset-left, 0px));
   padding-right:max(16px, env(safe-area-inset-right, 0px));
-  padding-block:6px;box-sizing:border-box;overflow-x:hidden;
-  -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;
+  padding-block:0;
+  -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation;
 }
-button{font:inherit;color:inherit;cursor:pointer}
+#wrap{position:relative;width:100%;height:100%;overflow:hidden}
+#rot{display:none;position:absolute;left:0;right:0;top:12px;text-align:center;color:var(--time);font-size:13px}
+@media (orientation:portrait){#rot{display:block}}
+#stage{position:absolute;left:50%;top:50%;width:844px;height:390px;transform:translate(-50%,-50%) scale(var(--s,1));background:var(--bg);font-size:11px;line-height:1.35;overflow:hidden}
+#stage *{box-sizing:border-box}
+button{font:inherit;color:inherit;cursor:pointer;padding:0;margin:0;background:none;border:0;text-align:left}
 button:focus-visible{outline:2px solid var(--time);outline-offset:2px}
-#app{height:100%;max-width:1100px;margin:0 auto;display:grid;grid-template-rows:auto 1fr auto;gap:6px}
+.num{font-family:var(--f-num)}
+.time{color:var(--time)} .me{color:var(--me)} .foe{color:var(--foe)} .foe2{color:var(--foe2)} .just{color:var(--just)} .dim{color:var(--dim2)}
+.nopt{pointer-events:none}
+[hidden]{display:none!important}
+
+/* top bar */
+#top{position:absolute;left:10px;top:4px;width:824px;height:22px;display:flex;align-items:center;gap:12px}
+#menuBtn{width:30px;height:22px;border:1px solid var(--line);border-radius:4px;background:var(--panel);color:var(--dim);display:flex;align-items:center;justify-content:center;flex:none}
+#where{color:var(--dim);white-space:nowrap;flex:none}
+#msg{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--dim2)}
+#msg.pv{color:var(--fg2)}
+#msg b{font-weight:700}
+.bl{color:var(--dim);flex:none}
+.bbar{width:56px;height:4px;background:var(--grid);border-radius:2px;overflow:hidden;flex:none}
+.bbar i{display:block;height:100%;background:var(--dim);transition:width .25s}
+#bodyNum{font-size:11px;color:#a9a3b4;flex:none;min-width:38px;text-align:right}
+
+#chips{position:absolute;left:10px;top:30px;display:flex;gap:6px}
+.chip{height:15px;padding:0 6px;border:1px solid;border-radius:3px;font-size:10px;font-weight:700;line-height:13px;display:flex;gap:4px;align-items:center}
+.chip.blk{color:var(--me);border-color:var(--me)}
+.chip.blk.zero{color:var(--dim2);border-color:var(--line)}
+.chip.sw{color:var(--time);border-color:var(--time)}
 
 /* timeline */
-.tl{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:4px 10px 2px}
-.tl-head{display:flex;align-items:center;gap:10px;font-family:var(--f-disp);font-size:11px;letter-spacing:.08em;color:var(--dim)}
-.tl-head .t{color:var(--time);font-weight:700;font-variant-numeric:tabular-nums}
-.tl-head #pred{flex:1;min-width:0;color:var(--fg);letter-spacing:0;font-family:var(--f-body);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tl-head #pred .j{color:var(--just);font-weight:700}
-.tl-head #pred .w{color:var(--foe)}
-.icon-btn{border:1px solid var(--line);background:var(--panel-2);border-radius:4px;padding:0 8px;height:20px;font-size:11px}
-.track{position:relative;padding:0 14px}
-.inner{position:relative}
-.tick{position:absolute;top:0;bottom:0;width:0;border-left:1px dashed #2e2936}
-.tick span{position:absolute;bottom:-1px;left:0;transform:translateX(-50%);font-family:var(--f-disp);font-size:9px;color:var(--dim);font-variant-numeric:tabular-nums}
-.tick.now{border-left:2px solid var(--time)}
-.tick.now span{color:var(--time);font-weight:700}
-.bar{position:absolute;left:0;height:15px;border-radius:2px;font-size:10px;line-height:15px;padding-left:4px;white-space:nowrap;overflow:visible;transition:width .25s}
-.bar span{position:relative;z-index:1}
-.bar.prev{background:color-mix(in srgb,var(--me) 22%,transparent);border-right:2px solid var(--me);color:var(--me)}
-.bar.cast{background:color-mix(in srgb,var(--me) 45%,transparent);border-right:2px solid var(--me);color:#e9fffb}
-.mk{position:absolute;transform:translateX(-50%);height:15px;min-width:26px;padding:0 4px;border-radius:3px;background:#3a1e27;border:1px solid var(--foe);color:#ffd3d9;font-family:var(--f-disp);font-size:10px;line-height:13px;text-align:center;white-space:nowrap;transition:left .25s}
-.mk b{margin-left:3px;font-weight:700}
-.mk.later{opacity:.45}
-.mk.ch{background:#3a3013;border-color:var(--just);color:var(--just)}
-.mk.danger{box-shadow:0 0 0 2px color-mix(in srgb,var(--foe) 55%,transparent)}
-.mk.tie{box-shadow:0 0 0 2px var(--me)}
-.mk.justable{background:var(--just);color:#2a2108;box-shadow:0 0 10px var(--just);animation:pulse .8s ease-in-out infinite alternate}
-.mk.over::after{content:"›";margin-left:2px}
-@keyframes pulse{to{box-shadow:0 0 2px var(--just)}}
+.lane{position:absolute;left:200px;width:634px;height:62px;border-radius:6px;background:var(--lane);border:1.5px solid transparent;transition:background .2s}
+.lane.dead{opacity:.3}
+.lane.tgt{border-color:var(--me)}
+.lane.can{border:1.5px dashed rgba(63,208,192,.35)}
+.lane.act{background:rgba(255,77,94,.14)}
+.tl{position:absolute;top:45px;width:1px;height:213px;background:var(--grid)}
+.tl.now{width:2px;background:var(--time)}
+.tn{position:absolute;top:31px;width:20px;text-align:center;font-family:var(--f-num);font-size:10px;font-weight:500;color:var(--time-dim)}
+.tn.now{color:var(--time);font-weight:700;font-size:11px}
+#noise{position:absolute;top:45px;height:213px;background:repeating-linear-gradient(135deg,rgba(15,14,19,.92) 0 5px,rgba(36,33,45,.92) 5px 7px);display:flex;align-items:center;justify-content:center;color:var(--foe2);font-size:10px;font-weight:700;writing-mode:vertical-rl;letter-spacing:.1em}
+#pvRegion{position:absolute;left:206px;top:45px;height:213px;background:rgba(63,208,192,.07)}
+#pvLine{position:absolute;top:45px;width:2px;height:213px;background:var(--me)}
+#selfBar{position:absolute;left:206px;top:46px;height:12px;display:flex;align-items:center;overflow:visible;transition:width .24s linear}
+#selfBar span{padding-left:5px;font-size:9.5px;font-weight:700;white-space:nowrap;color:#e9fffb}
+#selfBar.pre{background:rgba(63,208,192,.3);border-right:2px solid var(--me)}
+#selfBar.cast{background:rgba(63,208,192,.55);border-right:2px solid var(--me)}
 
-/* field */
-.field{display:grid;grid-template-columns:minmax(140px,190px) 1fr;grid-template-rows:1fr auto;gap:6px;min-height:0}
-.panel{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 8px;min-width:0}
-.me{border-color:color-mix(in srgb,var(--me) 45%,var(--line))}
-.who{font-family:var(--f-disp);font-weight:700;font-size:12px;letter-spacing:.04em;display:flex;justify-content:space-between;gap:6px}
-.who small{font-weight:500;color:var(--dim);font-size:10px}
-.hpbar{height:6px;background:#0d0c10;border-radius:3px;margin:5px 0 2px;overflow:hidden}
-.hpbar i{display:block;height:100%;transition:width .3s}
-.me .hpbar i{background:var(--me)}
-.foe .hpbar i{background:var(--foe)}
-.nums{display:flex;justify-content:space-between;font-variant-numeric:tabular-nums;font-size:11px;color:var(--dim)}
-.nums b{color:var(--fg)}
-.shield{margin-top:4px;font-size:11px}
-.shield b{color:var(--me);font-family:var(--f-disp);font-size:14px}
-.foes{display:flex;gap:6px;justify-content:flex-end;min-width:0}
-.foe{flex:0 1 210px;min-width:0;text-align:left;border:1px solid var(--line);background:var(--panel);border-radius:6px;padding:6px 8px}
-.foe.tg{border-color:var(--foe);box-shadow:0 0 0 1px var(--foe) inset}
-.foe.dead{opacity:.35}
-.intent{margin-top:4px;font-size:11px;padding:2px 5px;border-radius:3px;background:#2b1a21;color:#ffd3d9;display:flex;justify-content:space-between;gap:6px}
-.intent.ch{background:#332a12;color:var(--just)}
-.intent b{font-family:var(--f-disp);font-size:13px}
-.log{font-size:11px;color:var(--dim);display:flex;flex-direction:column;gap:1px;padding:4px 8px;max-height:44px;overflow:hidden}
-.log div:first-child{color:var(--fg)}
-.log .just{color:var(--just)} .log .bad{color:var(--foe)} .log .good{color:var(--me)}
+.mk{position:absolute;width:38px;height:26px;display:flex;align-items:center;justify-content:center;gap:2px;border-radius:5px;border:1.5px solid var(--foe);background:#2a1419;color:#ffdade;transition:left .24s linear,top .24s,opacity .22s,transform .22s,box-shadow .15s}
+.mk b{font-family:var(--f-num);font-size:14px;font-weight:700}
+.mk span{font-size:10px}
+.mk.later{opacity:.5}
+.mk.ch{border-color:var(--just);background:#221a36;color:#ece4ff;border-radius:13px}
+.mk.dl{color:var(--time)}
+.mk.danger{box-shadow:0 0 0 3px rgba(255,77,94,.42)}
+.mk.just{background:var(--just);color:#1a1030;box-shadow:0 0 14px rgba(180,140,255,.8)}
+.mk .lb{position:absolute;top:-15px;left:-6px;right:-6px;text-align:center;font-style:normal;font-size:9px;font-weight:700;color:var(--just)}
+.mk.dl .lb{color:var(--time)}
+.mk.out{opacity:0!important;transform:scale(1.5)}
+
+/* enemy panels */
+.fp{position:absolute;left:664px;width:166px;height:50px;display:flex;gap:8px;align-items:center}
+.fp.dead{opacity:.35}
+.fart{width:50px;height:50px;flex:none;border:1px solid var(--line);border-radius:6px;background:repeating-linear-gradient(135deg,#1c1a23 0 6px,#17151d 6px 12px);display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--dim2);font-size:9px}
+.fart b{font-family:var(--f-num);font-size:16px;color:var(--dim)}
+.fb{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.fname{display:flex;justify-content:space-between;gap:4px;font-size:11px;font-weight:700;white-space:nowrap}
+.fnm{overflow:hidden;text-overflow:ellipsis}
+.tchip{font-size:9px;color:var(--bg);background:var(--me);border-radius:3px;padding:0 4px;line-height:14px;flex:none}
+.hpb{display:block;height:5px;background:var(--grid);border-radius:3px;overflow:hidden;position:relative}
+.hpb i{position:absolute;left:0;top:0;bottom:0;background:var(--foe);transition:width .25s}
+.hpb s{position:absolute;top:0;bottom:0;background:repeating-linear-gradient(135deg,var(--foe) 0 2px,transparent 2px 4px)}
+.frow{display:flex;gap:4px;align-items:center}
+.hpt{font-size:11px;color:var(--fg2)}
+.st{font-size:9px;color:var(--fg2);border:1px solid #4a4458;border-radius:3px;padding:0 3px;line-height:13px}
+.st.c{color:var(--foe2);border-color:rgba(255,77,94,.5)}
+
+/* parts */
+.part{position:absolute;left:72px;width:126px;height:35px;padding:3px 0 0 8px;border-left:2px solid var(--line);transition:background .2s}
+.part.ih{border-left-color:var(--foe)}
+.part.ic{border-left-color:var(--just)}
+.part.hit{background:rgba(255,77,94,.18)}
+.ph{display:flex;align-items:baseline;justify-content:space-between;padding-right:2px}
+.pn{font-size:11px;font-weight:700;white-space:nowrap}
+.pn em{font-style:normal;font-weight:400;font-size:9.5px;color:var(--dim);margin-left:3px}
+.ptag{text-decoration:none;font-weight:700;font-size:9px;margin-left:4px;color:var(--foe2)}
+.part.broken .pn{color:var(--dim2)}
+.part.broken .ptag{color:var(--bg);background:var(--foe);border-radius:3px;padding:0 3px}
+.pnum{font-family:var(--f-num);font-size:11px;font-weight:600}
+.pb{display:flex;align-items:center;gap:4px;margin-top:3px}
+.pbar{position:relative;display:block;width:50px;height:5px;background:var(--grid);border-radius:2px;overflow:hidden;flex:none}
+.pf{position:absolute;left:0;top:0;bottom:0;background:var(--me);transition:width .25s}
+.pl{position:absolute;top:0;bottom:0;background:repeating-linear-gradient(135deg,var(--foe) 0 2px,transparent 2px 4px)}
+.pinc{border-radius:3px;font-size:9.5px;font-weight:700;padding:0 4px;height:14px;line-height:12px;white-space:nowrap;border:1px solid}
+.pinc.h{background:#2a1419;color:#ffdade;border-color:var(--foe)}
+.pinc.c{background:#221a36;color:#ece4ff;border-color:var(--just)}
+.pinc.j{background:var(--just);color:#1a1030;border-color:var(--just)}
 
 /* hand */
-.handwrap{display:flex;gap:8px;align-items:stretch;min-width:0}
-.hand{flex:1;min-width:0;display:flex;gap:6px;overflow-x:auto;padding:6px 2px 2px}
-.card{flex:0 0 clamp(82px,12vw,118px);height:96px;border:1px solid var(--line);background:linear-gradient(180deg,var(--panel-2),var(--panel));border-radius:6px;padding:5px 6px;display:flex;flex-direction:column;gap:3px;text-align:left;transition:transform .15s,border-color .15s;position:relative}
-.card.sel{transform:translateY(-5px);border-color:var(--me);box-shadow:0 4px 14px color-mix(in srgb,var(--me) 30%,transparent)}
-.card:disabled{opacity:.5;cursor:default}
-.cost{font-family:var(--f-disp);font-weight:700;font-size:16px;color:var(--time);line-height:1}
-.cost small{font-size:9px;color:var(--dim);margin-left:2px;font-weight:500}
-.cname{font-weight:700;font-size:12px}
-.ctext{font-size:10.5px;color:var(--dim);line-height:1.35}
-.side{flex:0 0 auto;display:flex;flex-direction:column;gap:4px;justify-content:center;padding-top:6px;min-width:96px}
-.redraw{border:1px solid var(--time);background:color-mix(in srgb,var(--time) 12%,var(--panel));border-radius:6px;padding:6px 8px;text-align:left}
-.redraw b{display:block;font-family:var(--f-disp);color:var(--time);font-size:13px}
-.redraw:disabled{opacity:.45;cursor:default}
-.piles{font-size:10.5px;color:var(--dim);font-variant-numeric:tabular-nums}
-.hint{font-size:10.5px;color:var(--me);min-height:14px}
+.pile{position:absolute;left:10px;width:58px;height:36px;border:1px solid var(--line);border-radius:6px;background:var(--panel2);color:var(--dim);font-size:9.5px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.pile b{font-family:var(--f-num);font-size:13px;color:#a9a3b4}
+.card{position:absolute;top:268px;width:120px;height:116px;overflow:hidden;border-radius:8px;background:var(--panel);border:1px solid var(--line);transition:top .15s,border-color .15s,box-shadow .15s}
+.card.sel{top:260px;border:1.5px solid var(--me);box-shadow:0 8px 18px rgba(63,208,192,.22)}
+.card:disabled{opacity:.55;cursor:default}
+.card.static{position:relative;top:auto}
+.cart{position:relative;display:flex;align-items:center;justify-content:center;height:44px;background:repeating-linear-gradient(135deg,#1f1c27 0 6px,#1a1821 6px 12px);color:var(--dim2);font-size:9px}
+.cost{position:absolute;left:5px;top:5px;width:24px;height:24px;border:1.5px solid var(--time);border-radius:12px;background:var(--bg);color:var(--time);font-family:var(--f-num);font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.ctype{position:absolute;right:6px;top:5px;font-size:9px;color:var(--dim)}
+.cname{display:block;padding:5px 7px 0;font-size:12px;font-weight:700;white-space:nowrap}
+.ctext{display:block;padding:2px 7px 0;font-size:10.5px;color:var(--fg2)}
+.ctext b{font-weight:700}
+.ctext .up{color:var(--me)}
+.kw-me{font-weight:700;color:var(--me)} .kw-t{font-weight:700;color:var(--time)} .kw-f{font-weight:700;color:var(--foe2)}
+.katom{display:inline-block;margin:3px 0 0 7px;font-size:9.5px;font-weight:700;border:1px solid #4a4458;border-radius:3px;padding:0 4px;line-height:14px}
+.csrc{position:absolute;right:7px;bottom:5px;font-size:9px;color:var(--dim2)}
+#redraw{position:absolute;left:718px;top:268px;width:116px;height:116px;border:1.5px solid var(--time);border-radius:8px;background:#1d170f;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;transition:top .15s,box-shadow .15s}
+#redraw.sel{top:260px;box-shadow:0 8px 18px rgba(242,163,58,.22)}
+#redraw:disabled{opacity:.45;cursor:default}
+#redraw .t1{font-size:12px;font-weight:700}
+#redraw .t2{font-family:var(--f-num);font-size:28px;line-height:1.1;color:var(--time);font-weight:700}
+#redraw .t3{font-size:10px;color:#a9a3b4}
+#redraw .t4{font-size:9px;color:var(--dim2);margin-top:3px}
 
-.float{position:fixed;transform:translate(-50%,-50%);pointer-events:none;font-family:var(--f-disp);font-weight:700;font-size:18px;animation:rise .9s ease-out forwards;z-index:20;text-shadow:0 0 6px #000}
-.float.bad{color:var(--foe)} .float.good{color:var(--me)} .float.just{color:var(--just);font-size:22px} .float.dim{color:var(--dim)}
-@keyframes rise{from{opacity:1;margin-top:0}to{opacity:0;margin-top:-28px}}
+/* fx */
+.float{position:absolute;transform:translate(-50%,-50%);pointer-events:none;font-family:var(--f-num);font-weight:700;font-size:16px;white-space:nowrap;text-shadow:0 0 6px #000,0 0 2px #000;animation:rise .95s ease-out forwards;z-index:40}
+.float.foe{color:var(--foe2)} .float.me{color:var(--me)} .float.time{color:var(--time);font-size:13px} .float.just{color:var(--just);font-size:22px} .float.dim{color:var(--dim);font-size:12px}
+@keyframes rise{from{opacity:1;margin-top:0}to{opacity:0;margin-top:-26px}}
+#toast{position:absolute;left:0;right:0;top:132px;text-align:center;font-size:20px;font-weight:700;letter-spacing:.12em;opacity:0;pointer-events:none;z-index:41;text-shadow:0 0 10px #000}
+#toast.show{animation:toast 1.7s ease-out}
+@keyframes toast{0%{opacity:0;transform:translateY(6px)}15%{opacity:1;transform:none}70%{opacity:1}100%{opacity:0}}
 
-#ov{position:fixed;inset:0;background:color-mix(in srgb,#000 65%,transparent);display:flex;align-items:center;justify-content:center;z-index:30;padding:16px}
+/* overlay */
+#ov{position:absolute;inset:0;background:rgba(8,7,11,.8);display:flex;align-items:center;justify-content:center;z-index:50;padding:14px}
 #ov[hidden]{display:none!important}
-.box{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 18px;max-width:560px;width:100%;max-height:100%;overflow:auto}
-.box h2{font-family:var(--f-disp);font-size:18px;margin:0 0 8px;letter-spacing:.04em;text-wrap:balance}
-.box ul{margin:0 0 10px;padding-left:18px;display:flex;flex-direction:column;gap:3px}
-.box .tag{color:var(--dim);font-size:10.5px}
-.box .row{display:flex;gap:8px;flex-wrap:wrap}
-.btn{border:1px solid var(--time);background:var(--time);color:#22170a;font-weight:700;border-radius:5px;padding:6px 14px}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 18px;max-width:560px;width:100%;max-height:362px;overflow:auto}
+.box h2{font-size:16px;margin:0 0 4px;letter-spacing:.04em}
+.box .sub{color:var(--dim);margin:0 0 8px}
+.box .eff{font-size:12px;margin:6px 0 10px;color:var(--fg)}
+.box ul,.box ol{margin:0 0 10px;padding-left:18px;display:flex;flex-direction:column;gap:3px}
+.box li.cur{color:var(--time)}
+.gl{margin:0 0 10px;display:grid;grid-template-columns:auto 1fr;gap:3px 10px;font-size:10.5px}
+.gl dt{font-weight:700;color:var(--fg2)} .gl dd{margin:0;color:var(--dim)}
+.row{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.btn{border:1px solid var(--time);background:var(--time);color:#22170a;font-weight:700;border-radius:6px;padding:7px 16px;text-align:center}
 .btn.ghost{background:transparent;color:var(--time)}
-.rot{display:none;font-size:11px;color:var(--time);text-align:center}
-@media (orientation:portrait){
-  .rot{display:block}
-  #app{height:auto;min-height:100%}
-  .field{grid-template-columns:1fr}
-  .foes{justify-content:stretch}
-  .foe{flex:1 1 0}
-}
-@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+.opts{display:flex;gap:10px;justify-content:center;margin:8px 0 12px;flex-wrap:wrap}
+.opts.col{flex-direction:column;align-items:stretch}
+.opt{border:1px solid var(--line);background:var(--panel2);border-radius:8px;padding:9px 12px;display:flex;flex-direction:column;gap:2px}
+.opt b{font-size:12px}
+.opt span{color:var(--dim)}
+.opt:disabled{opacity:.4;cursor:default}
+.dk{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:0 0 10px}
+@media (prefers-reduced-motion:reduce){#stage *{transition:none!important;animation:none!important}}
 </style>
 </head>
 <body>
-<div id="app">
-  <section class="tl" aria-label="タイムライン">
-    <div class="rot">横画面で遊ぶ想定です</div>
-    <div class="tl-head">
-      <span>TIMELINE</span>
-      <span class="t" id="tnow">T+0</span>
-      <span id="pred"></span>
-      <span id="floorname"></span>
-      <button class="icon-btn" id="helpBtn" type="button">ルール</button>
-    </div>
-    <div class="track" id="track"></div>
-  </section>
+<div id="wrap">
+  <div id="rot">横画面にすると大きく表示されます</div>
+  <div id="stage">
+    <div id="lanes"></div>
+    <div id="ticks" class="nopt"></div>
+    <div id="noise" class="nopt" hidden>演算破損 先読み不能</div>
+    <div id="pvRegion" class="nopt" hidden></div>
+    <div id="pvLine" class="nopt" hidden></div>
+    <div id="selfBar" class="nopt" hidden><span></span></div>
+    <div id="marks" class="nopt"></div>
+    <div id="foes"></div>
 
-  <section class="field">
-    <div class="panel me" id="me"></div>
-    <div class="foes" id="foes"></div>
-    <div class="panel log" id="log" aria-live="polite"></div>
-  </section>
+    <svg style="position:absolute;left:6px;top:58px" width="70" height="196" viewBox="0 0 70 196" role="img" aria-label="アンドロイドの絵(仮)">
+      <rect x="23" y="4" width="24" height="24" rx="6" fill="#17151d" stroke="#3d3849" stroke-width="1.5"/>
+      <path d="M31 28v6h8v-6" fill="none" stroke="#3d3849" stroke-width="1.5"/>
+      <path d="M18 36h34l-4 52H22z" fill="#17151d" stroke="#3d3849" stroke-width="1.5"/>
+      <path d="M16 38l-8 50M54 38l8 50" fill="none" stroke="#3d3849" stroke-width="5" stroke-linecap="round"/>
+      <path d="M27 92l-4 96M43 92l4 96" fill="none" stroke="#3d3849" stroke-width="6" stroke-linecap="round"/>
+      <text x="35" y="194" text-anchor="middle" font-size="9" fill="#5f5a6b" font-family="Chakra Petch, sans-serif">K-7 絵</text>
+    </svg>
+    <div id="parts"></div>
 
-  <section class="handwrap">
-    <div class="hand" id="hand"></div>
-    <div class="side">
-      <div class="hint" id="hint"></div>
-      <button class="redraw" id="redraw" type="button"></button>
-      <div class="piles" id="piles"></div>
+    <button class="pile" id="pileDraw" type="button" style="top:286px">山札<b id="nDraw">0</b></button>
+    <button class="pile" id="pileDisc" type="button" style="top:328px">捨て札<b id="nDisc">0</b></button>
+    <div id="hand"></div>
+    <button id="redraw" type="button"><span class="t1">引き直し</span><span class="t2" id="rdCost">5</span><span class="t3">サイクル</span><span class="t4">残りの手札の枚数</span></button>
+
+    <div id="top">
+      <button id="menuBtn" type="button" data-act="menu" aria-label="メニュー"><svg width="14" height="10" viewBox="0 0 14 10" aria-hidden="true"><path d="M0 1h14M0 5h14M0 9h14" stroke="currentColor" stroke-width="1.5" fill="none"/></svg></button>
+      <span id="where"></span>
+      <span id="msg"></span>
+      <span class="bl">本体</span><span class="bbar"><i id="bodyFill"></i></span><span id="bodyNum" class="num"></span>
     </div>
-  </section>
+    <div id="chips"></div>
+
+    <div id="floats"></div>
+    <div id="toast"></div>
+    <div id="ov" hidden><div class="box" id="ovbox"></div></div>
+  </div>
 </div>
 
-<div id="ov" hidden><div class="box" id="ovbox"></div></div>
-
 <script>
-const WIN = 12;
-const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
-const TICK = RM ? 120 : 340;
 const $ = s => document.querySelector(s);
-const sleep = ms => new Promise(r => setTimeout(r, ms));
+const X0 = 206, PX = 36.2, xs = c => X0 + c * PX, laneTop = i => 60 + i * 66;
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const sleep = ms => new Promise(r => setTimeout(r, RM ? Math.min(ms, 60) : ms));
+const TICK = 270;
+
+const PARTS = [
+  {id:'calc', fn:'演算', pt:'', ab:'演', name:'〘標準演算核〙', max:5, text:'タイムラインを12サイクル先まで見る。破損すると6サイクル先までしか見えない。'},
+  {id:'arm',  fn:'武装', pt:'', ab:'武', name:'〘CXR34レールガン〙', max:6, text:'光学威力+1。《チャージショット》2枚をデッキに加える。'},
+  {id:'out',  fn:'出力', pt:'腕部', ab:'出', name:'〘汎用マニピュレータ〙', max:7, text:'物理威力+1。'},
+  {id:'dur',  fn:'耐久', pt:'基体', ab:'耐', name:'〘標準フレーム〙', max:9, text:'ブロックを得るとき、+1。'},
+  {id:'mob',  fn:'機動', pt:'脚部', ab:'機', name:'〘デトロイト噴射機構〙', max:6, text:'戦闘開始時、スウィフト2。自分がディレイされたとき、スウィフト1を得る。'},
+];
+const PART_BY = Object.fromEntries(PARTS.map(p => [p.id, p]));
 
 const CARDS = {
-  jab:   {name:'ジャブ',     cost:1, tgt:true,  text:'3ダメージ',               fx:t=>hit(t,3)},
-  slash: {name:'スラッシュ', cost:2, tgt:true,  text:'7ダメージ',               fx:t=>hit(t,7)},
-  blow:  {name:'過負荷打撃', cost:4, tgt:true,  text:'16ダメージ',              fx:t=>hit(t,16)},
-  pulse: {name:'EMPパルス',  cost:3, tgt:false, text:'敵全員に5ダメージ',       fx:()=>alive().forEach(e=>hit(e,5))},
-  guard: {name:'障壁展開',   cost:1, tgt:false, text:'シールド+5',              fx:()=>{S.block+=5;pop('#me','+5 盾','good');}},
-  hack:  {name:'遅延ハック', cost:1, tgt:true,  text:'対象の次の行動を2遅らせる', fx:t=>{t.r+=2;pop(foeSel(t),'遅延+2','good');log(`${t.name}の行動を2遅らせた`,'good');}},
+  jab:      {name:'ジャブ', cost:1, tgt:true, dmg:{t:'phys', n:3}},
+  rapid:    {name:'速射', cost:1, tgt:true, dmg:{t:'phys', n:1, x:2}},
+  slash:    {name:'スラッシュ', cost:2, tgt:true, dmg:{t:'phys', n:7}},
+  blow:     {name:'過負荷打撃', cost:4, tgt:true, dmg:{t:'phys', n:16}},
+  charge:   {name:'チャージショット', cost:3, tgt:true, atomic:true, dmg:{t:'opt', n:8}, src:'レールガン'},
+  emp:      {name:'EMPパルス', cost:3, all:true, dmg:{t:'opt', n:4}},
+  crackshot:{name:'亀裂弾', cost:2, tgt:true, dmg:{t:'opt', n:2}, crack:2},
+  guard:    {name:'障壁展開', cost:1, block:4},
+  wall:     {name:'防御姿勢', cost:2, block:9},
+  hack:     {name:'遅延ハック', cost:1, tgt:true, delay:2},
+  backflow: {name:'逆流', cost:2, all:true, delay:2},
+  overclock:{name:'オーバークロック', cost:1, swift:3},
 };
-const DECK = ['jab','jab','jab','slash','slash','blow','pulse','guard','guard','guard','hack','hack'];
+const START_DECK = ['jab','jab','jab','slash','slash','blow','guard','guard','guard','hack','hack','charge','charge'];
 
-const FLOORS = [
-  {name:'第1層 搬入ゲート', foes:[
-    {name:'警備ドローンA', tag:'A', hp:12, start:3, pat:[{n:'射撃',d:3,dl:3}]},
-    {name:'警備ドローンB', tag:'B', hp:12, start:4, pat:[{n:'射撃',d:3,dl:3}]},
-  ]},
-  {name:'第2層 処理区画', foes:[
-    {name:'処刑ユニット', tag:'X', hp:24, start:3, pat:[{n:'殴打',d:4,dl:3},{n:'殴打',d:4,dl:3},{n:'粉砕砲',d:12,dl:4,ch:true}]},
-    {name:'警備ドローン', tag:'D', hp:12, start:4, pat:[{n:'射撃',d:3,dl:4}]},
-  ]},
-  {name:'第3層 中枢', foes:[
-    {name:'管理AI ウォーデン', tag:'W', hp:40, start:3, pat:[{n:'照射',d:4,dl:3},{n:'照射',d:4,dl:2},{n:'消去プロトコル',d:18,dl:5,ch:true}]},
-    {name:'随伴ドローン', tag:'D', hp:10, start:2, pat:[{n:'射撃',d:2,dl:3}]},
-  ]},
+const FOES = {
+  droneA:{name:'警備ドローン', tag:'A', hp:12, start:3, pat:[{n:'射撃', d:3, dl:3, p:'calc'}], pool:['jab','rapid','guard','wall','emp']},
+  droneB:{name:'警備ドローン', tag:'B', hp:12, start:4, pat:[{n:'射撃', d:3, dl:4, p:'out'}], pool:['jab','rapid','guard','wall','emp']},
+  exec:  {name:'処刑ユニット', tag:'X', hp:26, start:3, pat:[{n:'殴打', d:4, dl:3, p:'out'},{n:'殴打', d:4, dl:3, p:'out'},{n:'粉砕砲', d:12, dl:4, p:'dur', ch:true}], pool:['slash','blow','wall','crackshot']},
+  hacker:{name:'ハッカー', tag:'H', hp:10, start:4, pat:[{n:'割り込み', kind:'delay', v:2, dl:4},{n:'射撃', d:2, dl:3, p:'calc'}], pool:['hack','backflow','overclock','crackshot']},
+  warden:{name:'管理AI ウォーデン', tag:'W', hp:44, start:3, pat:[{n:'照射', d:4, dl:3, p:'calc'},{n:'照射', d:4, dl:2, p:'arm'},{n:'消去プロトコル', d:16, dl:5, p:'dur', ch:true}], pool:[]},
+  escort:{name:'随伴ドローン', tag:'E', hp:10, start:2, pat:[{n:'射撃', d:2, dl:3, p:'mob'}], pool:[]},
+};
+const BATTLES = [
+  {area:'エリア1', room:'搬入ゲート', no:2, foes:['droneA','droneB']},
+  {area:'エリア1', room:'処理区画', no:4, foes:['exec','hacker']},
+  {area:'エリア1', room:'中枢', no:6, boss:true, foes:['warden','escort']},
 ];
+const FLOW = ['b0','learn','b1','learn','rest','b2','clear'];
 
-let S;
-function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
-function alive(){return S.foes.filter(e=>e.alive);}
-function cur(e){return e.pat[e.idx];}
-function foeSel(e){return `.foe[data-i="${e.i}"]`;}
+const GLOSS = {
+  'サイクル':'時間の単位。カードのコストもサイクルで表す。時間はカードを使ったときだけ進む。',
+  'ディレイ':'ディレイX: 対象の次の行動をXサイクル遅らせる。自分が受けると、実行中のカードの完了がXサイクル遅れる。',
+  'スウィフト':'スウィフトX: 自分だけXサイクル加速する。サイクルを使うとき先に消費され、その間は敵の予定が進まない。',
+  'ブロック':'ブロックX: X分だけ、パーツへのダメージを減らす。全部位にかかり、使い切るまで残る。',
+  'アトミック':'このカードは、タイムラインの攻撃で中断されない。',
+  'クラック':'クラックX: ダメージを受けるとき、その量がX増える。消えずに残る。',
+  'ジャスト':'カードの完了と敵の行動が同じサイクルなら自分が先に動く。溜め技ならそのまま潰す。',
+  '中断':'カードの完了前に攻撃でダメージを受けると、そのカードは効果を出さずに終わる。',
+  '溜め':'ジャストで潰せる敵の大技。紫で表示される。',
+  '破損':'部位の耐久が0。その戦闘の間は性能を失い、そこへの攻撃は本体に通る。',
+  '損傷':'前の戦闘で破損した部位。次の戦闘は耐久が半分から始まる。耐えきれば元に戻る。',
+};
 
-function newRun(){S={floor:0,hp:50,max:50};startFloor();}
-function startFloor(){
-  const F = FLOORS[S.floor];
-  S.floorHp = S.hp; S.block = 0; S.T = 0; S.over = false; S.busy = false; S.sel = null; S.cast = null; S.logs = [];
-  S.foes = F.foes.map((f,i)=>({...f,maxHp:f.hp,idx:0,r:f.start,alive:true,i}));
-  S.draw = shuffle(DECK.map((k,id)=>({k,id}))); S.disc = []; S.hand = [];
-  drawN(5);
-  log(`${F.name}に侵入`);
-  $('#ov').hidden = true;
-  render();
-}
-function drawN(n){
-  for(let i=0;i<n;i++){
-    if(!S.draw.length){S.draw = shuffle(S.disc); S.disc = [];}
-    if(!S.draw.length) break;
-    S.hand.push(S.draw.pop());
-  }
-}
-function log(t,cls=''){S.logs.unshift({t,cls}); S.logs.length = Math.min(S.logs.length,6);}
-function pop(sel,text,cls){
-  const el = document.querySelector(sel); if(!el) return;
-  const r = el.getBoundingClientRect();
-  const s = document.createElement('div');
-  s.className = 'float '+cls; s.textContent = text;
-  s.style.left = (r.left + r.width/2)+'px'; s.style.top = (r.top + r.height*0.4)+'px';
-  document.body.appendChild(s); setTimeout(()=>s.remove(), 950);
-}
-function hit(e,n){
-  if(!e || !e.alive) return;
-  e.hp -= n; pop(foeSel(e), '-'+n, 'bad');
-  if(e.hp <= 0){e.hp = 0; e.alive = false; log(`${e.name}を破壊`,'good');}
-}
-function advance(e){e.idx = (e.idx+1) % e.pat.length; e.r = e.pat[e.idx].dl;}
-function enemyAct(e){
-  const a = cur(e);
-  const ab = Math.min(S.block, a.d); S.block -= ab;
-  const hpd = a.d - ab; S.hp -= hpd;
-  log(`${e.name}の${a.n}: ${a.d}ダメージ` + (ab ? `(盾で${ab}防御)` : ''), hpd ? 'bad' : '');
-  pop('#me', hpd ? '-'+hpd : '防御', hpd ? 'bad' : 'dim');
-  advance(e);
-  return hpd;
-}
+let S = null, sel = null, PV = null, busy = false, lastTarget = 0, snapshot = null, lastPool = [], lastMsg = '';
+const markEls = new Map();
 
-// 時間を c 進める。card があれば完了時に効果が出る。
-async function spend(c, card, target, label){
-  S.busy = true; S.sel = null;
-  let cancelled = false;
-  S.cast = {name: label, left: c};
-  render();
-  for(let step=1; step<=c; step++){
-    S.T++; alive().forEach(e=>e.r--); S.cast.left = c-step;
-    render(); await sleep(TICK);
-    if(card && step === c){
-      for(const e of alive()){
-        if(e.r <= 0 && cur(e).ch){
-          log(`JUST! ${e.name}の${cur(e).n}を潰した`,'just');
-          pop(foeSel(e),'JUST','just'); advance(e);
-        }
-      }
-      const def = CARDS[card.k];
-      if(def.tgt && (!target || !target.alive)) log(`${def.name}: 対象がいない`);
-      else def.fx(target);
-      S.cast = null; render(); await sleep(TICK*0.7);
-    }
-    for(const e of alive()){
-      if(e.r > 0) continue;
-      const hpd = enemyAct(e);
-      if(card && step < c && hpd > 0 && !cancelled){
-        cancelled = true;
-        log(`${CARDS[card.k].name}は中断された`,'bad');
-        setTimeout(()=>pop('.me .who','中断','bad'), 120);
-      }
-      render();
-      if(S.hp <= 0){S.hp = 0; S.cast = null; S.busy = false; lose(); return false;}
-      await sleep(TICK*0.7);
-    }
-    if(cancelled || !alive().length) break;
-  }
-  S.cast = null;
-  if(card) S.disc.push(card);
-  S.busy = false;
-  if(!alive().length){win(); return false;}
-  render();
-  return true;
-}
-
-async function useCard(i, target){
-  const card = S.hand.splice(i,1)[0];
-  const def = CARDS[card.k];
-  log(`${def.name}を使用(時間${def.cost})`);
-  const ok = await spend(def.cost, card, target, def.name);
-  if(ok && !S.hand.length){drawN(5); log('手札を使い切った: 時間0で引き直し','good'); render();}
-}
-async function redraw(){
-  if(S.busy || S.over) return;
-  const n = S.hand.length;
-  S.disc.push(...S.hand); S.hand = []; S.sel = null;
-  log(`引き直し(時間${n})`);
-  let ok = true;
-  if(n > 0) ok = await spend(n, null, null, '引き直し');
-  if(ok){drawN(5); render();}
-}
-
-function win(){
-  S.over = true; render();
-  const last = S.floor === FLOORS.length-1;
-  showOv(last
-    ? `<h2>塔の試作を踏破</h2><p>残りHP ${S.hp}/${S.max}・経過時間 ${S.T}</p><div class="row"><button class="btn" id="ovA" type="button">最初から</button></div>`
-    : `<h2>${FLOORS[S.floor].name} 突破</h2><p>残りHP ${S.hp}/${S.max}。次の層の前にHPを15修復します。</p><div class="row"><button class="btn" id="ovA" type="button">次の層へ</button></div>`);
-  $('#ovA').onclick = () => { if(last) newRun(); else {S.floor++; S.hp = Math.min(S.max, S.hp+15); startFloor();} };
-}
-function lose(){
-  S.over = true; render();
-  showOv(`<h2>機能停止</h2><p>${FLOORS[S.floor].name}で倒れました。</p><div class="row"><button class="btn" id="ovA" type="button">この層をやり直す</button><button class="btn ghost" id="ovB" type="button">最初から</button></div>`);
-  $('#ovA').onclick = () => {S.hp = S.floorHp; startFloor();};
-  $('#ovB').onclick = newRun;
-}
-function showOv(html){$('#ovbox').innerHTML = html; $('#ov').hidden = false;}
-function help(){
-  showOv(`<h2>ルール</h2><ul>
-    <li>ターンはない。時間はカードを使ったときだけ進む。カードのコスト=かかる時間。</li>
-    <li>上のバーは敵の行動予定。左端が今で、右に行くほど先。薄いのは次の次以降。</li>
-    <li>カードの効果は、かかる時間が終わった時点で出る。</li>
-    <li>使用中に敵の攻撃でHPが減ると、カードは中断される。時間はそこで止まり、カードは捨て札へ。シールドで全部防げば中断されない。<span class="tag">(試作の仮ルール)</span></li>
-    <li>完了時刻と敵の行動がぴったり同じなら、自分が先に動く。金色の溜め技なら、そのまま潰せる(JUST)。</li>
-    <li>引き直し: 残っている手札の枚数ぶん時間を払い、5枚引く。使い切ったら時間0で自動的に引く。</li>
-    <li>カードをタップで選ぶと、完了位置がバーに出る。もう一度タップするか敵をタップで使用。</li>
-  </ul><div class="row"><button class="btn" id="ovA" type="button">閉じる</button></div>`);
-  $('#ovA').onclick = () => { $('#ov').hidden = true; };
-}
-
-function upcoming(e){
-  const out = []; let t = e.r, i = e.idx;
-  out.push({t, a:e.pat[i], over: t > WIN});
-  while(out.length < 4){
-    i = (i+1) % e.pat.length; t += e.pat[i].dl;
-    if(t > WIN) break;
-    out.push({t, a:e.pat[i]});
-  }
+function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+const clone = o => JSON.parse(JSON.stringify(o));
+const cur = e => e.pat[e.idx];
+function advance(e){ e.idx = (e.idx + 1) % e.pat.length; e.r = e.pat[e.idx].dl; e.seq++; }
+function bonus(st, id){ return st && st.b && !st.b.over ? (st.b.parts[id].cur > 0 ? 1 : 0) : 1; }
+function viewLen(){ return S.b.parts.calc.cur > 0 ? 12 : 6; }
+function upcoming(e, view){
+  const out = []; let t = e.r, idx = e.idx, k = 0;
+  while(t <= view && k < 6){ out.push({t, a:e.pat[idx], k}); idx = (idx + 1) % e.pat.length; t += e.pat[idx].dl; k++; }
   return out;
 }
-const rowTop = i => 3 + i*18;
 
-function render(){
-  const selDef = S.sel != null ? CARDS[S.hand[S.sel].k] : null;
-  const c = selDef ? selDef.cost : null;
-
-  // timeline
-  let h = '';
-  for(let t=0;t<=WIN;t++) h += `<div class="tick${t===0?' now':''}" style="left:${t/WIN*100}%"><span>${t===0?'NOW':t}</span></div>`;
-  if(S.cast) h += `<div class="bar cast" style="top:${rowTop(0)}px;width:${Math.min(S.cast.left,WIN)/WIN*100}%"><span>${S.cast.name}</span></div>`;
-  else if(c != null) h += `<div class="bar prev" style="top:${rowTop(0)}px;width:${c/WIN*100}%"><span>${selDef.name}</span></div>`;
-  let danger = 0, justName = null, tie = false;
-  S.foes.forEach((e,row)=>{
-    if(!e.alive) return;
-    upcoming(e).forEach((m,k)=>{
-      let cls = 'mk';
-      if(m.a.ch) cls += ' ch';
-      if(k > 0) cls += ' later';
-      if(m.over) cls += ' over';
-      if(c != null && !S.cast){
-        if(m.t < c){cls += ' danger'; danger++;}
-        else if(m.t === c){ if(m.a.ch){cls += ' justable'; justName = m.a.n;} else {cls += ' tie'; tie = true;} }
+/* ---------- engine (pure on a state object; used for play and for preview) ---------- */
+function applyCard(st, k, ti){
+  const c = CARDS[k], b = st.b, ev = [];
+  const targets = c.all ? b.foes.filter(e => e.alive) : (c.tgt ? [b.foes[ti]].filter(e => e && e.alive) : []);
+  if(c.tgt && !targets.length) ev.push({kind:'miss'});
+  if(c.dmg){
+    const n = c.dmg.n + (c.dmg.t === 'phys' ? bonus(st,'out') : bonus(st,'arm'));
+    for(const e of targets){
+      for(let h = 0; h < (c.dmg.x || 1); h++){
+        if(!e.alive) break;
+        const d = n + e.crack; e.hp -= d; ev.push({kind:'dmg', e:e.i, n:d});
+        if(e.hp <= 0){ e.hp = 0; e.alive = false; ev.push({kind:'kill', e:e.i}); }
       }
-      h += `<div class="${cls}" style="left:${Math.min(m.t,WIN)/WIN*100}%;top:${rowTop(row+1)}px">${e.tag}<b>${m.a.d}</b></div>`;
-    });
-  });
-  $('#track').innerHTML = `<div class="inner" style="height:${rowTop(S.foes.length+1)+12}px">${h}</div>`;
-  $('#tnow').textContent = 'T+'+S.T;
-  $('#floorname').textContent = FLOORS[S.floor].name;
-  let pred = '';
-  if(c != null){
-    pred = `完了まで時間${c}`;
-    if(danger) pred += ` ・ <span class="w">途中で敵が${danger}回動く</span>`;
-    if(justName) pred += ` ・ <span class="j">JUST: ${justName}を潰せる</span>`;
-    else if(tie) pred += ' ・ 同時: 自分が先';
+    }
   }
-  $('#pred').innerHTML = pred;
-
-  // player
-  $('#me').innerHTML = `<div class="who">K-7 <small>アンドロイド</small></div>
-    <div class="hpbar"><i style="width:${S.hp/S.max*100}%"></i></div>
-    <div class="nums"><span>HP</span><b>${S.hp} / ${S.max}</b></div>
-    <div class="shield">シールド <b>${S.block}</b></div>`;
-
-  // foes
-  const needTarget = selDef && selDef.tgt && alive().length > 1;
-  $('#foes').innerHTML = S.foes.map(e=>{
-    const a = cur(e);
-    return `<button type="button" class="foe${e.alive?'':' dead'}${needTarget&&e.alive?' tg':''}" data-i="${e.i}" ${e.alive?'':'disabled'}>
-      <div class="who">${e.tag} ${e.name}</div>
-      <div class="hpbar"><i style="width:${e.hp/e.maxHp*100}%"></i></div>
-      <div class="nums"><span>HP</span><b>${e.hp} / ${e.maxHp}</b></div>
-      ${e.alive ? `<div class="intent${a.ch?' ch':''}"><span>次: ${a.n} ${a.d}${a.ch?' (溜め)':''}</span><span>あと<b>${e.r}</b></span></div>` : '<div class="intent">破壊</div>'}
-    </button>`;
-  }).join('');
-
-  // log
-  $('#log').innerHTML = S.logs.slice(0,3).map(l=>`<div class="${l.cls}">${l.t}</div>`).join('');
-
-  // hand
-  const lock = S.busy || S.over;
-  $('#hand').innerHTML = S.hand.map((cd,i)=>{
-    const d = CARDS[cd.k];
-    return `<button type="button" class="card${S.sel===i?' sel':''}" data-i="${i}" ${lock?'disabled':''}>
-      <span class="cost">${d.cost}<small>時間</small></span>
-      <span class="cname">${d.name}</span>
-      <span class="ctext">${d.text}</span></button>`;
-  }).join('');
-  const n = S.hand.length;
-  $('#redraw').innerHTML = `<b>引き直し</b>時間 ${n} を払う`;
-  $('#redraw').disabled = lock;
-  $('#piles').textContent = `山札 ${S.draw.length} ・ 捨て札 ${S.disc.length}`;
-  $('#hint').textContent = selDef ? (needTarget ? '敵をタップして使用' : 'もう一度タップで使用') : '';
+  if(c.crack) for(const e of targets) if(e.alive){ e.crack += c.crack; ev.push({kind:'crack', e:e.i, n:c.crack}); }
+  if(c.delay) for(const e of targets) if(e.alive){ e.r += c.delay; ev.push({kind:'delay', e:e.i, n:c.delay}); }
+  if(c.block){ const n = c.block + bonus(st,'dur'); b.block += n; ev.push({kind:'block', n}); }
+  if(c.swift){ b.swift += c.swift; ev.push({kind:'swift', n:c.swift}); }
+  return ev;
+}
+function enemyAct(st, e){
+  const a = cur(e), b = st.b, res = {name:a.n};
+  if(a.kind === 'delay'){ res.kind = 'delay'; res.v = a.v; }
+  else {
+    const raw = a.d, ab = Math.min(b.block, raw); b.block -= ab;
+    const rem = raw - ab, p = b.parts[a.p];
+    let partLoss = 0, bodyLoss = 0, broke = false;
+    if(rem > 0){
+      if(p.cur > 0){ partLoss = Math.min(p.cur, rem); p.cur -= partLoss; if(p.cur === 0){ broke = true; b.broken[a.p] = true; } bodyLoss = rem - partLoss; }
+      else bodyLoss = rem;
+      st.run.body = Math.max(0, st.run.body - bodyLoss);
+    }
+    Object.assign(res, {kind:'hit', part:a.p, raw, blocked:ab, partLoss, bodyLoss, broke, hurt:rem > 0});
+  }
+  advance(e);
+  return res;
+}
+function* spendGen(st, cost, k, ti, noInt){
+  const b = st.b, c = k ? CARDS[k] : null, atomic = !c || !!c.atomic;
+  let left = cost;
+  const out = {elapsed:0, completeAt:null, interruptedAt:null, justs:[], dead:false, won:false};
+  b.cast = {k, left, label: c ? c.name : '引き直し'};
+  while(left > 0){
+    let real = true;
+    if(b.swift > 0){ b.swift--; real = false; }
+    left--; b.cast.left = left;
+    if(real){ b.T++; out.elapsed++; for(const e of b.foes) if(e.alive) e.r--; }
+    yield {type:'tick', real};
+    if(left === 0){
+      out.completeAt = out.elapsed;
+      if(c){
+        if(real) for(const e of b.foes){
+          if(e.alive && e.r <= 0 && cur(e).ch){ const nm = cur(e).n; advance(e); out.justs.push({i:e.i, name:nm}); yield {type:'just', e:e.i, name:nm}; }
+        }
+        const ev = applyCard(st, k, ti);
+        b.cast = null;
+        yield {type:'card', ev};
+      }
+      b.cast = null;
+      if(!b.foes.some(e => e.alive)){ out.won = true; return out; }
+    }
+    for(const e of b.foes){
+      if(!e.alive || e.r > 0) continue;
+      const res = enemyAct(st, e);
+      if(res.kind === 'delay' && b.cast){
+        left += res.v; b.cast.left = left; res.applied = true;
+        if(b.parts.mob.cur > 0){ b.swift += 1; res.swift = 1; }
+      }
+      yield {type:'foe', e:e.i, res};
+      if(st.run.body <= 0){ out.dead = true; b.cast = null; return out; }
+      if(c && b.cast && res.hurt && !atomic && !noInt){ out.interruptedAt = out.elapsed; b.cast = null; yield {type:'interrupt'}; }
+    }
+    if(out.interruptedAt !== null) break;
+  }
+  b.cast = null;
+  return out;
 }
 
-$('#hand').addEventListener('click', ev=>{
-  const b = ev.target.closest('.card'); if(!b || S.busy || S.over) return;
-  const i = +b.dataset.i;
-  if(S.sel === i){
-    const def = CARDS[S.hand[i].k];
-    if(!def.tgt) useCard(i, null);
-    else if(alive().length === 1) useCard(i, alive()[0]);
-  } else { S.sel = i; render(); }
-});
-$('#foes').addEventListener('click', ev=>{
-  const b = ev.target.closest('.foe'); if(!b || S.busy || S.over || S.sel == null) return;
-  const def = CARDS[S.hand[S.sel].k]; if(!def.tgt) return;
-  const e = S.foes[+b.dataset.i]; if(!e.alive) return;
-  useCard(S.sel, e);
-});
-$('#redraw').addEventListener('click', redraw);
-$('#helpBtn').addEventListener('click', help);
+/* ---------- preview ---------- */
+function computePreview(){
+  if(!sel) return null;
+  const b = S.b, k = sel.kind === 'card' ? sel.k : null;
+  const cost = k ? CARDS[k].cost : b.hand.length;
+  const sim = noInt => {
+    const c = clone(S);
+    if(k) c.b.hand.splice(sel.i, 1); else { c.b.disc.push(...c.b.hand); c.b.hand = []; }
+    const g = spendGen(c, cost, k, sel.target, noInt); let r;
+    while(!(r = g.next()).done){}
+    return {c, out:r.value};
+  };
+  const A = sim(false), P = sim(true);
+  return {
+    k, cost, name: k ? CARDS[k].name : '引き直し', atomic: !!(k && CARDS[k].atomic),
+    completeAt: P.out.completeAt ?? P.out.elapsed,
+    swiftUsed: Math.min(b.swift, cost),
+    interruptedAt: A.out.interruptedAt,
+    justSet: new Set(A.out.justs.map(j => j.i)), justNames: A.out.justs.map(j => j.name),
+    parts: A.c.b.parts, body: A.c.run.body, dead: A.out.dead,
+    foeHp: A.c.b.foes.map(e => e.hp),
+    kills: b.foes.filter((e, i) => e.alive && !A.c.b.foes[i].alive).map(e => e.tag),
+  };
+}
+function pvSummary(pv){
+  const out = [];
+  out.push(`<b class="me">${pv.name}</b> 完了 <b class="num time">${pv.completeAt}</b>${pv.swiftUsed ? ` <span class="time">(スウィフト−${pv.swiftUsed})</span>` : ''}`);
+  if(pv.atomic) out.push('<b>アトミック</b>');
+  if(pv.justNames.length) out.push(`<b class="just">JUST ${pv.justNames.join('・')}</b>`);
+  if(pv.interruptedAt != null) out.push(`<b class="foe">中断される(${pv.interruptedAt}で被弾)</b>`);
+  const loss = [];
+  for(const p of PARTS){ const d = S.b.parts[p.id].cur - pv.parts[p.id].cur; if(d > 0) loss.push(`${p.fn}−${d}`); }
+  const bl = S.run.body - pv.body; if(bl > 0) loss.push(`本体−${bl}`);
+  out.push(loss.length ? `受ける <span class="foe2">${loss.join(' ')}</span>` : '<span class="dim">被弾なし</span>');
+  if(pv.kills.length) out.push(`<b class="me">撃破 ${pv.kills.join('・')}</b>`);
+  if(pv.dead) out.push('<b class="foe">機能停止</b>');
+  return out.join(' · ');
+}
 
+/* ---------- card text ---------- */
+function cardType(c){ return c.dmg ? (c.dmg.t === 'phys' ? '物理' : '光学') : c.block ? '防御' : '時間'; }
+function cardBits(k, st){
+  const c = CARDS[k], s = [];
+  if(c.dmg){
+    const bn = c.dmg.t === 'phys' ? bonus(st,'out') : bonus(st,'arm');
+    s.push(`${c.all ? '敵全員に ' : ''}${c.dmg.t === 'phys' ? '物理' : '光学'} <b class="${bn ? 'up' : ''}">${c.dmg.n + bn}</b>ダメージ${c.dmg.x ? '×' + c.dmg.x : ''}`);
+  }
+  if(c.crack) s.push(`<span class="kw-f">クラック</span> ${c.crack}`);
+  if(c.delay) s.push(`${c.all ? '敵全員に ' : ''}<span class="kw-t">ディレイ</span> ${c.delay}`);
+  if(c.block){ const bn = bonus(st,'dur'); s.push(`<span class="kw-me">ブロック</span> <b class="${bn ? 'up' : ''}">${c.block + bn}</b>`); }
+  if(c.swift) s.push(`<span class="kw-t">スウィフト</span> ${c.swift}`);
+  return s.join('<br>');
+}
+function cardInner(k, st){
+  const c = CARDS[k];
+  return `<span class="cart">絵<span class="cost">${c.cost}</span><span class="ctype">${cardType(c)}</span></span><span class="cname">${c.name}</span><span class="ctext">${cardBits(k, st)}</span>${c.atomic ? '<span class="katom">アトミック</span>' : ''}${c.src ? `<span class="csrc">${c.src}</span>` : ''}`;
+}
+
+/* ---------- static build ---------- */
+function buildStatic(){
+  let h = '';
+  for(let c = 0; c <= 12; c++){
+    const now = c === 0;
+    h += `<div class="tl${now ? ' now' : ''}" style="left:${xs(c) - (now ? 1 : 0)}px"></div><div class="tn${now ? ' now' : ''}" style="left:${xs(c) - 10}px">${now ? '今' : c}</div>`;
+  }
+  $('#ticks').innerHTML = h;
+  $('#parts').innerHTML = PARTS.map((p, j) => `<button class="part" type="button" data-p="${p.id}" style="top:${60 + j * 39}px"><span class="ph"><span class="pn">${p.fn}${p.pt ? `<em>${p.pt}</em>` : ''}<s class="ptag"></s></span><span class="pnum"></span></span><span class="pb"><span class="pbar"><i class="pf"></i><i class="pl"></i></span><span class="pinc" hidden></span></span></button>`).join('');
+}
+function buildLanes(){
+  const b = S.b;
+  $('#lanes').innerHTML = b.foes.map(e => `<div class="lane" data-f="${e.i}" style="top:${laneTop(e.i)}px"></div>`).join('');
+  $('#foes').innerHTML = b.foes.map(e => `<button class="fp" type="button" data-f="${e.i}" style="top:${laneTop(e.i) + 6}px"><span class="fart"><b>${e.tag}</b>絵</span><span class="fb"><span class="fname"><span class="fnm">${e.name}</span><span class="tchip" hidden>対象</span></span><span class="hpb"><i></i><s></s></span><span class="frow"><span class="hpt num"></span><span class="sts"></span></span></span></button>`).join('');
+}
+function clearMarks(){ for(const el of markEls.values()) el.remove(); markEls.clear(); }
+
+/* ---------- render ---------- */
+function renderAll(){ renderTop(); renderChips(); renderNoise(); renderLanes(); renderPreview(); renderMarks(); renderParts(); renderHand(); renderSide(); }
+function renderTop(){
+  const B = BATTLES[S.b.n];
+  const w = $('#where'); w.textContent = `${B.area} ${B.room} · 部屋 ${B.no}/6${B.boss ? ' ボス' : ''}`; w.hidden = !!PV;
+  const m = $('#msg');
+  if(PV){ m.innerHTML = pvSummary(PV); m.className = 'pv'; } else { m.textContent = lastMsg; m.className = ''; }
+  const body = S.run.body, after = PV ? PV.body : body;
+  $('#bodyFill').style.width = (after / S.run.bodyMax * 100) + '%';
+  $('#bodyNum').innerHTML = after < body ? `<span class="foe2">${body}→${after}</span>` : `${body}/${S.run.bodyMax}`;
+}
+function renderChips(){
+  const b = S.b;
+  $('#chips').innerHTML = `<span class="chip blk${b.block ? '' : ' zero'}">ブロック<span class="num">${b.block}</span></span>` + (b.swift ? `<span class="chip sw">スウィフト<span class="num">${b.swift}</span></span>` : '');
+}
+function renderNoise(){
+  const v = viewLen(), n = $('#noise');
+  n.hidden = v >= 12;
+  if(v < 12){ n.style.left = (xs(v) + 20) + 'px'; n.style.width = (xs(12) + 22 - xs(v) - 20) + 'px'; }
+}
+function renderLanes(){
+  const b = S.b, need = sel && sel.kind === 'card' && CARDS[sel.k].tgt;
+  document.querySelectorAll('.lane').forEach(el => {
+    const e = b.foes[+el.dataset.f];
+    el.classList.toggle('dead', !e.alive);
+    el.classList.toggle('tgt', !!need && sel.target === e.i && e.alive);
+    el.classList.toggle('can', !!need && sel.target !== e.i && e.alive);
+  });
+  document.querySelectorAll('.fp').forEach(el => {
+    const e = b.foes[+el.dataset.f];
+    const after = PV ? PV.foeHp[e.i] : e.hp;
+    el.classList.toggle('dead', !e.alive); el.disabled = !e.alive;
+    el.querySelector('.hpb i').style.width = (Math.max(0, after) / e.maxHp * 100) + '%';
+    const s = el.querySelector('.hpb s');
+    s.style.left = (Math.max(0, after) / e.maxHp * 100) + '%'; s.style.width = ((e.hp - Math.max(0, after)) / e.maxHp * 100) + '%';
+    el.querySelector('.hpt').innerHTML = !e.alive ? '破壊' : (after < e.hp ? `<span class="foe2">${e.hp}→${Math.max(0, after)}</span>` : `${e.hp}/${e.maxHp}`);
+    el.querySelector('.sts').innerHTML = e.crack ? `<span class="st c">クラック${e.crack}</span>` : '';
+    el.querySelector('.tchip').hidden = !(need && sel.target === e.i && e.alive);
+  });
+}
+function renderPreview(){
+  const b = S.b, reg = $('#pvRegion'), line = $('#pvLine'), bar = $('#selfBar');
+  if(busy && b.cast){
+    reg.hidden = line.hidden = true; bar.hidden = false; bar.className = 'cast nopt';
+    bar.style.width = Math.max(4, Math.min(b.cast.left, 12) * PX) + 'px';
+    bar.firstElementChild.textContent = b.cast.label; return;
+  }
+  if(PV && !busy){
+    const c = Math.min(PV.completeAt, 12);
+    reg.hidden = line.hidden = bar.hidden = false; bar.className = 'pre nopt';
+    reg.style.width = (c * PX) + 'px'; line.style.left = (xs(c) - 1) + 'px';
+    bar.style.width = Math.max(4, c * PX) + 'px'; bar.firstElementChild.textContent = PV.name; return;
+  }
+  reg.hidden = line.hidden = bar.hidden = true;
+}
+function renderMarks(){
+  const layer = $('#marks'), b = S.b, view = viewLen(), seen = new Set();
+  for(const e of b.foes){
+    if(!e.alive) continue;
+    for(const m of upcoming(e, view)){
+      const key = e.i + '-' + (e.seq + m.k); seen.add(key);
+      let el = markEls.get(key);
+      const x = xs(m.t) - 19, y = laneTop(e.i) + 22;
+      if(!el){
+        el = document.createElement('div'); el.className = 'mk';
+        el.style.left = (xs(view) + 34) + 'px'; el.style.top = y + 'px'; el.style.opacity = '0';
+        layer.appendChild(el); markEls.set(key, el); el.getBoundingClientRect();
+      }
+      const a = m.a;
+      let cls = 'mk ' + (a.kind === 'delay' ? 'dl' : a.ch ? 'ch' : 'hit');
+      if(m.k > 0 && !a.ch) cls += ' later';
+      let just = false;
+      if(PV && !busy){
+        if(m.t < PV.completeAt) cls += ' danger';
+        if(m.t === PV.completeAt && a.ch && PV.justSet.has(e.i)){ cls += ' just'; just = true; }
+      }
+      const label = a.ch ? (just ? 'JUST' : '溜め') : (a.kind === 'delay' ? '自分へ' : '');
+      el.className = cls;
+      const html = (label ? `<i class="lb">${label}</i>` : '') + (a.kind === 'delay' ? `<span>遅</span><b>${a.v}</b>` : `<b>${a.d}</b><span>${PART_BY[a.p].ab}</span>`);
+      if(el._h !== html){ el.innerHTML = html; el._h = html; }
+      el.style.left = x + 'px'; el.style.top = y + 'px'; el.style.opacity = '';
+    }
+  }
+  for(const [key, el] of markEls){
+    if(!seen.has(key)){ markEls.delete(key); el.classList.add('out'); setTimeout(() => el.remove(), 260); }
+  }
+}
+function incoming(view){
+  const res = {};
+  for(const e of S.b.foes){
+    if(!e.alive) continue;
+    for(const m of upcoming(e, view)){
+      if(m.a.kind === 'delay') continue;
+      const c = res[m.a.p];
+      if(!c || m.t < c.t) res[m.a.p] = {t:m.t, a:m.a, e:e.i};
+    }
+  }
+  return res;
+}
+function renderParts(){
+  const b = S.b, inc = incoming(viewLen());
+  document.querySelectorAll('.part').forEach((el, j) => {
+    const p = PARTS[j], st = b.parts[p.id], rp = S.run.parts[p.id];
+    const after = PV ? PV.parts[p.id].cur : st.cur, broken = st.cur <= 0;
+    el.classList.toggle('broken', broken);
+    el.querySelector('.ptag').textContent = broken ? '破損' : rp.damaged ? '損傷' : '';
+    const num = el.querySelector('.pnum');
+    if(after < st.cur){ num.textContent = `${st.cur}→${after}`; num.style.color = 'var(--foe2)'; }
+    else { num.textContent = `${st.cur}/${st.max}`; num.style.color = broken ? 'var(--dim2)' : ''; }
+    el.querySelector('.pf').style.width = (after / st.max * 100) + '%';
+    const pl = el.querySelector('.pl'); pl.style.left = (after / st.max * 100) + '%'; pl.style.width = ((st.cur - after) / st.max * 100) + '%';
+    const chip = el.querySelector('.pinc'), h = inc[p.id];
+    el.classList.remove('ih', 'ic');
+    if(h){
+      const justing = PV && !busy && h.a.ch && h.t === PV.completeAt && PV.justSet.has(h.e);
+      chip.hidden = false;
+      chip.className = 'pinc ' + (justing ? 'j' : h.a.ch ? 'c' : 'h');
+      chip.textContent = justing ? '潰せる' : (broken ? `本体−${h.a.d} あと${h.t}` : `−${h.a.d} あと${h.t}`);
+      el.classList.add(h.a.ch ? 'ic' : 'ih');
+    } else chip.hidden = true;
+  });
+}
+function renderHand(){
+  const b = S.b;
+  $('#hand').innerHTML = b.hand.map((cd, i) => {
+    const on = sel && sel.kind === 'card' && sel.i === i;
+    return `<button class="card${on ? ' sel' : ''}" type="button" data-i="${i}" style="left:${78 + i * 128}px" ${busy ? 'disabled' : ''}>${cardInner(cd.k, S)}</button>`;
+  }).join('');
+}
+function renderSide(){
+  const b = S.b, rd = $('#redraw');
+  $('#rdCost').textContent = b.hand.length;
+  rd.classList.toggle('sel', !!sel && sel.kind === 'redraw');
+  rd.disabled = busy || !b.hand.length;
+  $('#nDraw').textContent = b.draw.length; $('#nDisc').textContent = b.disc.length;
+}
+
+/* ---------- fx ---------- */
+function floatAt(x, y, text, cls){
+  const el = document.createElement('div'); el.className = 'float ' + cls; el.textContent = text;
+  el.style.left = x + 'px'; el.style.top = y + 'px'; $('#floats').appendChild(el);
+  setTimeout(() => el.remove(), 1000);
+}
+function flash(sel2, cls){ const el = document.querySelector(sel2); if(!el) return; el.classList.add(cls); setTimeout(() => el.classList.remove(cls), 300); }
+function toast(t){ const el = $('#toast'); el.textContent = t; el.classList.remove('show'); void el.offsetWidth; el.classList.add('show'); }
+function setLast(t){ lastMsg = t; }
+function partY(id){ return 60 + PARTS.findIndex(p => p.id === id) * 39; }
+
+function cardFx(x){
+  const b = S.b;
+  switch(x.kind){
+    case 'dmg': floatAt(712, laneTop(x.e) + 22, '−' + x.n, 'foe'); break;
+    case 'kill': floatAt(740, laneTop(x.e) + 40, '撃破', 'me'); flash(`.lane[data-f="${x.e}"]`, 'act'); break;
+    case 'crack': floatAt(760, laneTop(x.e) + 50, 'クラック+' + x.n, 'foe'); break;
+    case 'delay': floatAt(xs(2), laneTop(x.e) + 12, 'ディレイ' + x.n, 'time'); break;
+    case 'block': floatAt(48, 38, 'ブロック+' + x.n, 'me'); break;
+    case 'swift': floatAt(60, 38, 'スウィフト+' + x.n, 'time'); break;
+    case 'miss': setLast('対象がいない'); break;
+  }
+}
+function foeFx(i, r){
+  const e = S.b.foes[i];
+  flash(`.lane[data-f="${i}"]`, 'act');
+  if(r.kind === 'delay'){
+    if(r.applied){ floatAt(xs(1), 52, `完了+${r.v}`, 'time'); setLast(`${e.name}の${r.name}: ディレイ${r.v}で完了が遅れた${r.swift ? '(噴射機構: スウィフト+1)' : ''}`); }
+    else setLast(`${e.name}の${r.name}: 空振り`);
+    return;
+  }
+  const pf = PART_BY[r.part], y = partY(r.part);
+  if(r.blocked) floatAt(48, 40, `ブロック−${r.blocked}`, 'dim');
+  if(r.partLoss){ floatAt(176, y + 10, '−' + r.partLoss, 'foe'); flash(`.part[data-p="${r.part}"]`, 'hit'); }
+  if(r.broke) floatAt(120, y + 22, '破損', 'foe');
+  if(r.bodyLoss) floatAt(790, 20, '本体−' + r.bodyLoss, 'foe');
+  if(!r.hurt) floatAt(150, y + 10, '防御', 'dim');
+  setLast(`${e.name}の${r.name} ${r.raw} → ${pf.fn}${r.blocked ? `(ブロック${r.blocked})` : ''}${r.broke ? ' 破損' : ''}${r.bodyLoss ? ` 本体−${r.bodyLoss}` : ''}`);
+}
+
+/* ---------- play ---------- */
+function drawN(n){
+  const b = S.b;
+  for(let i = 0; i < n; i++){
+    if(!b.draw.length){ b.draw = shuffle(b.disc); b.disc = []; }
+    if(!b.draw.length) break;
+    b.hand.push(b.draw.pop());
+  }
+}
+function defaultTarget(){ const b = S.b; if(b.foes[lastTarget] && b.foes[lastTarget].alive) return lastTarget; const e = b.foes.find(f => f.alive); return e ? e.i : 0; }
+function recalc(){ PV = computePreview(); renderAll(); }
+function onCard(i){
+  const k = S.b.hand[i].k, c = CARDS[k];
+  if(sel && sel.kind === 'card' && sel.i === i){ execute(); return; }
+  sel = {kind:'card', i, k, target: c.tgt ? defaultTarget() : null}; recalc();
+}
+function onRedraw(){
+  if(!S.b.hand.length) return;
+  if(sel && sel.kind === 'redraw'){ execute(); return; }
+  sel = {kind:'redraw'}; recalc();
+}
+function onFoe(i){
+  const e = S.b.foes[i]; if(!e.alive) return;
+  if(sel && sel.kind === 'card' && CARDS[sel.k].tgt){
+    if(sel.target === i){ execute(); return; }
+    sel.target = i; lastTarget = i; recalc(); return;
+  }
+  if(!sel) infoFoe(i);
+}
+async function showEvent(ev, k){
+  const b = S.b;
+  switch(ev.type){
+    case 'tick': renderAll(); if(!ev.real) floatAt(xs(0) + 22, 40, '加速', 'time'); await sleep(ev.real ? TICK : TICK * 0.55); break;
+    case 'just': floatAt(xs(0) + 24, laneTop(ev.e) + 34, 'JUST', 'just'); setLast(`JUST: ${b.foes[ev.e].name}の${ev.name}を潰した`); renderAll(); await sleep(450); break;
+    case 'card': for(const x of ev.ev) cardFx(x); renderAll(); await sleep(330); break;
+    case 'foe': foeFx(ev.e, ev.res); renderAll(); await sleep(360); break;
+    case 'interrupt': floatAt(xs(1) + 10, 52, '中断', 'foe'); setLast(`${CARDS[k].name}は中断された`); renderAll(); await sleep(420); break;
+  }
+}
+async function execute(){
+  const s = sel, b = S.b; sel = null; PV = null; busy = true;
+  let card = null, k = null, cost;
+  if(s.kind === 'card'){ card = b.hand.splice(s.i, 1)[0]; k = card.k; cost = CARDS[k].cost; if(s.target != null) lastTarget = s.target; setLast(`${CARDS[k].name}を実行(${cost}サイクル)`); }
+  else { cost = b.hand.length; b.disc.push(...b.hand); b.hand = []; setLast(`引き直し(${cost}サイクル)`); }
+  renderAll();
+  const g = spendGen(S, cost, k, s.target, false); let r;
+  while(!(r = g.next()).done) await showEvent(r.value, k);
+  const out = r.value;
+  if(card) b.disc.push(card);
+  if(out.dead){ busy = false; renderAll(); await sleep(300); onLose(); return; }
+  if(out.won){ busy = false; b.over = true; renderAll(); await sleep(400); onWin(); return; }
+  if(!k) drawN(5);
+  else if(!b.hand.length){ drawN(5); setLast('手札を使い切った: 0サイクルで引き直し'); }
+  busy = false; renderAll();
+}
+
+/* ---------- flow ---------- */
+function newRun(){
+  const parts = {}; for(const p of PARTS) parts[p.id] = {damaged:false};
+  S = {run:{body:50, bodyMax:50, parts, deck:START_DECK.slice(), step:0}};
+  hideOv(); startBattle(0);
+}
+function startBattle(n){
+  const B = BATTLES[n], run = S.run;
+  snapshot = JSON.stringify(run);
+  const parts = {};
+  for(const p of PARTS) parts[p.id] = {cur: run.parts[p.id].damaged ? Math.ceil(p.max / 2) : p.max, max:p.max};
+  const foes = B.foes.map((key, i) => { const f = FOES[key]; return {key, i, name:f.name, tag:f.tag, hp:f.hp, maxHp:f.hp, pat:f.pat, idx:0, r:f.start, seq:0, alive:true, crack:0}; });
+  let id = 0;
+  S.b = {n, T:0, block:0, swift: parts.mob.cur > 0 ? 2 : 0, foes, parts, draw: shuffle(run.deck.map(k => ({k, id:id++}))), disc:[], hand:[], cast:null, broken:{}, over:false};
+  drawN(5); sel = null; PV = null; busy = false; lastTarget = 0;
+  setLast('デトロイト噴射機構: 戦闘開始時スウィフト2');
+  buildLanes(); clearMarks(); renderAll();
+  toast(`${B.area} · ${B.room}${B.boss ? ' · ボス' : ''}`);
+}
+function next(){
+  S.run.step++;
+  const s = FLOW[S.run.step];
+  if(s[0] === 'b') startBattle(+s[1]);
+  else if(s === 'learn') showLearn();
+  else if(s === 'rest') showRest();
+  else showClear();
+}
+function onWin(){
+  const lines = [];
+  for(const p of PARTS){
+    const rp = S.run.parts[p.id], br = !!S.b.broken[p.id];
+    if(br) lines.push(`<li><b class="foe2">${p.fn}</b> 破損 → 損傷: 次の戦闘は耐久が半分から</li>`);
+    else if(rp.damaged) lines.push(`<li><b class="me">${p.fn}</b> 耐えきった → 損傷が直った</li>`);
+    rp.damaged = br;
+  }
+  lastPool = BATTLES[S.b.n].foes.flatMap(k => FOES[k].pool);
+  showOv(`<h2>戦闘終了</h2><p class="sub">本体 ${S.run.body}/${S.run.bodyMax}</p><ul>${lines.join('') || '<li>破損した部位はない</li>'}</ul><div class="row"><button class="btn" type="button" data-act="next">次へ</button></div>`);
+}
+function onLose(){
+  showOv(`<h2>機能停止</h2><p class="sub">${BATTLES[S.b.n].room}で本体の耐久が尽きた。</p><div class="row"><button class="btn ghost" type="button" data-act="restart">最初から</button><button class="btn" type="button" data-act="retry">この戦闘をやり直す</button></div>`);
+}
+function showLearn(){
+  const opts = shuffle([...new Set(lastPool)]).slice(0, 3);
+  showOv(`<h2>学習</h2><p class="sub">倒した敵の動きを、1つ取り込める。</p><div class="opts">${opts.map(k => `<button class="card static" type="button" data-act="learn" data-arg="${k}">${cardInner(k, null)}</button>`).join('')}</div><div class="row"><button class="btn ghost" type="button" data-act="next">取り込まない</button></div>`);
+}
+function showRest(){
+  const dmg = PARTS.filter(p => S.run.parts[p.id].damaged).map(p => p.fn);
+  showOv(`<h2>整備ステーション</h2><p class="sub">1つだけ選べる。本体 ${S.run.body}/${S.run.bodyMax}${dmg.length ? ` · 損傷: ${dmg.join('・')}` : ''}</p><div class="opts col"><button class="opt" type="button" data-act="repair"><b>修理</b><span>本体+15、損傷をすべて直す</span></button><button class="opt" type="button" data-act="defrag"><b>デフラグ</b><span>デッキからカードを1枚消去する</span></button></div>`);
+}
+function showDefrag(){
+  const counts = {}; for(const k of S.run.deck) counts[k] = (counts[k] || 0) + 1;
+  showOv(`<h2>デフラグ</h2><p class="sub">消去するカードを選ぶ。武装由来のカードは消せない。</p><div class="dk">${Object.keys(counts).map(k => `<button class="opt" type="button" data-act="del" data-arg="${k}" ${CARDS[k].src ? 'disabled' : ''}><b>${CARDS[k].name} ×${counts[k]}</b><span>${CARDS[k].cost}サイクル</span></button>`).join('')}</div>`);
+}
+function showClear(){
+  showOv(`<h2>エリア1 踏破</h2><p class="sub">本体 ${S.run.body}/${S.run.bodyMax} · デッキ ${S.run.deck.length}枚。試作はここまで。</p><div class="row"><button class="btn" type="button" data-act="restart">最初から</button></div>`);
+}
+
+/* ---------- info overlays ---------- */
+function gloss(list){ return `<dl class="gl">${list.map(w => `<dt>${w}</dt><dd>${GLOSS[w]}</dd>`).join('')}</dl>`; }
+const closeRow = '<div class="row"><button class="btn" type="button" data-act="close">閉じる</button></div>';
+function infoCard(k){
+  const c = CARDS[k], kw = [];
+  if(c.block) kw.push('ブロック'); if(c.delay) kw.push('ディレイ'); if(c.swift) kw.push('スウィフト'); if(c.crack) kw.push('クラック');
+  kw.push(c.atomic ? 'アトミック' : '中断'); kw.push('サイクル');
+  showOv(`<h2>${c.name}</h2><p class="sub">コスト <b class="time">${c.cost}</b> サイクル · ${cardType(c)}${c.src ? ` · ${c.src}由来` : ''}</p><p class="eff">${cardBits(k, S)}</p>${gloss(kw)}${closeRow}`, true);
+}
+function infoFoe(i){
+  const e = S.b.foes[i];
+  const rows = e.pat.map((a, j) => `<li class="${j === e.idx ? 'cur' : ''}">${a.kind === 'delay' ? `${a.n}: 自分に<span class="time">ディレイ</span>${a.v}` : `${a.n}: ${a.d}ダメージ → ${PART_BY[a.p].fn}${a.ch ? ' <b class="just">溜め</b>' : ''}`} <span class="dim">(間隔${a.dl})</span></li>`).join('');
+  showOv(`<h2>${e.name}</h2><p class="sub">耐久 ${e.hp}/${e.maxHp}${e.crack ? ` · クラック${e.crack}` : ''} · 行動パターン(繰り返し、色つきが次)</p><ol>${rows}</ol>${gloss(['溜め','ジャスト'])}${closeRow}`, true);
+}
+function infoPart(id){
+  const p = PART_BY[id], st = S.b.parts[id], rp = S.run.parts[id];
+  showOv(`<h2>${p.name}</h2><p class="sub">${p.fn}${p.pt ? '(' + p.pt + ')' : ''} · 耐久 ${st.cur}/${st.max}${st.cur <= 0 ? ' · <b class="foe">破損</b>' : rp.damaged ? ' · <b class="foe2">損傷</b>' : ''}</p><p class="eff">${p.text}</p>${gloss(['破損','損傷'])}${closeRow}`, true);
+}
+function infoDeck(){
+  const counts = {}; for(const k of S.run.deck) counts[k] = (counts[k] || 0) + 1;
+  showOv(`<h2>デッキ ${S.run.deck.length}枚</h2><p class="sub">山札 ${S.b.draw.length} · 捨て札 ${S.b.disc.length} · 手札 ${S.b.hand.length}</p><div class="dk">${Object.keys(counts).map(k => `<div class="opt"><b>${CARDS[k].name} ×${counts[k]}</b><span>${CARDS[k].cost}サイクル · ${cardType(CARDS[k])}</span></div>`).join('')}</div>${closeRow}`, true);
+}
+function showRules(first){
+  showOv(`<h2>試作2の遊び方</h2><ul>
+    <li>時間はカードを使ったときだけ進む。コストは、かかる<b class="time">サイクル</b>。</li>
+    <li>各敵の行に、攻撃の予定が右から流れてくる。数字はダメージ、横の字は狙う部位(演・武・出・耐・機)。</li>
+    <li>カードをタップすると、完了位置と受けるダメージの予測が出る。もう一度タップで実行。攻撃カードは敵の行をタップして対象を変えられ、同じ敵をもう一度タップしても実行。</li>
+    <li>完了前に被弾すると<b class="foe">中断</b>。ブロックで全部防ぐか、<b>アトミック</b>なら中断されない。</li>
+    <li>完了と<b class="just">溜め技(紫)</b>が同じサイクルなら、JUSTで潰せる。</li>
+    <li>部位の耐久が0で<b class="foe">破損</b>: 性能を失い、そこへの攻撃は本体に通る。本体0で機能停止。破損した部位は次の戦闘で耐久半分(損傷)。</li>
+    <li>引き直しは、残りの手札の枚数ぶんサイクルを払う。長押しで詳細、部位や敵はタップで詳細。</li>
+  </ul><div class="row"><button class="btn" type="button" data-act="close">${first ? 'はじめる' : '閉じる'}</button></div>`, !first);
+}
+function showMenu(){
+  showOv(`<h2>メニュー</h2><div class="opts col"><button class="opt" type="button" data-act="rules"><b>遊び方</b></button><button class="opt" type="button" data-act="deck"><b>デッキ一覧</b></button><button class="opt" type="button" data-act="fs"><b>全画面にする</b><span>対応していない環境では何も起きない</span></button><button class="opt" type="button" data-act="restart"><b>最初からやり直す</b></button></div>${closeRow}`, true);
+}
+async function goFull(){
+  hideOv();
+  try{ await document.documentElement.requestFullscreen(); try{ await screen.orientation.lock('landscape'); }catch(e){} }
+  catch(e){ setLast('この表示環境では全画面にできません'); renderAll(); }
+}
+function showOv(html, closable){ const ov = $('#ov'); $('#ovbox').innerHTML = html; ov.dataset.closable = closable ? '1' : ''; ov.hidden = false; }
+function hideOv(){ $('#ov').hidden = true; }
+function act(a, arg){
+  switch(a){
+    case 'close': hideOv(); break;
+    case 'menu': if(!busy) showMenu(); break;
+    case 'rules': showRules(false); break;
+    case 'deck': infoDeck(); break;
+    case 'fs': goFull(); break;
+    case 'restart': newRun(); break;
+    case 'retry': S.run = JSON.parse(snapshot); hideOv(); startBattle(S.b.n); break;
+    case 'next': hideOv(); next(); break;
+    case 'learn': S.run.deck.push(arg); hideOv(); next(); break;
+    case 'repair': S.run.body = Math.min(S.run.bodyMax, S.run.body + 15); for(const p of PARTS) S.run.parts[p.id].damaged = false; hideOv(); next(); break;
+    case 'defrag': showDefrag(); break;
+    case 'del': { const i = S.run.deck.indexOf(arg); if(i >= 0) S.run.deck.splice(i, 1); hideOv(); next(); break; }
+  }
+}
+
+/* ---------- input ---------- */
+const stage = $('#stage');
+let lpTimer = null, longFired = false;
+stage.addEventListener('pointerdown', ev => {
+  if(busy || !$('#ov').hidden) return;
+  const c = ev.target.closest('.card[data-i]'), f = ev.target.closest('.fp[data-f]');
+  if(!c && !f) return;
+  clearTimeout(lpTimer);
+  lpTimer = setTimeout(() => {
+    longFired = true; setTimeout(() => { longFired = false; }, 700);
+    if(c) infoCard(S.b.hand[+c.dataset.i].k); else infoFoe(+f.dataset.f);
+  }, 430);
+});
+['pointerup','pointercancel','pointerleave'].forEach(n => stage.addEventListener(n, () => clearTimeout(lpTimer)));
+stage.addEventListener('contextmenu', e => e.preventDefault());
+stage.addEventListener('click', ev => {
+  if(longFired){ longFired = false; return; }
+  const t = ev.target, a = t.closest('[data-act]');
+  if(a){ act(a.dataset.act, a.dataset.arg); return; }
+  const ov = $('#ov');
+  if(!ov.hidden){ if(t === ov && ov.dataset.closable) hideOv(); return; }
+  if(busy) return;
+  const card = t.closest('.card[data-i]'); if(card){ onCard(+card.dataset.i); return; }
+  if(t.closest('#redraw')){ onRedraw(); return; }
+  const f = t.closest('[data-f]'); if(f){ onFoe(+f.dataset.f); return; }
+  const p = t.closest('.part'); if(p){ infoPart(p.dataset.p); return; }
+  if(t.closest('.pile')){ infoDeck(); return; }
+  if(sel){ sel = null; PV = null; renderAll(); }
+});
+
+function fit(){
+  const w = $('#wrap');
+  const s = Math.min(w.clientWidth / 844, w.clientHeight / 390);
+  document.documentElement.style.setProperty('--s', Math.max(0.2, s));
+}
+addEventListener('resize', fit);
+fit();
+buildStatic();
 newRun();
-help();
+showRules(true);
 </script>
-
 <script>
 // オフライン用のサービスワーカー登録
 if ('serviceWorker' in navigator) {

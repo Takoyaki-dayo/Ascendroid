@@ -3,173 +3,219 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>塔の戦闘試作2</title>
-<meta name="theme-color" content="#0f0e13">
+<title>塔の戦闘試作3</title>
+<meta name="theme-color" content="#0e0d11">
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
-<style>html,body{margin:0}[hidden]{display:none!important}</style>
+<style>html,body{margin:0}</style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Chakra+Petch:wght@500;600;700&display=swap">
 <style>
-/* Layout: a fixed 844x390 phone-landscape stage scaled to fit. The timeline is the board: "now" at left by the android, enemy lanes flow right-to-left toward it.
-   Color carries meaning only: amber = time, teal = self, red = threat, violet = opportunity (charge/JUST). Everything else stays low-chroma. */
+/* Layout: fixed 844x390 landscape stage, scaled to fit. Back to front: battle-forecast screen (timeline), characters in a row, status column at left, hand at bottom.
+   Color is meaning only: red = threat, violet = charge/JUST, teal = what you have selected, amber = now and cost. Everything else is neutral. Text is kept to numbers, part names and card names. */
 :root{
-  --bg:#0f0e13; --lane:rgba(255,255,255,.03); --panel:#18161f; --panel2:#141219; --line:#2c2836; --grid:#24212d;
-  --fg:#e9e6ef; --fg2:#c9c3d3; --dim:#8a8496; --dim2:#5f5a6b;
-  --time:#f2a33a; --time-dim:#7d6c4d; --me:#3fd0c0; --foe:#ff4d5e; --foe2:#ff8a95; --just:#b48cff;
+  --bg:#0e0d11; --panel:#131217; --line:#23212a; --grid:#1b1a21; --raised:#16151b;
+  --fg:#e8e6ec; --fg2:#b9b5c2; --dim:#77727f; --dim2:#4d4955; --neutral:#cfcbd6;
+  --time:#e9a23b; --time-dim:#6b5a3e; --me:#46d1c2; --foe:#ff5266; --foe2:#ff7a88; --just:#a98bff; --just2:#c3adff;
   --f-body:"BIZ UDPGothic","Hiragino Sans","Noto Sans JP",system-ui,sans-serif;
   --f-num:"Chakra Petch","BIZ UDPGothic",system-ui,sans-serif;
   color-scheme:dark;
 }
 html,body{height:100%}
-body{
-  margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body);overflow:hidden;box-sizing:border-box;
-  padding-left:max(16px, env(safe-area-inset-left, 0px));
-  padding-right:max(16px, env(safe-area-inset-right, 0px));
-  padding-block:0;
-  -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation;
-}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body);overflow:hidden;box-sizing:border-box;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));padding-block:0;
+  -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+[hidden]{display:none!important}
 #wrap{position:relative;width:100%;height:100%;overflow:hidden}
-#rot{display:none;position:absolute;left:0;right:0;top:12px;text-align:center;color:var(--time);font-size:13px}
+#rot{display:none;position:absolute;left:0;right:0;top:10px;text-align:center;color:var(--time);font-size:13px}
 @media (orientation:portrait){#rot{display:block}}
-#stage{position:absolute;left:50%;top:50%;width:844px;height:390px;transform:translate(-50%,-50%) scale(var(--s,1));background:var(--bg);font-size:11px;line-height:1.35;overflow:hidden}
+#stage{position:absolute;left:50%;top:50%;width:844px;height:390px;transform:translate(-50%,-50%) scale(var(--s,1));overflow:hidden;background:var(--bg);font-size:11px;line-height:1.35}
 #stage *{box-sizing:border-box}
+#shaker{position:absolute;inset:0}
+#shaker.shake{animation:shake .28s linear}
+@keyframes shake{20%{transform:translate(-3px,1px)}40%{transform:translate(3px,-1px)}60%{transform:translate(-2px,1px)}80%{transform:translate(2px,0)}}
 button{font:inherit;color:inherit;cursor:pointer;padding:0;margin:0;background:none;border:0;text-align:left}
 button:focus-visible{outline:2px solid var(--time);outline-offset:2px}
 .num{font-family:var(--f-num)}
-.time{color:var(--time)} .me{color:var(--me)} .foe{color:var(--foe)} .foe2{color:var(--foe2)} .just{color:var(--just)} .dim{color:var(--dim2)}
-.nopt{pointer-events:none}
-[hidden]{display:none!important}
+.ic{display:inline-flex;flex:none}
+.ic svg{width:12px;height:12px;display:block}
+.abs{position:absolute}
+.np{pointer-events:none}
 
-/* top bar */
-#top{position:absolute;left:10px;top:4px;width:824px;height:22px;display:flex;align-items:center;gap:12px}
-#menuBtn{width:30px;height:22px;border:1px solid var(--line);border-radius:4px;background:var(--panel);color:var(--dim);display:flex;align-items:center;justify-content:center;flex:none}
-#where{color:var(--dim);white-space:nowrap;flex:none}
-#msg{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--dim2)}
-#msg.pv{color:var(--fg2)}
-#msg b{font-weight:700}
-.bl{color:var(--dim);flex:none}
-.bbar{width:56px;height:4px;background:var(--grid);border-radius:2px;overflow:hidden;flex:none}
-.bbar i{display:block;height:100%;background:var(--dim);transition:width .25s}
-#bodyNum{font-size:11px;color:#a9a3b4;flex:none;min-width:38px;text-align:right}
+/* timeline (battle forecast) */
+#tl{position:absolute;inset:0;transition:opacity .2s}
+#shaker.executing #tl{opacity:.62}
+#screen{position:absolute;left:96px;top:8px;width:620px;height:164px;border:1px solid #201e27;border-radius:6px;background:repeating-linear-gradient(180deg,rgba(255,255,255,.012) 0 1px,transparent 1px 3px),#111015}
+.tl{position:absolute;top:40px;width:1px;height:126px;background:var(--grid)}
+.tn{position:absolute;top:10px;width:20px;text-align:center;font-family:var(--f-num);font-size:10px;color:var(--time-dim)}
+#nowTri{position:absolute;left:174px;top:11px}
+#nowLine{position:absolute;left:179px;top:22px;width:2px;height:144px;background:var(--time)}
+.rowline{position:absolute;left:180px;height:1px;width:458px;background:rgba(255,255,255,.07)}
+.rowline.tgt{background:rgba(70,209,194,.45)}
+.rowline.dead{opacity:.3}
+.rowtag{position:absolute;left:646px;width:15px;height:15px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-family:var(--f-num);font-size:10px;font-weight:700;background:#24222b;color:var(--fg)}
+.rowtag.tgt{background:var(--me);color:var(--bg)}
+.rowtag.dead{opacity:.3}
+.rowhit{position:absolute;left:180px;width:490px;height:34px}
+#pvRegion{position:absolute;left:181px;top:24px;height:142px;background:rgba(70,209,194,.06)}
+#pvLine{position:absolute;top:22px;width:2px;height:144px;background:var(--me)}
+#selfBar{position:absolute;left:181px;top:25px;height:9px;border-radius:0 3px 3px 0;transition:width .13s linear}
+#selfBar.pre{background:rgba(70,209,194,.45)}
+#selfBar.cast{background:rgba(70,209,194,.75);box-shadow:0 0 8px rgba(70,209,194,.5)}
+#selfBar.broken{background:var(--foe);animation:barbreak .38s ease-out forwards}
+@keyframes barbreak{0%{opacity:1;transform:none}40%{opacity:1;transform:scaleY(2.2)}100%{opacity:0;transform:scaleY(.2) translateY(-6px)}}
+.mk{position:absolute;width:32px;height:22px;display:flex;align-items:center;justify-content:center;gap:2px;border-radius:4px;border:1.5px solid var(--foe);background:#24131a;color:#ffdade;transition:left .13s linear,top .2s,opacity .2s,transform .2s,box-shadow .15s}
+.mk b{font-family:var(--f-num);font-size:13px;font-weight:700}
+.mk span{font-size:9.5px}
+.mk .ic svg{width:10px;height:10px}
+.mk.later{opacity:.45}
+.mk.ch{border-color:var(--just);background:#1d1830;color:#e6defc;border-radius:11px}
+.mk.dl{border:1px solid #4d4955;background:var(--raised);color:var(--fg2)}
+.mk.danger{box-shadow:0 0 0 3px rgba(255,82,102,.42)}
+.mk.just{background:var(--just);color:#1a1030;box-shadow:0 0 16px rgba(169,139,255,.85)}
+.mk.fire{transform:scale(1.35);box-shadow:0 0 14px rgba(255,82,102,.8)}
+.mk.out{opacity:0!important;transform:scale(1.6)}
 
-#chips{position:absolute;left:10px;top:30px;display:flex;gap:6px}
-.chip{height:15px;padding:0 6px;border:1px solid;border-radius:3px;font-size:10px;font-weight:700;line-height:13px;display:flex;gap:4px;align-items:center}
-.chip.blk{color:var(--me);border-color:var(--me)}
-.chip.blk.zero{color:var(--dim2);border-color:var(--line)}
-.chip.sw{color:var(--time);border-color:var(--time)}
-
-/* timeline */
-.lane{position:absolute;left:200px;width:634px;height:62px;border-radius:6px;background:var(--lane);border:1.5px solid transparent;transition:background .2s}
-.lane.dead{opacity:.3}
-.lane.tgt{border-color:var(--me)}
-.lane.can{border:1.5px dashed rgba(63,208,192,.35)}
-.lane.act{background:rgba(255,77,94,.14)}
-.tl{position:absolute;top:45px;width:1px;height:213px;background:var(--grid)}
-.tl.now{width:2px;background:var(--time)}
-.tn{position:absolute;top:31px;width:20px;text-align:center;font-family:var(--f-num);font-size:10px;font-weight:500;color:var(--time-dim)}
-.tn.now{color:var(--time);font-weight:700;font-size:11px}
-#noise{position:absolute;top:45px;height:213px;background:repeating-linear-gradient(135deg,rgba(15,14,19,.92) 0 5px,rgba(36,33,45,.92) 5px 7px);display:flex;align-items:center;justify-content:center;color:var(--foe2);font-size:10px;font-weight:700;writing-mode:vertical-rl;letter-spacing:.1em}
-#pvRegion{position:absolute;left:206px;top:45px;height:213px;background:rgba(63,208,192,.07)}
-#pvLine{position:absolute;top:45px;width:2px;height:213px;background:var(--me)}
-#selfBar{position:absolute;left:206px;top:46px;height:12px;display:flex;align-items:center;overflow:visible;transition:width .24s linear}
-#selfBar span{padding-left:5px;font-size:9.5px;font-weight:700;white-space:nowrap;color:#e9fffb}
-#selfBar.pre{background:rgba(63,208,192,.3);border-right:2px solid var(--me)}
-#selfBar.cast{background:rgba(63,208,192,.55);border-right:2px solid var(--me)}
-
-.mk{position:absolute;width:38px;height:26px;display:flex;align-items:center;justify-content:center;gap:2px;border-radius:5px;border:1.5px solid var(--foe);background:#2a1419;color:#ffdade;transition:left .24s linear,top .24s,opacity .22s,transform .22s,box-shadow .15s}
-.mk b{font-family:var(--f-num);font-size:14px;font-weight:700}
-.mk span{font-size:10px}
-.mk.later{opacity:.5}
-.mk.ch{border-color:var(--just);background:#221a36;color:#ece4ff;border-radius:13px}
-.mk.dl{color:var(--time)}
-.mk.danger{box-shadow:0 0 0 3px rgba(255,77,94,.42)}
-.mk.just{background:var(--just);color:#1a1030;box-shadow:0 0 14px rgba(180,140,255,.8)}
-.mk .lb{position:absolute;top:-15px;left:-6px;right:-6px;text-align:center;font-style:normal;font-size:9px;font-weight:700;color:var(--just)}
-.mk.dl .lb{color:var(--time)}
-.mk.out{opacity:0!important;transform:scale(1.5)}
-
-/* enemy panels */
-.fp{position:absolute;left:664px;width:166px;height:50px;display:flex;gap:8px;align-items:center}
-.fp.dead{opacity:.35}
-.fart{width:50px;height:50px;flex:none;border:1px solid var(--line);border-radius:6px;background:repeating-linear-gradient(135deg,#1c1a23 0 6px,#17151d 6px 12px);display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--dim2);font-size:9px}
-.fart b{font-family:var(--f-num);font-size:16px;color:var(--dim)}
-.fb{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
-.fname{display:flex;justify-content:space-between;gap:4px;font-size:11px;font-weight:700;white-space:nowrap}
-.fnm{overflow:hidden;text-overflow:ellipsis}
-.tchip{font-size:9px;color:var(--bg);background:var(--me);border-radius:3px;padding:0 4px;line-height:14px;flex:none}
-.hpb{display:block;height:5px;background:var(--grid);border-radius:3px;overflow:hidden;position:relative}
-.hpb i{position:absolute;left:0;top:0;bottom:0;background:var(--foe);transition:width .25s}
-.hpb s{position:absolute;top:0;bottom:0;background:repeating-linear-gradient(135deg,var(--foe) 0 2px,transparent 2px 4px)}
+/* stage */
+#floor{position:absolute;left:0;top:214px;width:844px;height:80px;background:linear-gradient(180deg,transparent,rgba(255,255,255,.03))}
+#droid{position:absolute;left:108px;top:142px;width:50px;height:128px;transform-origin:50% 100%}
+#droid svg{display:block}
+#droid.casting{filter:drop-shadow(0 0 5px rgba(70,209,194,.55))}
+#droid.lunge{animation:lunge .36s ease-out}
+@keyframes lunge{35%{transform:translateX(72px) rotate(8deg)}100%{transform:none}}
+#droid.recoil{animation:recoil .3s ease-out}
+@keyframes recoil{25%{transform:translateX(-7px) rotate(-3deg)}100%{transform:none}}
+#droid.hit{animation:dhit .3s linear}
+@keyframes dhit{0%{filter:brightness(2.2) drop-shadow(0 0 6px rgba(255,82,102,.9))}25%{transform:translateX(-5px)}50%{transform:translateX(4px)}75%{transform:translateX(-2px)}100%{transform:none;filter:none}}
+#droid.stagger{animation:stagger .4s ease-out}
+@keyframes stagger{30%{transform:rotate(-10deg) translateX(-6px)}100%{transform:none}}
+#droid.glitch{animation:glitch .3s steps(4)}
+@keyframes glitch{25%{transform:translateX(3px)}50%{transform:translateX(-3px);filter:hue-rotate(60deg)}75%{transform:translateX(2px)}100%{transform:none}}
+.foe{position:absolute;top:170px;width:90px;height:100px;transition:opacity .4s,transform .4s}
+.foe svg{display:block}
+.foe.atk{animation:fatk .26s ease-out}
+@keyframes fatk{40%{transform:translateX(-26px)}100%{transform:none}}
+.foe.ehit{animation:fhit .26s ease-out}
+@keyframes fhit{0%{filter:brightness(2.4)}30%{transform:translateX(10px)}100%{transform:none;filter:none}}
+.foe.ejust{animation:fjust .45s ease-out}
+@keyframes fjust{0%{filter:brightness(2) drop-shadow(0 0 10px #a98bff)}30%{transform:translateX(16px) rotate(6deg)}100%{transform:none;filter:none}}
+.foe.dead{opacity:0;transform:translateY(14px) scaleY(.85)}
+.reticle{position:absolute;left:4px;top:6px;width:82px;height:90px;border:2px solid var(--me);border-radius:4px;opacity:0;transition:opacity .15s;
+  -webkit-mask:linear-gradient(#000 0 0) top left/14px 14px no-repeat,linear-gradient(#000 0 0) top right/14px 14px no-repeat,linear-gradient(#000 0 0) bottom left/14px 14px no-repeat,linear-gradient(#000 0 0) bottom right/14px 14px no-repeat;
+  mask:linear-gradient(#000 0 0) top left/14px 14px no-repeat,linear-gradient(#000 0 0) top right/14px 14px no-repeat,linear-gradient(#000 0 0) bottom left/14px 14px no-repeat,linear-gradient(#000 0 0) bottom right/14px 14px no-repeat}
+.foe.tgt .reticle{opacity:1}
+.finfo{position:absolute;top:272px;width:100px;display:flex;flex-direction:column;gap:3px;transition:opacity .4s}
+.finfo.dead{opacity:.25}
 .frow{display:flex;gap:4px;align-items:center}
-.hpt{font-size:11px;color:var(--fg2)}
-.st{font-size:9px;color:var(--fg2);border:1px solid #4a4458;border-radius:3px;padding:0 3px;line-height:13px}
-.st.c{color:var(--foe2);border-color:rgba(255,77,94,.5)}
+.ftag{width:15px;height:15px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-family:var(--f-num);font-size:10px;font-weight:700;background:#24222b;flex:none}
+.ftag.tgt{background:var(--me);color:var(--bg)}
+.fhp{position:relative;display:block;width:58px;height:4px;background:#24222b;border-radius:2px;overflow:hidden}
+.fhp i{position:absolute;left:0;top:0;bottom:0;background:var(--neutral);transition:width .25s}
+.fhp s{position:absolute;top:0;bottom:0;background:repeating-linear-gradient(135deg,var(--foe) 0 2px,transparent 2px 4px)}
+.fhpt{font-family:var(--f-num);font-size:10.5px;color:var(--fg2)}
+.fhpt.pv{color:var(--foe2)}
+.fst{display:inline-flex;gap:2px;align-items:center;color:var(--foe2);font-family:var(--f-num);font-size:10px;font-weight:700}
+.fst .ic svg{width:11px;height:11px}
 
-/* parts */
-.part{position:absolute;left:72px;width:126px;height:35px;padding:3px 0 0 8px;border-left:2px solid var(--line);transition:background .2s}
-.part.ih{border-left-color:var(--foe)}
-.part.ic{border-left-color:var(--just)}
-.part.hit{background:rgba(255,77,94,.18)}
-.ph{display:flex;align-items:baseline;justify-content:space-between;padding-right:2px}
-.pn{font-size:11px;font-weight:700;white-space:nowrap}
-.pn em{font-style:normal;font-weight:400;font-size:9.5px;color:var(--dim);margin-left:3px}
-.ptag{text-decoration:none;font-weight:700;font-size:9px;margin-left:4px;color:var(--foe2)}
-.part.broken .pn{color:var(--dim2)}
-.part.broken .ptag{color:var(--bg);background:var(--foe);border-radius:3px;padding:0 3px}
-.pnum{font-family:var(--f-num);font-size:11px;font-weight:600}
-.pb{display:flex;align-items:center;gap:4px;margin-top:3px}
-.pbar{position:relative;display:block;width:50px;height:5px;background:var(--grid);border-radius:2px;overflow:hidden;flex:none}
-.pf{position:absolute;left:0;top:0;bottom:0;background:var(--me);transition:width .25s}
-.pl{position:absolute;top:0;bottom:0;background:repeating-linear-gradient(135deg,var(--foe) 0 2px,transparent 2px 4px)}
-.pinc{border-radius:3px;font-size:9.5px;font-weight:700;padding:0 4px;height:14px;line-height:12px;white-space:nowrap;border:1px solid}
-.pinc.h{background:#2a1419;color:#ffdade;border-color:var(--foe)}
-.pinc.c{background:#221a36;color:#ece4ff;border-color:var(--just)}
-.pinc.j{background:var(--just);color:#1a1030;border-color:var(--just)}
+/* status column */
+#body{position:absolute;left:8px;top:8px;width:74px;display:flex;align-items:center;gap:4px;color:var(--fg2)}
+#bodyBar{position:relative;display:block;flex:1;height:4px;background:#24222b;border-radius:2px;overflow:hidden}
+#bodyBar i{position:absolute;left:0;top:0;bottom:0;background:var(--neutral);transition:width .25s}
+#bodyNum{font-family:var(--f-num);font-size:10.5px}
+#bodyNum.pv{color:var(--foe2)}
+#chips{position:absolute;left:8px;top:26px;display:flex;gap:10px}
+.chip{display:inline-flex;align-items:center;gap:3px;font-family:var(--f-num);font-size:11px;font-weight:700}
+#blk{color:var(--fg)} #blk.zero{color:var(--dim2)}
+#blk.flash{animation:blkflash .35s}
+@keyframes blkflash{0%{color:#fff;filter:drop-shadow(0 0 6px #fff)}100%{filter:none}}
+#swf{color:var(--time)}
+.part{position:absolute;left:8px;width:74px;display:block;transition:background .2s}
+.ph{display:flex;align-items:center;gap:4px}
+.pico{position:relative;display:inline-flex;color:var(--fg)}
+.pico svg{width:12px;height:12px;display:block}
+.pname{font-size:10.5px;font-weight:700}
+.pnum{margin-left:auto;font-family:var(--f-num);font-size:10.5px;font-weight:600;color:var(--fg2)}
+.pnum.pv{color:var(--foe2)}
+.pips{display:flex;gap:2px;margin-top:4px}
+.pip{display:block;height:7px;border-radius:1px;background:#24222b}
+.pip.full{background:var(--neutral)}
+.pip.loss{background:repeating-linear-gradient(135deg,var(--foe) 0 2px,#3a1820 2px 4px)}
+.pip.worn{background:repeating-linear-gradient(135deg,#2c2a33 0 2px,#16151b 2px 4px)}
+.part.th-hit .pico,.part.th-hit .pname{color:var(--foe2)}
+.part.th-ch .pico,.part.th-ch .pname{color:var(--just2)}
+.part.broken .pname{color:var(--dim2)}
+.part.broken .pico{color:var(--dim2)}
+.part.broken .pico::after{content:"";position:absolute;left:-2px;top:5px;width:16px;height:2px;background:var(--foe);transform:rotate(-40deg)}
+.part.flash{background:rgba(255,82,102,.2)}
+#menuBtn{position:absolute;left:806px;top:8px;width:28px;height:22px;border:1px solid var(--line);border-radius:4px;background:var(--panel);color:var(--dim);display:flex;align-items:center;justify-content:center}
 
 /* hand */
-.pile{position:absolute;left:10px;width:58px;height:36px;border:1px solid var(--line);border-radius:6px;background:var(--panel2);color:var(--dim);font-size:9.5px;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.pile b{font-family:var(--f-num);font-size:13px;color:#a9a3b4}
-.card{position:absolute;top:268px;width:120px;height:116px;overflow:hidden;border-radius:8px;background:var(--panel);border:1px solid var(--line);transition:top .15s,border-color .15s,box-shadow .15s}
-.card.sel{top:260px;border:1.5px solid var(--me);box-shadow:0 8px 18px rgba(63,208,192,.22)}
-.card:disabled{opacity:.55;cursor:default}
-.card.static{position:relative;top:auto}
-.cart{position:relative;display:flex;align-items:center;justify-content:center;height:44px;background:repeating-linear-gradient(135deg,#1f1c27 0 6px,#1a1821 6px 12px);color:var(--dim2);font-size:9px}
-.cost{position:absolute;left:5px;top:5px;width:24px;height:24px;border:1.5px solid var(--time);border-radius:12px;background:var(--bg);color:var(--time);font-family:var(--f-num);font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center}
-.ctype{position:absolute;right:6px;top:5px;font-size:9px;color:var(--dim)}
-.cname{display:block;padding:5px 7px 0;font-size:12px;font-weight:700;white-space:nowrap}
-.ctext{display:block;padding:2px 7px 0;font-size:10.5px;color:var(--fg2)}
-.ctext b{font-weight:700}
-.ctext .up{color:var(--me)}
-.kw-me{font-weight:700;color:var(--me)} .kw-t{font-weight:700;color:var(--time)} .kw-f{font-weight:700;color:var(--foe2)}
-.katom{display:inline-block;margin:3px 0 0 7px;font-size:9.5px;font-weight:700;border:1px solid #4a4458;border-radius:3px;padding:0 4px;line-height:14px}
-.csrc{position:absolute;right:7px;bottom:5px;font-size:9px;color:var(--dim2)}
-#redraw{position:absolute;left:718px;top:268px;width:116px;height:116px;border:1.5px solid var(--time);border-radius:8px;background:#1d170f;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;transition:top .15s,box-shadow .15s}
-#redraw.sel{top:260px;box-shadow:0 8px 18px rgba(242,163,58,.22)}
-#redraw:disabled{opacity:.45;cursor:default}
-#redraw .t1{font-size:12px;font-weight:700}
-#redraw .t2{font-family:var(--f-num);font-size:28px;line-height:1.1;color:var(--time);font-weight:700}
-#redraw .t3{font-size:10px;color:#a9a3b4}
-#redraw .t4{font-size:9px;color:var(--dim2);margin-top:3px}
+#handShade{position:absolute;left:0;top:200px;width:844px;height:190px;background:linear-gradient(180deg,rgba(14,13,17,0),rgba(14,13,17,.92) 30%);opacity:0;transition:opacity .2s;pointer-events:none}
+#handShade.on{opacity:1}
+.pile{position:absolute;left:8px;width:66px;height:36px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--fg2);display:flex;align-items:center;justify-content:center;gap:6px}
+.pile .ic svg{width:14px;height:14px}
+.pile b{font-family:var(--f-num);font-size:13px}
+#pileDisc{color:var(--dim)}
+.card{position:absolute;overflow:hidden;border-radius:8px;background:var(--raised);border:1px solid #2a2832;color:var(--fg);
+  transition:left .22s cubic-bezier(.2,.8,.2,1),top .22s cubic-bezier(.2,.8,.2,1),width .2s,height .2s,transform .22s cubic-bezier(.2,.8,.2,1),opacity .22s,border-color .15s,box-shadow .2s}
+.card.sel{border:1.5px solid var(--me);box-shadow:0 10px 22px rgba(70,209,194,.25)}
+.card:disabled{cursor:default}
+.card.static{position:relative;width:122px;height:132px;transition:none}
+.cart{position:relative;display:block;height:44px;background:repeating-linear-gradient(135deg,#1d1c23 0 6px,#18171d 6px 12px);transition:height .2s}
+.card.exp .cart{height:58px}
+.cost{position:absolute;left:4px;top:4px;width:20px;height:20px;border:1.5px solid var(--time);border-radius:10px;background:var(--bg);color:var(--time);font-family:var(--f-num);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.atom{position:absolute;right:6px;top:7px;width:8px;height:8px;background:var(--fg);transform:rotate(45deg)}
+.cval{position:absolute;right:6px;bottom:3px;display:flex;align-items:center;gap:3px}
+.cval b{font-family:var(--f-num);font-size:16px;line-height:1}
+.cname{display:block;padding:5px 6px 0;font-size:11px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ctext{display:none;padding:3px 7px 0;font-size:10.5px;color:var(--fg2)}
+.card.exp .ctext{display:block}
+.kwp{display:inline-block;margin-top:4px;font-size:9.5px;font-weight:700;border:1px solid #3a3743;border-radius:3px;padding:0 4px;line-height:14px;color:var(--fg)}
+.kw-me{font-weight:700;color:var(--fg)} .kw-t{font-weight:700;color:var(--fg)} .kw-f{font-weight:700;color:var(--foe2)}
+#toggle{position:absolute;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--dim);display:flex;align-items:center;justify-content:center;transition:left .2s,top .2s,width .2s,height .2s}
+#toggle svg{transition:transform .2s}
+#toggle.exp svg{transform:rotate(180deg)}
+#detail{position:absolute;left:560px;top:306px;width:172px;height:76px;border-radius:8px;background:var(--panel);border:1px solid var(--line);padding:7px 9px;display:flex;flex-direction:column;gap:3px;transition:opacity .15s}
+#detail .dn{display:flex;justify-content:space-between;font-size:11.5px;font-weight:700}
+#detail .dn b{color:var(--time);font-family:var(--f-num)}
+#detail .dt{font-size:10.5px;color:var(--fg2)}
+#redraw{position:absolute;left:742px;top:306px;width:92px;height:76px;border:1px solid #2c2a33;border-radius:8px;background:#141318;color:#9a96a3;display:flex;align-items:center;justify-content:center;gap:8px;transition:top .15s,border-color .15s,box-shadow .15s}
+#redraw svg{width:20px;height:20px}
+#redraw b{font-family:var(--f-num);font-size:24px;color:var(--time)}
+#redraw.sel{top:296px;border:1.5px solid var(--me);box-shadow:0 10px 22px rgba(70,209,194,.2)}
+#redraw:disabled{opacity:.4;cursor:default}
 
 /* fx */
-.float{position:absolute;transform:translate(-50%,-50%);pointer-events:none;font-family:var(--f-num);font-weight:700;font-size:16px;white-space:nowrap;text-shadow:0 0 6px #000,0 0 2px #000;animation:rise .95s ease-out forwards;z-index:40}
-.float.foe{color:var(--foe2)} .float.me{color:var(--me)} .float.time{color:var(--time);font-size:13px} .float.just{color:var(--just);font-size:22px} .float.dim{color:var(--dim);font-size:12px}
+#fx,#floats{position:absolute;inset:0;pointer-events:none}
+.float{position:absolute;transform:translate(-50%,-50%);font-family:var(--f-num);font-weight:700;font-size:17px;white-space:nowrap;text-shadow:0 0 6px #000,0 1px 0 #000;animation:rise .9s ease-out forwards;color:#fff}
+.float.foe{color:var(--foe2)} .float.dim{color:var(--dim);font-size:13px} .float.time{color:var(--time);font-size:14px} .float.big{font-size:26px;text-shadow:0 0 10px rgba(169,139,255,.9),0 2px 0 #000}
 @keyframes rise{from{opacity:1;margin-top:0}to{opacity:0;margin-top:-26px}}
-#toast{position:absolute;left:0;right:0;top:132px;text-align:center;font-size:20px;font-weight:700;letter-spacing:.12em;opacity:0;pointer-events:none;z-index:41;text-shadow:0 0 10px #000}
-#toast.show{animation:toast 1.7s ease-out}
+.burst{position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;border:2px solid var(--just);box-shadow:0 0 18px rgba(169,139,255,.9),inset 0 0 12px rgba(169,139,255,.6);animation:burst .5s ease-out forwards}
+@keyframes burst{0%{transform:scale(.4);opacity:1}70%{opacity:1}100%{transform:scale(1.8);opacity:0}}
+.shard{position:absolute;width:9px;height:3px;background:var(--just2);transition:transform .45s ease-out,opacity .45s}
+.beam{position:absolute;height:3px;transform-origin:0 50%;border-radius:2px;background:linear-gradient(90deg,rgba(232,255,251,0),#e8fffb 25%,#cfeeea);box-shadow:0 0 10px rgba(232,255,251,.7);animation:beam .3s ease-out forwards}
+@keyframes beam{0%{opacity:0;clip-path:inset(0 100% 0 0)}30%{opacity:1;clip-path:inset(0 0 0 0)}100%{opacity:0}}
+.slash{position:absolute;width:60px;height:3px;margin:-1px 0 0 -30px;background:#fff;box-shadow:0 0 8px #fff;transform:rotate(-35deg);animation:slash .25s ease-out forwards}
+@keyframes slash{0%{opacity:0;transform:rotate(-35deg) scaleX(.2)}40%{opacity:1;transform:rotate(-35deg) scaleX(1)}100%{opacity:0;transform:rotate(-35deg) scaleX(1.2)}}
+.shield{position:absolute;left:92px;top:136px;width:82px;height:140px;border:1.5px solid rgba(232,230,236,.8);border-radius:40% 40% 46% 46%;box-shadow:0 0 14px rgba(232,230,236,.35),inset 0 0 14px rgba(232,230,236,.2);animation:shield .55s ease-out forwards}
+@keyframes shield{0%{opacity:0;transform:scale(.7)}35%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.06)}}
+.noise{position:absolute;width:6px;height:6px;background:var(--fg2);transition:left .32s ease-in,top .32s ease-in,opacity .32s}
+.ghost{position:absolute;width:24px;height:34px;border:1.5px solid var(--foe);border-radius:4px;background:var(--raised);transition:left .4s ease-in,top .4s ease-in,opacity .4s,transform .4s}
+.spark{position:absolute;width:4px;height:4px;border-radius:2px;background:#ffd28a;transition:transform .4s ease-out,opacity .4s}
+.after{position:absolute;opacity:.35;transition:opacity .3s,transform .3s}
+#toast{position:absolute;left:0;right:0;top:120px;text-align:center;font-size:18px;font-weight:700;letter-spacing:.14em;opacity:0;pointer-events:none;text-shadow:0 0 10px #000}
+#toast.show{animation:toast 1.6s ease-out}
 @keyframes toast{0%{opacity:0;transform:translateY(6px)}15%{opacity:1;transform:none}70%{opacity:1}100%{opacity:0}}
 
 /* overlay */
-#ov{position:absolute;inset:0;background:rgba(8,7,11,.8);display:flex;align-items:center;justify-content:center;z-index:50;padding:14px}
-#ov[hidden]{display:none!important}
-.box{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 18px;max-width:560px;width:100%;max-height:362px;overflow:auto}
+#ov{position:absolute;inset:0;background:rgba(8,7,11,.82);display:flex;align-items:center;justify-content:center;z-index:50;padding:14px}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 18px;max-width:580px;width:100%;max-height:362px;overflow:auto}
 .box h2{font-size:16px;margin:0 0 4px;letter-spacing:.04em}
 .box .sub{color:var(--dim);margin:0 0 8px}
-.box .eff{font-size:12px;margin:6px 0 10px;color:var(--fg)}
+.box .eff{font-size:12px;margin:6px 0 10px}
 .box ul,.box ol{margin:0 0 10px;padding-left:18px;display:flex;flex-direction:column;gap:3px}
 .box li.cur{color:var(--time)}
 .gl{margin:0 0 10px;display:grid;grid-template-columns:auto 1fr;gap:3px 10px;font-size:10.5px}
@@ -179,10 +225,8 @@ button:focus-visible{outline:2px solid var(--time);outline-offset:2px}
 .btn.ghost{background:transparent;color:var(--time)}
 .opts{display:flex;gap:10px;justify-content:center;margin:8px 0 12px;flex-wrap:wrap}
 .opts.col{flex-direction:column;align-items:stretch}
-.opt{border:1px solid var(--line);background:var(--panel2);border-radius:8px;padding:9px 12px;display:flex;flex-direction:column;gap:2px}
-.opt b{font-size:12px}
-.opt span{color:var(--dim)}
-.opt:disabled{opacity:.4;cursor:default}
+.opt{border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:9px 12px;display:flex;flex-direction:column;gap:2px}
+.opt b{font-size:12px} .opt span{color:var(--dim)} .opt:disabled{opacity:.4;cursor:default}
 .dk{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:0 0 10px}
 @media (prefers-reduced-motion:reduce){#stage *{transition:none!important;animation:none!important}}
 </style>
@@ -191,59 +235,99 @@ button:focus-visible{outline:2px solid var(--time);outline-offset:2px}
 <div id="wrap">
   <div id="rot">横画面にすると大きく表示されます</div>
   <div id="stage">
-    <div id="lanes"></div>
-    <div id="ticks" class="nopt"></div>
-    <div id="noise" class="nopt" hidden>演算破損 先読み不能</div>
-    <div id="pvRegion" class="nopt" hidden></div>
-    <div id="pvLine" class="nopt" hidden></div>
-    <div id="selfBar" class="nopt" hidden><span></span></div>
-    <div id="marks" class="nopt"></div>
-    <div id="foes"></div>
+    <div id="shaker">
+      <div id="tl">
+        <div id="screen"></div>
+        <div id="ticks" class="np"></div>
+        <svg id="nowTri" class="np" width="12" height="9" viewBox="0 0 12 9" aria-label="今"><path d="M0 0H12L6 9Z" fill="#e9a23b"/></svg>
+        <div id="nowLine" class="np"></div>
+        <div id="rows"></div>
+        <div id="pvRegion" class="np" hidden></div>
+        <div id="pvLine" class="np" hidden></div>
+        <div id="selfBar" class="np" hidden></div>
+        <div id="marks" class="np"></div>
+      </div>
+      <div id="floor" class="np"></div>
+      <div id="droid" class="np">
+        <svg width="50" height="128" viewBox="0 0 98 250" role="img" aria-label="アンドロイド K-7">
+          <path d="M26 50L14 116" stroke="#2c2a33" stroke-width="7" stroke-linecap="round"/>
+          <path d="M40 134L34 236M58 134L66 236" stroke="#3a3743" stroke-width="10" stroke-linecap="round"/>
+          <rect x="26" y="232" width="16" height="7" rx="2" fill="#3a3743"/><rect x="60" y="232" width="16" height="7" rx="2" fill="#3a3743"/>
+          <rect x="30" y="120" width="38" height="14" rx="3" fill="#1c1b22" stroke="#55505f" stroke-width="2"/>
+          <path d="M24 44H74L68 122H30Z" fill="#1c1b22" stroke="#55505f" stroke-width="2"/>
+          <rect x="44" y="30" width="10" height="10" fill="#2c2a33"/>
+          <rect x="34" y="6" width="30" height="26" rx="8" fill="#1c1b22" stroke="#55505f" stroke-width="2"/>
+          <rect x="40" y="15" width="20" height="5" rx="2" fill="#77727f"/>
+          <rect x="66" y="34" width="28" height="9" rx="2" fill="#1c1b22" stroke="#55505f" stroke-width="2"/>
+          <path d="M72 50L84 110" stroke="#3a3743" stroke-width="8" stroke-linecap="round"/>
+          <circle cx="85" cy="115" r="6" fill="#3a3743"/>
+        </svg>
+      </div>
+      <div id="foes"></div>
+      <div id="fx"></div>
 
-    <svg style="position:absolute;left:6px;top:58px" width="70" height="196" viewBox="0 0 70 196" role="img" aria-label="アンドロイドの絵(仮)">
-      <rect x="23" y="4" width="24" height="24" rx="6" fill="#17151d" stroke="#3d3849" stroke-width="1.5"/>
-      <path d="M31 28v6h8v-6" fill="none" stroke="#3d3849" stroke-width="1.5"/>
-      <path d="M18 36h34l-4 52H22z" fill="#17151d" stroke="#3d3849" stroke-width="1.5"/>
-      <path d="M16 38l-8 50M54 38l8 50" fill="none" stroke="#3d3849" stroke-width="5" stroke-linecap="round"/>
-      <path d="M27 92l-4 96M43 92l4 96" fill="none" stroke="#3d3849" stroke-width="6" stroke-linecap="round"/>
-      <text x="35" y="194" text-anchor="middle" font-size="9" fill="#5f5a6b" font-family="Chakra Petch, sans-serif">K-7 絵</text>
-    </svg>
-    <div id="parts"></div>
+      <div id="body"><span class="ic" id="icCore"></span><span id="bodyBar"><i></i></span><span id="bodyNum"></span></div>
+      <div id="chips"><span class="chip" id="blk"></span><span class="chip" id="swf" hidden></span></div>
+      <div id="parts"></div>
+      <button id="menuBtn" type="button" data-act="menu" aria-label="メニュー"></button>
 
-    <button class="pile" id="pileDraw" type="button" style="top:286px">山札<b id="nDraw">0</b></button>
-    <button class="pile" id="pileDisc" type="button" style="top:328px">捨て札<b id="nDisc">0</b></button>
-    <div id="hand"></div>
-    <button id="redraw" type="button"><span class="t1">引き直し</span><span class="t2" id="rdCost">5</span><span class="t3">サイクル</span><span class="t4">残りの手札の枚数</span></button>
+      <div id="handShade"></div>
+      <button class="pile" id="pileDraw" type="button" style="top:306px" aria-label="山札"><span class="ic" id="icDeck"></span><b id="nDraw">0</b></button>
+      <button class="pile" id="pileDisc" type="button" style="top:346px" aria-label="捨て札"><span class="ic" id="icDisc"></span><b id="nDisc">0</b></button>
+      <div id="hand"></div>
+      <button id="toggle" type="button" aria-label="手札の大きさを切り替える"><svg width="10" height="7" viewBox="0 0 10 7" aria-hidden="true"><path d="M1 6L5 2L9 6" stroke="currentColor" stroke-width="1.5" fill="none"/></svg></button>
+      <div id="detail" hidden></div>
+      <button id="redraw" type="button" aria-label="引き直し"><span id="icRedraw"></span><b id="rdCost">5</b></button>
 
-    <div id="top">
-      <button id="menuBtn" type="button" data-act="menu" aria-label="メニュー"><svg width="14" height="10" viewBox="0 0 14 10" aria-hidden="true"><path d="M0 1h14M0 5h14M0 9h14" stroke="currentColor" stroke-width="1.5" fill="none"/></svg></button>
-      <span id="where"></span>
-      <span id="msg"></span>
-      <span class="bl">本体</span><span class="bbar"><i id="bodyFill"></i></span><span id="bodyNum" class="num"></span>
+      <div id="floats"></div>
+      <div id="toast"></div>
     </div>
-    <div id="chips"></div>
-
-    <div id="floats"></div>
-    <div id="toast"></div>
     <div id="ov" hidden><div class="box" id="ovbox"></div></div>
   </div>
 </div>
 
 <script>
 const $ = s => document.querySelector(s);
-const X0 = 206, PX = 36.2, xs = c => X0 + c * PX, laneTop = i => 60 + i * 66;
+const NOW = 180, PX = 37, xs = c => NOW + c * PX, ROWY = [58, 94, 130], VIEW = 12;
+const DROID = {x: 133, y: 206, sx: 156, sy: 162};
 const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
-const sleep = ms => new Promise(r => setTimeout(r, RM ? Math.min(ms, 60) : ms));
-const TICK = 270;
+const sleep = ms => new Promise(r => setTimeout(r, RM ? Math.min(ms, 40) : ms));
+const T_TICK = 140, T_SWIFT = 90;
+
+const IC = {
+  phys:'<svg viewBox="0 0 12 12"><path d="M2 10L10 2M7 2H10V5" stroke="currentColor" stroke-width="1.6" fill="none"/></svg>',
+  opt:'<svg viewBox="0 0 12 12"><path d="M1 6H8" stroke="currentColor" stroke-width="1.6"/><circle cx="9.5" cy="6" r="2" fill="currentColor"/></svg>',
+  block:'<svg viewBox="0 0 12 12"><path d="M6 1L11 3V6C11 9 8.5 10.5 6 11C3.5 10.5 1 9 1 6V3Z" stroke="currentColor" stroke-width="1.4" fill="none"/></svg>',
+  delay:'<svg viewBox="0 0 12 12"><path d="M2 1H10M2 11H10M3 1L9 11M9 1L3 11" stroke="currentColor" stroke-width="1.4" fill="none"/></svg>',
+  swift:'<svg viewBox="0 0 12 12"><path d="M2 2L6 6L2 10M6 2L10 6L6 10" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>',
+  crack:'<svg viewBox="0 0 12 12"><path d="M6 0L4 4L7 6L4 9L6 12" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>',
+  core:'<svg viewBox="0 0 12 12"><path d="M6 .5L11 3.5V8.5L6 11.5L1 8.5V3.5Z" stroke="currentColor" stroke-width="1.3" fill="none"/><circle cx="6" cy="6" r="1.8" fill="currentColor"/></svg>',
+  deck:'<svg viewBox="0 0 14 14"><rect x="3" y="1" width="9" height="11" rx="1.5" stroke="currentColor" stroke-width="1.2" fill="none"/><path d="M1 4V13H9" stroke="currentColor" stroke-width="1.2" fill="none"/></svg>',
+  disc:'<svg viewBox="0 0 14 14"><rect x="3" y="2" width="9" height="11" rx="1.5" stroke="currentColor" stroke-width="1.2" fill="none" transform="rotate(12 7 7)"/><path d="M5 6L9 10M9 6L5 10" stroke="currentColor" stroke-width="1.2"/></svg>',
+  redraw:'<svg viewBox="0 0 20 20"><path d="M16 7A7 7 0 1 0 17 11" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/><path d="M16 2V7H11" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  menu:'<svg width="12" height="9" viewBox="0 0 14 10"><path d="M0 1h14M0 5h14M0 9h14" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>',
+  calc:'<svg viewBox="0 0 12 12"><rect x="2" y="1.5" width="8" height="7" rx="2" stroke="currentColor" stroke-width="1.3" fill="none"/><path d="M4 5H8M6 8.5V11" stroke="currentColor" stroke-width="1.3"/></svg>',
+  arm:'<svg viewBox="0 0 12 12"><path d="M1 5H11M1 8H7M3 5V8" stroke="currentColor" stroke-width="1.3" fill="none"/></svg>',
+  out:'<svg viewBox="0 0 12 12"><path d="M3 1V6L8 10" stroke="currentColor" stroke-width="1.5" fill="none"/><circle cx="9" cy="10" r="1.6" fill="currentColor"/></svg>',
+  dur:'<svg viewBox="0 0 12 12"><path d="M2 2H10L9 10H3Z" stroke="currentColor" stroke-width="1.3" fill="none"/></svg>',
+  mob:'<svg viewBox="0 0 12 12"><path d="M4 1V7L2 11M8 1V7L10 11" stroke="currentColor" stroke-width="1.4" fill="none"/></svg>',
+};
+const SPR = {
+  drone:'<svg width="90" height="100" viewBox="0 -4 60 66" aria-hidden="true"><path d="M8 16h44" stroke="#55505f" stroke-width="2"/><path d="M30 16v6" stroke="#55505f" stroke-width="2"/><circle cx="30" cy="34" r="13" fill="#1c1b22" stroke="#55505f" stroke-width="1.2"/><circle cx="25" cy="34" r="4" fill="#77727f"/><path d="M22 46l-4 8M38 46l4 8" stroke="#55505f" stroke-width="2"/></svg>',
+  exec:'<svg width="90" height="100" viewBox="0 -4 60 66" aria-hidden="true"><rect x="16" y="6" width="18" height="12" rx="3" fill="#1c1b22" stroke="#55505f" stroke-width="1.2"/><rect x="10" y="20" width="32" height="28" rx="4" fill="#1c1b22" stroke="#55505f" stroke-width="1.2"/><rect x="2" y="22" width="10" height="26" rx="3" fill="#1c1b22" stroke="#55505f" stroke-width="1.2"/><path d="M20 48v10M34 48v10" stroke="#55505f" stroke-width="4" stroke-linecap="round"/><rect x="20" y="10" width="10" height="3" fill="#77727f"/></svg>',
+  hacker:'<svg width="90" height="100" viewBox="0 -4 60 66" aria-hidden="true"><circle cx="34" cy="12" r="7" fill="#1c1b22" stroke="#55505f" stroke-width="1.2"/><path d="M34 5l4-5" stroke="#55505f" stroke-width="1.2"/><path d="M34 20v22M34 26l-10 8M34 26l8 10M34 42l-6 16M34 42l6 16" stroke="#55505f" stroke-width="2.5" stroke-linecap="round"/><path d="M6 20h10M4 28h8M8 36h10" stroke="#3a3743" stroke-width="2"/></svg>',
+  warden:'<svg width="90" height="100" viewBox="0 -4 60 66" aria-hidden="true"><rect x="19" y="0" width="22" height="58" rx="4" fill="#1c1b22" stroke="#55505f" stroke-width="1.2"/><rect x="6" y="14" width="10" height="30" rx="2" fill="#1c1b22" stroke="#55505f" stroke-width="1.2"/><rect x="44" y="14" width="10" height="30" rx="2" fill="#1c1b22" stroke="#55505f" stroke-width="1.2"/><circle cx="30" cy="16" r="5" fill="#77727f"/><path d="M24 30h12M24 36h12M24 42h12" stroke="#3a3743" stroke-width="2"/></svg>',
+};
 
 const PARTS = [
-  {id:'calc', fn:'演算', pt:'', ab:'演', name:'〘標準演算核〙', max:5, text:'タイムラインを12サイクル先まで見る。破損すると6サイクル先までしか見えない。'},
-  {id:'arm',  fn:'武装', pt:'', ab:'武', name:'〘CXR34レールガン〙', max:6, text:'光学威力+1。《チャージショット》2枚をデッキに加える。'},
-  {id:'out',  fn:'出力', pt:'腕部', ab:'出', name:'〘汎用マニピュレータ〙', max:7, text:'物理威力+1。'},
-  {id:'dur',  fn:'耐久', pt:'基体', ab:'耐', name:'〘標準フレーム〙', max:9, text:'ブロックを得るとき、+1。'},
-  {id:'mob',  fn:'機動', pt:'脚部', ab:'機', name:'〘デトロイト噴射機構〙', max:6, text:'戦闘開始時、スウィフト2。自分がディレイされたとき、スウィフト1を得る。'},
+  {id:'calc', fn:'演算', pt:'', name:'〘標準演算核〙', max:5, text:'JUSTで溜め技を潰すと、その敵にクラック1。'},
+  {id:'arm',  fn:'武装', pt:'', name:'〘CXR34レールガン〙', max:6, text:'光学威力+1。《チャージショット》2枚をデッキに加える。'},
+  {id:'out',  fn:'出力', pt:'腕部', name:'〘汎用マニピュレータ〙', max:7, text:'物理威力+1。'},
+  {id:'dur',  fn:'耐久', pt:'基体', name:'〘標準フレーム〙', max:9, text:'ブロックを得るとき、+1。'},
+  {id:'mob',  fn:'機動', pt:'脚部', name:'〘デトロイト噴射機構〙', max:6, text:'戦闘開始時、スウィフト2。自分がディレイされたとき、スウィフト1を得る。'},
 ];
 const PART_BY = Object.fromEntries(PARTS.map(p => [p.id, p]));
+const AB = {calc:'演', arm:'武', out:'出', dur:'耐', mob:'機'};
 
 const CARDS = {
   jab:      {name:'ジャブ', cost:1, tgt:true, dmg:{t:'phys', n:3}},
@@ -262,12 +346,12 @@ const CARDS = {
 const START_DECK = ['jab','jab','jab','slash','slash','blow','guard','guard','guard','hack','hack','charge','charge'];
 
 const FOES = {
-  droneA:{name:'警備ドローン', tag:'A', hp:12, start:3, pat:[{n:'射撃', d:3, dl:3, p:'calc'}], pool:['jab','rapid','guard','wall','emp']},
-  droneB:{name:'警備ドローン', tag:'B', hp:12, start:4, pat:[{n:'射撃', d:3, dl:4, p:'out'}], pool:['jab','rapid','guard','wall','emp']},
-  exec:  {name:'処刑ユニット', tag:'X', hp:26, start:3, pat:[{n:'殴打', d:4, dl:3, p:'out'},{n:'殴打', d:4, dl:3, p:'out'},{n:'粉砕砲', d:12, dl:4, p:'dur', ch:true}], pool:['slash','blow','wall','crackshot']},
-  hacker:{name:'ハッカー', tag:'H', hp:10, start:4, pat:[{n:'割り込み', kind:'delay', v:2, dl:4},{n:'射撃', d:2, dl:3, p:'calc'}], pool:['hack','backflow','overclock','crackshot']},
-  warden:{name:'管理AI ウォーデン', tag:'W', hp:44, start:3, pat:[{n:'照射', d:4, dl:3, p:'calc'},{n:'照射', d:4, dl:2, p:'arm'},{n:'消去プロトコル', d:16, dl:5, p:'dur', ch:true}], pool:[]},
-  escort:{name:'随伴ドローン', tag:'E', hp:10, start:2, pat:[{n:'射撃', d:2, dl:3, p:'mob'}], pool:[]},
+  droneA:{name:'警備ドローン', tag:'A', kind:'drone', hp:12, start:3, pat:[{n:'射撃', d:3, dl:3, p:'calc'}], pool:['jab','rapid','guard','wall','emp']},
+  droneB:{name:'警備ドローン', tag:'B', kind:'drone', hp:12, start:4, pat:[{n:'射撃', d:3, dl:4, p:'out'}], pool:['jab','rapid','guard','wall','emp']},
+  exec:  {name:'処刑ユニット', tag:'X', kind:'exec', hp:26, start:3, pat:[{n:'殴打', d:4, dl:3, p:'out'},{n:'殴打', d:4, dl:3, p:'out'},{n:'粉砕砲', d:12, dl:4, p:'dur', ch:true}], pool:['slash','blow','wall','crackshot']},
+  hacker:{name:'ハッカー', tag:'H', kind:'hacker', hp:10, start:4, pat:[{n:'割り込み', kind:'delay', v:2, dl:4},{n:'射撃', d:2, dl:3, p:'calc'}], pool:['hack','backflow','overclock','crackshot']},
+  warden:{name:'管理AI ウォーデン', tag:'W', kind:'warden', hp:44, start:3, pat:[{n:'照射', d:4, dl:3, p:'calc'},{n:'照射', d:4, dl:2, p:'arm'},{n:'消去プロトコル', d:16, dl:5, p:'dur', ch:true}], pool:[]},
+  escort:{name:'随伴ドローン', tag:'E', kind:'drone', hp:10, start:2, pat:[{n:'射撃', d:2, dl:3, p:'mob'}], pool:[]},
 };
 const BATTLES = [
   {area:'エリア1', room:'搬入ゲート', no:2, foes:['droneA','droneB']},
@@ -275,37 +359,37 @@ const BATTLES = [
   {area:'エリア1', room:'中枢', no:6, boss:true, foes:['warden','escort']},
 ];
 const FLOW = ['b0','learn','b1','learn','rest','b2','clear'];
-
 const GLOSS = {
   'サイクル':'時間の単位。カードのコストもサイクルで表す。時間はカードを使ったときだけ進む。',
   'ディレイ':'ディレイX: 対象の次の行動をXサイクル遅らせる。自分が受けると、実行中のカードの完了がXサイクル遅れる。',
   'スウィフト':'スウィフトX: 自分だけXサイクル加速する。サイクルを使うとき先に消費され、その間は敵の予定が進まない。',
   'ブロック':'ブロックX: X分だけ、パーツへのダメージを減らす。全部位にかかり、使い切るまで残る。',
-  'アトミック':'このカードは、タイムラインの攻撃で中断されない。',
+  'アトミック':'このカードは、攻撃を受けても中断されない。カードの右上の菱形が目印。',
   'クラック':'クラックX: ダメージを受けるとき、その量がX増える。消えずに残る。',
-  'ジャスト':'カードの完了と敵の行動が同じサイクルなら自分が先に動く。溜め技ならそのまま潰す。',
+  'ジャスト':'カードの完了と敵の行動が同じサイクルなら自分が先に動く。紫の溜め技ならそのまま潰す。',
   '中断':'カードの完了前に攻撃でダメージを受けると、そのカードは効果を出さずに終わる。',
-  '溜め':'ジャストで潰せる敵の大技。紫で表示される。',
+  '溜め':'紫の丸い印。ジャストで潰せる敵の大技。',
   '破損':'部位の耐久が0。その戦闘の間は性能を失い、そこへの攻撃は本体に通る。',
   '損傷':'前の戦闘で破損した部位。次の戦闘は耐久が半分から始まる。耐えきれば元に戻る。',
 };
 
-let S = null, sel = null, PV = null, busy = false, lastTarget = 0, snapshot = null, lastPool = [], lastMsg = '';
-const markEls = new Map();
+let S = null, sel = null, PV = null, busy = false, lastTarget = 0, snapshot = null, lastPool = [];
+const UI = {expand:false};
+const markEls = new Map(), cardEls = new Map();
 
 function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
 const clone = o => JSON.parse(JSON.stringify(o));
 const cur = e => e.pat[e.idx];
 function advance(e){ e.idx = (e.idx + 1) % e.pat.length; e.r = e.pat[e.idx].dl; e.seq++; }
 function bonus(st, id){ return st && st.b && !st.b.over ? (st.b.parts[id].cur > 0 ? 1 : 0) : 1; }
-function viewLen(){ return S.b.parts.calc.cur > 0 ? 12 : 6; }
-function upcoming(e, view){
+function upcoming(e){
   const out = []; let t = e.r, idx = e.idx, k = 0;
-  while(t <= view && k < 6){ out.push({t, a:e.pat[idx], k}); idx = (idx + 1) % e.pat.length; t += e.pat[idx].dl; k++; }
+  while(t <= VIEW && k < 6){ out.push({t, a:e.pat[idx], k}); idx = (idx + 1) % e.pat.length; t += e.pat[idx].dl; k++; }
   return out;
 }
+function foeX(n, i){ return (n === 1 ? [620] : n === 2 ? [560, 690] : [494, 600, 706])[i]; }
 
-/* ---------- engine (pure on a state object; used for play and for preview) ---------- */
+/* ---------- engine ---------- */
 function applyCard(st, k, ti){
   const c = CARDS[k], b = st.b, ev = [];
   const targets = c.all ? b.foes.filter(e => e.alive) : (c.tgt ? [b.foes[ti]].filter(e => e && e.alive) : []);
@@ -347,7 +431,7 @@ function* spendGen(st, cost, k, ti, noInt){
   const b = st.b, c = k ? CARDS[k] : null, atomic = !c || !!c.atomic;
   let left = cost;
   const out = {elapsed:0, completeAt:null, interruptedAt:null, justs:[], dead:false, won:false};
-  b.cast = {k, left, label: c ? c.name : '引き直し'};
+  b.cast = {k, left};
   while(left > 0){
     let real = true;
     if(b.swift > 0){ b.swift--; real = false; }
@@ -358,7 +442,11 @@ function* spendGen(st, cost, k, ti, noInt){
       out.completeAt = out.elapsed;
       if(c){
         if(real) for(const e of b.foes){
-          if(e.alive && e.r <= 0 && cur(e).ch){ const nm = cur(e).n; advance(e); out.justs.push({i:e.i, name:nm}); yield {type:'just', e:e.i, name:nm}; }
+          if(e.alive && e.r <= 0 && cur(e).ch){
+            const nm = cur(e).n; advance(e);
+            const cr = b.parts.calc.cur > 0 ? 1 : 0; e.crack += cr;
+            out.justs.push({i:e.i, name:nm}); yield {type:'just', e:e.i, crack:cr};
+          }
         }
         const ev = applyCard(st, k, ti);
         b.cast = null;
@@ -398,159 +486,71 @@ function computePreview(){
   };
   const A = sim(false), P = sim(true);
   return {
-    k, cost, name: k ? CARDS[k].name : '引き直し', atomic: !!(k && CARDS[k].atomic),
-    completeAt: P.out.completeAt ?? P.out.elapsed,
-    swiftUsed: Math.min(b.swift, cost),
-    interruptedAt: A.out.interruptedAt,
-    justSet: new Set(A.out.justs.map(j => j.i)), justNames: A.out.justs.map(j => j.name),
-    parts: A.c.b.parts, body: A.c.run.body, dead: A.out.dead,
-    foeHp: A.c.b.foes.map(e => e.hp),
-    kills: b.foes.filter((e, i) => e.alive && !A.c.b.foes[i].alive).map(e => e.tag),
+    k, cost, completeAt: P.out.completeAt ?? P.out.elapsed,
+    interruptedAt: A.out.interruptedAt, justSet: new Set(A.out.justs.map(j => j.i)),
+    parts: A.c.b.parts, body: A.c.run.body, foeHp: A.c.b.foes.map(e => e.hp),
   };
-}
-function pvSummary(pv){
-  const out = [];
-  out.push(`<b class="me">${pv.name}</b> 完了 <b class="num time">${pv.completeAt}</b>${pv.swiftUsed ? ` <span class="time">(スウィフト−${pv.swiftUsed})</span>` : ''}`);
-  if(pv.atomic) out.push('<b>アトミック</b>');
-  if(pv.justNames.length) out.push(`<b class="just">JUST ${pv.justNames.join('・')}</b>`);
-  if(pv.interruptedAt != null) out.push(`<b class="foe">中断される(${pv.interruptedAt}で被弾)</b>`);
-  const loss = [];
-  for(const p of PARTS){ const d = S.b.parts[p.id].cur - pv.parts[p.id].cur; if(d > 0) loss.push(`${p.fn}−${d}`); }
-  const bl = S.run.body - pv.body; if(bl > 0) loss.push(`本体−${bl}`);
-  out.push(loss.length ? `受ける <span class="foe2">${loss.join(' ')}</span>` : '<span class="dim">被弾なし</span>');
-  if(pv.kills.length) out.push(`<b class="me">撃破 ${pv.kills.join('・')}</b>`);
-  if(pv.dead) out.push('<b class="foe">機能停止</b>');
-  return out.join(' · ');
 }
 
 /* ---------- card text ---------- */
-function cardType(c){ return c.dmg ? (c.dmg.t === 'phys' ? '物理' : '光学') : c.block ? '防御' : '時間'; }
-function cardBits(k, st){
+function cardType(c){ return c.dmg ? c.dmg.t : c.block ? 'block' : c.swift ? 'swift' : 'delay'; }
+function cardVal(k, st){
+  const c = CARDS[k];
+  if(c.dmg){ const bn = c.dmg.t === 'phys' ? bonus(st,'out') : bonus(st,'arm'); return (c.dmg.n + bn) + (c.dmg.x ? '×' + c.dmg.x : ''); }
+  if(c.block) return c.block + bonus(st,'dur');
+  if(c.delay) return c.delay;
+  return c.swift;
+}
+function cardText(k, st){
   const c = CARDS[k], s = [];
-  if(c.dmg){
-    const bn = c.dmg.t === 'phys' ? bonus(st,'out') : bonus(st,'arm');
-    s.push(`${c.all ? '敵全員に ' : ''}${c.dmg.t === 'phys' ? '物理' : '光学'} <b class="${bn ? 'up' : ''}">${c.dmg.n + bn}</b>ダメージ${c.dmg.x ? '×' + c.dmg.x : ''}`);
-  }
+  if(c.dmg){ const bn = c.dmg.t === 'phys' ? bonus(st,'out') : bonus(st,'arm'); s.push(`${c.all ? '敵全員に ' : ''}${c.dmg.t === 'phys' ? '物理' : '光学'} <b>${c.dmg.n + bn}</b>ダメージ${c.dmg.x ? '×' + c.dmg.x : ''}`); }
   if(c.crack) s.push(`<span class="kw-f">クラック</span> ${c.crack}`);
   if(c.delay) s.push(`${c.all ? '敵全員に ' : ''}<span class="kw-t">ディレイ</span> ${c.delay}`);
-  if(c.block){ const bn = bonus(st,'dur'); s.push(`<span class="kw-me">ブロック</span> <b class="${bn ? 'up' : ''}">${c.block + bn}</b>`); }
+  if(c.block) s.push(`<span class="kw-me">ブロック</span> <b>${c.block + bonus(st,'dur')}</b>`);
   if(c.swift) s.push(`<span class="kw-t">スウィフト</span> ${c.swift}`);
   return s.join('<br>');
 }
 function cardInner(k, st){
   const c = CARDS[k];
-  return `<span class="cart">絵<span class="cost">${c.cost}</span><span class="ctype">${cardType(c)}</span></span><span class="cname">${c.name}</span><span class="ctext">${cardBits(k, st)}</span>${c.atomic ? '<span class="katom">アトミック</span>' : ''}${c.src ? `<span class="csrc">${c.src}</span>` : ''}`;
+  return `<span class="cart"><span class="cost">${c.cost}</span>${c.atomic ? '<i class="atom"></i>' : ''}<span class="cval"><span class="ic">${IC[cardType(c)]}</span><b>${cardVal(k, st)}</b></span></span><span class="cname">${c.name}</span><span class="ctext">${cardText(k, st)}${c.atomic ? '<br><span class="kwp">アトミック</span>' : ''}</span>`;
 }
 
 /* ---------- static build ---------- */
 function buildStatic(){
   let h = '';
-  for(let c = 0; c <= 12; c++){
-    const now = c === 0;
-    h += `<div class="tl${now ? ' now' : ''}" style="left:${xs(c) - (now ? 1 : 0)}px"></div><div class="tn${now ? ' now' : ''}" style="left:${xs(c) - 10}px">${now ? '今' : c}</div>`;
-  }
+  for(let c = 1; c <= 12; c++) h += `<div class="tl" style="left:${xs(c)}px"></div><div class="tn" style="left:${xs(c) - 10}px">${c}</div>`;
   $('#ticks').innerHTML = h;
-  $('#parts').innerHTML = PARTS.map((p, j) => `<button class="part" type="button" data-p="${p.id}" style="top:${60 + j * 39}px"><span class="ph"><span class="pn">${p.fn}${p.pt ? `<em>${p.pt}</em>` : ''}<s class="ptag"></s></span><span class="pnum"></span></span><span class="pb"><span class="pbar"><i class="pf"></i><i class="pl"></i></span><span class="pinc" hidden></span></span></button>`).join('');
+  $('#parts').innerHTML = PARTS.map((p, j) => `<button class="part" type="button" data-p="${p.id}" style="top:${50 + j * 44}px"><span class="ph"><span class="pico">${IC[p.id]}</span><span class="pname">${p.fn}</span><span class="pnum"></span></span><span class="pips"></span></button>`).join('');
+  $('#icCore').innerHTML = IC.core; $('#icDeck').innerHTML = IC.deck; $('#icDisc').innerHTML = IC.disc;
+  $('#icRedraw').innerHTML = IC.redraw; $('#menuBtn').innerHTML = IC.menu;
 }
-function buildLanes(){
-  const b = S.b;
-  $('#lanes').innerHTML = b.foes.map(e => `<div class="lane" data-f="${e.i}" style="top:${laneTop(e.i)}px"></div>`).join('');
-  $('#foes').innerHTML = b.foes.map(e => `<button class="fp" type="button" data-f="${e.i}" style="top:${laneTop(e.i) + 6}px"><span class="fart"><b>${e.tag}</b>絵</span><span class="fb"><span class="fname"><span class="fnm">${e.name}</span><span class="tchip" hidden>対象</span></span><span class="hpb"><i></i><s></s></span><span class="frow"><span class="hpt num"></span><span class="sts"></span></span></span></button>`).join('');
+function buildFoes(){
+  const b = S.b, n = b.foes.length;
+  $('#rows').innerHTML = b.foes.map(e => `<div class="rowline" data-r="${e.i}" style="top:${ROWY[e.i]}px"></div><div class="rowtag" data-r="${e.i}" style="top:${ROWY[e.i] - 8}px">${e.tag}</div><div class="rowhit" data-f="${e.i}" style="top:${ROWY[e.i] - 17}px"></div>`).join('');
+  $('#foes').innerHTML = b.foes.map(e => `<div class="foe" data-f="${e.i}" style="left:${foeX(n, e.i)}px">${SPR[e.kind]}<span class="reticle"></span></div><div class="finfo" data-f="${e.i}" style="left:${foeX(n, e.i) + 2}px"><span class="frow"><span class="ftag">${e.tag}</span><span class="fhp"><i></i><s></s></span><span class="fhpt"></span></span><span class="fst"></span></div>`).join('');
 }
 function clearMarks(){ for(const el of markEls.values()) el.remove(); markEls.clear(); }
+function clearCards(){ for(const el of cardEls.values()) el.remove(); cardEls.clear(); }
+const foeEl = i => document.querySelector(`.foe[data-f="${i}"]`);
+const foeCenter = i => { const n = S.b.foes.length; return {x: foeX(n, i) + 45, y: 220}; };
 
 /* ---------- render ---------- */
-function renderAll(){ renderTop(); renderChips(); renderNoise(); renderLanes(); renderPreview(); renderMarks(); renderParts(); renderHand(); renderSide(); }
-function renderTop(){
-  const B = BATTLES[S.b.n];
-  const w = $('#where'); w.textContent = `${B.area} ${B.room} · 部屋 ${B.no}/6${B.boss ? ' ボス' : ''}`; w.hidden = !!PV;
-  const m = $('#msg');
-  if(PV){ m.innerHTML = pvSummary(PV); m.className = 'pv'; } else { m.textContent = lastMsg; m.className = ''; }
+function renderAll(){
+  $('#shaker').classList.toggle('executing', busy);
+  renderStatus(); renderParts(); renderRows(); renderFoes(); renderPreview(); renderMarks(); renderHand(); renderSide();
+}
+function renderStatus(){
   const body = S.run.body, after = PV ? PV.body : body;
-  $('#bodyFill').style.width = (after / S.run.bodyMax * 100) + '%';
-  $('#bodyNum').innerHTML = after < body ? `<span class="foe2">${body}→${after}</span>` : `${body}/${S.run.bodyMax}`;
+  $('#bodyBar i').style.width = (after / S.run.bodyMax * 100) + '%';
+  const bn = $('#bodyNum'); bn.textContent = after < body ? `${body}→${after}` : String(body); bn.classList.toggle('pv', after < body);
+  const blk = $('#blk'); blk.innerHTML = `<span class="ic">${IC.block}</span>${S.b.block}`; blk.classList.toggle('zero', !S.b.block);
+  const sw = $('#swf'); sw.hidden = !S.b.swift; sw.innerHTML = `<span class="ic">${IC.swift}</span>${S.b.swift}`;
 }
-function renderChips(){
-  const b = S.b;
-  $('#chips').innerHTML = `<span class="chip blk${b.block ? '' : ' zero'}">ブロック<span class="num">${b.block}</span></span>` + (b.swift ? `<span class="chip sw">スウィフト<span class="num">${b.swift}</span></span>` : '');
-}
-function renderNoise(){
-  const v = viewLen(), n = $('#noise');
-  n.hidden = v >= 12;
-  if(v < 12){ n.style.left = (xs(v) + 20) + 'px'; n.style.width = (xs(12) + 22 - xs(v) - 20) + 'px'; }
-}
-function renderLanes(){
-  const b = S.b, need = sel && sel.kind === 'card' && CARDS[sel.k].tgt;
-  document.querySelectorAll('.lane').forEach(el => {
-    const e = b.foes[+el.dataset.f];
-    el.classList.toggle('dead', !e.alive);
-    el.classList.toggle('tgt', !!need && sel.target === e.i && e.alive);
-    el.classList.toggle('can', !!need && sel.target !== e.i && e.alive);
-  });
-  document.querySelectorAll('.fp').forEach(el => {
-    const e = b.foes[+el.dataset.f];
-    const after = PV ? PV.foeHp[e.i] : e.hp;
-    el.classList.toggle('dead', !e.alive); el.disabled = !e.alive;
-    el.querySelector('.hpb i').style.width = (Math.max(0, after) / e.maxHp * 100) + '%';
-    const s = el.querySelector('.hpb s');
-    s.style.left = (Math.max(0, after) / e.maxHp * 100) + '%'; s.style.width = ((e.hp - Math.max(0, after)) / e.maxHp * 100) + '%';
-    el.querySelector('.hpt').innerHTML = !e.alive ? '破壊' : (after < e.hp ? `<span class="foe2">${e.hp}→${Math.max(0, after)}</span>` : `${e.hp}/${e.maxHp}`);
-    el.querySelector('.sts').innerHTML = e.crack ? `<span class="st c">クラック${e.crack}</span>` : '';
-    el.querySelector('.tchip').hidden = !(need && sel.target === e.i && e.alive);
-  });
-}
-function renderPreview(){
-  const b = S.b, reg = $('#pvRegion'), line = $('#pvLine'), bar = $('#selfBar');
-  if(busy && b.cast){
-    reg.hidden = line.hidden = true; bar.hidden = false; bar.className = 'cast nopt';
-    bar.style.width = Math.max(4, Math.min(b.cast.left, 12) * PX) + 'px';
-    bar.firstElementChild.textContent = b.cast.label; return;
-  }
-  if(PV && !busy){
-    const c = Math.min(PV.completeAt, 12);
-    reg.hidden = line.hidden = bar.hidden = false; bar.className = 'pre nopt';
-    reg.style.width = (c * PX) + 'px'; line.style.left = (xs(c) - 1) + 'px';
-    bar.style.width = Math.max(4, c * PX) + 'px'; bar.firstElementChild.textContent = PV.name; return;
-  }
-  reg.hidden = line.hidden = bar.hidden = true;
-}
-function renderMarks(){
-  const layer = $('#marks'), b = S.b, view = viewLen(), seen = new Set();
-  for(const e of b.foes){
-    if(!e.alive) continue;
-    for(const m of upcoming(e, view)){
-      const key = e.i + '-' + (e.seq + m.k); seen.add(key);
-      let el = markEls.get(key);
-      const x = xs(m.t) - 19, y = laneTop(e.i) + 22;
-      if(!el){
-        el = document.createElement('div'); el.className = 'mk';
-        el.style.left = (xs(view) + 34) + 'px'; el.style.top = y + 'px'; el.style.opacity = '0';
-        layer.appendChild(el); markEls.set(key, el); el.getBoundingClientRect();
-      }
-      const a = m.a;
-      let cls = 'mk ' + (a.kind === 'delay' ? 'dl' : a.ch ? 'ch' : 'hit');
-      if(m.k > 0 && !a.ch) cls += ' later';
-      let just = false;
-      if(PV && !busy){
-        if(m.t < PV.completeAt) cls += ' danger';
-        if(m.t === PV.completeAt && a.ch && PV.justSet.has(e.i)){ cls += ' just'; just = true; }
-      }
-      const label = a.ch ? (just ? 'JUST' : '溜め') : (a.kind === 'delay' ? '自分へ' : '');
-      el.className = cls;
-      const html = (label ? `<i class="lb">${label}</i>` : '') + (a.kind === 'delay' ? `<span>遅</span><b>${a.v}</b>` : `<b>${a.d}</b><span>${PART_BY[a.p].ab}</span>`);
-      if(el._h !== html){ el.innerHTML = html; el._h = html; }
-      el.style.left = x + 'px'; el.style.top = y + 'px'; el.style.opacity = '';
-    }
-  }
-  for(const [key, el] of markEls){
-    if(!seen.has(key)){ markEls.delete(key); el.classList.add('out'); setTimeout(() => el.remove(), 260); }
-  }
-}
-function incoming(view){
+function incoming(){
   const res = {};
   for(const e of S.b.foes){
     if(!e.alive) continue;
-    for(const m of upcoming(e, view)){
+    for(const m of upcoming(e)){
       if(m.a.kind === 'delay') continue;
       const c = res[m.a.p];
       if(!c || m.t < c.t) res[m.a.p] = {t:m.t, a:m.a, e:e.i};
@@ -559,34 +559,128 @@ function incoming(view){
   return res;
 }
 function renderParts(){
-  const b = S.b, inc = incoming(viewLen());
+  const b = S.b, inc = incoming();
   document.querySelectorAll('.part').forEach((el, j) => {
-    const p = PARTS[j], st = b.parts[p.id], rp = S.run.parts[p.id];
-    const after = PV ? PV.parts[p.id].cur : st.cur, broken = st.cur <= 0;
-    el.classList.toggle('broken', broken);
-    el.querySelector('.ptag').textContent = broken ? '破損' : rp.damaged ? '損傷' : '';
+    const p = PARTS[j], st = b.parts[p.id], worn = S.run.parts[p.id].damaged;
+    const after = PV ? PV.parts[p.id].cur : st.cur;
+    el.classList.toggle('broken', st.cur <= 0);
+    const h = inc[p.id];
+    el.classList.toggle('th-hit', !!h && !h.a.ch && st.cur > 0);
+    el.classList.toggle('th-ch', !!h && !!h.a.ch && st.cur > 0);
     const num = el.querySelector('.pnum');
-    if(after < st.cur){ num.textContent = `${st.cur}→${after}`; num.style.color = 'var(--foe2)'; }
-    else { num.textContent = `${st.cur}/${st.max}`; num.style.color = broken ? 'var(--dim2)' : ''; }
-    el.querySelector('.pf').style.width = (after / st.max * 100) + '%';
-    const pl = el.querySelector('.pl'); pl.style.left = (after / st.max * 100) + '%'; pl.style.width = ((st.cur - after) / st.max * 100) + '%';
-    const chip = el.querySelector('.pinc'), h = inc[p.id];
-    el.classList.remove('ih', 'ic');
-    if(h){
-      const justing = PV && !busy && h.a.ch && h.t === PV.completeAt && PV.justSet.has(h.e);
-      chip.hidden = false;
-      chip.className = 'pinc ' + (justing ? 'j' : h.a.ch ? 'c' : 'h');
-      chip.textContent = justing ? '潰せる' : (broken ? `本体−${h.a.d} あと${h.t}` : `−${h.a.d} あと${h.t}`);
-      el.classList.add(h.a.ch ? 'ic' : 'ih');
-    } else chip.hidden = true;
+    num.textContent = after < st.cur ? `${st.cur}→${after}` : String(st.cur); num.classList.toggle('pv', after < st.cur);
+    const start = worn ? Math.ceil(st.max / 2) : st.max;
+    const w = Math.floor((68 - (st.max - 1) * 2) / st.max);
+    let pips = '';
+    for(let k = 0; k < st.max; k++){
+      const cls = k < after ? 'full' : k < st.cur ? 'loss' : k >= start ? 'worn' : '';
+      pips += `<span class="pip ${cls}" style="width:${w}px"></span>`;
+    }
+    el.querySelector('.pips').innerHTML = pips;
   });
 }
+function renderRows(){
+  const b = S.b, need = sel && sel.kind === 'card' && CARDS[sel.k].tgt;
+  document.querySelectorAll('[data-r]').forEach(el => {
+    const e = b.foes[+el.dataset.r];
+    el.classList.toggle('dead', !e.alive);
+    el.classList.toggle('tgt', !!need && sel.target === e.i && e.alive);
+  });
+}
+function renderFoes(){
+  const b = S.b, need = sel && sel.kind === 'card' && CARDS[sel.k].tgt;
+  for(const e of b.foes){
+    const sp = foeEl(e.i), info = document.querySelector(`.finfo[data-f="${e.i}"]`);
+    sp.classList.toggle('dead', !e.alive); info.classList.toggle('dead', !e.alive);
+    const tgt = !!need && sel.target === e.i && e.alive;
+    sp.classList.toggle('tgt', tgt); info.querySelector('.ftag').classList.toggle('tgt', tgt);
+    const after = Math.max(0, PV ? PV.foeHp[e.i] : e.hp);
+    info.querySelector('.fhp i').style.width = (after / e.maxHp * 100) + '%';
+    const s = info.querySelector('.fhp s'); s.style.left = (after / e.maxHp * 100) + '%'; s.style.width = ((e.hp - after) / e.maxHp * 100) + '%';
+    const t = info.querySelector('.fhpt'); t.textContent = after < e.hp ? `${e.hp}→${after}` : String(e.hp); t.classList.toggle('pv', after < e.hp);
+    info.querySelector('.fst').innerHTML = e.crack ? `<span class="ic">${IC.crack}</span>${e.crack}` : '';
+  }
+}
+function renderPreview(){
+  const b = S.b, reg = $('#pvRegion'), line = $('#pvLine'), bar = $('#selfBar');
+  if(busy){
+    reg.hidden = line.hidden = true;
+    if(b.cast){ bar.hidden = false; bar.className = 'np cast'; bar.style.width = Math.max(4, Math.min(b.cast.left, 12) * PX) + 'px'; }
+    else if(!bar.classList.contains('broken')) bar.hidden = true;
+    return;
+  }
+  if(PV){
+    const c = Math.min(PV.completeAt, 12);
+    reg.hidden = line.hidden = bar.hidden = false; bar.className = 'np pre';
+    reg.style.width = (c * PX) + 'px'; line.style.left = (xs(c) - 1) + 'px'; bar.style.width = Math.max(4, c * PX) + 'px';
+    return;
+  }
+  reg.hidden = line.hidden = bar.hidden = true;
+}
+function renderMarks(){
+  const layer = $('#marks'), b = S.b, seen = new Set();
+  for(const e of b.foes){
+    if(!e.alive) continue;
+    for(const m of upcoming(e)){
+      const key = e.i + '-' + (e.seq + m.k); seen.add(key);
+      let el = markEls.get(key);
+      const x = xs(m.t) - 16, y = ROWY[e.i] - 11;
+      if(!el){
+        el = document.createElement('div'); el.className = 'mk';
+        el.style.left = (xs(VIEW) + 30) + 'px'; el.style.top = y + 'px'; el.style.opacity = '0';
+        layer.appendChild(el); markEls.set(key, el); el.getBoundingClientRect();
+      }
+      const a = m.a;
+      let cls = 'mk ' + (a.kind === 'delay' ? 'dl' : a.ch ? 'ch' : 'hit');
+      if(m.k > 0 && !a.ch) cls += ' later';
+      if(PV && !busy){
+        if(m.t < PV.completeAt && a.kind !== 'delay') cls += ' danger';
+        if(m.t === PV.completeAt && a.ch && PV.justSet.has(e.i)) cls += ' just';
+      }
+      if(el.classList.contains('fire')) cls += ' fire';
+      el.className = cls;
+      const html = a.kind === 'delay' ? `<span class="ic">${IC.delay}</span><b>${a.v}</b>` : `<b>${a.d}</b><span>${AB[a.p]}</span>`;
+      if(el._h !== html){ el.innerHTML = html; el._h = html; }
+      el.style.left = x + 'px'; el.style.top = y + 'px'; el.style.opacity = '';
+    }
+  }
+  for(const [key, el] of markEls){
+    if(!seen.has(key)){ markEls.delete(key); el.classList.add('out'); setTimeout(() => el.remove(), 260); }
+  }
+}
+function slot(i){
+  const ex = UI.expand, W = ex ? 122 : 80, H = ex ? 132 : 76, top = ex ? 250 : 306;
+  return {left: 84 + i * (W + 8), top, W, H};
+}
 function renderHand(){
-  const b = S.b;
-  $('#hand').innerHTML = b.hand.map((cd, i) => {
-    const on = sel && sel.kind === 'card' && sel.i === i;
-    return `<button class="card${on ? ' sel' : ''}" type="button" data-i="${i}" style="left:${78 + i * 128}px" ${busy ? 'disabled' : ''}>${cardInner(cd.k, S)}</button>`;
-  }).join('');
+  const b = S.b, ids = new Set(b.hand.map(c => c.id));
+  for(const [id, el] of cardEls) if(!ids.has(id)){ el.remove(); cardEls.delete(id); }
+  let dealN = 0;
+  const selI = sel && sel.kind === 'card' ? sel.i : -1;
+  b.hand.forEach((cd, i) => {
+    let el = cardEls.get(cd.id), fresh = false;
+    if(!el){
+      el = document.createElement('button'); el.type = 'button'; el.className = 'card';
+      el.style.left = '24px'; el.style.top = '312px'; el.style.width = '80px'; el.style.height = '76px';
+      el.style.transform = 'scale(.35) rotate(-10deg)'; el.style.opacity = '0';
+      $('#hand').appendChild(el); cardEls.set(cd.id, el); fresh = true;
+    }
+    el.dataset.i = i; el.disabled = busy;
+    const html = cardInner(cd.k, S);
+    if(el._h !== html){ el.innerHTML = html; el._h = html; }
+    el.classList.toggle('exp', UI.expand);
+    el.classList.toggle('sel', i === selI);
+    const s = slot(i);
+    const place = () => {
+      let left = s.left, top = s.top, tf = 'none';
+      if(i === selI){ top -= 12; tf = 'rotate(-3deg) scale(1.06)'; }
+      else if(selI >= 0){ left += i < selI ? -4 : 4; }
+      el.style.left = left + 'px'; el.style.top = top + 'px'; el.style.width = s.W + 'px'; el.style.height = s.H + 'px';
+      el.style.transform = tf; el.style.opacity = '1';
+    };
+    if(fresh){ el.getBoundingClientRect(); setTimeout(place, 40 + dealN * 70); dealN++; }
+    else place();
+  });
 }
 function renderSide(){
   const b = S.b, rd = $('#redraw');
@@ -594,46 +688,111 @@ function renderSide(){
   rd.classList.toggle('sel', !!sel && sel.kind === 'redraw');
   rd.disabled = busy || !b.hand.length;
   $('#nDraw').textContent = b.draw.length; $('#nDisc').textContent = b.disc.length;
+  $('#handShade').classList.toggle('on', UI.expand);
+  const tg = $('#toggle'); tg.classList.toggle('exp', UI.expand);
+  Object.assign(tg.style, UI.expand ? {left:'742px', top:'250px', width:'92px', height:'48px'} : {left:'530px', top:'306px', width:'22px', height:'76px'});
+  const d = $('#detail');
+  if(sel && !busy && !UI.expand){
+    d.hidden = false;
+    if(sel.kind === 'card'){ const c = CARDS[sel.k]; d.innerHTML = `<span class="dn">${c.name}<b>${c.cost}</b></span><span class="dt">${cardText(sel.k, S)}</span>${c.atomic ? '<span><span class="kwp">アトミック</span></span>' : ''}`; }
+    else d.innerHTML = `<span class="dn">引き直し<b>${b.hand.length}</b></span><span class="dt">手札を捨てて5枚引く</span>`;
+  } else d.hidden = true;
 }
 
 /* ---------- fx ---------- */
-function floatAt(x, y, text, cls){
-  const el = document.createElement('div'); el.className = 'float ' + cls; el.textContent = text;
-  el.style.left = x + 'px'; el.style.top = y + 'px'; $('#floats').appendChild(el);
-  setTimeout(() => el.remove(), 1000);
-}
-function flash(sel2, cls){ const el = document.querySelector(sel2); if(!el) return; el.classList.add(cls); setTimeout(() => el.classList.remove(cls), 300); }
+function fxEl(cls, x, y, css){ const el = document.createElement('div'); el.className = cls; el.style.left = x + 'px'; el.style.top = y + 'px'; if(css) Object.assign(el.style, css); $('#fx').appendChild(el); return el; }
+function floatAt(x, y, text, cls){ const el = document.createElement('div'); el.className = 'float ' + (cls || ''); el.textContent = text; el.style.left = x + 'px'; el.style.top = y + 'px'; $('#floats').appendChild(el); setTimeout(() => el.remove(), 950); }
+function pulse(el, cls, ms){ if(!el) return; el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); setTimeout(() => el.classList.remove(cls), ms); }
+function shake(){ pulse($('#shaker'), 'shake', 300); }
 function toast(t){ const el = $('#toast'); el.textContent = t; el.classList.remove('show'); void el.offsetWidth; el.classList.add('show'); }
-function setLast(t){ lastMsg = t; }
-function partY(id){ return 60 + PARTS.findIndex(p => p.id === id) * 39; }
+const partY = id => 50 + PARTS.findIndex(p => p.id === id) * 44;
 
-function cardFx(x){
-  const b = S.b;
-  switch(x.kind){
-    case 'dmg': floatAt(712, laneTop(x.e) + 22, '−' + x.n, 'foe'); break;
-    case 'kill': floatAt(740, laneTop(x.e) + 40, '撃破', 'me'); flash(`.lane[data-f="${x.e}"]`, 'act'); break;
-    case 'crack': floatAt(760, laneTop(x.e) + 50, 'クラック+' + x.n, 'foe'); break;
-    case 'delay': floatAt(xs(2), laneTop(x.e) + 12, 'ディレイ' + x.n, 'time'); break;
-    case 'block': floatAt(48, 38, 'ブロック+' + x.n, 'me'); break;
-    case 'swift': floatAt(60, 38, 'スウィフト+' + x.n, 'time'); break;
-    case 'miss': setLast('対象がいない'); break;
+function beam(to){
+  const dx = to.x - DROID.sx, dy = to.y - DROID.sy, len = Math.hypot(dx, dy), ang = Math.atan2(dy, dx) * 180 / Math.PI;
+  const el = fxEl('beam', DROID.sx, DROID.sy, {width: len + 'px', transform: `rotate(${ang}deg)`});
+  setTimeout(() => el.remove(), 320);
+}
+function shards(x, y, color){
+  for(let k = 0; k < 6; k++){
+    const el = fxEl('shard', x - 4, y - 1); if(color) el.style.background = color;
+    const a = Math.random() * Math.PI * 2, r = 26 + Math.random() * 16;
+    el.getBoundingClientRect();
+    el.style.transform = `translate(${Math.cos(a) * r}px,${Math.sin(a) * r}px) rotate(${a * 57}deg)`; el.style.opacity = '0';
+    setTimeout(() => el.remove(), 480);
   }
 }
-function foeFx(i, r){
+function sparks(x, y){
+  for(let k = 0; k < 7; k++){
+    const el = fxEl('spark', x, y); const a = -Math.PI / 2 + (Math.random() - .5) * 2.4, r = 14 + Math.random() * 20;
+    el.getBoundingClientRect(); el.style.transform = `translate(${Math.cos(a) * r}px,${Math.sin(a) * r}px)`; el.style.opacity = '0';
+    setTimeout(() => el.remove(), 450);
+  }
+}
+function afterimage(){
+  const src = $('#droid svg').cloneNode(true), el = fxEl('after', 108, 142); el.appendChild(src);
+  el.getBoundingClientRect(); el.style.transform = 'translateX(-14px)'; el.style.opacity = '0';
+  setTimeout(() => el.remove(), 320);
+}
+function cardMotion(k, ti){
+  const c = CARDS[k], d = $('#droid'), t = cardType(c);
+  const targets = c.all ? S.b.foes.filter(e => e.alive || true).map(e => e.i) : (c.tgt ? [ti] : []);
+  if(t === 'phys'){ pulse(d, 'lunge', 380); for(const i of targets){ const p = foeCenter(i); const el = fxEl('slash', p.x, p.y - 10); setTimeout(() => el.remove(), 260); } }
+  else if(t === 'opt'){ pulse(d, 'recoil', 320); for(const i of targets) beam(foeCenter(i)); }
+  else if(t === 'block'){ const el = fxEl('shield', 92, 136); setTimeout(() => el.remove(), 560); }
+  else if(t === 'delay'){
+    pulse(d, 'glitch', 320);
+    for(const i of targets){
+      const p = foeCenter(i);
+      for(let k2 = 0; k2 < 5; k2++){
+        const el = fxEl('noise', DROID.sx + k2 * 4, DROID.sy + (k2 % 2) * 8); el.getBoundingClientRect();
+        setTimeout(() => { el.style.left = (p.x + (k2 - 2) * 6) + 'px'; el.style.top = (p.y - 20 + k2 * 5) + 'px'; el.style.opacity = '0'; }, k2 * 30);
+        setTimeout(() => el.remove(), 420);
+      }
+    }
+  }
+  else if(t === 'swift'){ afterimage(); setTimeout(afterimage, 90); }
+}
+function cardFx(x){
+  switch(x.kind){
+    case 'dmg': { const p = foeCenter(x.e); floatAt(p.x, p.y - 62, '−' + x.n, 'foe'); pulse(foeEl(x.e), 'ehit', 280); break; }
+    case 'kill': { const p = foeCenter(x.e); shards(p.x, p.y, '#cfcbd6'); break; }
+    case 'crack': { const p = foeCenter(x.e); floatAt(p.x + 30, p.y - 40, '+' + x.n, 'foe'); break; }
+    case 'delay': floatAt(xs(2), ROWY[x.e] - 14, '+' + x.n, 'time'); break;
+    case 'block': floatAt(30, 34, '+' + x.n, ''); pulse($('#blk'), 'flash', 360); break;
+    case 'swift': floatAt(70, 34, '+' + x.n, 'time'); break;
+  }
+}
+async function foeFx(i, r){
   const e = S.b.foes[i];
-  flash(`.lane[data-f="${i}"]`, 'act');
+  pulse(foeEl(i), 'atk', 270);
+  const mk = markEls.get(i + '-' + (e.seq - 1));
+  if(mk){ mk.classList.add('fire'); }
+  await sleep(110);
   if(r.kind === 'delay'){
-    if(r.applied){ floatAt(xs(1), 52, `完了+${r.v}`, 'time'); setLast(`${e.name}の${r.name}: ディレイ${r.v}で完了が遅れた${r.swift ? '(噴射機構: スウィフト+1)' : ''}`); }
-    else setLast(`${e.name}の${r.name}: 空振り`);
+    if(r.applied){ pulse($('#droid'), 'glitch', 320); floatAt(xs(1), 30, '+' + r.v, 'time'); if(r.swift) setTimeout(afterimage, 120); }
     return;
   }
-  const pf = PART_BY[r.part], y = partY(r.part);
-  if(r.blocked) floatAt(48, 40, `ブロック−${r.blocked}`, 'dim');
-  if(r.partLoss){ floatAt(176, y + 10, '−' + r.partLoss, 'foe'); flash(`.part[data-p="${r.part}"]`, 'hit'); }
-  if(r.broke) floatAt(120, y + 22, '破損', 'foe');
-  if(r.bodyLoss) floatAt(790, 20, '本体−' + r.bodyLoss, 'foe');
-  if(!r.hurt) floatAt(150, y + 10, '防御', 'dim');
-  setLast(`${e.name}の${r.name} ${r.raw} → ${pf.fn}${r.blocked ? `(ブロック${r.blocked})` : ''}${r.broke ? ' 破損' : ''}${r.bodyLoss ? ` 本体−${r.bodyLoss}` : ''}`);
+  const y = partY(r.part);
+  if(r.blocked) pulse($('#blk'), 'flash', 360);
+  if(r.partLoss){ floatAt(66, y + 6, '−' + r.partLoss, 'foe'); pulse(document.querySelector(`.part[data-p="${r.part}"]`), 'flash', 320); }
+  if(r.broke) sparks(DROID.x, DROID.y - 30);
+  if(r.bodyLoss) floatAt(58, 14, '−' + r.bodyLoss, 'foe');
+  if(r.hurt){ pulse($('#droid'), 'hit', 320); if(r.raw >= 8) shake(); }
+  else { const el = fxEl('shield', 92, 136); setTimeout(() => el.remove(), 560); }
+}
+function justFx(i){
+  const x = NOW, y = ROWY[i];
+  const el = fxEl('burst', x, y); setTimeout(() => el.remove(), 520);
+  shards(x, y, null);
+  pulse(foeEl(i), 'ejust', 460);
+}
+function interruptFx(){
+  const bar = $('#selfBar'); bar.hidden = false; bar.className = 'np broken';
+  setTimeout(() => { bar.classList.remove('broken'); }, 400);
+  pulse($('#droid'), 'stagger', 420);
+  const g = fxEl('ghost', DROID.x - 12, DROID.y - 40); g.getBoundingClientRect();
+  g.style.left = '30px'; g.style.top = '350px'; g.style.opacity = '0'; g.style.transform = 'rotate(-30deg) scale(.6)';
+  setTimeout(() => g.remove(), 420);
 }
 
 /* ---------- play ---------- */
@@ -665,31 +824,43 @@ function onFoe(i){
   }
   if(!sel) infoFoe(i);
 }
-async function showEvent(ev, k){
-  const b = S.b;
+function flyCard(el, x, y){
+  if(!el) return;
+  el.style.left = x + 'px'; el.style.top = y + 'px'; el.style.transform = 'scale(.25) rotate(12deg)'; el.style.opacity = '0';
+  setTimeout(() => el.remove(), 260);
+}
+async function showEvent(ev, k, ti){
   switch(ev.type){
-    case 'tick': renderAll(); if(!ev.real) floatAt(xs(0) + 22, 40, '加速', 'time'); await sleep(ev.real ? TICK : TICK * 0.55); break;
-    case 'just': floatAt(xs(0) + 24, laneTop(ev.e) + 34, 'JUST', 'just'); setLast(`JUST: ${b.foes[ev.e].name}の${ev.name}を潰した`); renderAll(); await sleep(450); break;
-    case 'card': for(const x of ev.ev) cardFx(x); renderAll(); await sleep(330); break;
-    case 'foe': foeFx(ev.e, ev.res); renderAll(); await sleep(360); break;
-    case 'interrupt': floatAt(xs(1) + 10, 52, '中断', 'foe'); setLast(`${CARDS[k].name}は中断された`); renderAll(); await sleep(420); break;
+    case 'tick': if(!ev.real) afterimage(); renderAll(); await sleep(ev.real ? T_TICK : T_SWIFT); break;
+    case 'just': justFx(ev.e); renderAll(); await sleep(420); break;
+    case 'card': cardMotion(k, ti); for(const x of ev.ev) cardFx(x); renderAll(); await sleep(320); break;
+    case 'foe': await foeFx(ev.e, ev.res); renderAll(); await sleep(190); break;
+    case 'interrupt': interruptFx(); renderAll(); await sleep(420); break;
   }
 }
 async function execute(){
   const s = sel, b = S.b; sel = null; PV = null; busy = true;
   let card = null, k = null, cost;
-  if(s.kind === 'card'){ card = b.hand.splice(s.i, 1)[0]; k = card.k; cost = CARDS[k].cost; if(s.target != null) lastTarget = s.target; setLast(`${CARDS[k].name}を実行(${cost}サイクル)`); }
-  else { cost = b.hand.length; b.disc.push(...b.hand); b.hand = []; setLast(`引き直し(${cost}サイクル)`); }
+  if(s.kind === 'card'){
+    card = b.hand.splice(s.i, 1)[0]; k = card.k; cost = CARDS[k].cost; if(s.target != null) lastTarget = s.target;
+    const el = cardEls.get(card.id); cardEls.delete(card.id); flyCard(el, DROID.x - 40, DROID.y - 40);
+  } else {
+    cost = b.hand.length;
+    b.hand.forEach((cd, n) => { const el = cardEls.get(cd.id); cardEls.delete(cd.id); setTimeout(() => flyCard(el, 24, 346), n * 30); });
+    b.disc.push(...b.hand); b.hand = [];
+  }
+  $('#droid').classList.add('casting');
   renderAll();
   const g = spendGen(S, cost, k, s.target, false); let r;
-  while(!(r = g.next()).done) await showEvent(r.value, k);
+  while(!(r = g.next()).done) await showEvent(r.value, k, s.target);
+  $('#droid').classList.remove('casting');
   const out = r.value;
   if(card) b.disc.push(card);
-  if(out.dead){ busy = false; renderAll(); await sleep(300); onLose(); return; }
-  if(out.won){ busy = false; b.over = true; renderAll(); await sleep(400); onWin(); return; }
-  if(!k) drawN(5);
-  else if(!b.hand.length){ drawN(5); setLast('手札を使い切った: 0サイクルで引き直し'); }
-  busy = false; renderAll();
+  busy = false;
+  if(out.dead){ renderAll(); await sleep(350); onLose(); return; }
+  if(out.won){ b.over = true; renderAll(); await sleep(500); onWin(); return; }
+  if(!k || !b.hand.length) drawN(5);
+  renderAll();
 }
 
 /* ---------- flow ---------- */
@@ -703,13 +874,13 @@ function startBattle(n){
   snapshot = JSON.stringify(run);
   const parts = {};
   for(const p of PARTS) parts[p.id] = {cur: run.parts[p.id].damaged ? Math.ceil(p.max / 2) : p.max, max:p.max};
-  const foes = B.foes.map((key, i) => { const f = FOES[key]; return {key, i, name:f.name, tag:f.tag, hp:f.hp, maxHp:f.hp, pat:f.pat, idx:0, r:f.start, seq:0, alive:true, crack:0}; });
+  const foes = B.foes.map((key, i) => { const f = FOES[key]; return {key, i, name:f.name, tag:f.tag, kind:f.kind, hp:f.hp, maxHp:f.hp, pat:f.pat, idx:0, r:f.start, seq:0, alive:true, crack:0}; });
   let id = 0;
-  S.b = {n, T:0, block:0, swift: parts.mob.cur > 0 ? 2 : 0, foes, parts, draw: shuffle(run.deck.map(k => ({k, id:id++}))), disc:[], hand:[], cast:null, broken:{}, over:false};
-  drawN(5); sel = null; PV = null; busy = false; lastTarget = 0;
-  setLast('デトロイト噴射機構: 戦闘開始時スウィフト2');
-  buildLanes(); clearMarks(); renderAll();
-  toast(`${B.area} · ${B.room}${B.boss ? ' · ボス' : ''}`);
+  S.b = {n, T:0, block:0, swift: parts.mob.cur > 0 ? 2 : 0, foes, parts, draw: shuffle(run.deck.map(k => ({k, id: n * 1000 + id++}))), disc:[], hand:[], cast:null, broken:{}, over:false};
+  sel = null; PV = null; busy = false; lastTarget = 0;
+  clearCards(); clearMarks(); buildFoes();
+  drawN(5); renderAll();
+  toast(`${B.area} · ${B.room}`);
 }
 function next(){
   S.run.step++;
@@ -723,19 +894,19 @@ function onWin(){
   const lines = [];
   for(const p of PARTS){
     const rp = S.run.parts[p.id], br = !!S.b.broken[p.id];
-    if(br) lines.push(`<li><b class="foe2">${p.fn}</b> 破損 → 損傷: 次の戦闘は耐久が半分から</li>`);
-    else if(rp.damaged) lines.push(`<li><b class="me">${p.fn}</b> 耐えきった → 損傷が直った</li>`);
+    if(br) lines.push(`<li>${p.fn}: 破損 → 次の戦闘は耐久半分(損傷)</li>`);
+    else if(rp.damaged) lines.push(`<li>${p.fn}: 耐えきった → 損傷が直った</li>`);
     rp.damaged = br;
   }
   lastPool = BATTLES[S.b.n].foes.flatMap(k => FOES[k].pool);
-  showOv(`<h2>戦闘終了</h2><p class="sub">本体 ${S.run.body}/${S.run.bodyMax}</p><ul>${lines.join('') || '<li>破損した部位はない</li>'}</ul><div class="row"><button class="btn" type="button" data-act="next">次へ</button></div>`);
+  showOv(`<h2>戦闘終了</h2><p class="sub">本体 ${S.run.body}/${S.run.bodyMax}</p>${lines.length ? `<ul>${lines.join('')}</ul>` : ''}<div class="row"><button class="btn" type="button" data-act="next">次へ</button></div>`);
 }
 function onLose(){
   showOv(`<h2>機能停止</h2><p class="sub">${BATTLES[S.b.n].room}で本体の耐久が尽きた。</p><div class="row"><button class="btn ghost" type="button" data-act="restart">最初から</button><button class="btn" type="button" data-act="retry">この戦闘をやり直す</button></div>`);
 }
 function showLearn(){
   const opts = shuffle([...new Set(lastPool)]).slice(0, 3);
-  showOv(`<h2>学習</h2><p class="sub">倒した敵の動きを、1つ取り込める。</p><div class="opts">${opts.map(k => `<button class="card static" type="button" data-act="learn" data-arg="${k}">${cardInner(k, null)}</button>`).join('')}</div><div class="row"><button class="btn ghost" type="button" data-act="next">取り込まない</button></div>`);
+  showOv(`<h2>学習</h2><p class="sub">倒した敵の動きを、1つ取り込める。</p><div class="opts">${opts.map(k => `<button class="card static exp" type="button" data-act="learn" data-arg="${k}">${cardInner(k, null)}</button>`).join('')}</div><div class="row"><button class="btn ghost" type="button" data-act="next">取り込まない</button></div>`);
 }
 function showRest(){
   const dmg = PARTS.filter(p => S.run.parts[p.id].damaged).map(p => p.fn);
@@ -756,39 +927,38 @@ function infoCard(k){
   const c = CARDS[k], kw = [];
   if(c.block) kw.push('ブロック'); if(c.delay) kw.push('ディレイ'); if(c.swift) kw.push('スウィフト'); if(c.crack) kw.push('クラック');
   kw.push(c.atomic ? 'アトミック' : '中断'); kw.push('サイクル');
-  showOv(`<h2>${c.name}</h2><p class="sub">コスト <b class="time">${c.cost}</b> サイクル · ${cardType(c)}${c.src ? ` · ${c.src}由来` : ''}</p><p class="eff">${cardBits(k, S)}</p>${gloss(kw)}${closeRow}`, true);
+  showOv(`<h2>${c.name}</h2><p class="sub">コスト ${c.cost} サイクル${c.src ? ` · ${c.src}由来` : ''}</p><p class="eff">${cardText(k, S)}</p>${gloss(kw)}${closeRow}`, true);
 }
 function infoFoe(i){
   const e = S.b.foes[i];
-  const rows = e.pat.map((a, j) => `<li class="${j === e.idx ? 'cur' : ''}">${a.kind === 'delay' ? `${a.n}: 自分に<span class="time">ディレイ</span>${a.v}` : `${a.n}: ${a.d}ダメージ → ${PART_BY[a.p].fn}${a.ch ? ' <b class="just">溜め</b>' : ''}`} <span class="dim">(間隔${a.dl})</span></li>`).join('');
-  showOv(`<h2>${e.name}</h2><p class="sub">耐久 ${e.hp}/${e.maxHp}${e.crack ? ` · クラック${e.crack}` : ''} · 行動パターン(繰り返し、色つきが次)</p><ol>${rows}</ol>${gloss(['溜め','ジャスト'])}${closeRow}`, true);
+  const rows = e.pat.map((a, j) => `<li class="${j === e.idx ? 'cur' : ''}">${a.kind === 'delay' ? `${a.n}: 自分にディレイ${a.v}` : `${a.n}: ${a.d}ダメージ → ${PART_BY[a.p].fn}${a.ch ? '(溜め)' : ''}`} <span style="color:var(--dim)">間隔${a.dl}</span></li>`).join('');
+  showOv(`<h2>${e.tag} ${e.name}</h2><p class="sub">耐久 ${e.hp}/${e.maxHp}${e.crack ? ` · クラック${e.crack}` : ''} · 行動パターン(繰り返し、色つきが次)</p><ol>${rows}</ol>${gloss(['溜め','ジャスト'])}${closeRow}`, true);
 }
 function infoPart(id){
   const p = PART_BY[id], st = S.b.parts[id], rp = S.run.parts[id];
-  showOv(`<h2>${p.name}</h2><p class="sub">${p.fn}${p.pt ? '(' + p.pt + ')' : ''} · 耐久 ${st.cur}/${st.max}${st.cur <= 0 ? ' · <b class="foe">破損</b>' : rp.damaged ? ' · <b class="foe2">損傷</b>' : ''}</p><p class="eff">${p.text}</p>${gloss(['破損','損傷'])}${closeRow}`, true);
+  showOv(`<h2>${p.name}</h2><p class="sub">${p.fn}${p.pt ? '(' + p.pt + ')' : ''} · 耐久 ${st.cur}/${st.max}${st.cur <= 0 ? ' · 破損' : rp.damaged ? ' · 損傷' : ''}</p><p class="eff">${p.text}</p>${gloss(['破損','損傷'])}${closeRow}`, true);
 }
 function infoDeck(){
   const counts = {}; for(const k of S.run.deck) counts[k] = (counts[k] || 0) + 1;
-  showOv(`<h2>デッキ ${S.run.deck.length}枚</h2><p class="sub">山札 ${S.b.draw.length} · 捨て札 ${S.b.disc.length} · 手札 ${S.b.hand.length}</p><div class="dk">${Object.keys(counts).map(k => `<div class="opt"><b>${CARDS[k].name} ×${counts[k]}</b><span>${CARDS[k].cost}サイクル · ${cardType(CARDS[k])}</span></div>`).join('')}</div>${closeRow}`, true);
+  showOv(`<h2>デッキ ${S.run.deck.length}枚</h2><p class="sub">山札 ${S.b.draw.length} · 捨て札 ${S.b.disc.length} · 手札 ${S.b.hand.length}</p><div class="dk">${Object.keys(counts).map(k => `<div class="opt"><b>${CARDS[k].name} ×${counts[k]}</b><span>${CARDS[k].cost}サイクル</span></div>`).join('')}</div>${closeRow}`, true);
 }
 function showRules(first){
-  showOv(`<h2>試作2の遊び方</h2><ul>
-    <li>時間はカードを使ったときだけ進む。コストは、かかる<b class="time">サイクル</b>。</li>
-    <li>各敵の行に、攻撃の予定が右から流れてくる。数字はダメージ、横の字は狙う部位(演・武・出・耐・機)。</li>
-    <li>カードをタップすると、完了位置と受けるダメージの予測が出る。もう一度タップで実行。攻撃カードは敵の行をタップして対象を変えられ、同じ敵をもう一度タップしても実行。</li>
-    <li>完了前に被弾すると<b class="foe">中断</b>。ブロックで全部防ぐか、<b>アトミック</b>なら中断されない。</li>
-    <li>完了と<b class="just">溜め技(紫)</b>が同じサイクルなら、JUSTで潰せる。</li>
-    <li>部位の耐久が0で<b class="foe">破損</b>: 性能を失い、そこへの攻撃は本体に通る。本体0で機能停止。破損した部位は次の戦闘で耐久半分(損傷)。</li>
-    <li>引き直しは、残りの手札の枚数ぶんサイクルを払う。長押しで詳細、部位や敵はタップで詳細。</li>
+  showOv(`<h2>試作3の遊び方</h2><ul>
+    <li>時間はカードを使ったときだけ進む。カード左上の数字が、かかるサイクル。</li>
+    <li>奥の画面が戦闘予測。各敵の行を、攻撃の予定が右から「今」(琥珀の三角)へ流れてくる。数字はダメージ、横の字は狙う部位。紫の丸は溜め技、砂時計は自分へのディレイ。</li>
+    <li>カードをタップすると完了位置と被弾の予測が出る。もう一度タップで実行。攻撃カードは敵か敵の行をタップして対象を変えられ、同じ敵をもう一度タップしても実行。</li>
+    <li>完了前に被弾すると中断。ブロックで全部防ぐか、右上に菱形のあるカード(アトミック)なら中断されない。完了と溜め技が同じサイクルなら、JUSTで潰せる。</li>
+    <li>左端は部位。耐久が0で破損し、性能を失う。そこへの攻撃と、削りきれなかった分は本体へ。破損した部位は次の戦闘で耐久半分。</li>
+    <li>右下は引き直し(残りの手札の枚数ぶんサイクルを払う)。下の矢印で手札を広げると効果文が見える。カードと敵は長押し、部位はタップで詳細。</li>
   </ul><div class="row"><button class="btn" type="button" data-act="close">${first ? 'はじめる' : '閉じる'}</button></div>`, !first);
 }
 function showMenu(){
-  showOv(`<h2>メニュー</h2><div class="opts col"><button class="opt" type="button" data-act="rules"><b>遊び方</b></button><button class="opt" type="button" data-act="deck"><b>デッキ一覧</b></button><button class="opt" type="button" data-act="fs"><b>全画面にする</b><span>対応していない環境では何も起きない</span></button><button class="opt" type="button" data-act="restart"><b>最初からやり直す</b></button></div>${closeRow}`, true);
+  const B = BATTLES[S.b.n];
+  showOv(`<h2>${B.area} ${B.room}</h2><p class="sub">部屋 ${B.no}/6${B.boss ? ' · ボス' : ''}</p><div class="opts col"><button class="opt" type="button" data-act="rules"><b>遊び方</b></button><button class="opt" type="button" data-act="deck"><b>デッキ一覧</b></button><button class="opt" type="button" data-act="fs"><b>全画面にする</b><span>対応していない環境では何も起きない</span></button><button class="opt" type="button" data-act="restart"><b>最初からやり直す</b></button></div>${closeRow}`, true);
 }
 async function goFull(){
   hideOv();
-  try{ await document.documentElement.requestFullscreen(); try{ await screen.orientation.lock('landscape'); }catch(e){} }
-  catch(e){ setLast('この表示環境では全画面にできません'); renderAll(); }
+  try{ await document.documentElement.requestFullscreen(); try{ await screen.orientation.lock('landscape'); }catch(e){} }catch(e){}
 }
 function showOv(html, closable){ const ov = $('#ov'); $('#ovbox').innerHTML = html; ov.dataset.closable = closable ? '1' : ''; ov.hidden = false; }
 function hideOv(){ $('#ov').hidden = true; }
@@ -814,7 +984,7 @@ const stage = $('#stage');
 let lpTimer = null, longFired = false;
 stage.addEventListener('pointerdown', ev => {
   if(busy || !$('#ov').hidden) return;
-  const c = ev.target.closest('.card[data-i]'), f = ev.target.closest('.fp[data-f]');
+  const c = ev.target.closest('.card[data-i]'), f = ev.target.closest('.foe[data-f],.finfo[data-f]');
   if(!c && !f) return;
   clearTimeout(lpTimer);
   lpTimer = setTimeout(() => {
@@ -833,6 +1003,7 @@ stage.addEventListener('click', ev => {
   if(busy) return;
   const card = t.closest('.card[data-i]'); if(card){ onCard(+card.dataset.i); return; }
   if(t.closest('#redraw')){ onRedraw(); return; }
+  if(t.closest('#toggle')){ UI.expand = !UI.expand; renderAll(); return; }
   const f = t.closest('[data-f]'); if(f){ onFoe(+f.dataset.f); return; }
   const p = t.closest('.part'); if(p){ infoPart(p.dataset.p); return; }
   if(t.closest('.pile')){ infoDeck(); return; }
@@ -841,8 +1012,7 @@ stage.addEventListener('click', ev => {
 
 function fit(){
   const w = $('#wrap');
-  const s = Math.min(w.clientWidth / 844, w.clientHeight / 390);
-  document.documentElement.style.setProperty('--s', Math.max(0.2, s));
+  document.documentElement.style.setProperty('--s', Math.max(0.2, Math.min(w.clientWidth / 844, w.clientHeight / 390)));
 }
 addEventListener('resize', fit);
 fit();

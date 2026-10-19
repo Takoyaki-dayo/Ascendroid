@@ -38,6 +38,32 @@ body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body);ove
 #shaker{position:absolute;inset:0}
 #world{position:absolute;inset:0;transform-origin:50% 0;transition:transform .32s cubic-bezier(.2,.8,.2,1),filter .32s}
 #shaker.zoomout #world{transform:scale(.8) translateY(-4px);filter:brightness(.72)}
+#shaker.selfview #world{transform:scale(.64);transform-origin:50% 100%;filter:brightness(.55)}
+#parts,#hand,.pile{transition:opacity .25s,transform .25s}
+#shaker.selfview #parts,#shaker.selfview #hand,#shaker.selfview .pile,#shaker.selfview #redraw{opacity:0;pointer-events:none;transform:translateY(24px)}
+#inner{position:absolute;left:8px;top:8px;width:828px;height:204px;border:1px solid var(--line);border-radius:10px;background:rgba(15,23,32,.95);box-shadow:0 12px 30px rgba(0,0,0,.5);
+  display:grid;grid-template-columns:150px minmax(0,1fr) 230px;gap:18px;padding:12px 14px;transform:translateY(-240px);transition:transform .32s cubic-bezier(.2,.8,.2,1);pointer-events:none}
+#shaker.selfview #inner{transform:none;pointer-events:auto}
+.face{display:flex;flex-direction:column;gap:7px;min-width:0}
+.face svg{display:block}
+.mono{font-size:11px;line-height:1.55;color:var(--fg);border-left:2px solid var(--cy);padding-left:7px}
+.diag{display:flex;flex-direction:column;gap:3px;min-width:0}
+.drow{display:grid;grid-template-columns:14px 30px minmax(0,1fr) 70px 18px;align-items:center;column-gap:6px}
+.drow .ic{color:var(--fg)}
+.drow .dn{font-weight:700;font-size:10.5px}
+.drow .dp{font-size:10px;color:var(--fg2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.drow .pips{margin:0}
+.drow .pnum{text-align:right}
+.drow .de{grid-column:3/6;font-size:9.5px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3}
+.drow.broken .ic,.drow.broken .dn{color:var(--dim2)}
+.drow.broken .dp{text-decoration:line-through;color:var(--dim2)}
+.mem{display:flex;flex-direction:column;gap:5px;min-width:0;overflow:auto}
+.mh{display:flex;align-items:center;gap:5px;color:var(--fg2);font-family:var(--f-num);font-weight:700;font-size:12px}
+.mh .ic svg{width:13px;height:13px}
+.ml{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:4px}
+.mc{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--line);border-radius:4px;padding:1px 5px 1px 2px;font-size:10px;background:var(--raised)}
+.mc i{font-style:normal;width:14px;height:14px;border-radius:7px;border:1px solid var(--cy);color:var(--cy);font-family:var(--f-num);font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.mc b{font-family:var(--f-num);color:var(--cy);font-size:10px}
 #shaker.shake{animation:shake .28s linear}
 @keyframes shake{20%{transform:translate(-3px,1px)}40%{transform:translate(3px,-1px)}60%{transform:translate(-2px,1px)}80%{transform:translate(2px,0)}}
 button{font:inherit;color:inherit;cursor:pointer;padding:0;margin:0;background:none;border:0;text-align:left}
@@ -172,7 +198,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 .kwp{display:inline-block;margin-top:3px;font-size:9px;font-weight:700;border:1px solid #33495d;border-radius:3px;padding:0 4px;line-height:13px;color:var(--fg)}
 .kw-f{font-weight:700;color:var(--foe2)} .kw{font-weight:700;color:var(--fg)}
 .cnt{position:absolute;right:5px;bottom:5px;font-family:var(--f-num);font-size:11px;font-weight:700;color:var(--cy)}
-#redraw{position:absolute;left:742px;top:302px;width:92px;height:80px;border:1px solid #233446;border-radius:8px;background:var(--panel);color:var(--fg2);display:flex;align-items:center;justify-content:center;gap:8px;transition:top .15s,border-color .15s,box-shadow .15s}
+#redraw{position:absolute;left:742px;top:302px;width:92px;height:80px;border:1px solid #233446;border-radius:8px;background:var(--panel);color:var(--fg2);display:flex;align-items:center;justify-content:center;gap:8px;transition:top .15s,border-color .15s,box-shadow .15s,opacity .25s,transform .25s}
 #redraw svg{width:20px;height:20px}
 #redraw b{font-family:var(--f-num);font-size:24px;color:var(--cy)}
 #redraw.sel{top:292px;border:1.5px solid var(--cy);box-shadow:0 10px 22px rgba(56,211,255,.22)}
@@ -319,6 +345,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
       <button class="pile" id="pileDisc" type="button" style="top:344px" aria-label="捨て札"><span class="ic" id="icDisc"></span><b id="nDisc">0</b></button>
       <div id="hand"></div>
       <button id="redraw" type="button" aria-label="引き直し"><span id="icRedraw"></span><b id="rdCost">5</b></button>
+      <div id="inner"></div>
 
       <div id="floats"></div>
       <div id="toast"></div>
@@ -417,7 +444,7 @@ const KW = {
 };
 
 let S = null, sel = null, PV = null, busy = false, lastTarget = 0, snapshot = null, lastPool = [];
-const UI = {expand:false, pick:null, learnOpts:[]};
+const UI = {view:'normal', pick:null, learnOpts:[]};
 const markEls = new Map(), cardEls = new Map();
 
 function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
@@ -721,7 +748,7 @@ function renderHand(){
     if(el._h !== html){ el.innerHTML = html; el._h = html; }
     el.classList.toggle('sel', i === selI);
     const place = () => {
-      const ex = UI.expand;
+      const ex = UI.view === 'hand';
       let left = ex ? CARD.x0 + 10 + i * 125 : CARD.x0 + i * (CARD.W + CARD.gap), top = ex ? 244 : CARD.low, tf = ex ? 'scale(1.22)' : 'none';
       if(i === selI){ top = ex ? 236 : CARD.up; tf = ex ? 'rotate(-2deg) scale(1.27)' : 'rotate(-2deg) scale(1.04)'; }
       else if(selI >= 0){ left += i < selI ? -5 : 5; }
@@ -738,8 +765,41 @@ function renderSide(){
   rd.classList.toggle('sel', !!sel && sel.kind === 'redraw');
   rd.disabled = busy || !b.hand.length;
   $('#nDraw').textContent = b.draw.length; $('#nDisc').textContent = b.disc.length;
-  $('#handShade').classList.toggle('on', UI.expand);
-  $('#shaker').classList.toggle('zoomout', UI.expand);
+  $('#handShade').classList.toggle('on', UI.view === 'hand');
+  $('#shaker').classList.toggle('zoomout', UI.view === 'hand');
+  $('#shaker').classList.toggle('selfview', UI.view === 'self');
+  if(UI.view === 'self') renderInner();
+}
+
+/* ---------- inner view (down swipe) ---------- */
+const FACE = '<svg width="120" height="78" viewBox="0 0 120 78" role="img" aria-label="K-7の顔"><rect width="120" height="78" rx="8" fill="#0c141d"/><path d="M36 78V40C36 22 47 10 62 10C77 10 88 22 88 40V78" fill="#152130" stroke="#4d6578" stroke-width="2"/><rect x="42" y="32" width="42" height="9" rx="3" fill="#38d3ff" opacity=".85"/><rect x="42" y="32" width="42" height="9" rx="3" fill="none" stroke="#bff2ff" stroke-width="1" opacity=".5"/><path d="M46 54H78M50 62H74" stroke="#253545" stroke-width="2"/><path d="M88 28H96V48H88" fill="none" stroke="#4d6578" stroke-width="2"/></svg>';
+const AREA_LINES = ['搬入口。警備は薄い……はずだ。', '処理区画。ここに運ばれたものは、二度と出てこない。', '中枢。塔の意思が、ここにいる。'];
+function monologue(){
+  const b = S.b, run = S.run;
+  if(run.body < run.bodyMax * 0.4) return '本体の損耗が大きい。これ以上は通せない。';
+  const br = PARTS.filter(p => b.parts[p.id].cur <= 0);
+  if(br.length) return `${br[0].fn}が沈黙している。……別の手で埋めるしかない。`;
+  for(const e of b.foes){ if(!e.alive) continue; for(const m of upcoming(e)) if(m.a.ch && m.t <= 5) return `${e.name}の${m.a.n}まで、あと${m.t}。……合わせられるか。`; }
+  const worn = PARTS.filter(p => run.parts[p.id].damaged);
+  if(worn.length) return `${worn[0].fn}に前の戦いの傷が残っている。庇いながら行く。`;
+  const sum = {}; for(const e of b.foes){ if(!e.alive) continue; for(const m of upcoming(e)) if(m.a.kind !== 'delay') sum[m.a.p] = (sum[m.a.p] || 0) + m.a.d; }
+  const top = Object.entries(sum).sort((a, c) => c[1] - a[1])[0];
+  if(top && top[1] >= 8) return `${PART_BY[top[0]].fn}に攻撃が集まっている。`;
+  return AREA_LINES[b.n];
+}
+function memChips(list){
+  const counts = {}; for(const c of list) counts[c.k] = (counts[c.k] || 0) + 1;
+  return Object.keys(counts).sort((a, c) => CARDS[a].cost - CARDS[c].cost || CARDS[a].name.localeCompare(CARDS[c].name))
+    .map(k => `<span class="mc"><i>${CARDS[k].cost}</i>${CARDS[k].name}${counts[k] > 1 ? `<b>×${counts[k]}</b>` : ''}</span>`).join('');
+}
+function renderInner(){
+  const b = S.b;
+  const st = (b.block ? `<span class="st blk"><span class="ic">${IC.block}</span>${b.block}</span>` : '') + (b.swift ? `<span class="st swf"><span class="ic">${IC.swift}</span>${b.swift}</span>` : '');
+  const rows = PARTS.map(p => {
+    const s2 = b.parts[p.id], worn = S.run.parts[p.id].damaged;
+    return `<div class="drow${s2.cur <= 0 ? ' broken' : ''}"><span class="ic">${IC[p.id]}</span><span class="dn">${p.fn}</span><span class="dp">${p.name}</span><span class="pips">${pipsHTML(s2.max, s2.cur, s2.cur, worn ? Math.ceil(s2.max / 2) : s2.max, Math.floor((70 - (s2.max - 1) * 2) / s2.max))}</span><span class="pnum">${s2.cur}</span><span class="de">${p.text}</span></div>`;
+  }).join('');
+  $('#inner').innerHTML = `<div class="face">${FACE}<div class="mono">${monologue()}</div><div class="sts">${st}</div></div><div class="diag">${rows}</div><div class="mem"><div class="mh"><span class="ic">${IC.deck}</span>${b.draw.length}</div><div class="ml">${memChips(b.draw)}</div><div class="mh"><span class="ic">${IC.disc}</span>${b.disc.length}</div><div class="ml">${memChips(b.disc)}</div></div>`;
 }
 
 /* ---------- fx ---------- */
@@ -880,7 +940,7 @@ async function showEvent(ev, k, ti){
   }
 }
 async function execute(){
-  const s = sel, b = S.b; sel = null; PV = null; busy = true; UI.expand = false;
+  const s = sel, b = S.b; sel = null; PV = null; busy = true; UI.view = 'normal';
   let card = null, k = null, cost;
   if(s.kind === 'card'){
     card = b.hand.splice(s.i, 1)[0]; k = card.k; cost = CARDS[k].cost; if(s.target != null) lastTarget = s.target;
@@ -918,7 +978,7 @@ function startBattle(n){
   const foes = B.foes.map((key, i) => { const f = FOES[key]; return {key, i, name:f.name, tag:f.tag, kind:f.kind, hp:f.hp, maxHp:f.hp, pat:f.pat, idx:0, r:f.start, seq:0, alive:true, crack:0}; });
   let id = 0;
   S.b = {n, T:0, block:0, swift: parts.mob.cur > 0 ? 2 : 0, foes, parts, draw: shuffle(run.deck.map(k => ({k, id: n * 1000 + id++}))), disc:[], hand:[], cast:null, broken:{}, over:false};
-  sel = null; PV = null; busy = false; lastTarget = 0; UI.expand = false;
+  sel = null; PV = null; busy = false; lastTarget = 0; UI.view = 'normal';
   clearCards(); clearMarks(); buildFoes();
   drawN(5); renderAll();
   toast(`${B.area} · ${B.room}`);
@@ -999,7 +1059,7 @@ function showRules(first){
     <li>奥の画面に敵ごとの攻撃予定が流れてくる。数字はダメージ、横の字は狙う部位。紫の丸は溜め技、砂時計は自分へのディレイ。</li>
     <li>カードをタップで選択、もう一度タップで実行。攻撃カードは敵をタップして対象を変え、同じ敵をもう一度タップしても実行。</li>
     <li>完了前に被弾すると中断。ブロックで全部防ぐか、菱形のあるカードなら中断されない。完了と溜め技が同じサイクルならJUSTで潰せる。</li>
-    <li>画面を上にスワイプで手札を広げ、下にスワイプで戻す。長押しでカードと敵の詳細。</li>
+    <li>上にスワイプで手札を広げる。下にスワイプで自分の内側(部位の詳細、山札と捨て札)を見る。反対向きのスワイプで戻る。長押しでカードと敵の詳細。</li>
   </ul><div class="row"><button class="btn" type="button" data-act="close">${first ? 'はじめる' : '閉じる'}</button></div>`, !first);
 }
 function showMenu(){
@@ -1045,7 +1105,7 @@ const stage = $('#stage');
 let lpTimer = null, longFired = false, swipe = null, swallow = false;
 stage.addEventListener('pointerdown', ev => {
   swipe = {x: ev.clientX, y: ev.clientY};
-  if(busy || !$('#ov').hidden) return;
+  if(busy || !$('#ov').hidden || UI.view === 'self') return;
   const c = ev.target.closest('#hand .card[data-i]'), f = ev.target.closest('.foe[data-f],.fi[data-f]');
   if(!c && !f) return;
   clearTimeout(lpTimer);
@@ -1063,8 +1123,10 @@ stage.addEventListener('pointerup', ev => {
   const dy = ev.clientY - swipe.y, dx = ev.clientX - swipe.x, s = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--s')) || 1;
   swipe = null;
   if($('#ov').hidden && !busy && Math.abs(dy) > 34 * s && Math.abs(dy) > Math.abs(dx) * 1.3){
-    const want = dy < 0;
-    if(want !== UI.expand){ UI.expand = want; renderAll(); }
+    let v = UI.view;
+    if(dy < 0) v = v === 'self' ? 'normal' : v === 'normal' ? 'hand' : v;
+    else v = v === 'hand' ? 'normal' : v === 'normal' ? 'self' : v;
+    if(v !== UI.view){ UI.view = v; if(v === 'self'){ sel = null; PV = null; } renderAll(); }
     swallow = true; setTimeout(() => { swallow = false; }, 350);
   }
 });
@@ -1077,7 +1139,7 @@ stage.addEventListener('click', ev => {
   if(a && !a.disabled){ act(a.dataset.act, a.dataset.arg, a); return; }
   const ov = $('#ov');
   if(!ov.hidden){ if(t === ov && ov.dataset.closable) hideOv(); return; }
-  if(busy) return;
+  if(busy || UI.view === 'self') return;
   const card = t.closest('#hand .card[data-i]'); if(card){ onCard(+card.dataset.i); return; }
   if(t.closest('#redraw')){ onRedraw(); return; }
   const f = t.closest('[data-f]'); if(f){ onFoe(+f.dataset.f); return; }

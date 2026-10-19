@@ -36,9 +36,9 @@ body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body);ove
   background:radial-gradient(ellipse 520px 220px at 420px 230px, rgba(56,211,255,.05), transparent 70%), var(--bg);font-size:11px;line-height:1.35;touch-action:none}
 #stage *{box-sizing:border-box}
 #shaker{position:absolute;inset:0}
-#world{position:absolute;inset:0;transform-origin:50% 0;transition:transform .32s cubic-bezier(.2,.8,.2,1),filter .32s}
-#shaker.zoomout #world{transform:scale(.8) translateY(-4px);filter:brightness(.72)}
-#shaker.selfview #world{transform:scale(.64);transform-origin:50% 100%;filter:brightness(.55)}
+#world{position:absolute;inset:0;transform-origin:50% 50%;transition:transform .32s cubic-bezier(.2,.8,.2,1),filter .32s}
+#shaker.zoomout #world{transform:scale(.8);filter:brightness(.72)}
+#shaker.selfview #world{transform:scale(.64);filter:brightness(.55)}
 #parts,#hand,.pile{transition:opacity .25s,transform .25s}
 #shaker.selfview #parts,#shaker.selfview #hand,#shaker.selfview .pile,#shaker.selfview #redraw{opacity:0;pointer-events:none;transform:translateY(24px)}
 #inner{position:absolute;left:8px;top:8px;width:828px;height:204px;border:1px solid var(--line);border-radius:10px;background:rgba(15,23,32,.95);box-shadow:0 12px 30px rgba(0,0,0,.5);
@@ -359,7 +359,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 <script src="data/enemies.js"></script>
 <script src="data/lines.js"></script>
 <script>
-const APP_VERSION = '0.5.1';
+const APP_VERSION = '0.5.2';
 const $ = s => document.querySelector(s);
 const NOW = 180, PX = 37, xs = c => NOW + c * PX, ROWY = [58, 94, 130], VIEW = 12, SWIFT_VIS = 2.2;
 const DROID = {x: 133, y: 206, sx: 156, sy: 162};

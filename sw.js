@@ -1,11 +1,15 @@
-// 塔の戦闘試作 サービスワーカー
-// 更新するときは VERSION を上げる(Claudeがpushのたびに上げる)
-const VERSION = 'v6';
+// Ascendroid サービスワーカー
+// 更新するときは VERSION をアプリのバージョン(index.html の APP_VERSION)と同じ値にする
+const VERSION = '0.5.1';
 const CACHE = 'tower-' + VERSION;
 const CORE = [
   './',
   'index.html',
   'manifest.webmanifest',
+  'data/parts.js',
+  'data/cards.js',
+  'data/enemies.js',
+  'data/lines.js',
   'icons/icon-192.png',
   'icons/icon-512.png',
   'icons/maskable-512.png',

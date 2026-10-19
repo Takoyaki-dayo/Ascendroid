@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>塔の戦闘試作4</title>
+<title>Ascendroid</title>
 <meta name="theme-color" content="#0a0f15">
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
@@ -354,7 +354,12 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
   </div>
 </div>
 
+<script src="data/parts.js"></script>
+<script src="data/cards.js"></script>
+<script src="data/enemies.js"></script>
+<script src="data/lines.js"></script>
 <script>
+const APP_VERSION = '0.5.1';
 const $ = s => document.querySelector(s);
 const NOW = 180, PX = 37, xs = c => NOW + c * PX, ROWY = [58, 94, 130], VIEW = 12, SWIFT_VIS = 2.2;
 const DROID = {x: 133, y: 206, sx: 156, sy: 162};
@@ -395,53 +400,17 @@ const SPR = {
   warden:'<svg width="90" height="100" viewBox="0 -4 60 66" aria-hidden="true"><rect x="19" y="0" width="22" height="58" rx="4" fill="#152130" stroke="#4d6578" stroke-width="1.2"/><rect x="6" y="14" width="10" height="30" rx="2" fill="#152130" stroke="#4d6578" stroke-width="1.2"/><rect x="44" y="14" width="10" height="30" rx="2" fill="#152130" stroke="#4d6578" stroke-width="1.2"/><circle cx="30" cy="16" r="5" fill="#ff4d6a" opacity=".85"/><path d="M24 30h12M24 36h12M24 42h12" stroke="#253545" stroke-width="2"/></svg>',
 };
 
-const PARTS = [
-  {id:'calc', fn:'演算', pt:'', name:'〘標準演算核〙', max:5, text:'JUSTで溜め技を潰すと、その敵にクラック1。'},
-  {id:'arm',  fn:'武装', pt:'', name:'〘CXR34レールガン〙', max:6, text:'光学威力+1。《チャージショット》2枚をデッキに加える。'},
-  {id:'out',  fn:'出力', pt:'腕部', name:'〘汎用マニピュレータ〙', max:7, text:'物理威力+1。'},
-  {id:'dur',  fn:'耐久', pt:'基体', name:'〘標準フレーム〙', max:9, text:'ブロックを得るとき、+1。'},
-  {id:'mob',  fn:'機動', pt:'脚部', name:'〘デトロイト噴射機構〙', max:6, text:'戦闘開始時、スウィフト2。自分がディレイされたとき、スウィフト1を得る。'},
-];
+const PARTS = DATA.parts;
 const PART_BY = Object.fromEntries(PARTS.map(p => [p.id, p]));
 const AB = {calc:'演', arm:'武', out:'出', dur:'耐', mob:'機'};
 
-const CARDS = {
-  jab:      {name:'ジャブ', cost:1, tgt:true, dmg:{t:'phys', n:3}},
-  rapid:    {name:'速射', cost:1, tgt:true, dmg:{t:'phys', n:1, x:2}},
-  slash:    {name:'スラッシュ', cost:2, tgt:true, dmg:{t:'phys', n:7}},
-  blow:     {name:'過負荷打撃', cost:4, tgt:true, dmg:{t:'phys', n:16}},
-  charge:   {name:'チャージショット', cost:3, tgt:true, atomic:true, dmg:{t:'opt', n:8}, src:'arm'},
-  emp:      {name:'EMPパルス', cost:3, all:true, dmg:{t:'opt', n:4}},
-  crackshot:{name:'亀裂弾', cost:2, tgt:true, dmg:{t:'opt', n:2}, crack:2},
-  guard:    {name:'障壁展開', cost:1, block:4},
-  wall:     {name:'防御姿勢', cost:2, block:9},
-  hack:     {name:'遅延ハック', cost:1, tgt:true, delay:2},
-  backflow: {name:'逆流', cost:2, all:true, delay:2},
-  overclock:{name:'オーバークロック', cost:1, swift:3},
-};
-const START_DECK = ['jab','jab','jab','slash','slash','blow','guard','guard','guard','hack','hack','charge','charge'];
+const CARDS = DATA.cards;
+const START_DECK = DATA.startDeck;
 
-const FOES = {
-  droneA:{name:'警備ドローン', tag:'A', kind:'drone', hp:12, start:3, pat:[{n:'射撃', d:3, dl:3, p:'calc'}], pool:['jab','rapid','guard','wall','emp']},
-  droneB:{name:'警備ドローン', tag:'B', kind:'drone', hp:12, start:4, pat:[{n:'射撃', d:3, dl:4, p:'out'}], pool:['jab','rapid','guard','wall','emp']},
-  exec:  {name:'処刑ユニット', tag:'X', kind:'exec', hp:26, start:3, pat:[{n:'殴打', d:4, dl:3, p:'out'},{n:'殴打', d:4, dl:3, p:'out'},{n:'粉砕砲', d:12, dl:4, p:'dur', ch:true}], pool:['slash','blow','wall','crackshot']},
-  hacker:{name:'ハッカー', tag:'H', kind:'hacker', hp:10, start:4, pat:[{n:'割り込み', kind:'delay', v:2, dl:4},{n:'射撃', d:2, dl:3, p:'calc'}], pool:['hack','backflow','overclock','crackshot']},
-  warden:{name:'管理AI ウォーデン', tag:'W', kind:'warden', hp:44, start:3, pat:[{n:'照射', d:4, dl:3, p:'calc'},{n:'照射', d:4, dl:2, p:'arm'},{n:'消去プロトコル', d:16, dl:5, p:'dur', ch:true}], pool:[]},
-  escort:{name:'随伴ドローン', tag:'E', kind:'drone', hp:10, start:2, pat:[{n:'射撃', d:2, dl:3, p:'mob'}], pool:[]},
-};
-const BATTLES = [
-  {area:'エリア1', room:'搬入ゲート', no:2, foes:['droneA','droneB']},
-  {area:'エリア1', room:'処理区画', no:4, foes:['exec','hacker']},
-  {area:'エリア1', room:'中枢', no:6, boss:true, foes:['warden','escort']},
-];
-const FLOW = ['b0','learn','b1','learn','rest','b2','clear'];
-const KW = {
-  'ブロック':'X分だけ部位へのダメージを減らす。全部位にかかり、使い切るまで残る。',
-  'ディレイ':'対象の次の行動をXサイクル遅らせる。',
-  'スウィフト':'自分だけXサイクル加速する。その間、敵の予定は進まない。',
-  'クラック':'受けるダメージ+X。消えずに残る。',
-  'アトミック':'被弾しても中断されない。',
-};
+const FOES = DATA.foes;
+const BATTLES = DATA.battles;
+const FLOW = DATA.flow;
+const KW = DATA.keywords;
 
 let S = null, sel = null, PV = null, busy = false, lastTarget = 0, snapshot = null, lastPool = [];
 const UI = {view:'normal', pick:null, learnOpts:[]};
@@ -768,24 +737,24 @@ function renderSide(){
   $('#handShade').classList.toggle('on', UI.view === 'hand');
   $('#shaker').classList.toggle('zoomout', UI.view === 'hand');
   $('#shaker').classList.toggle('selfview', UI.view === 'self');
-  if(UI.view === 'self') renderInner();
+  if(UI.view === 'self'){ if(!UI.line) UI.line = monologue(); renderInner(); } else UI.line = null;
 }
 
 /* ---------- inner view (down swipe) ---------- */
 const FACE = '<svg width="120" height="78" viewBox="0 0 120 78" role="img" aria-label="K-7の顔"><rect width="120" height="78" rx="8" fill="#0c141d"/><path d="M36 78V40C36 22 47 10 62 10C77 10 88 22 88 40V78" fill="#152130" stroke="#4d6578" stroke-width="2"/><rect x="42" y="32" width="42" height="9" rx="3" fill="#38d3ff" opacity=".85"/><rect x="42" y="32" width="42" height="9" rx="3" fill="none" stroke="#bff2ff" stroke-width="1" opacity=".5"/><path d="M46 54H78M50 62H74" stroke="#253545" stroke-width="2"/><path d="M88 28H96V48H88" fill="none" stroke="#4d6578" stroke-width="2"/></svg>';
-const AREA_LINES = ['搬入口。警備は薄い……はずだ。', '処理区画。ここに運ばれたものは、二度と出てこない。', '中枢。塔の意思が、ここにいる。'];
+function pickLine(t){ return Array.isArray(t) ? t[Math.floor(Math.random() * t.length)] : t; }
+function fillLine(t, v){ return pickLine(t).replace(/\{(\w+)\}/g, (m, k) => v[k] ?? m); }
 function monologue(){
-  const b = S.b, run = S.run;
-  if(run.body < run.bodyMax * 0.4) return '本体の損耗が大きい。これ以上は通せない。';
-  const br = PARTS.filter(p => b.parts[p.id].cur <= 0);
-  if(br.length) return `${br[0].fn}が沈黙している。……別の手で埋めるしかない。`;
-  for(const e of b.foes){ if(!e.alive) continue; for(const m of upcoming(e)) if(m.a.ch && m.t <= 5) return `${e.name}の${m.a.n}まで、あと${m.t}。……合わせられるか。`; }
-  const worn = PARTS.filter(p => run.parts[p.id].damaged);
-  if(worn.length) return `${worn[0].fn}に前の戦いの傷が残っている。庇いながら行く。`;
+  const b = S.b, run = S.run, L = DATA.lines, hit = {};
+  if(run.body < run.bodyMax * 0.4) hit.bodyLow = {};
+  const br = PARTS.find(p => b.parts[p.id].cur <= 0); if(br) hit.partBroken = {part: br.fn};
+  for(const e of b.foes){ if(!e.alive || hit.chargeSoon) continue; for(const m of upcoming(e)) if(m.a.ch && m.t <= 5){ hit.chargeSoon = {enemy: e.name, move: m.a.n, t: m.t}; break; } }
+  const worn = PARTS.find(p => run.parts[p.id].damaged); if(worn) hit.partWorn = {part: worn.fn};
   const sum = {}; for(const e of b.foes){ if(!e.alive) continue; for(const m of upcoming(e)) if(m.a.kind !== 'delay') sum[m.a.p] = (sum[m.a.p] || 0) + m.a.d; }
   const top = Object.entries(sum).sort((a, c) => c[1] - a[1])[0];
-  if(top && top[1] >= 8) return `${PART_BY[top[0]].fn}に攻撃が集まっている。`;
-  return AREA_LINES[b.n];
+  if(top && top[1] >= 8) hit.focus = {part: PART_BY[top[0]].fn};
+  for(const r of L.rules) if(hit[r.when]) return fillLine(r.text, hit[r.when]);
+  const a = L.area[BATTLES[b.n].room]; return a ? pickLine(a) : '';
 }
 function memChips(list){
   const counts = {}; for(const c of list) counts[c.k] = (counts[c.k] || 0) + 1;
@@ -799,7 +768,7 @@ function renderInner(){
     const s2 = b.parts[p.id], worn = S.run.parts[p.id].damaged;
     return `<div class="drow${s2.cur <= 0 ? ' broken' : ''}"><span class="ic">${IC[p.id]}</span><span class="dn">${p.fn}</span><span class="dp">${p.name}</span><span class="pips">${pipsHTML(s2.max, s2.cur, s2.cur, worn ? Math.ceil(s2.max / 2) : s2.max, Math.floor((70 - (s2.max - 1) * 2) / s2.max))}</span><span class="pnum">${s2.cur}</span><span class="de">${p.text}</span></div>`;
   }).join('');
-  $('#inner').innerHTML = `<div class="face">${FACE}<div class="mono">${monologue()}</div><div class="sts">${st}</div></div><div class="diag">${rows}</div><div class="mem"><div class="mh"><span class="ic">${IC.deck}</span>${b.draw.length}</div><div class="ml">${memChips(b.draw)}</div><div class="mh"><span class="ic">${IC.disc}</span>${b.disc.length}</div><div class="ml">${memChips(b.disc)}</div></div>`;
+  $('#inner').innerHTML = `<div class="face">${FACE}<div class="mono">${UI.line || ''}</div><div class="sts">${st}</div></div><div class="diag">${rows}</div><div class="mem"><div class="mh"><span class="ic">${IC.deck}</span>${b.draw.length}</div><div class="ml">${memChips(b.draw)}</div><div class="mh"><span class="ic">${IC.disc}</span>${b.disc.length}</div><div class="ml">${memChips(b.disc)}</div></div>`;
 }
 
 /* ---------- fx ---------- */
@@ -967,7 +936,7 @@ async function execute(){
 /* ---------- flow ---------- */
 function newRun(){
   const parts = {}; for(const p of PARTS) parts[p.id] = {damaged:false};
-  S = {run:{body:50, bodyMax:50, parts, deck:START_DECK.slice(), step:0}};
+  S = {run:{body:DATA.bodyMax, bodyMax:DATA.bodyMax, parts, deck:START_DECK.slice(), step:0}};
   hideOv(); startBattle(0);
 }
 function startBattle(n){
@@ -1054,7 +1023,7 @@ function infoDeck(){
   showOv(`<h2>デッキ ${S.run.deck.length}</h2><div class="cards">${Object.keys(counts).map(k => `<div class="card static">${cardInner(k, S, counts[k])}</div>`).join('')}</div>${closeRow}`, true);
 }
 function showRules(first){
-  showOv(`<h2>試作4の遊び方</h2><ul>
+  showOv(`<h2>遊び方</h2><ul>
     <li>時間はカードを使ったときだけ進む。カード左上の数字が、かかるサイクル。</li>
     <li>奥の画面に敵ごとの攻撃予定が流れてくる。数字はダメージ、横の字は狙う部位。紫の丸は溜め技、砂時計は自分へのディレイ。</li>
     <li>カードをタップで選択、もう一度タップで実行。攻撃カードは敵をタップして対象を変え、同じ敵をもう一度タップしても実行。</li>
@@ -1064,7 +1033,7 @@ function showRules(first){
 }
 function showMenu(){
   const B = BATTLES[S.b.n];
-  showOv(`<h2>${B.area} ${B.room} · ${B.no}/6</h2><div class="mlist"><button class="opt" type="button" data-act="rules"><b>遊び方</b></button><button class="opt" type="button" data-act="deck"><b>デッキ</b></button><button class="opt" type="button" data-act="fs"><b>全画面</b></button><button class="opt" type="button" data-act="restart"><b>最初から</b></button></div>${closeRow}`, true);
+  showOv(`<h2>${B.area} ${B.room} · ${B.no}/6</h2><p class="sub">Ascendroid ${APP_VERSION}</p><div class="mlist"><button class="opt" type="button" data-act="rules"><b>遊び方</b></button><button class="opt" type="button" data-act="deck"><b>デッキ</b></button><button class="opt" type="button" data-act="fs"><b>全画面</b></button><button class="opt" type="button" data-act="restart"><b>最初から</b></button></div>${closeRow}`, true);
 }
 async function goFull(){
   hideOv();

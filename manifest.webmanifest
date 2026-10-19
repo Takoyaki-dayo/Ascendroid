@@ -1,7 +1,7 @@
 {
-  "name": "塔の戦闘試作",
-  "short_name": "塔の試作",
-  "description": "サイバーパンク風ローグライク・カードゲームの戦闘試作",
+  "name": "Ascendroid",
+  "short_name": "Ascendroid",
+  "description": "サイバーパンク風ローグライク・カードゲーム(開発中)",
   "lang": "ja",
   "start_url": "./",
   "scope": "./",
@@ -10,8 +10,23 @@
   "background_color": "#0a0f15",
   "theme_color": "#0a0f15",
   "icons": [
-    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ]
 }

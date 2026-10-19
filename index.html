@@ -36,6 +36,8 @@ body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body);ove
   background:radial-gradient(ellipse 520px 220px at 420px 230px, rgba(56,211,255,.05), transparent 70%), var(--bg);font-size:11px;line-height:1.35;touch-action:none}
 #stage *{box-sizing:border-box}
 #shaker{position:absolute;inset:0}
+#world{position:absolute;inset:0;transform-origin:50% 0;transition:transform .32s cubic-bezier(.2,.8,.2,1),filter .32s}
+#shaker.zoomout #world{transform:scale(.8) translateY(-4px);filter:brightness(.72)}
 #shaker.shake{animation:shake .28s linear}
 @keyframes shake{20%{transform:translate(-3px,1px)}40%{transform:translate(3px,-1px)}60%{transform:translate(-2px,1px)}80%{transform:translate(2px,0)}}
 button{font:inherit;color:inherit;cursor:pointer;padding:0;margin:0;background:none;border:0;text-align:left}
@@ -147,13 +149,13 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 #menuBtn{position:absolute;left:806px;top:8px;width:28px;height:22px;border:1px solid var(--line);border-radius:4px;background:var(--panel);color:var(--dim);display:flex;align-items:center;justify-content:center}
 
 /* hand: tall cards peek from the bottom edge */
-#handShade{position:absolute;left:0;top:190px;width:844px;height:200px;background:linear-gradient(180deg,rgba(10,15,21,0),rgba(10,15,21,.93) 32%);opacity:0;transition:opacity .2s;pointer-events:none}
+#handShade{position:absolute;left:0;top:170px;width:844px;height:220px;background:linear-gradient(180deg,rgba(10,15,21,0),rgba(10,15,21,.88) 40%);opacity:0;transition:opacity .2s;pointer-events:none}
 #handShade.on{opacity:1}
 .pile{position:absolute;left:8px;width:66px;height:36px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--fg2);display:flex;align-items:center;justify-content:center;gap:6px}
 .pile .ic svg{width:14px;height:14px}
 .pile b{font-family:var(--f-num);font-size:13px}
 #pileDisc{color:var(--dim)}
-.card{position:absolute;width:96px;height:136px;overflow:hidden;border-radius:8px;background:var(--raised);border:1px solid #233446;color:var(--fg);display:flex;flex-direction:column;
+.card{position:absolute;width:96px;height:136px;transform-origin:50% 100%;overflow:hidden;border-radius:8px;background:var(--raised);border:1px solid #233446;color:var(--fg);display:flex;flex-direction:column;
   transition:left .22s cubic-bezier(.2,.8,.2,1),top .22s cubic-bezier(.2,.8,.2,1),transform .22s cubic-bezier(.2,.8,.2,1),opacity .22s,border-color .15s,box-shadow .2s}
 .card.sel,.card.picked{border:1.5px solid var(--cy);box-shadow:0 10px 24px rgba(56,211,255,.28)}
 .card:disabled{cursor:default}
@@ -272,6 +274,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
   <div id="rot">横画面にすると大きく表示されます</div>
   <div id="stage">
     <div id="shaker">
+      <div id="world">
       <div id="tl">
         <div id="screen"></div>
         <div id="swiftBand" class="np" hidden></div>
@@ -306,6 +309,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
       </div>
       <div id="foes"></div>
       <div id="fx"></div>
+      </div>
 
       <div id="parts"></div>
       <button id="menuBtn" type="button" data-act="menu" aria-label="メニュー"></button>
@@ -717,8 +721,9 @@ function renderHand(){
     if(el._h !== html){ el.innerHTML = html; el._h = html; }
     el.classList.toggle('sel', i === selI);
     const place = () => {
-      let left = CARD.x0 + i * (CARD.W + CARD.gap), top = UI.expand ? CARD.exp : CARD.low, tf = 'none';
-      if(i === selI){ top = (UI.expand ? CARD.exp - 10 : CARD.up); tf = 'rotate(-2deg) scale(1.04)'; }
+      const ex = UI.expand;
+      let left = ex ? CARD.x0 + 10 + i * 125 : CARD.x0 + i * (CARD.W + CARD.gap), top = ex ? 244 : CARD.low, tf = ex ? 'scale(1.22)' : 'none';
+      if(i === selI){ top = ex ? 236 : CARD.up; tf = ex ? 'rotate(-2deg) scale(1.27)' : 'rotate(-2deg) scale(1.04)'; }
       else if(selI >= 0){ left += i < selI ? -5 : 5; }
       el.style.left = left + 'px'; el.style.top = top + 'px'; el.style.transform = tf; el.style.opacity = '1';
       el.style.zIndex = i === selI ? 5 : 1;
@@ -734,6 +739,7 @@ function renderSide(){
   rd.disabled = busy || !b.hand.length;
   $('#nDraw').textContent = b.draw.length; $('#nDisc').textContent = b.disc.length;
   $('#handShade').classList.toggle('on', UI.expand);
+  $('#shaker').classList.toggle('zoomout', UI.expand);
 }
 
 /* ---------- fx ---------- */
@@ -874,7 +880,7 @@ async function showEvent(ev, k, ti){
   }
 }
 async function execute(){
-  const s = sel, b = S.b; sel = null; PV = null; busy = true;
+  const s = sel, b = S.b; sel = null; PV = null; busy = true; UI.expand = false;
   let card = null, k = null, cost;
   if(s.kind === 'card'){
     card = b.hand.splice(s.i, 1)[0]; k = card.k; cost = CARDS[k].cost; if(s.target != null) lastTarget = s.target;

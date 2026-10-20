@@ -12,6 +12,7 @@
   - `enemies.js` 敵(行動パターン、反応・連携、学習で出るカード)と遭遇
   - `map.js` 地図(道の性格と部屋の中身)、報酬、ショップ、イベント
   - `lines.js` 独り言のセリフ
+- `tools/datadoc.js` データ一覧の資料に載せる表を data から作る
 - `tools/sim.js` 自動対戦のシミュレータ。`node tools/sim.js greedy 40` で遭遇ごと、`node tools/sim.js greedy 40 run` でラン全体
 - `manifest.webmanifest` アプリ設定(全画面・横向き)
 - `sw.js` オフライン用。データファイルを増やしたら CORE に足す

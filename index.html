@@ -29,10 +29,10 @@ body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body);ove
   padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));padding-block:0;
   -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
 [hidden]{display:none!important}
-#wrap{position:relative;width:100%;height:100%;overflow:hidden}
+#wrap{position:relative;width:100%;height:100%;overflow:hidden;overflow:clip}
 #rot{display:none;position:absolute;left:0;right:0;top:10px;text-align:center;color:var(--cy);font-size:13px}
 @media (orientation:portrait){#rot{display:block}}
-#stage{position:absolute;left:50%;top:50%;width:844px;height:390px;transform:translate(-50%,-50%) scale(var(--s,1));overflow:hidden;
+#stage{position:absolute;left:50%;top:50%;width:844px;height:390px;transform:translate(-50%,-50%) scale(var(--s,1));overflow:hidden;overflow:clip;
   background:radial-gradient(ellipse 520px 220px at 420px 230px, rgba(56,211,255,.05), transparent 70%), var(--bg);font-size:11px;line-height:1.35;touch-action:none}
 #stage *{box-sizing:border-box}
 #shaker{position:absolute;inset:0}
@@ -96,8 +96,8 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 #selfBar.cast{background:rgba(56,211,255,.8);box-shadow:0 0 8px rgba(56,211,255,.5)}
 #selfBar.broken{background:var(--foe);animation:barbreak .38s ease-out forwards}
 @keyframes barbreak{0%{opacity:1;transform:none}40%{opacity:1;transform:scaleY(2.2)}100%{opacity:0;transform:scaleY(.2) translateY(-6px)}}
-.mk{position:absolute;width:32px;height:22px;display:flex;align-items:center;justify-content:center;gap:2px;border-radius:4px;border:1.5px solid var(--foe);background:#2a1220;color:#ffe0e6;transition:left .13s linear,top .2s,opacity .2s,transform .2s,box-shadow .15s}
-.mk b{font-family:var(--f-num);font-size:13px;font-weight:700}
+.mk{position:absolute;width:26px;height:22px;display:flex;align-items:center;justify-content:center;gap:2px;border-radius:4px;border:1.5px solid var(--foe);background:#2a1220;color:#ffe0e6;transition:left .13s linear,top .2s,opacity .2s,transform .2s,box-shadow .15s}
+.mk b{font-family:var(--f-num);font-size:12px;font-weight:700}
 .mk span{font-size:9.5px}
 .mk .ic svg{width:10px;height:10px}
 .mk.later{opacity:.45}
@@ -267,7 +267,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 .stchip{display:inline-flex;align-items:center;gap:3px;border:1px solid rgba(255,77,106,.5);border-radius:4px;padding:2px 6px;color:var(--foe2);font-family:var(--f-num);font-weight:700;font-size:12px}
 .stchip .ic svg{width:12px;height:12px}
 .stdesc{font-size:10.5px;color:var(--fg2);border-left:2px solid var(--foe);padding-left:6px}
-.ei-r{flex:1;min-width:0;display:flex;align-items:center}
+.ei-r{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center}
 .seq{display:flex;align-items:center;gap:0;flex-wrap:nowrap;overflow-x:auto;padding:22px 0 6px}
 .at{position:relative;width:76px;height:104px;flex:none;border:1.5px solid var(--foe);border-radius:8px;background:#1d1220;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
 .at .ty{position:absolute;left:6px;top:6px;color:var(--foe2)}
@@ -292,6 +292,85 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 .pinfo .pips{width:150px}
 .ckw{display:flex;flex-direction:column;gap:6px;font-size:10.5px;color:var(--fg2);flex:1;min-width:0}
 .ckw b{color:var(--fg)}
+/* 0.6.0: hand arrivals, timers, traits */
+.tl.tl3{background:#1d2e40}
+.mk.react{border-style:dashed}
+.mk.react.ghost{opacity:.75}
+.mk.sync{box-shadow:0 0 0 2px #0c141d,0 0 0 3.5px var(--foe)}
+#strip{position:absolute;inset:0}
+#stripLine{position:absolute;left:180px;top:150px;width:458px;height:1px;background:rgba(56,211,255,.14)}
+.sm{position:absolute;top:143px;transition:left .13s linear,opacity .2s}
+.sm.arr{width:10px;height:14px;margin-left:-5px;border:1.5px solid var(--cy-dim);border-radius:2px;background:#0d1d29}
+.sm.arr.over{border-color:#6a2a3a;border-style:dashed;background:transparent}
+.sm.tmr{top:142px;height:16px;padding:0 3px;margin-left:-12px;border:1.5px solid var(--cy);border-radius:4px;background:#0d2230;color:var(--cy);display:flex;align-items:center;gap:2px;font-family:var(--f-num);font-weight:700;font-size:10px}
+.sm.tmr .ic svg{width:10px;height:10px}
+#handCnt{position:absolute;left:8px;top:278px;width:66px;display:flex;align-items:center;justify-content:center;gap:5px;color:var(--fg2);font-family:var(--f-num);font-size:12px;font-weight:700;transition:opacity .25s}
+#handCnt .ic svg{width:14px;height:14px}
+#handCnt.full{color:var(--foe2)}
+#shaker.selfview #handCnt{opacity:0}
+.cost.zero{border-style:dashed}
+.st.trait{color:var(--foe2);opacity:.75}
+.st.trait.on{opacity:1;filter:drop-shadow(0 0 4px rgba(255,77,106,.8))}
+.pile.flash{border-color:var(--cy)}
+.pin{position:absolute;width:12px;height:12px;border:2px solid var(--cy);transform:rotate(45deg);animation:pin .6s ease-out forwards}
+@keyframes pin{0%{opacity:0;transform:rotate(45deg) scale(1.8)}40%{opacity:1;transform:rotate(45deg) scale(1)}100%{opacity:0}}
+#redraw.wait b{color:var(--fg2)}
+.traits{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+.trait-row{display:flex;gap:6px;align-items:center;font-size:10.5px;color:var(--fg2)}
+.trait-row .ic{color:var(--foe2)} .trait-row b{color:var(--fg)}
+.card.src{border-style:dashed}
+.gain{display:flex;align-items:center;gap:5px;justify-content:center;font-family:var(--f-num);font-weight:700;font-size:14px;color:var(--fg);margin:0 0 10px}
+.gain .ic svg{width:14px;height:14px}
+.bodyline .ic svg{width:12px;height:12px}
+/* shop / parts offer */
+.shop{display:flex;gap:14px;align-items:flex-start;justify-content:center;margin-bottom:10px}
+.shop .cards{margin:0;flex-wrap:nowrap}
+.sitem{display:flex;flex-direction:column;align-items:center;gap:4px;width:96px}
+.sitem.sold{height:158px;border:1px dashed var(--line);border-radius:8px}
+.price{display:inline-flex;align-items:center;gap:3px;font-family:var(--f-num);font-weight:700;font-size:12px;color:var(--fg)}
+.price.no{color:var(--dim2)}
+.svc{display:flex;flex-direction:column;gap:8px}
+.svc .opt{width:170px;padding:9px 10px;gap:4px}
+.opt.off{opacity:.45}
+.popt{width:250px}
+.pt-h{display:flex;align-items:center;gap:5px;color:var(--fg2);font-size:10.5px;width:100%}
+.pt-h .ic svg{width:14px;height:14px}
+.pt-m{margin-left:auto;font-family:var(--f-num)}
+.opt .pt-cur{font-size:9.5px;color:var(--dim2)}
+/* map */
+#mapScr{position:absolute;inset:0;z-index:40;background:radial-gradient(ellipse 520px 260px at 420px 200px,rgba(56,211,255,.05),transparent 70%),var(--bg)}
+.mh-bar{position:absolute;left:0;right:0;top:0;height:40px;display:flex;align-items:center;gap:14px;padding:0 12px;border-bottom:1px solid var(--line);background:rgba(15,23,32,.85)}
+.mh-bar b{font-size:13px;letter-spacing:.06em}
+.mb{display:inline-flex;align-items:center;gap:4px;font-family:var(--f-num);font-weight:700;font-size:12px;color:var(--fg2)}
+.mb .ic svg{width:13px;height:13px}
+.pm{display:inline-flex;color:var(--fg2)} .pm.dmg{color:var(--foe2)}
+.mh-bar .sp{flex:1}
+.mbtn{height:26px;min-width:30px;padding:0 8px;border:1px solid var(--line);border-radius:5px;background:var(--panel);color:var(--fg2);display:inline-flex;align-items:center;justify-content:center;gap:5px;font-family:var(--f-num);font-weight:700}
+.mbtn .ic svg{width:13px;height:13px}
+.medges{position:absolute;left:0;top:0;pointer-events:none}
+.ed{stroke:#24364a;stroke-width:2}
+.ed.tr{stroke-dasharray:4 4}
+.ed.vis{stroke:var(--cy-dim)}
+.mn{position:absolute;width:40px;height:40px;margin:-20px 0 0 -20px;border-radius:50%;border:1.5px solid #2c4054;background:var(--panel);color:var(--fg2);display:flex;align-items:center;justify-content:center;transition:border-color .15s,box-shadow .15s,transform .15s,opacity .15s}
+.mn .ic svg{width:18px;height:18px}
+.mn .fam{position:absolute;top:42px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:9.5px;color:var(--dim)}
+.mn.elite{border-color:#6a2a3a;color:var(--foe2)}
+.mn.boss{width:54px;height:54px;margin:-27px 0 0 -27px;border-color:var(--foe);color:var(--foe2)}
+.mn.boss .ic svg{width:24px;height:24px}
+.mn.start{color:var(--cy-dim)}
+.mn:not(.reach):not(.here):not(.done):not(.start):not(.sel){opacity:.5}
+.mn.reach{border-color:var(--cy);color:var(--cy);animation:reach 1.6s ease-in-out infinite}
+@keyframes reach{50%{box-shadow:0 0 0 4px rgba(56,211,255,.15)}}
+.mn.done{background:#13202c;color:var(--dim)}
+.mn.here{box-shadow:0 0 0 3px var(--bg),0 0 0 5px var(--cy);color:var(--cy)}
+.mn.sel{background:var(--cy);color:var(--bg);border-color:var(--cy);transform:scale(1.08)}
+.mn.sel .fam{color:var(--fg)}
+.lane{position:absolute;font-size:10px;color:var(--fg2);letter-spacing:.06em;transform:translateX(-50%);white-space:nowrap}
+.minfo{position:absolute;left:12px;right:12px;bottom:10px;height:44px;display:flex;align-items:center;gap:10px;padding:0 6px 0 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+.minfo .ic svg{width:16px;height:16px}
+.minfo b{font-size:12px}
+.mi-f{font-size:11px;color:var(--fg)} .mi-d{font-size:10.5px;color:var(--dim)} .mi-l{font-size:10.5px;color:var(--fg2)} .mi-h{color:var(--dim)}
+.minfo .sp{flex:1}
 @media (prefers-reduced-motion:reduce){#stage *{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -312,6 +391,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
         <div id="pvLine" class="np" hidden></div>
         <div id="selfBar" class="np" hidden></div>
         <div id="marks" class="np"></div>
+        <div id="strip" class="np"><div id="stripLine"></div></div>
       </div>
       <div id="floor" class="np"></div>
       <div id="droid" class="np">
@@ -343,6 +423,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
       <div id="handShade"></div>
       <button class="pile" id="pileDraw" type="button" style="top:302px" aria-label="山札"><span class="ic" id="icDeck"></span><b id="nDraw">0</b></button>
       <button class="pile" id="pileDisc" type="button" style="top:344px" aria-label="捨て札"><span class="ic" id="icDisc"></span><b id="nDisc">0</b></button>
+      <div id="handCnt" class="np"><span class="ic" id="icHand"></span><b id="nHand"></b></div>
       <div id="hand"></div>
       <button id="redraw" type="button" aria-label="引き直し"><span id="icRedraw"></span><b id="rdCost">5</b></button>
       <div id="inner"></div>
@@ -350,6 +431,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
       <div id="floats"></div>
       <div id="toast"></div>
     </div>
+    <div id="mapScr" hidden></div>
     <div id="ov" hidden><div class="box" id="ovbox"></div></div>
   </div>
 </div>
@@ -357,16 +439,19 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 <script src="data/parts.js"></script>
 <script src="data/cards.js"></script>
 <script src="data/enemies.js"></script>
+<script src="data/map.js"></script>
 <script src="data/lines.js"></script>
+<script src="js/engine.js"></script>
 <script>
-const APP_VERSION = '0.5.2';
+const APP_VERSION = '0.6.0';
 const $ = s => document.querySelector(s);
-const NOW = 180, PX = 37, xs = c => NOW + c * PX, ROWY = [58, 94, 130], VIEW = 12, SWIFT_VIS = 2.2;
+const EN = ENGINE, RULE = EN.RULE;
+const VIEW = RULE.view, NOW = 180, PX = 25, xs = c => NOW + c * PX, ROWY = [52, 86, 120], STRIP_Y = 150, SWIFT_VIS = 3;
 const DROID = {x: 133, y: 206, sx: 156, sy: 162};
 const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const sleep = ms => new Promise(r => setTimeout(r, RM ? Math.min(ms, 40) : ms));
-const T_TICK = 140, T_SWIFT = 90;
-const CARD = {W: 96, H: 136, gap: 8, x0: 84, low: 302, up: 248, exp: 250};
+const T_TICK = 110, T_SWIFT = 70;
+const CARD = {W: 96, H: 136, gap: 8, x0: 84, low: 302, up: 248, right: 734};
 
 const IC = {
   phys:'<svg viewBox="0 0 12 12"><path d="M2 10L10 2M7 2H10V5" stroke="currentColor" stroke-width="1.6" fill="none"/></svg>',
@@ -375,6 +460,8 @@ const IC = {
   delay:'<svg viewBox="0 0 12 12"><path d="M2 1H10M2 11H10M3 1L9 11M9 1L3 11" stroke="currentColor" stroke-width="1.4" fill="none"/></svg>',
   swift:'<svg viewBox="0 0 12 12"><path d="M2 2L6 6L2 10M6 2L10 6L6 10" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>',
   crack:'<svg viewBox="0 0 12 12"><path d="M6 0L4 4L7 6L4 9L6 12" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>',
+  draw:'<svg viewBox="0 0 12 12"><rect x="3" y="1.5" width="6.5" height="9" rx="1.2" stroke="currentColor" stroke-width="1.3" fill="none"/><path d="M1 6H5M3 4V8" stroke="currentColor" stroke-width="1.3"/></svg>',
+  timer:'<svg viewBox="0 0 12 12"><circle cx="6" cy="6.8" r="4.3" stroke="currentColor" stroke-width="1.3" fill="none"/><path d="M6 4.4V6.8L7.6 8M5 1H7" stroke="currentColor" stroke-width="1.3" fill="none"/></svg>',
   core:'<svg viewBox="0 0 12 12"><path d="M6 .5L11 3.5V8.5L6 11.5L1 8.5V3.5Z" stroke="currentColor" stroke-width="1.3" fill="none"/><circle cx="6" cy="6" r="1.8" fill="currentColor"/></svg>',
   hit:'<svg viewBox="0 0 14 14"><path d="M2 12L12 2M5 12L12 5M2 9L9 2" stroke="currentColor" stroke-width="1.4" fill="none"/></svg>',
   parry:'<svg viewBox="0 0 16 16"><path d="M8 1.5A6.5 6.5 0 0 1 14.5 8M14 11A6.5 6.5 0 0 1 3 13M1.6 9.5A6.5 6.5 0 0 1 5 2.3" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/><path d="M6 6L10 10M10 6L6 10" stroke="currentColor" stroke-width="1.6"/></svg>',
@@ -383,10 +470,22 @@ const IC = {
   loop:'<svg viewBox="0 0 24 16" style="width:24px;height:16px"><path d="M2 8A6 6 0 0 0 8 14H16A6 6 0 0 0 16 2H6M9 -1L5 2L9 5" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>',
   deck:'<svg viewBox="0 0 14 14"><rect x="3" y="1" width="9" height="11" rx="1.5" stroke="currentColor" stroke-width="1.2" fill="none"/><path d="M1 4V13H9" stroke="currentColor" stroke-width="1.2" fill="none"/></svg>',
   disc:'<svg viewBox="0 0 14 14"><rect x="3" y="2" width="9" height="11" rx="1.5" stroke="currentColor" stroke-width="1.2" fill="none" transform="rotate(12 7 7)"/><path d="M5 6L9 10M9 6L5 10" stroke="currentColor" stroke-width="1.2"/></svg>',
+  hand:'<svg viewBox="0 0 14 14"><rect x="1" y="3" width="6" height="9" rx="1.2" stroke="currentColor" stroke-width="1.2" fill="none" transform="rotate(-10 4 7)"/><rect x="6" y="2" width="6" height="9" rx="1.2" stroke="currentColor" stroke-width="1.2" fill="none" transform="rotate(8 9 7)"/></svg>',
   redraw:'<svg viewBox="0 0 20 20"><path d="M16 7A7 7 0 1 0 17 11" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/><path d="M16 2V7H11" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  wait:'<svg viewBox="0 0 20 20"><path d="M5 2H15M5 18H15M6 2C6 7 14 7 14 10C14 13 6 13 6 18M14 2C14 7 6 7 6 10" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>',
   menu:'<svg width="12" height="9" viewBox="0 0 14 10"><path d="M0 1h14M0 5h14M0 9h14" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>',
   repair:'<svg viewBox="0 0 12 12"><path d="M8 1.5A2.5 2.5 0 0 0 5.6 4.7L1.5 8.8L3.2 10.5L7.3 6.4A2.5 2.5 0 0 0 10.5 4L9 5.5L7.5 4.5L6.5 3Z" stroke="currentColor" stroke-width="1.1" fill="none" stroke-linejoin="round"/></svg>',
   defrag:'<svg viewBox="0 0 12 12"><rect x="1.5" y="1.5" width="4" height="4" stroke="currentColor" stroke-width="1.2" fill="none"/><rect x="6.5" y="1.5" width="4" height="4" stroke="currentColor" stroke-width="1.2" fill="currentColor"/><rect x="1.5" y="6.5" width="4" height="4" stroke="currentColor" stroke-width="1.2" fill="currentColor"/><path d="M7 7L10 10M10 7L7 10" stroke="currentColor" stroke-width="1.2"/></svg>',
+  scrap:'<svg viewBox="0 0 12 12"><path d="M2 4L6 1.5L10 4V8L6 10.5L2 8Z" stroke="currentColor" stroke-width="1.2" fill="none"/><path d="M4.5 5.2L7.5 6.8M7.5 5.2L4.5 6.8" stroke="currentColor" stroke-width="1.1"/></svg>',
+  link:'<svg viewBox="0 0 12 12"><path d="M5 7L7 5M4.2 5.6L2.8 7A1.8 1.8 0 0 0 5 9.2L6.4 7.8M7.8 6.4L9.2 5A1.8 1.8 0 0 0 7 2.8L5.6 4.2" stroke="currentColor" stroke-width="1.3" fill="none" stroke-linecap="round"/></svg>',
+  eye:'<svg viewBox="0 0 12 12"><path d="M1 6C2.5 3.5 4 2.5 6 2.5S9.5 3.5 11 6C9.5 8.5 8 9.5 6 9.5S2.5 8.5 1 6Z" stroke="currentColor" stroke-width="1.2" fill="none"/><circle cx="6" cy="6" r="1.7" fill="currentColor"/></svg>',
+  battle:'<svg viewBox="0 0 16 16"><path d="M3 13L13 3M10 3H13V6M13 13L3 3M3 6V3H6" stroke="currentColor" stroke-width="1.6" fill="none"/></svg>',
+  elite:'<svg viewBox="0 0 16 16"><path d="M2 12L4 4L8 8L12 4L14 12Z" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linejoin="round"/></svg>',
+  rest:'<svg viewBox="0 0 16 16"><path d="M10.5 2A3.4 3.4 0 0 0 7.4 6.3L2 11.7L4.3 14L9.7 8.6A3.4 3.4 0 0 0 14 5.5L12 7.5L10 6L8.5 4Z" stroke="currentColor" stroke-width="1.4" fill="none" stroke-linejoin="round"/></svg>',
+  shop:'<svg viewBox="0 0 16 16"><path d="M3 5L8 2L13 5V11L8 14L3 11Z" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M6 7L10 9M10 7L6 9" stroke="currentColor" stroke-width="1.4"/></svg>',
+  event:'<svg viewBox="0 0 16 16"><path d="M5.5 5.5A2.5 2.5 0 1 1 8.8 7.9C8.2 8.2 8 8.6 8 9.3V10" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/><circle cx="8" cy="12.8" r="1" fill="currentColor"/></svg>',
+  boss:'<svg viewBox="0 0 16 16"><rect x="5" y="1.5" width="6" height="13" rx="1.5" stroke="currentColor" stroke-width="1.4" fill="none"/><circle cx="8" cy="5" r="1.6" fill="currentColor"/><path d="M2 5V11M14 5V11" stroke="currentColor" stroke-width="1.4"/></svg>',
+  start:'<svg viewBox="0 0 16 16"><path d="M8 2V14M8 2L4 6M8 2L12 6" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>',
   calc:'<svg viewBox="0 0 12 12"><rect x="2" y="1.5" width="8" height="7" rx="2" stroke="currentColor" stroke-width="1.3" fill="none"/><path d="M4 5H8M6 8.5V11" stroke="currentColor" stroke-width="1.3"/></svg>',
   arm:'<svg viewBox="0 0 12 12"><path d="M1 5H11M1 8H7M3 5V8" stroke="currentColor" stroke-width="1.3" fill="none"/></svg>',
   out:'<svg viewBox="0 0 12 12"><path d="M3 1V6L8 10" stroke="currentColor" stroke-width="1.5" fill="none"/><circle cx="9" cy="10" r="1.6" fill="currentColor"/></svg>',
@@ -395,184 +494,91 @@ const IC = {
 };
 const SPR = {
   drone:'<svg width="90" height="100" viewBox="0 -4 60 66" aria-hidden="true"><path d="M8 16h44" stroke="#4d6578" stroke-width="2"/><path d="M30 16v6" stroke="#4d6578" stroke-width="2"/><circle cx="30" cy="34" r="13" fill="#152130" stroke="#4d6578" stroke-width="1.2"/><circle cx="25" cy="34" r="4" fill="#ff4d6a" opacity=".8"/><path d="M22 46l-4 8M38 46l4 8" stroke="#4d6578" stroke-width="2"/></svg>',
+  link:'<svg width="90" height="100" viewBox="0 -4 60 66" aria-hidden="true"><path d="M10 14h40" stroke="#4d6578" stroke-width="2"/><path d="M30 14v6M44 6v8" stroke="#4d6578" stroke-width="2"/><circle cx="44" cy="5" r="2.5" fill="#ff4d6a" opacity=".8"/><rect x="18" y="22" width="24" height="22" rx="7" fill="#152130" stroke="#4d6578" stroke-width="1.2"/><circle cx="25" cy="33" r="3.5" fill="#ff4d6a" opacity=".8"/><path d="M22 44l-3 10M38 44l3 10" stroke="#4d6578" stroke-width="2"/></svg>',
+  scout:'<svg width="90" height="100" viewBox="0 -4 60 66" aria-hidden="true"><path d="M14 34L30 26L46 34" fill="none" stroke="#4d6578" stroke-width="1.5"/><rect x="18" y="26" width="24" height="12" rx="4" fill="#152130" stroke="#4d6578" stroke-width="1.2"/><rect x="10" y="22" width="10" height="7" rx="2" fill="#152130" stroke="#4d6578" stroke-width="1.2"/><circle cx="13" cy="25.5" r="1.8" fill="#ff4d6a" opacity=".85"/><path d="M22 38l-6 18M28 38l-2 18M34 38l2 18M40 38l6 18" stroke="#4d6578" stroke-width="2" stroke-linecap="round"/></svg>',
+  turret:'<svg width="90" height="100" viewBox="0 -4 60 66" aria-hidden="true"><path d="M14 58h32L40 44H20Z" fill="#152130" stroke="#4d6578" stroke-width="1.2"/><rect x="22" y="26" width="16" height="18" rx="3" fill="#152130" stroke="#4d6578" stroke-width="1.2"/><path d="M22 32H4" stroke="#4d6578" stroke-width="4" stroke-linecap="round"/><circle cx="30" cy="31" r="3" fill="#ff4d6a" opacity=".85"/></svg>',
   exec:'<svg width="90" height="100" viewBox="0 -4 60 66" aria-hidden="true"><rect x="16" y="6" width="18" height="12" rx="3" fill="#152130" stroke="#4d6578" stroke-width="1.2"/><rect x="10" y="20" width="32" height="28" rx="4" fill="#152130" stroke="#4d6578" stroke-width="1.2"/><rect x="2" y="22" width="10" height="26" rx="3" fill="#152130" stroke="#4d6578" stroke-width="1.2"/><path d="M20 48v10M34 48v10" stroke="#4d6578" stroke-width="4" stroke-linecap="round"/><rect x="20" y="10" width="10" height="3" fill="#ff4d6a" opacity=".8"/></svg>',
   hacker:'<svg width="90" height="100" viewBox="0 -4 60 66" aria-hidden="true"><circle cx="34" cy="12" r="7" fill="#152130" stroke="#4d6578" stroke-width="1.2"/><path d="M34 5l4-5" stroke="#4d6578" stroke-width="1.2"/><path d="M34 20v22M34 26l-10 8M34 26l8 10M34 42l-6 16M34 42l6 16" stroke="#4d6578" stroke-width="2.5" stroke-linecap="round"/><path d="M6 20h10M4 28h8M8 36h10" stroke="#b18cff" stroke-width="2" opacity=".6"/></svg>',
   warden:'<svg width="90" height="100" viewBox="0 -4 60 66" aria-hidden="true"><rect x="19" y="0" width="22" height="58" rx="4" fill="#152130" stroke="#4d6578" stroke-width="1.2"/><rect x="6" y="14" width="10" height="30" rx="2" fill="#152130" stroke="#4d6578" stroke-width="1.2"/><rect x="44" y="14" width="10" height="30" rx="2" fill="#152130" stroke="#4d6578" stroke-width="1.2"/><circle cx="30" cy="16" r="5" fill="#ff4d6a" opacity=".85"/><path d="M24 30h12M24 36h12M24 42h12" stroke="#253545" stroke-width="2"/></svg>',
 };
 
-const PARTS = DATA.parts;
-const PART_BY = Object.fromEntries(PARTS.map(p => [p.id, p]));
+const SLOTS = DATA.slots;
+const SLOT_BY = Object.fromEntries(SLOTS.map(s => [s.id, s]));
 const AB = {calc:'演', arm:'武', out:'出', dur:'耐', mob:'機'};
+const CARDS = DATA.cards, KW = DATA.keywords, FOES = DATA.foes, ENC = DATA.encounters, PARTDEF = DATA.parts;
 
-const CARDS = DATA.cards;
-const START_DECK = DATA.startDeck;
-
-const FOES = DATA.foes;
-const BATTLES = DATA.battles;
-const FLOW = DATA.flow;
-const KW = DATA.keywords;
-
-let S = null, sel = null, PV = null, busy = false, lastTarget = 0, snapshot = null, lastPool = [];
-const UI = {view:'normal', pick:null, learnOpts:[]};
-const markEls = new Map(), cardEls = new Map();
-
-function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
-const clone = o => JSON.parse(JSON.stringify(o));
-const cur = e => e.pat[e.idx];
-function advance(e){ e.idx = (e.idx + 1) % e.pat.length; e.r = e.pat[e.idx].dl; e.seq++; }
-function bonus(st, id){ return st && st.b && !st.b.over ? (st.b.parts[id].cur > 0 ? 1 : 0) : 1; }
-function upcoming(e){
-  const out = []; let t = e.r, idx = e.idx, k = 0;
-  while(t <= VIEW && k < 6){ out.push({t, a:e.pat[idx], k}); idx = (idx + 1) % e.pat.length; t += e.pat[idx].dl; k++; }
-  return out;
-}
-function foeX(n, i){ return (n === 1 ? [620] : n === 2 ? [560, 690] : [494, 600, 706])[i]; }
-
-/* ---------- engine ---------- */
-function applyCard(st, k, ti){
-  const c = CARDS[k], b = st.b, ev = [];
-  const targets = c.all ? b.foes.filter(e => e.alive) : (c.tgt ? [b.foes[ti]].filter(e => e && e.alive) : []);
-  if(c.dmg){
-    const n = c.dmg.n + (c.dmg.t === 'phys' ? bonus(st,'out') : bonus(st,'arm'));
-    for(const e of targets){
-      for(let h = 0; h < (c.dmg.x || 1); h++){
-        if(!e.alive) break;
-        const d = n + e.crack; e.hp -= d; ev.push({kind:'dmg', e:e.i, n:d});
-        if(e.hp <= 0){ e.hp = 0; e.alive = false; ev.push({kind:'kill', e:e.i}); }
-      }
-    }
-  }
-  if(c.crack) for(const e of targets) if(e.alive){ e.crack += c.crack; ev.push({kind:'crack', e:e.i, n:c.crack}); }
-  if(c.delay) for(const e of targets) if(e.alive){ e.r += c.delay; ev.push({kind:'delay', e:e.i, n:c.delay}); }
-  if(c.block){ const n = c.block + bonus(st,'dur'); b.block += n; ev.push({kind:'block', n}); }
-  if(c.swift){ b.swift += c.swift; ev.push({kind:'swift', n:c.swift}); }
-  return ev;
-}
-function enemyAct(st, e){
-  const a = cur(e), b = st.b, res = {name:a.n};
-  if(a.kind === 'delay'){ res.kind = 'delay'; res.v = a.v; }
-  else {
-    const raw = a.d, ab = Math.min(b.block, raw); b.block -= ab;
-    const rem = raw - ab, p = b.parts[a.p];
-    let partLoss = 0, bodyLoss = 0, broke = false;
-    if(rem > 0){
-      if(p.cur > 0){ partLoss = Math.min(p.cur, rem); p.cur -= partLoss; if(p.cur === 0){ broke = true; b.broken[a.p] = true; } bodyLoss = rem - partLoss; }
-      else bodyLoss = rem;
-      st.run.body = Math.max(0, st.run.body - bodyLoss);
-    }
-    Object.assign(res, {kind:'hit', part:a.p, raw, blocked:ab, partLoss, bodyLoss, broke, hurt:rem > 0});
-  }
-  advance(e);
-  return res;
-}
-function* spendGen(st, cost, k, ti, noInt){
-  const b = st.b, c = k ? CARDS[k] : null, atomic = !c || !!c.atomic;
-  let left = cost;
-  const out = {elapsed:0, completeAt:null, interruptedAt:null, justs:[], dead:false, won:false};
-  b.cast = {k, left};
-  while(left > 0){
-    let real = true;
-    if(b.swift > 0){ b.swift--; real = false; }
-    left--; b.cast.left = left;
-    if(real){ b.T++; out.elapsed++; for(const e of b.foes) if(e.alive) e.r--; }
-    yield {type:'tick', real};
-    if(left === 0){
-      out.completeAt = out.elapsed;
-      if(c){
-        if(real) for(const e of b.foes){
-          if(e.alive && e.r <= 0 && cur(e).ch){
-            const nm = cur(e).n; advance(e);
-            const cr = b.parts.calc.cur > 0 ? 1 : 0; e.crack += cr;
-            out.justs.push({i:e.i, name:nm}); yield {type:'just', e:e.i, crack:cr};
-          }
-        }
-        const ev = applyCard(st, k, ti);
-        b.cast = null;
-        yield {type:'card', ev};
-      }
-      b.cast = null;
-      if(!b.foes.some(e => e.alive)){ out.won = true; return out; }
-    }
-    for(const e of b.foes){
-      if(!e.alive || e.r > 0) continue;
-      const res = enemyAct(st, e);
-      if(res.kind === 'delay' && b.cast){
-        left += res.v; b.cast.left = left; res.applied = true;
-        if(b.parts.mob.cur > 0){ b.swift += 1; res.swift = 1; }
-      }
-      yield {type:'foe', e:e.i, res};
-      if(st.run.body <= 0){ out.dead = true; b.cast = null; return out; }
-      if(c && b.cast && res.hurt && !atomic && !noInt){ out.interruptedAt = out.elapsed; b.cast = null; yield {type:'interrupt'}; }
-    }
-    if(out.interruptedAt !== null) break;
-  }
-  b.cast = null;
-  return out;
-}
+let S = null, sel = null, PV = null, busy = false, lastTarget = 0, snapshot = null;
+const UI = {view:'normal', pick:null, learnOpts:[], screen:'map', mapSel:null, node:null, offers:null, partOpts:null, back:null, after:null, eventId:null};
+const markEls = new Map(), cardEls = new Map(), stripEls = new Map();
+const partOf = slot => PARTDEF[S.run.parts[slot].id];
 
 /* ---------- preview ---------- */
+function selAction(){ return !sel ? null : sel.kind === 'card' ? {type:'card', i:sel.i, k:sel.k, t:sel.target} : {type:sel.kind}; }
 function computePreview(){
-  if(!sel) return null;
-  const b = S.b, k = sel.kind === 'card' ? sel.k : null;
-  const cost = k ? CARDS[k].cost : b.hand.length;
-  const sim = noInt => {
-    const c = clone(S);
-    if(k) c.b.hand.splice(sel.i, 1); else { c.b.disc.push(...c.b.hand); c.b.hand = []; }
-    const g = spendGen(c, cost, k, sel.target, noInt); let r;
-    while(!(r = g.next()).done){}
-    return {c, out:r.value};
-  };
+  const a = selAction(); if(!a) return null;
+  const cost = EN.actionCost(S, a);
+  const sim = noInt => { const c = EN.clone(S); const p = EN.beginAction(c, a); const out = EN.runGen(EN.spendGen(c, p.cost, p.k, p.t, noInt)); return {c, out}; };
   const A = sim(false), P = sim(true);
-  return {
-    k, cost, completeAt: P.out.completeAt ?? P.out.elapsed, free: Math.min(b.swift, cost),
-    justSet: new Set(A.out.justs.map(j => j.i)),
-    parts: A.c.b.parts, body: A.c.run.body, foeHp: A.c.b.foes.map(e => e.hp),
-  };
+  const react = new Set();
+  if(a.type === 'card' && cost > 0) for(const e of S.b.foes) if(e.alive && e.react && cost >= e.react.min && e.reactIn == null) react.add(e.i);
+  return {k:a.k || null, cost, completeAt: P.out.completeAt ?? P.out.elapsed, free: Math.min(S.b.swift, cost),
+    justSet: new Set(A.out.justs.map(j => j.i)), parts: A.c.b.parts, body: A.c.run.body, foeHp: A.c.b.foes.map(e => e.hp), react};
 }
 
 /* ---------- cards ---------- */
-function cardType(c){ return c.dmg ? c.dmg.t : c.block ? 'block' : c.swift ? 'swift' : 'delay'; }
+function cardType(c){ return c.timer ? 'timer' : c.parry ? 'parry' : c.dmg ? c.dmg.t : c.block ? 'block' : c.delay ? 'delay' : c.swift ? 'swift' : c.draw ? 'draw' : 'crack'; }
+const stv = st => st && st.b ? st : {run: S ? S.run : null, b: null};
+function vDmg(st, c, d){ return st && st.run ? EN.dmgOf(stv(st), c, d) : (d || c.dmg).n; }
+function vBlock(st, c){ return st && st.run ? EN.blockOf(stv(st), c) : c.block; }
 function cardVal(k, st){
   const c = CARDS[k];
-  if(c.dmg){ const bn = c.dmg.t === 'phys' ? bonus(st,'out') : bonus(st,'arm'); return (c.dmg.n + bn) + (c.dmg.x ? '×' + c.dmg.x : ''); }
-  if(c.block) return c.block + bonus(st,'dur');
+  if(c.timer) return vDmg(st, c, c.timer.dmg);
+  if(c.parry) return vBlock(st, c);
+  if(c.dmg) return vDmg(st, c) + (c.dmg.x ? '×' + c.dmg.x : '');
+  if(c.block) return vBlock(st, c);
   if(c.delay) return c.delay;
-  return c.swift;
+  if(c.swift) return c.swift;
+  if(c.draw) return c.draw;
+  return c.crack;
 }
 function cardText(k, st){
   const c = CARDS[k], s = [];
-  if(c.dmg){ const bn = c.dmg.t === 'phys' ? bonus(st,'out') : bonus(st,'arm'); s.push(`${c.all ? '敵全員に' : ''}${c.dmg.t === 'phys' ? '物理' : '光学'}<b>${c.dmg.n + bn}</b>ダメージ${c.dmg.x ? '×' + c.dmg.x : ''}`); }
+  if(c.dmg) s.push(`${c.all ? '敵全員に' : ''}${c.dmg.t === 'phys' ? '物理' : '光学'}<b>${vDmg(st, c)}</b>ダメージ${c.dmg.x ? '×' + c.dmg.x : ''}`);
+  if(c.timer) s.push(`<span class="kw">時限</span>${c.timer.t}: 光学<b>${vDmg(st, c, c.timer.dmg)}</b>`);
   if(c.crack) s.push(`<span class="kw-f">クラック</span>${c.crack}`);
   if(c.delay) s.push(`${c.all ? '敵全員に' : ''}<span class="kw">ディレイ</span>${c.delay}`);
-  if(c.block) s.push(`<span class="kw">ブロック</span><b>${c.block + bonus(st,'dur')}</b>`);
+  if(c.block) s.push(`<span class="kw">ブロック</span><b>${vBlock(st, c)}</b>`);
+  if(c.parry) s.push(`<span class="kw">ぴったり</span>で攻撃を返す`);
   if(c.swift) s.push(`<span class="kw">スウィフト</span>${c.swift}`);
+  if(c.draw) s.push(`<b>${c.draw}</b>枚引く`);
   return s.join('<br>') + (c.atomic ? '<br><span class="kwp">アトミック</span>' : '');
 }
 function cardInner(k, st, count){
   const c = CARDS[k];
-  return `<span class="chd"><span class="cost">${c.cost}</span><span class="cname">${c.name}</span></span><span class="cart">${c.atomic ? '<i class="atom"></i>' : ''}<span class="cval"><span class="ic">${IC[cardType(c)]}</span><b>${cardVal(k, st)}</b></span></span><span class="ctx">${cardText(k, st)}</span>${count > 1 ? `<span class="cnt">×${count}</span>` : ''}`;
+  return `<span class="chd"><span class="cost${c.cost === 0 ? ' zero' : ''}">${c.cost}</span><span class="cname">${c.name}</span></span><span class="cart">${c.atomic ? '<i class="atom"></i>' : ''}<span class="cval"><span class="ic">${IC[cardType(c)]}</span><b>${cardVal(k, st)}</b></span></span><span class="ctx">${cardText(k, st)}</span>${count > 1 ? `<span class="cnt">×${count}</span>` : ''}`;
 }
 function cardKw(k){
   const c = CARDS[k], kw = [];
-  if(c.block) kw.push('ブロック'); if(c.delay) kw.push('ディレイ'); if(c.swift) kw.push('スウィフト'); if(c.crack) kw.push('クラック'); if(c.atomic) kw.push('アトミック');
+  if(c.block) kw.push('ブロック'); if(c.delay) kw.push('ディレイ'); if(c.swift) kw.push('スウィフト'); if(c.crack) kw.push('クラック'); if(c.atomic) kw.push('アトミック'); if(c.timer) kw.push('時限'); if(c.parry) kw.push('ぴったり');
   return kw;
 }
 
 /* ---------- static build ---------- */
 function buildStatic(){
   let h = '';
-  for(let c = 1; c <= 12; c++) h += `<div class="tl" style="left:${xs(c)}px"></div><div class="tn" style="left:${xs(c) - 10}px">${c}</div>`;
+  for(let c = 1; c <= VIEW; c++) h += `<div class="tl${c % RULE.draw === 0 ? ' tl3' : ''}" style="left:${xs(c)}px"></div><div class="tn" style="left:${xs(c) - 10}px">${c}</div>`;
   $('#ticks').innerHTML = h;
-  $('#parts').innerHTML = PARTS.map((p, j) => `<button class="part" type="button" data-p="${p.id}" style="top:${10 + j * 48}px"><span class="ph"><span class="pico">${IC[p.id]}</span><span class="pname">${p.fn}</span><span class="pnum"></span></span><span class="pips"></span></button>`).join('');
-  $('#icDeck').innerHTML = IC.deck; $('#icDisc').innerHTML = IC.disc;
-  $('#icRedraw').innerHTML = IC.redraw; $('#menuBtn').innerHTML = IC.menu;
+  $('#parts').innerHTML = SLOTS.map((p, j) => `<button class="part" type="button" data-p="${p.id}" style="top:${10 + j * 48}px"><span class="ph"><span class="pico">${IC[p.id]}</span><span class="pname">${p.fn}</span><span class="pnum"></span></span><span class="pips"></span></button>`).join('');
+  $('#icDeck').innerHTML = IC.deck; $('#icDisc').innerHTML = IC.disc; $('#icHand').innerHTML = IC.hand;
+  $('#menuBtn').innerHTML = IC.menu;
 }
+function foeX(n, i){ return (n === 1 ? [620] : n === 2 ? [560, 690] : [494, 600, 706])[i]; }
 function buildFoes(){
   const b = S.b, n = b.foes.length;
   $('#rows').innerHTML = b.foes.map(e => `<div class="rowline" data-r="${e.i}" style="top:${ROWY[e.i]}px"></div><div class="rowtag" data-r="${e.i}" style="top:${ROWY[e.i] - 8}px">${e.tag}</div><div class="rowhit" data-f="${e.i}" style="top:${ROWY[e.i] - 17}px"></div>`).join('');
   $('#foes').innerHTML = b.foes.map(e => `<div class="foe" data-f="${e.i}" style="left:${foeX(n, e.i)}px">${SPR[e.kind]}<span class="reticle"></span></div><div class="cinfo fi" data-f="${e.i}" style="left:${foeX(n, e.i) + 2}px"><span class="frow"><span class="ftag">${e.tag}</span><span class="hpb"><i></i><s></s></span><span class="hpt"></span></span><span class="sts"></span></div>`).join('');
 }
-function clearMarks(){ for(const el of markEls.values()) el.remove(); markEls.clear(); }
+function clearMarks(){ for(const el of markEls.values()) el.remove(); markEls.clear(); for(const el of stripEls.values()) el.remove(); stripEls.clear(); }
 function clearCards(){ for(const el of cardEls.values()) el.remove(); cardEls.clear(); }
 const foeEl = i => document.querySelector(`.foe[data-f="${i}"]`);
 const foeCenter = i => { const n = S.b.foes.length; return {x: foeX(n, i) + 45, y: 220}; };
@@ -581,11 +587,13 @@ function pipsHTML(max, cur, after, start, w){
   for(let k = 0; k < max; k++){ const cls = k < after ? 'full' : k < cur ? 'loss' : k >= start ? 'worn' : ''; s += `<span class="pip ${cls}" style="width:${w}px"></span>`; }
   return s;
 }
+const pipW = (max, room) => Math.max(2, Math.floor((room - (max - 1) * 2) / max));
 
 /* ---------- render ---------- */
 function renderAll(){
+  if(!S.b) return;
   $('#shaker').classList.toggle('executing', busy);
-  renderMe(); renderParts(); renderRows(); renderFoes(); renderPreview(); renderMarks(); renderHand(); renderSide();
+  renderMe(); renderParts(); renderRows(); renderFoes(); renderPreview(); renderMarks(); renderStrip(); renderHand(); renderSide();
 }
 function renderMe(){
   const body = S.run.body, after = PV ? PV.body : body, max = S.run.bodyMax;
@@ -601,7 +609,7 @@ function incoming(){
   const res = {};
   for(const e of S.b.foes){
     if(!e.alive) continue;
-    for(const m of upcoming(e)){
+    for(const m of EN.upcoming(e)){
       if(m.a.kind === 'delay') continue;
       const c = res[m.a.p];
       if(!c || m.t < c.t) res[m.a.p] = {t:m.t, a:m.a, e:e.i};
@@ -612,7 +620,7 @@ function incoming(){
 function renderParts(){
   const b = S.b, inc = incoming();
   document.querySelectorAll('#parts .part').forEach((el, j) => {
-    const p = PARTS[j], st = b.parts[p.id], worn = S.run.parts[p.id].damaged;
+    const p = SLOTS[j], st = b.parts[p.id], worn = S.run.parts[p.id].damaged;
     const after = PV ? PV.parts[p.id].cur : st.cur;
     el.classList.toggle('broken', st.cur <= 0);
     const h = inc[p.id];
@@ -621,7 +629,7 @@ function renderParts(){
     const num = el.querySelector('.pnum');
     num.textContent = after < st.cur ? `${st.cur}→${after}` : String(st.cur); num.classList.toggle('pv', after < st.cur);
     const start = worn ? Math.ceil(st.max / 2) : st.max;
-    el.querySelector('.pips').innerHTML = pipsHTML(st.max, st.cur, after, start, Math.floor((70 - (st.max - 1) * 2) / st.max));
+    el.querySelector('.pips').innerHTML = pipsHTML(st.max, st.cur, after, start, pipW(st.max, 70));
   });
 }
 function renderRows(){
@@ -643,7 +651,11 @@ function renderFoes(){
     info.querySelector('.hpb i').style.width = (after / e.maxHp * 100) + '%';
     const s = info.querySelector('.hpb s'); s.style.left = (after / e.maxHp * 100) + '%'; s.style.width = ((e.hp - after) / e.maxHp * 100) + '%';
     const t = info.querySelector('.hpt'); t.textContent = after < e.hp ? `${e.hp}→${after}` : String(e.hp); t.classList.toggle('pv', after < e.hp);
-    info.querySelector('.sts').innerHTML = e.crack ? `<span class="st crack"><span class="ic">${IC.crack}</span>${e.crack}</span>` : '';
+    let sts = '';
+    if(e.crack) sts += `<span class="st crack"><span class="ic">${IC.crack}</span>${e.crack}</span>`;
+    if(e.react) sts += `<span class="st trait${PV && PV.react.has(e.i) ? ' on' : ''}"><span class="ic">${IC.eye}</span>${e.react.min}</span>`;
+    if(e.sync) sts += `<span class="st trait"><span class="ic">${IC.link}</span>${e.sync}</span>`;
+    info.querySelector('.sts').innerHTML = sts;
   }
 }
 function renderPreview(){
@@ -656,12 +668,12 @@ function renderPreview(){
     if(b.cast){
       const free = Math.min(b.swift, b.cast.left, SWIFT_VIS), real = Math.max(0, b.cast.left - b.swift);
       bar.hidden = false; bar.className = 'np cast';
-      bar.style.left = (NOW + 1 - free * PX) + 'px'; bar.style.width = Math.max(4, (free + Math.min(real, 12)) * PX) + 'px';
+      bar.style.left = (NOW + 1 - free * PX) + 'px'; bar.style.width = Math.max(4, (free + Math.min(real, VIEW)) * PX) + 'px';
     } else if(!bar.classList.contains('broken')) bar.hidden = true;
     return;
   }
   if(PV){
-    const c = Math.min(PV.completeAt, 12), free = Math.min(PV.free, SWIFT_VIS);
+    const c = Math.min(PV.completeAt, VIEW), free = Math.min(PV.free, SWIFT_VIS);
     reg.hidden = line.hidden = bar.hidden = false; bar.className = 'np pre';
     reg.style.width = (c * PX) + 'px'; line.style.left = (xs(c) - 1) + 'px';
     bar.style.left = (NOW + 1 - free * PX) + 'px'; bar.style.width = Math.max(4, (free + c) * PX) + 'px';
@@ -669,42 +681,78 @@ function renderPreview(){
   }
   reg.hidden = line.hidden = bar.hidden = true;
 }
+function syncTimes(){
+  // 連携持ちが同じサイクルに攻撃する時刻 → 上乗せ
+  const at = {};
+  for(const e of S.b.foes){ if(!e.alive || !e.sync) continue; for(const m of EN.upcoming(e)) if(m.a.kind !== 'delay') (at[m.t] = at[m.t] || []).push(e.i); }
+  const out = new Set(); for(const [t, l] of Object.entries(at)) if(l.length >= 2) for(const i of l) out.add(i + '@' + t);
+  return out;
+}
+function placeMark(key, x, y, cls, html){
+  let el = markEls.get(key);
+  if(!el){
+    el = document.createElement('div'); el.className = 'mk';
+    el.style.left = (xs(VIEW) + 30) + 'px'; el.style.top = y + 'px'; el.style.opacity = '0';
+    $('#marks').appendChild(el); markEls.set(key, el); el.getBoundingClientRect();
+  }
+  if(el.classList.contains('fire')) cls += ' fire';
+  el.className = cls;
+  if(el._h !== html){ el.innerHTML = html; el._h = html; }
+  el.style.left = x + 'px'; el.style.top = y + 'px'; el.style.opacity = '';
+}
 function renderMarks(){
-  const layer = $('#marks'), b = S.b, seen = new Set();
+  const b = S.b, seen = new Set(), syn = syncTimes();
   for(const e of b.foes){
     if(!e.alive) continue;
-    for(const m of upcoming(e)){
+    const y = ROWY[e.i] - 11;
+    for(const m of EN.upcoming(e)){
       const key = e.i + '-' + (e.seq + m.k); seen.add(key);
-      let el = markEls.get(key);
-      const x = xs(m.t) - 16, y = ROWY[e.i] - 11;
-      if(!el){
-        el = document.createElement('div'); el.className = 'mk';
-        el.style.left = (xs(VIEW) + 30) + 'px'; el.style.top = y + 'px'; el.style.opacity = '0';
-        layer.appendChild(el); markEls.set(key, el); el.getBoundingClientRect();
-      }
-      const a = m.a;
+      const a = m.a, sy = syn.has(e.i + '@' + m.t);
       let cls = 'mk ' + (a.kind === 'delay' ? 'dl' : a.ch ? 'ch' : 'hit');
       if(m.k > 0 && !a.ch) cls += ' later';
+      if(sy) cls += ' sync';
       if(PV && !busy){
         if(m.t < PV.completeAt && a.kind !== 'delay') cls += ' danger';
         if(m.t === PV.completeAt && a.ch && PV.justSet.has(e.i)) cls += ' just';
       }
-      if(el.classList.contains('fire')) cls += ' fire';
-      el.className = cls;
-      const html = a.kind === 'delay' ? `<span class="ic">${IC.delay}</span><b>${a.v}</b>` : `<b>${a.d}</b><span>${AB[a.p]}</span>`;
-      if(el._h !== html){ el.innerHTML = html; el._h = html; }
-      el.style.left = x + 'px'; el.style.top = y + 'px'; el.style.opacity = '';
+      const html = a.kind === 'delay' ? `<span class="ic">${IC.delay}</span><b>${a.v}</b>` : `<b>${a.d + (sy ? e.sync : 0)}</b><span>${AB[a.p]}</span>`;
+      placeMark(key, xs(m.t) - 13, y, cls, html);
+    }
+    // 反応: 予定ではなく、重いカードへの返し
+    const rt = e.reactIn != null ? e.reactIn : (PV && !busy && PV.react.has(e.i) ? 1 : null);
+    if(rt != null && rt > 0){
+      const key = 'r' + e.i; seen.add(key);
+      placeMark(key, xs(rt) - 13, y, 'mk react' + (e.reactIn == null ? ' ghost' : ' danger'), `<b>${e.react.d}</b><span>${AB[e.react.p]}</span>`);
     }
   }
   for(const [key, el] of markEls){
     if(!seen.has(key)){ markEls.delete(key); el.classList.add('out'); setTimeout(() => el.remove(), 260); }
   }
 }
+function renderStrip(){
+  const b = S.b, seen = new Set(), room = b.handMax - b.hand.length;
+  const put = (key, x, cls, html) => {
+    seen.add(key);
+    let el = stripEls.get(key);
+    if(!el){ el = document.createElement('div'); el.style.left = (xs(VIEW) + 20) + 'px'; el.style.opacity = '0'; $('#strip').appendChild(el); stripEls.set(key, el); el.getBoundingClientRect(); }
+    el.className = cls; if(el._h !== html){ el.innerHTML = html; el._h = html; }
+    el.style.left = x + 'px'; el.style.opacity = '';
+  };
+  // 手札が満杯なら、次に届く1枚はあふれる
+  EN.arrivals(b).forEach((t, n) => put('a' + (b.T + t), xs(t), 'sm arr' + (n === 0 && room <= 0 ? ' over' : ''), ''));
+  for(const t of b.timers){ if(t.left <= VIEW) put('t' + t.id, xs(t.left), 'sm tmr', `<span class="ic">${IC.timer}</span>${b.foes[t.e] && b.foes[t.e].alive ? b.foes[t.e].tag : ''}`); }
+  for(const [key, el] of stripEls){ if(!seen.has(key)){ stripEls.delete(key); el.style.opacity = '0'; el.style.left = (parseFloat(el.style.left) - 10) + 'px'; setTimeout(() => el.remove(), 220); } }
+}
+function handLayout(n, i, ex){
+  if(ex){ const w = CARD.W * 1.22, sp = n > 1 ? Math.min(125, (CARD.right - 120 - w) / (n - 1)) : 0; return CARD.x0 + 10 + i * sp; }
+  const sp = n > 1 ? Math.min(CARD.W + CARD.gap, (CARD.right - CARD.x0 - CARD.W) / (n - 1)) : 0;
+  return CARD.x0 + i * sp;
+}
 function renderHand(){
   const b = S.b, ids = new Set(b.hand.map(c => c.id));
   for(const [id, el] of cardEls) if(!ids.has(id)){ el.remove(); cardEls.delete(id); }
   let dealN = 0;
-  const selI = sel && sel.kind === 'card' ? sel.i : -1;
+  const selI = sel && sel.kind === 'card' ? sel.i : -1, n = b.hand.length;
   b.hand.forEach((cd, i) => {
     let el = cardEls.get(cd.id), fresh = false;
     if(!el){
@@ -718,22 +766,27 @@ function renderHand(){
     el.classList.toggle('sel', i === selI);
     const place = () => {
       const ex = UI.view === 'hand';
-      let left = ex ? CARD.x0 + 10 + i * 125 : CARD.x0 + i * (CARD.W + CARD.gap), top = ex ? 244 : CARD.low, tf = ex ? 'scale(1.22)' : 'none';
+      let left = handLayout(n, i, ex), top = ex ? 244 : CARD.low, tf = ex ? 'scale(1.22)' : 'none';
       if(i === selI){ top = ex ? 236 : CARD.up; tf = ex ? 'rotate(-2deg) scale(1.27)' : 'rotate(-2deg) scale(1.04)'; }
       else if(selI >= 0){ left += i < selI ? -5 : 5; }
       el.style.left = left + 'px'; el.style.top = top + 'px'; el.style.transform = tf; el.style.opacity = '1';
-      el.style.zIndex = i === selI ? 5 : 1;
+      el.style.zIndex = i === selI ? 20 : 1 + i;
     };
     if(fresh){ el.getBoundingClientRect(); setTimeout(place, 40 + dealN * 70); dealN++; }
     else place();
   });
 }
 function renderSide(){
-  const b = S.b, rd = $('#redraw');
-  $('#rdCost').textContent = b.hand.length;
-  rd.classList.toggle('sel', !!sel && sel.kind === 'redraw');
-  rd.disabled = busy || !b.hand.length;
+  const b = S.b, rd = $('#redraw'), empty = !b.hand.length;
+  $('#icRedraw').innerHTML = empty ? IC.wait : IC.redraw;
+  $('#rdCost').textContent = empty ? 1 : b.hand.length;
+  rd.setAttribute('aria-label', empty ? '待機' : '入れ替え');
+  rd.classList.toggle('wait', empty);
+  rd.classList.toggle('sel', !!sel && (sel.kind === 'swap' || sel.kind === 'wait'));
+  rd.disabled = busy;
   $('#nDraw').textContent = b.draw.length; $('#nDisc').textContent = b.disc.length;
+  $('#nHand').textContent = `${b.hand.length}/${b.handMax}`;
+  $('#handCnt').classList.toggle('full', b.hand.length >= b.handMax);
   $('#handShade').classList.toggle('on', UI.view === 'hand');
   $('#shaker').classList.toggle('zoomout', UI.view === 'hand');
   $('#shaker').classList.toggle('selfview', UI.view === 'self');
@@ -747,14 +800,15 @@ function fillLine(t, v){ return pickLine(t).replace(/\{(\w+)\}/g, (m, k) => v[k]
 function monologue(){
   const b = S.b, run = S.run, L = DATA.lines, hit = {};
   if(run.body < run.bodyMax * 0.4) hit.bodyLow = {};
-  const br = PARTS.find(p => b.parts[p.id].cur <= 0); if(br) hit.partBroken = {part: br.fn};
-  for(const e of b.foes){ if(!e.alive || hit.chargeSoon) continue; for(const m of upcoming(e)) if(m.a.ch && m.t <= 5){ hit.chargeSoon = {enemy: e.name, move: m.a.n, t: m.t}; break; } }
-  const worn = PARTS.find(p => run.parts[p.id].damaged); if(worn) hit.partWorn = {part: worn.fn};
-  const sum = {}; for(const e of b.foes){ if(!e.alive) continue; for(const m of upcoming(e)) if(m.a.kind !== 'delay') sum[m.a.p] = (sum[m.a.p] || 0) + m.a.d; }
+  const br = SLOTS.find(p => b.parts[p.id].cur <= 0); if(br) hit.partBroken = {part: br.fn};
+  for(const e of b.foes){ if(!e.alive || hit.chargeSoon) continue; for(const m of EN.upcoming(e)) if(m.a.ch && m.t <= 9){ hit.chargeSoon = {enemy: e.name, move: m.a.n, t: m.t}; break; } }
+  if(!b.hand.length) hit.handEmpty = {};
+  const worn = SLOTS.find(p => run.parts[p.id].damaged); if(worn) hit.partWorn = {part: worn.fn};
+  const sum = {}; for(const e of b.foes){ if(!e.alive) continue; for(const m of EN.upcoming(e)) if(m.a.kind !== 'delay') sum[m.a.p] = (sum[m.a.p] || 0) + m.a.d; }
   const top = Object.entries(sum).sort((a, c) => c[1] - a[1])[0];
-  if(top && top[1] >= 8) hit.focus = {part: PART_BY[top[0]].fn};
+  if(top && top[1] >= 10) hit.focus = {part: SLOT_BY[top[0]].fn};
   for(const r of L.rules) if(hit[r.when]) return fillLine(r.text, hit[r.when]);
-  const a = L.area[BATTLES[b.n].room]; return a ? pickLine(a) : '';
+  const a = L.room[UI.node ? UI.node.type : 'battle']; return a ? pickLine(a) : '';
 }
 function memChips(list){
   const counts = {}; for(const c of list) counts[c.k] = (counts[c.k] || 0) + 1;
@@ -764,9 +818,9 @@ function memChips(list){
 function renderInner(){
   const b = S.b;
   const st = (b.block ? `<span class="st blk"><span class="ic">${IC.block}</span>${b.block}</span>` : '') + (b.swift ? `<span class="st swf"><span class="ic">${IC.swift}</span>${b.swift}</span>` : '');
-  const rows = PARTS.map(p => {
-    const s2 = b.parts[p.id], worn = S.run.parts[p.id].damaged;
-    return `<div class="drow${s2.cur <= 0 ? ' broken' : ''}"><span class="ic">${IC[p.id]}</span><span class="dn">${p.fn}</span><span class="dp">${p.name}</span><span class="pips">${pipsHTML(s2.max, s2.cur, s2.cur, worn ? Math.ceil(s2.max / 2) : s2.max, Math.floor((70 - (s2.max - 1) * 2) / s2.max))}</span><span class="pnum">${s2.cur}</span><span class="de">${p.text}</span></div>`;
+  const rows = SLOTS.map(p => {
+    const s2 = b.parts[p.id], worn = S.run.parts[p.id].damaged, d = partOf(p.id);
+    return `<div class="drow${s2.cur <= 0 ? ' broken' : ''}"><span class="ic">${IC[p.id]}</span><span class="dn">${p.fn}</span><span class="dp">${d.name}</span><span class="pips">${pipsHTML(s2.max, s2.cur, s2.cur, worn ? Math.ceil(s2.max / 2) : s2.max, pipW(s2.max, 70))}</span><span class="pnum">${s2.cur}</span><span class="de">${d.text}</span></div>`;
   }).join('');
   $('#inner').innerHTML = `<div class="face">${FACE}<div class="mono">${UI.line || ''}</div><div class="sts">${st}</div></div><div class="diag">${rows}</div><div class="mem"><div class="mh"><span class="ic">${IC.deck}</span>${b.draw.length}</div><div class="ml">${memChips(b.draw)}</div><div class="mh"><span class="ic">${IC.disc}</span>${b.disc.length}</div><div class="ml">${memChips(b.disc)}</div></div>`;
 }
@@ -777,10 +831,11 @@ function floatAt(x, y, text, cls){ const el = document.createElement('div'); el.
 function pulse(el, cls, ms){ if(!el) return; el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); setTimeout(() => el.classList.remove(cls), ms); }
 function shake(){ pulse($('#shaker'), 'shake', 300); }
 function toast(t){ const el = $('#toast'); el.textContent = t; el.classList.remove('show'); void el.offsetWidth; el.classList.add('show'); }
-const partY = id => 10 + PARTS.findIndex(p => p.id === id) * 48;
-function beam(to){
-  const dx = to.x - DROID.sx, dy = to.y - DROID.sy, len = Math.hypot(dx, dy), ang = Math.atan2(dy, dx) * 180 / Math.PI;
-  const el = fxEl('beam', DROID.sx, DROID.sy, {width: len + 'px', transform: `rotate(${ang}deg)`});
+const partY = id => 10 + SLOTS.findIndex(p => p.id === id) * 48;
+function beam(to, from){
+  const f = from || {x: DROID.sx, y: DROID.sy};
+  const dx = to.x - f.x, dy = to.y - f.y, len = Math.hypot(dx, dy), ang = Math.atan2(dy, dx) * 180 / Math.PI;
+  const el = fxEl('beam', f.x, f.y, {width: len + 'px', transform: `rotate(${ang}deg)`});
   setTimeout(() => el.remove(), 320);
 }
 function shards(x, y, color){
@@ -804,13 +859,15 @@ function afterimage(){
   el.getBoundingClientRect(); el.style.transform = 'translateX(-14px)'; el.style.opacity = '0';
   setTimeout(() => el.remove(), 320);
 }
+function shieldFx(){ const el = fxEl('shield', 92, 136); setTimeout(() => el.remove(), 560); }
 function cardMotion(k, ti){
   const c = CARDS[k], d = $('#droid'), t = cardType(c);
-  const targets = c.all ? S.b.foes.map(e => e.i) : (c.tgt ? [ti] : []);
+  const targets = c.all ? S.b.foes.filter(e => e.alive).map(e => e.i) : (c.tgt && ti != null ? [ti] : []);
   if(t === 'phys'){ pulse(d, 'lunge', 380); for(const i of targets){ const p = foeCenter(i); const el = fxEl('slash', p.x, p.y - 10); setTimeout(() => el.remove(), 260); } }
   else if(t === 'opt'){ pulse(d, 'recoil', 320); for(const i of targets) beam(foeCenter(i)); }
-  else if(t === 'block'){ const el = fxEl('shield', 92, 136); setTimeout(() => el.remove(), 560); }
-  else if(t === 'delay'){
+  else if(t === 'block' || t === 'parry') shieldFx();
+  else if(t === 'timer'){ pulse(d, 'recoil', 320); for(const i of targets){ const p = foeCenter(i); const el = fxEl('pin', p.x - 6, p.y - 70); setTimeout(() => el.remove(), 600); } }
+  else if(t === 'delay' || t === 'crack'){
     pulse(d, 'glitch', 320);
     for(const i of targets){
       const p = foeCenter(i);
@@ -822,6 +879,7 @@ function cardMotion(k, ti){
     }
   }
   else if(t === 'swift'){ afterimage(); setTimeout(afterimage, 90); }
+  else if(t === 'draw') pulse($('#pileDraw'), 'flash', 360);
 }
 function cardFx(x){
   switch(x.kind){
@@ -831,16 +889,24 @@ function cardFx(x){
     case 'delay': floatAt(xs(2), ROWY[x.e] - 14, '+' + x.n, 'cy'); break;
     case 'block': floatAt(130, 262, '+' + x.n, ''); break;
     case 'swift': floatAt(150, 262, '+' + x.n, 'cy'); break;
+    case 'draw': if(x.n) floatAt(41, 290, '+' + x.n, 'cy'); break;
+    case 'timerSet': floatAt(xs(x.t), STRIP_Y - 10, '◆', 'cy'); break;
   }
 }
 async function foeFx(i, r){
   const e = S.b.foes[i];
   pulse(foeEl(i), 'atk', 270);
-  const mk = markEls.get(i + '-' + (e.seq - 1));
+  const mk = r.react ? markEls.get('r' + i) : markEls.get(i + '-' + (e.seq - 1));
   if(mk) mk.classList.add('fire');
   await sleep(110);
   if(r.kind === 'delay'){
     if(r.applied){ pulse($('#droid'), 'glitch', 320); floatAt(xs(1), 30, '+' + r.v, 'cy'); if(r.swift) setTimeout(afterimage, 120); }
+    return;
+  }
+  if(r.kind === 'parried'){
+    shieldFx(); const p = foeCenter(i); beam(p, {x: DROID.sx + 10, y: DROID.sy + 20});
+    for(const x of r.ev) cardFx(x);
+    floatAt(DROID.x + 10, DROID.y - 92, 'ぴったり', 'cy');
     return;
   }
   const y = partY(r.part);
@@ -848,8 +914,8 @@ async function foeFx(i, r){
   if(r.partLoss){ floatAt(70, y + 8, '−' + r.partLoss, 'foe'); pulse(document.querySelector(`.part[data-p="${r.part}"]`), 'flash', 320); }
   if(r.broke) sparks(DROID.x, DROID.y - 30);
   if(r.bodyLoss) floatAt(150, 268, '−' + r.bodyLoss, 'foe');
-  if(r.hurt){ pulse($('#droid'), 'hit', 320); if(r.raw >= 8) shake(); }
-  else { const el = fxEl('shield', 92, 136); setTimeout(() => el.remove(), 560); }
+  if(r.hurt){ pulse($('#droid'), 'hit', 320); if(r.raw >= 10) shake(); }
+  else shieldFx();
 }
 function justFx(i){
   const el = fxEl('burst', NOW, ROWY[i]); setTimeout(() => el.remove(), 520);
@@ -866,14 +932,6 @@ function interruptFx(){
 }
 
 /* ---------- play ---------- */
-function drawN(n){
-  const b = S.b;
-  for(let i = 0; i < n; i++){
-    if(!b.draw.length){ b.draw = shuffle(b.disc); b.disc = []; }
-    if(!b.draw.length) break;
-    b.hand.push(b.draw.pop());
-  }
-}
 function defaultTarget(){ const b = S.b; if(b.foes[lastTarget] && b.foes[lastTarget].alive) return lastTarget; const e = b.foes.find(f => f.alive); return e ? e.i : 0; }
 function recalc(){ PV = computePreview(); renderAll(); }
 function onCard(i){
@@ -882,9 +940,9 @@ function onCard(i){
   sel = {kind:'card', i, k, target: c.tgt ? defaultTarget() : null}; recalc();
 }
 function onRedraw(){
-  if(!S.b.hand.length) return;
-  if(sel && sel.kind === 'redraw'){ execute(); return; }
-  sel = {kind:'redraw'}; recalc();
+  const kind = S.b.hand.length ? 'swap' : 'wait';
+  if(sel && sel.kind === kind){ execute(); return; }
+  sel = {kind}; recalc();
 }
 function onFoe(i){
   const e = S.b.foes[i]; if(!e.alive) return;
@@ -902,95 +960,189 @@ function flyCard(el, x, y){
 async function showEvent(ev, k, ti){
   switch(ev.type){
     case 'tick': if(!ev.real) afterimage(); renderAll(); await sleep(ev.real ? T_TICK : T_SWIFT); break;
+    case 'react': { const p = foeCenter(ev.e); floatAt(p.x, p.y - 70, '!', 'foe'); pulse(foeEl(ev.e), 'ehit', 200); renderAll(); await sleep(180); break; }
     case 'just': justFx(ev.e); renderAll(); await sleep(420); break;
-    case 'card': cardMotion(k, ti); for(const x of ev.ev) cardFx(x); renderAll(); await sleep(320); break;
+    case 'card': if(k) cardMotion(k, ti); for(const x of ev.ev) cardFx(x); renderAll(); await sleep(320); break;
+    case 'timer': { const p = foeCenter(ev.t.e); const el = fxEl('burst', p.x, p.y - 10); setTimeout(() => el.remove(), 520); for(const x of ev.ev) cardFx(x); renderAll(); await sleep(320); break; }
+    case 'arrive': if(ev.r && ev.r.burn) floatAt(41, 290, '溢', 'foe'); renderAll(); await sleep(90); break;
     case 'foe': await foeFx(ev.e, ev.res); renderAll(); await sleep(190); break;
     case 'interrupt': interruptFx(); renderAll(); await sleep(420); break;
   }
 }
 async function execute(){
-  const s = sel, b = S.b; sel = null; PV = null; busy = true; UI.view = 'normal';
-  let card = null, k = null, cost;
-  if(s.kind === 'card'){
-    card = b.hand.splice(s.i, 1)[0]; k = card.k; cost = CARDS[k].cost; if(s.target != null) lastTarget = s.target;
-    const el = cardEls.get(card.id); cardEls.delete(card.id); flyCard(el, DROID.x - 48, DROID.y - 60);
-  } else {
-    cost = b.hand.length;
+  const s = sel, b = S.b, a = selAction(); sel = null; PV = null; busy = true; UI.view = 'normal';
+  if(a.type === 'card'){
+    if(a.t != null) lastTarget = a.t;
+    const cd = b.hand[a.i], el = cardEls.get(cd.id); cardEls.delete(cd.id); flyCard(el, DROID.x - 48, DROID.y - 60);
+  } else if(a.type === 'swap'){
     b.hand.forEach((cd, n) => { const el = cardEls.get(cd.id); cardEls.delete(cd.id); setTimeout(() => flyCard(el, 20, 340), n * 30); });
-    b.disc.push(...b.hand); b.hand = [];
   }
+  const p = EN.beginAction(S, a);
   $('#droid').classList.add('casting');
   renderAll();
-  const g = spendGen(S, cost, k, s.target, false); let r;
-  while(!(r = g.next()).done) await showEvent(r.value, k, s.target);
+  const g = EN.spendGen(S, p.cost, p.k, p.t, false); let r;
+  while(!(r = g.next()).done) await showEvent(r.value, p.k, p.t);
   $('#droid').classList.remove('casting');
   const out = r.value;
-  if(card) b.disc.push(card);
-  if(out.dead){ renderAll(); await sleep(350); busy = false; onLose(); return; }
-  if(out.won){ b.over = true; renderAll(); await sleep(500); busy = false; onWin(); return; }
+  EN.endAction(S, p, out);
+  if(out.dead){ renderAll(); await sleep(350); onLose(); busy = false; return; }
+  if(out.won){ b.over = true; renderAll(); await sleep(500); onWin(); busy = false; return; }
   busy = false;
-  if(!k || !b.hand.length) drawN(5);
   renderAll();
 }
 
-/* ---------- flow ---------- */
+/* ---------- run & map ---------- */
 function newRun(){
-  const parts = {}; for(const p of PARTS) parts[p.id] = {damaged:false};
-  S = {run:{body:DATA.bodyMax, bodyMax:DATA.bodyMax, parts, deck:START_DECK.slice(), step:0}};
-  hideOv(); startBattle(0);
+  hideOv();
+  const seed = Math.floor(Math.random() * 1e9);
+  S = {run: EN.newRun(seed), b: null};
+  UI.mapSel = null; UI.node = null;
+  showMap();
+}
+const nodeKey = n => n.type === 'boss' ? 'boss' : n.lane + '-' + n.idx;
+const MAPX = [52, 168, 276, 384, 492, 600, 736], MAPY = [112, 192, 272];
+function nodePos(n){ return n.type === 'boss' ? {x: MAPX[6], y: MAPY[1]} : {x: MAPX[n.idx + 1], y: MAPY[n.lane]}; }
+function encFoes(enc){ const c = {}; for(const f of ENC[enc].foes){ const nm = FOES[f].name; c[nm] = (c[nm] || 0) + 1; } return Object.entries(c).map(([n, k]) => k > 1 ? `${n}×${k}` : n).join('・'); }
+function showMap(){
+  UI.screen = 'map'; UI.view = 'normal'; sel = null; PV = null;
+  const run = S.run, m = run.map, reach = new Set(EN.nextNodes(run).map(nodeKey)), visited = new Set(run.visited);
+  const atKey = run.at ? (run.at.boss ? 'boss' : run.at.lane + '-' + run.at.idx) : 'start';
+  const all = [...m.nodes.flat(), m.boss];
+  const T = DATA.area.transferAfter;
+  let lines = '';
+  const ln = (a, c, cls) => { lines += `<line x1="${a.x}" y1="${a.y}" x2="${c.x}" y2="${c.y}" class="${cls}"/>`; };
+  const st = {x: MAPX[0], y: MAPY[1]};
+  for(const row of m.nodes){
+    const n0 = row[0]; ln(st, nodePos(n0), visited.has(nodeKey(n0)) ? 'ed vis' : 'ed');
+    for(let i = 0; i < row.length - 1; i++){
+      const a = row[i];
+      const nexts = i === T - 1 ? EN.reachAfter(a.lane, m.nodes.length).map(l => m.nodes[l][i + 1]) : [row[i + 1]];
+      for(const c of nexts) ln(nodePos(a), nodePos(c), (visited.has(nodeKey(a)) && visited.has(nodeKey(c)) ? 'ed vis' : 'ed') + (i === T - 1 ? ' tr' : ''));
+    }
+    ln(nodePos(row[row.length - 1]), nodePos(m.boss), 'ed');
+  }
+  const btn = n => {
+    const k = nodeKey(n), p = nodePos(n), E = n.enc ? ENC[n.enc] : null;
+    const cls = ['mn', n.type, reach.has(k) ? 'reach' : '', visited.has(k) ? 'done' : '', UI.mapSel === k ? 'sel' : '', atKey === k ? 'here' : ''].filter(Boolean).join(' ');
+    return `<button class="${cls}" type="button" data-act="node" data-arg="${k}" style="left:${p.x}px;top:${p.y}px" aria-label="${DATA.rooms[n.type].name}"><span class="ic">${IC[n.type]}</span>${E && n.type !== 'boss' ? `<span class="fam">${E.fam}</span>` : ''}</button>`;
+  };
+  const labels = m.lanes.map((k, l) => `<span class="lane" style="top:${MAPY[l] - 40}px;left:${MAPX[1]}px">${DATA.lanes[k].name}の道</span>`).join('');
+  const s = UI.mapSel ? all.find(n => nodeKey(n) === UI.mapSel) : null;
+  let info = '';
+  if(s){
+    const E = s.enc ? ENC[s.enc] : null;
+    info = `<span class="ic">${IC[s.type]}</span><b>${DATA.rooms[s.type].name}</b>${E ? `<span class="mi-f">${E.fam}</span><span class="mi-d">${encFoes(s.enc)}</span>` : ''}${s.type !== 'boss' ? `<span class="mi-l">${DATA.lanes[m.lanes[s.lane]].name}の道</span>` : ''}`;
+  }
+  const partsMini = SLOTS.map(p => `<span class="pm${run.parts[p.id].damaged ? ' dmg' : ''}" title="${p.fn}"><span class="ic">${IC[p.id]}</span></span>`).join('');
+  $('#mapScr').innerHTML = `<div class="mh-bar"><b>${DATA.area.name}</b><span class="mb"><span class="ic">${IC.core}</span>${run.body}/${run.bodyMax}</span><span class="mb">${partsMini}</span><span class="mb"><span class="ic">${IC.scrap}</span>${run.scrap}</span><span class="sp"></span><button class="mbtn" type="button" data-act="deck"><span class="ic">${IC.deck}</span>${EN.battleDeck(run).length}</button><button class="mbtn" type="button" data-act="menu" aria-label="メニュー">${IC.menu}</button></div>
+    <svg class="medges" width="844" height="390" viewBox="0 0 844 390" aria-hidden="true">${lines}</svg>
+    <span class="mn start${atKey === 'start' ? ' here' : ''}" style="left:${st.x}px;top:${st.y}px"><span class="ic">${IC.start}</span></span>${labels}${all.map(btn).join('')}
+    <div class="minfo">${info || '<span class="mi-h">次の部屋を選択</span>'}<span class="sp"></span><button class="btn" type="button" data-act="go" ${s && reach.has(UI.mapSel) ? '' : 'disabled'}>決定</button></div>`;
+  $('#mapScr').hidden = false;
+}
+function findNode(k){ const m = S.run.map; if(k === 'boss') return m.boss; const [l, i] = k.split('-').map(Number); return m.nodes[l][i]; }
+function enterRoom(n){
+  UI.node = n; UI.mapSel = null;
+  if(n.type === 'battle' || n.type === 'elite' || n.type === 'boss') startBattle(n);
+  else if(n.type === 'rest'){ UI.pick = null; showRest(); }
+  else if(n.type === 'shop'){ UI.pick = null; UI.offers = null; showShop(); }
+  else if(n.type === 'event'){ UI.pick = null; UI.eventId = n.ev; showEventRoom(); }
+}
+function completeRoom(){
+  const n = UI.node, run = S.run;
+  run.at = n.type === 'boss' ? {boss:true} : {lane:n.lane, idx:n.idx};
+  run.visited.push(nodeKey(n));
+  UI.pick = null; UI.learnOpts = []; UI.partOpts = null; UI.after = null;
+  hideOv();
+  if(n.type === 'boss'){ showClear(); return; }
+  showMap();
 }
 function startBattle(n){
-  const B = BATTLES[n], run = S.run;
-  snapshot = JSON.stringify(run);
-  const parts = {};
-  for(const p of PARTS) parts[p.id] = {cur: run.parts[p.id].damaged ? Math.ceil(p.max / 2) : p.max, max:p.max};
-  const foes = B.foes.map((key, i) => { const f = FOES[key]; return {key, i, name:f.name, tag:f.tag, kind:f.kind, hp:f.hp, maxHp:f.hp, pat:f.pat, idx:0, r:f.start, seq:0, alive:true, crack:0}; });
-  let id = 0;
-  S.b = {n, T:0, block:0, swift: parts.mob.cur > 0 ? 2 : 0, foes, parts, draw: shuffle(run.deck.map(k => ({k, id: n * 1000 + id++}))), disc:[], hand:[], cast:null, broken:{}, over:false};
-  sel = null; PV = null; busy = false; lastTarget = 0; UI.view = 'normal';
+  snapshot = JSON.stringify(S.run);
+  S = EN.newBattle(S.run, n.enc);
+  sel = null; PV = null; busy = false; lastTarget = 0; UI.view = 'normal'; UI.screen = 'battle';
+  $('#mapScr').hidden = true;
   clearCards(); clearMarks(); buildFoes();
-  drawN(5); renderAll();
-  toast(`${B.area} · ${B.room}`);
-}
-function next(){
-  S.run.step++;
-  const s = FLOW[S.run.step];
-  if(s[0] === 'b') startBattle(+s[1]);
-  else if(s === 'learn') showLearn();
-  else if(s === 'rest') showRest();
-  else showClear();
+  renderAll();
+  toast(`${DATA.rooms[n.type].name} · ${ENC[n.enc].fam}`);
 }
 function partTiles(){
-  return `<div class="prow">${PARTS.map(p => {
-    const d = S.run.parts[p.id].damaged, w = Math.floor((76 - (p.max - 1) * 2) / p.max);
-    return `<div class="ptile${d ? ' dmg' : ''}"><span class="ic">${IC[p.id]}</span><b>${p.fn}</b><span class="pips">${pipsHTML(p.max, d ? Math.ceil(p.max / 2) : p.max, d ? Math.ceil(p.max / 2) : p.max, d ? Math.ceil(p.max / 2) : p.max, w)}</span></div>`;
+  return `<div class="prow">${SLOTS.map(p => {
+    const d = S.run.parts[p.id].damaged, mx = EN.partMax(S.run, p.id);
+    return `<div class="ptile${d ? ' dmg' : ''}"><span class="ic">${IC[p.id]}</span><b>${p.fn}</b><span class="pips">${pipsHTML(mx, d ? Math.ceil(mx / 2) : mx, d ? Math.ceil(mx / 2) : mx, d ? Math.ceil(mx / 2) : mx, pipW(mx, 76))}</span></div>`;
   }).join('')}</div>`;
 }
-function bodyLine(){ return `<div class="bodyline"><span class="ic" style="color:var(--cy)">${IC.core}</span>${S.run.body}/${S.run.bodyMax}</div>`; }
+function bodyLine(){ return `<div class="bodyline"><span class="ic" style="color:var(--cy)">${IC.core}</span>${S.run.body}/${S.run.bodyMax}<span class="ic" style="color:var(--fg2);margin-left:10px">${IC.scrap}</span>${S.run.scrap}</div>`; }
 function onWin(){
-  for(const p of PARTS) S.run.parts[p.id].damaged = !!S.b.broken[p.id];
-  lastPool = BATTLES[S.b.n].foes.flatMap(k => FOES[k].pool);
-  showOv(`<h2>戦闘終了</h2>${bodyLine()}${partTiles()}<div class="row"><button class="btn" type="button" data-act="next">次へ</button></div>`);
+  for(const p of SLOTS) S.run.parts[p.id].damaged = !!S.b.broken[p.id];
+  const n = UI.node, gain = n.type === 'elite' ? DATA.rewards.elite : n.type === 'battle' ? DATA.rewards.battle : 0;
+  S.run.scrap += gain;
+  showOv(`<h2>戦闘終了</h2>${bodyLine()}${partTiles()}${gain ? `<p class="gain"><span class="ic">${IC.scrap}</span>+${gain}</p>` : ''}<div class="row"><button class="btn" type="button" data-act="afterWin">次へ</button></div>`);
 }
 function onLose(){
   showOv(`<h2>機能停止</h2><div class="row"><button class="btn ghost" type="button" data-act="restart">最初から</button><button class="btn" type="button" data-act="retry">この戦闘をやり直す</button></div>`);
 }
+function learnPool(){ return [...new Set(ENC[UI.node.enc].foes.flatMap(k => FOES[k].pool))]; }
+function afterWin(){
+  const n = UI.node;
+  if(n.type === 'boss'){ completeRoom(); return; }
+  UI.learnOpts = EN.shuffle(learnPool()).slice(0, 3); UI.pick = null;
+  UI.after = n.type === 'elite' ? 'part' : 'map';
+  if(UI.learnOpts.length) showLearn(); else afterLearn();
+}
+function afterLearn(){
+  UI.pick = null; UI.learnOpts = [];
+  if(UI.after === 'part'){ UI.partOpts = randomParts(2); UI.back = 'map'; showPartOffer(); }
+  else completeRoom();
+}
 function showLearn(){
-  if(!UI.learnOpts.length) UI.learnOpts = shuffle([...new Set(lastPool)]).slice(0, 3);
   const pk = UI.pick;
   showOv(`<h2>学習</h2><div class="cards">${UI.learnOpts.map(k => `<button class="card static${pk === k ? ' picked' : ''}" type="button" data-act="pick" data-arg="${k}" data-view="learn">${cardInner(k, null)}</button>`).join('')}</div><div class="row"><button class="btn ghost" type="button" data-act="skipLearn">取り込まない</button><button class="btn" type="button" data-act="learn" ${pk ? '' : 'disabled'}>決定</button></div>`);
+}
+function randomParts(n){
+  const eq = new Set(Object.values(S.run.parts).map(p => p.id));
+  return EN.shuffle(Object.keys(PARTDEF).filter(id => !eq.has(id))).slice(0, n);
+}
+function showPartOffer(){
+  const pk = UI.pick;
+  const tile = id => { const d = PARTDEF[id], cur = partOf(d.slot); return `<button class="opt popt${pk === id ? ' picked' : ''}" type="button" data-act="pick" data-arg="${id}" data-view="part"><span class="pt-h"><span class="ic">${IC[d.slot]}</span>${SLOT_BY[d.slot].fn}<span class="pt-m">${d.max}</span></span><b>${d.name}</b><span>${d.text}</span><span class="pt-cur">今: ${cur.name}</span></button>`; };
+  showOv(`<h2>鹵獲</h2><div class="opts">${UI.partOpts.map(tile).join('')}</div><div class="row"><button class="btn ghost" type="button" data-act="skipPart">取り込まない</button><button class="btn" type="button" data-act="takePart" ${pk ? '' : 'disabled'}>決定</button></div>`);
 }
 function showRest(){
   const pk = UI.pick;
   showOv(`<h2>整備</h2>${bodyLine()}${partTiles()}<div class="opts"><button class="opt${pk === 'repair' ? ' picked' : ''}" type="button" data-act="pick" data-arg="repair" data-view="rest"><span class="ic">${IC.repair}</span><b>修理</b><span>本体+15・損傷を修復</span></button><button class="opt${pk === 'defrag' ? ' picked' : ''}" type="button" data-act="pick" data-arg="defrag" data-view="rest"><span class="ic">${IC.defrag}</span><b>デフラグ</b><span>カードを1枚消去</span></button></div><div class="row"><button class="btn" type="button" data-act="rest" ${pk ? '' : 'disabled'}>決定</button></div>`);
 }
-function groupDeck(){ const counts = {}; for(const k of S.run.deck) counts[k] = (counts[k] || 0) + 1; return counts; }
+function groupDeck(list){ const counts = {}; for(const k of list) counts[k] = (counts[k] || 0) + 1; return counts; }
 function showDefrag(){
-  const counts = groupDeck(), pk = UI.pick;
-  showOv(`<h2>消去するカードを選択</h2><div class="cards">${Object.keys(counts).map(k => `<button class="card static${pk === k ? ' picked' : ''}${CARDS[k].src ? ' off' : ''}" type="button" ${CARDS[k].src ? 'disabled' : `data-act="pick" data-arg="${k}" data-view="defrag"`}>${cardInner(k, null, counts[k])}</button>`).join('')}</div><div class="row"><button class="btn ghost" type="button" data-act="backRest">戻る</button><span class="sp"></span><button class="btn" type="button" data-act="del" ${pk ? '' : 'disabled'}>決定</button></div>`);
+  const counts = groupDeck(S.run.deck), pk = UI.pick;
+  showOv(`<h2>消去するカードを選択</h2><div class="cards">${Object.keys(counts).map(k => `<button class="card static${pk === k ? ' picked' : ''}" type="button" data-act="pick" data-arg="${k}" data-view="defrag">${cardInner(k, null, counts[k])}</button>`).join('')}</div><div class="row"><button class="btn ghost" type="button" data-act="backDefrag">戻る</button><span class="sp"></span><button class="btn" type="button" data-act="del" ${pk ? '' : 'disabled'}>決定</button></div>`);
+}
+const price = k => DATA.shop.price[CARDS[k].cost] ?? 30;
+function showShop(){
+  const sh = DATA.shop, run = S.run;
+  if(!UI.offers){ const pool = Object.keys(CARDS).filter(k => !['charge','scatter'].includes(k)); UI.offers = EN.shuffle(pool).slice(0, sh.offers); }
+  const pk = UI.pick, can = c => run.scrap >= c;
+  const offers = UI.offers.map((k, i) => k ? `<div class="sitem"><button class="card static${pk === 'c' + i ? ' picked' : ''}${can(price(k)) ? '' : ' off'}" type="button" data-act="pick" data-arg="c${i}" data-view="shop">${cardInner(k, null)}</button><span class="price${can(price(k)) ? '' : ' no'}"><span class="ic">${IC.scrap}</span>${price(k)}</span></div>` : '<div class="sitem sold"></div>').join('');
+  const svc = (id, ic, name, sub, c) => `<button class="opt${pk === id ? ' picked' : ''}${can(c) ? '' : ' off'}" type="button" data-act="pick" data-arg="${id}" data-view="shop"><span class="ic">${IC[ic]}</span><b>${name}</b><span>${sub}</span><span class="price${can(c) ? '' : ' no'}"><span class="ic">${IC.scrap}</span>${c}</span></button>`;
+  const cost = pk ? (pk[0] === 'c' ? price(UI.offers[+pk.slice(1)]) : pk === 'defrag' ? sh.defrag : sh.repairCost) : 0;
+  showOv(`<h2>ショップ</h2>${bodyLine()}<div class="shop"><div class="cards">${offers}</div><div class="svc">${svc('defrag', 'defrag', 'デフラグ', 'カードを1枚消去', sh.defrag)}${svc('repair', 'repair', '修理', `本体+${sh.repairBody}・損傷を修復`, sh.repairCost)}</div></div><div class="row"><button class="btn ghost" type="button" data-act="leave">出る</button><button class="btn" type="button" data-act="buy" ${pk && can(cost) ? '' : 'disabled'}>購入</button></div>`);
+}
+function showEventRoom(){
+  const ev = DATA.events.find(e => e.id === UI.eventId), pk = UI.pick;
+  showOv(`<h2>${ev.title}</h2><p class="sub">${ev.text}</p>${bodyLine()}<div class="opts">${ev.choices.map((c, i) => `<button class="opt${pk === String(i) ? ' picked' : ''}" type="button" data-act="pick" data-arg="${i}" data-view="event"><b>${c.label}</b><span>${c.sub}</span></button>`).join('')}</div><div class="row"><button class="btn" type="button" data-act="choose" ${pk != null ? '' : 'disabled'}>決定</button></div>`);
+}
+function applyEvent(fx){
+  const run = S.run;
+  if(fx.body) run.body = Math.max(1, Math.min(run.bodyMax, run.body + fx.body));
+  if(fx.scrap) run.scrap += fx.scrap;
+  if(fx.repair) for(const p of SLOTS) run.parts[p.id].damaged = false;
+  if(fx.card){ const k = EN.pick(DATA.rareCards); run.deck.push(k); UI.pick = null; showOv(`<h2>取り込んだ</h2><div class="cards"><div class="card static">${cardInner(k, null)}</div></div><div class="row"><button class="btn" type="button" data-act="done">次へ</button></div>`); return; }
+  if(fx.part){ UI.partOpts = randomParts(2); UI.pick = null; UI.back = 'map'; showPartOffer(); return; }
+  if(fx.defrag){ UI.pick = null; UI.back = 'event'; showDefrag(); return; }
+  completeRoom();
 }
 function showClear(){
-  showOv(`<h2>エリア1 踏破</h2>${bodyLine()}<div class="row"><button class="btn" type="button" data-act="restart">最初から</button></div>`);
+  showOv(`<h2>${DATA.area.name} 踏破</h2>${bodyLine()}<div class="row"><button class="btn" type="button" data-act="restart">最初から</button></div>`);
 }
 
 /* ---------- info overlays ---------- */
@@ -1007,33 +1159,40 @@ function infoFoe(i){
     if(j > 0) seq += `<div class="conn"><span class="ic">${IC.clock}</span><b>${a.dl}</b><span class="ic">${IC.arrow}</span></div>`;
     const cls = a.kind === 'delay' ? 'dl' : a.ch ? 'ch' : '';
     const val = a.kind === 'delay' ? `<span class="v" style="display:flex;align-items:center;gap:3px"><span class="ic">${IC.delay.replace('viewBox', 'style="width:16px;height:16px" viewBox')}</span>${a.v}</span>` : `<span class="v">${a.d}</span>`;
-    const tp = a.kind === 'delay' ? '<span class="tp">自機</span>' : `<span class="tp"><span class="ic">${IC[a.p]}</span>${PART_BY[a.p].fn}</span>`;
+    const tp = a.kind === 'delay' ? '<span class="tp">自機</span>' : `<span class="tp"><span class="ic">${IC[a.p]}</span>${SLOT_BY[a.p].fn}</span>`;
     seq += `<div class="at ${cls}${j === 0 ? ' cur' : ''}">${j === 0 ? `<span class="nx"><span class="ic">${IC.clock}</span>${e.r}</span>` : ''}<span class="ty">${a.kind === 'delay' ? IC.delay : IC.hit}</span>${a.ch ? `<span class="par">${IC.parry}</span>` : ''}${val}${tp}<span class="an">${a.n}</span></div>`;
   }
   seq += `<div class="loop"><span class="ic">${IC.loop}</span><b>${e.pat[e.idx].dl}</b></div>`;
-  const st = e.crack ? `<button class="stchip" type="button" data-act="stdesc"><span class="ic">${IC.crack}</span>${e.crack}</button>` : '';
-  showOv(`<div class="ei"><div class="ei-l"><div class="ei-spr">${SPR[e.kind].replace('width="90" height="100"', 'width="99" height="110"')}</div><div class="ei-name"><span class="ftag">${e.tag}</span>${e.name}</div><div class="ei-hp">${e.hp}<span>/${e.maxHp}</span></div><div class="ei-bar"><i style="width:${e.hp / e.maxHp * 100}%"></i></div><div class="ei-st">${st}</div><div class="stdesc" id="stdesc" hidden>クラック${e.crack}: 受けるダメージ+${e.crack}</div></div><div class="ei-r"><div class="seq">${seq}</div></div></div>${closeRow}`, true);
+  let st = e.crack ? `<span class="stchip"><span class="ic">${IC.crack}</span>${e.crack}</span>` : '';
+  let tr = '';
+  if(e.react) tr += `<div class="trait-row"><span class="ic">${IC.eye}</span><span>コスト${e.react.min}以上を使い始めると、1サイクル後に<b>${e.react.d}</b>→${SLOT_BY[e.react.p].fn}</span></div>`;
+  if(e.sync) tr += `<div class="trait-row"><span class="ic">${IC.link}</span><span>仲間と同じサイクルに攻撃すると+<b>${e.sync}</b></span></div>`;
+  if(e.crack) tr += `<div class="trait-row f"><span class="ic">${IC.crack}</span><span>受けるダメージ+${e.crack}</span></div>`;
+  showOv(`<div class="ei"><div class="ei-l"><div class="ei-spr">${SPR[e.kind].replace('width="90" height="100"', 'width="99" height="110"')}</div><div class="ei-name"><span class="ftag">${e.tag}</span>${e.name}</div><div class="ei-hp">${e.hp}<span>/${e.maxHp}</span></div><div class="ei-bar"><i style="width:${e.hp / e.maxHp * 100}%"></i></div><div class="ei-st">${st}</div></div><div class="ei-r"><div class="seq">${seq}</div>${tr ? `<div class="traits">${tr}</div>` : ''}</div></div>${closeRow}`, true);
 }
 function infoPart(id){
-  const p = PART_BY[id], st = S.b.parts[id], worn = S.run.parts[id].damaged;
-  showOv(`<h2>${p.name}</h2><div class="pinfo"><span class="ic">${IC[id]}</span><div><b>${p.fn}${p.pt ? '(' + p.pt + ')' : ''} ${st.cur}/${st.max}</b><div class="pips" style="margin-top:6px">${pipsHTML(st.max, st.cur, st.cur, worn ? Math.ceil(st.max / 2) : st.max, Math.floor((150 - (st.max - 1) * 2) / st.max))}</div></div></div><p style="margin:0 0 12px;font-size:12px">${p.text}</p>${closeRow}`, true);
+  const p = SLOT_BY[id], d = partOf(id), st = S.b.parts[id], worn = S.run.parts[id].damaged;
+  showOv(`<h2>${d.name}</h2><div class="pinfo"><span class="ic">${IC[id]}</span><div><b>${p.fn}${p.pt ? '(' + p.pt + ')' : ''} ${st.cur}/${st.max}</b><div class="pips" style="margin-top:6px">${pipsHTML(st.max, st.cur, st.cur, worn ? Math.ceil(st.max / 2) : st.max, pipW(st.max, 150))}</div></div></div><p style="margin:0 0 12px;font-size:12px">${d.text}</p>${closeRow}`, true);
 }
 function infoDeck(){
-  const counts = groupDeck();
-  showOv(`<h2>デッキ ${S.run.deck.length}</h2><div class="cards">${Object.keys(counts).map(k => `<div class="card static">${cardInner(k, S, counts[k])}</div>`).join('')}</div>${closeRow}`, true);
+  const own = groupDeck(S.run.deck), extra = groupDeck(EN.partCards(S.run));
+  const tiles = Object.keys(own).map(k => `<div class="card static">${cardInner(k, S, own[k])}</div>`).concat(Object.keys(extra).map(k => `<div class="card static src">${cardInner(k, S, extra[k])}</div>`));
+  showOv(`<h2>デッキ ${EN.battleDeck(S.run).length}</h2><div class="cards">${tiles.join('')}</div>${closeRow}`, true);
 }
 function showRules(first){
   showOv(`<h2>遊び方</h2><ul>
-    <li>時間はカードを使ったときだけ進む。カード左上の数字が、かかるサイクル。</li>
+    <li>時間はカードを使ったときだけ進む。カード左上の数字が、かかるサイクル。0は即時。</li>
+    <li>手札は3サイクルごとに1枚届く(最大${RULE.handMax}枚)。届く時刻はタイムラインの下の段。軽いカードを続けると手札が減り、重いカードの間に手札がたまる。</li>
     <li>奥の画面に敵ごとの攻撃予定が流れてくる。数字はダメージ、横の字は狙う部位。紫の丸は溜め技、砂時計は自分へのディレイ。</li>
-    <li>カードをタップで選択、もう一度タップで実行。攻撃カードは敵をタップして対象を変え、同じ敵をもう一度タップしても実行。</li>
     <li>完了前に被弾すると中断。ブロックで全部防ぐか、菱形のあるカードなら中断されない。完了と溜め技が同じサイクルならJUSTで潰せる。</li>
-    <li>上にスワイプで手札を広げる。下にスワイプで自分の内側(部位の詳細、山札と捨て札)を見る。反対向きのスワイプで戻る。長押しでカードと敵の詳細。</li>
+    <li>目の印の敵は、重いカードを使い始めると撃ってくる。鎖の印の敵は、仲間と同時に攻撃すると強くなる。</li>
+    <li>右下は手札の入れ替え(枚数ぶんのサイクル)。手札がないときは1サイクル待つ。</li>
+    <li>上スワイプで手札を広げ、下スワイプで自分の内側を見る。長押しでカードと敵の詳細。</li>
   </ul><div class="row"><button class="btn" type="button" data-act="close">${first ? 'はじめる' : '閉じる'}</button></div>`, !first);
 }
 function showMenu(){
-  const B = BATTLES[S.b.n];
-  showOv(`<h2>${B.area} ${B.room} · ${B.no}/6</h2><p class="sub">Ascendroid ${APP_VERSION}</p><div class="mlist"><button class="opt" type="button" data-act="rules"><b>遊び方</b></button><button class="opt" type="button" data-act="deck"><b>デッキ</b></button><button class="opt" type="button" data-act="fs"><b>全画面</b></button><button class="opt" type="button" data-act="restart"><b>最初から</b></button></div>${closeRow}`, true);
+  const at = S.run.at, pos = !at ? '入口' : at.boss ? 'ボス' : `部屋${at.idx + 1}/${DATA.area.rooms + 1}`;
+  showOv(`<h2>${DATA.area.name} · ${UI.screen === 'battle' && UI.node ? DATA.rooms[UI.node.type].name : pos}</h2><p class="sub">Ascendroid ${APP_VERSION}</p><div class="mlist"><button class="opt" type="button" data-act="rules"><b>遊び方</b></button><button class="opt" type="button" data-act="deck"><b>デッキ</b></button><button class="opt" type="button" data-act="fs"><b>全画面</b></button><button class="opt" type="button" data-act="restart"><b>最初から</b></button></div>${closeRow}`, true);
 }
 async function goFull(){
   hideOv();
@@ -1049,32 +1208,46 @@ function act(a, arg, el){
     case 'deck': infoDeck(); break;
     case 'fs': goFull(); break;
     case 'restart': UI.pick = null; UI.learnOpts = []; newRun(); break;
-    case 'retry': S.run = JSON.parse(snapshot); hideOv(); startBattle(S.b.n); break;
-    case 'next': UI.pick = null; UI.learnOpts = []; hideOv(); next(); break;
+    case 'retry': S = {run: JSON.parse(snapshot), b: null}; hideOv(); startBattle(UI.node); break;
+    case 'node': UI.mapSel = UI.mapSel === arg ? null : arg; showMap(); break;
+    case 'go': { const n = findNode(UI.mapSel); if(EN.nextNodes(S.run).some(x => nodeKey(x) === UI.mapSel)) enterRoom(n); break; }
+    case 'afterWin': UI.pick = null; hideOv(); afterWin(); break;
     case 'pick': {
       UI.pick = UI.pick === arg ? null : arg;
       const v = el.dataset.view;
-      if(v === 'learn') showLearn(); else if(v === 'rest') showRest(); else showDefrag();
+      ({learn:showLearn, rest:showRest, defrag:showDefrag, shop:showShop, event:showEventRoom, part:showPartOffer})[v]();
       break;
     }
-    case 'learn': if(UI.pick){ S.run.deck.push(UI.pick); UI.pick = null; UI.learnOpts = []; hideOv(); next(); } break;
-    case 'skipLearn': UI.pick = null; UI.learnOpts = []; hideOv(); next(); break;
+    case 'learn': if(UI.pick){ S.run.deck.push(UI.pick); afterLearn(); } break;
+    case 'skipLearn': afterLearn(); break;
+    case 'takePart': if(UI.pick){ const d = PARTDEF[UI.pick]; S.run.parts[d.slot] = {id:UI.pick, damaged:false}; UI.pick = null; completeRoom(); } break;
+    case 'skipPart': UI.pick = null; completeRoom(); break;
     case 'rest':
-      if(UI.pick === 'repair'){ S.run.body = Math.min(S.run.bodyMax, S.run.body + 15); for(const p of PARTS) S.run.parts[p.id].damaged = false; UI.pick = null; hideOv(); next(); }
-      else if(UI.pick === 'defrag'){ UI.pick = null; showDefrag(); }
+      if(UI.pick === 'repair'){ S.run.body = Math.min(S.run.bodyMax, S.run.body + 15); for(const p of SLOTS) S.run.parts[p.id].damaged = false; completeRoom(); }
+      else if(UI.pick === 'defrag'){ UI.pick = null; UI.back = 'rest'; showDefrag(); }
       break;
-    case 'backRest': UI.pick = 'defrag'; showRest(); break;
-    case 'del': if(UI.pick){ const i = S.run.deck.indexOf(UI.pick); if(i >= 0) S.run.deck.splice(i, 1); UI.pick = null; hideOv(); next(); } break;
-    case 'stdesc': { const d = $('#stdesc'); if(d) d.hidden = !d.hidden; break; }
+    case 'backDefrag': UI.pick = null; if(UI.back === 'shop') showShop(); else if(UI.back === 'event') showEventRoom(); else { UI.pick = 'defrag'; showRest(); } break;
+    case 'del': if(UI.pick){ const i = S.run.deck.indexOf(UI.pick); if(i >= 0) S.run.deck.splice(i, 1); UI.pick = null; if(UI.back === 'shop'){ S.run.scrap -= DATA.shop.defrag; showShop(); } else completeRoom(); } break;
+    case 'buy': {
+      const pk = UI.pick, sh = DATA.shop, run = S.run; if(!pk) break;
+      if(pk[0] === 'c'){ const i = +pk.slice(1), k = UI.offers[i]; if(!k || run.scrap < price(k)) break; run.scrap -= price(k); run.deck.push(k); UI.offers[i] = null; UI.pick = null; showShop(); }
+      else if(pk === 'repair'){ if(run.scrap < sh.repairCost) break; run.scrap -= sh.repairCost; run.body = Math.min(run.bodyMax, run.body + sh.repairBody); for(const p of SLOTS) run.parts[p.id].damaged = false; UI.pick = null; showShop(); }
+      else if(pk === 'defrag'){ if(run.scrap < sh.defrag) break; UI.pick = null; UI.back = 'shop'; showDefrag(); }
+      break;
+    }
+    case 'leave': completeRoom(); break;
+    case 'choose': { if(UI.pick == null) break; const ev = DATA.events.find(e => e.id === UI.eventId); const fx = ev.choices[+UI.pick].fx; UI.pick = null; applyEvent(fx); break; }
+    case 'done': completeRoom(); break;
   }
 }
 
 /* ---------- input ---------- */
 const stage = $('#stage');
 let lpTimer = null, longFired = false, swipe = null, swallow = false;
+const inBattle = () => UI.screen === 'battle' && S && S.b;
 stage.addEventListener('pointerdown', ev => {
   swipe = {x: ev.clientX, y: ev.clientY};
-  if(busy || !$('#ov').hidden || UI.view === 'self') return;
+  if(!inBattle() || busy || !$('#ov').hidden || UI.view === 'self') return;
   const c = ev.target.closest('#hand .card[data-i]'), f = ev.target.closest('.foe[data-f],.fi[data-f]');
   if(!c && !f) return;
   clearTimeout(lpTimer);
@@ -1091,7 +1264,7 @@ stage.addEventListener('pointerup', ev => {
   if(!swipe) return;
   const dy = ev.clientY - swipe.y, dx = ev.clientX - swipe.x, s = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--s')) || 1;
   swipe = null;
-  if($('#ov').hidden && !busy && Math.abs(dy) > 34 * s && Math.abs(dy) > Math.abs(dx) * 1.3){
+  if(inBattle() && $('#ov').hidden && !busy && Math.abs(dy) > 34 * s && Math.abs(dy) > Math.abs(dx) * 1.3){
     let v = UI.view;
     if(dy < 0) v = v === 'self' ? 'normal' : v === 'normal' ? 'hand' : v;
     else v = v === 'hand' ? 'normal' : v === 'normal' ? 'self' : v;
@@ -1108,7 +1281,7 @@ stage.addEventListener('click', ev => {
   if(a && !a.disabled){ act(a.dataset.act, a.dataset.arg, a); return; }
   const ov = $('#ov');
   if(!ov.hidden){ if(t === ov && ov.dataset.closable) hideOv(); return; }
-  if(busy || UI.view === 'self') return;
+  if(!inBattle() || busy || UI.view === 'self') return;
   const card = t.closest('#hand .card[data-i]'); if(card){ onCard(+card.dataset.i); return; }
   if(t.closest('#redraw')){ onRedraw(); return; }
   const f = t.closest('[data-f]'); if(f){ onFoe(+f.dataset.f); return; }
@@ -1122,6 +1295,8 @@ function fit(){
   document.documentElement.style.setProperty('--s', Math.max(0.2, Math.min(w.clientWidth / 844, w.clientHeight / 390)));
 }
 addEventListener('resize', fit);
+// ボタンにフォーカスが移ったときなどに、画面がずれないようにする
+for(const el of [$('#wrap'), stage]) el.addEventListener('scroll', () => { el.scrollTop = 0; el.scrollLeft = 0; });
 fit();
 buildStatic();
 newRun();

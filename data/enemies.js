@@ -1,37 +1,51 @@
-// 敵と戦闘の構成
-// tag: タイムラインの行に出る記号 / kind: 見た目(drone, exec, hacker, warden) / hp: 耐久 / start: 最初の行動までのサイクル
-// pat: 行動パターン(上から順に繰り返す)
-//   n: 行動名 / d: ダメージ / p: 狙う部位(calc 演算, arm 武装, out 出力, dur 耐久, mob 機動)
-//   dl: 1つ前の行動からの間隔(サイクル) / ch: true なら溜め技(JUSTで潰せる)
-//   kind:'delay' は自分へのディレイ(v: 量)
-// pool: 倒したときの学習で出るカード候補
+// 敵と遭遇
+// foes: 敵の種類
+//   kind: 見た目 / hp: 耐久 / start: 最初の行動までのサイクル
+//   pat: 行動パターン(上から順に繰り返す)
+//     n: 行動名 / d: ダメージ / p: 狙う部位(calc 演算, arm 武装, out 出力, dur 耐久, mob 機動)
+//     dl: 1つ前の行動からの間隔(サイクル) / ch: true なら溜め技(JUSTで潰せる)
+//     kind:'delay' は自分へのディレイ(v: 量)
+//   react: 反応する。コスト min 以上のカードを使い始めると、1サイクル後に撃つ {min, n, d, p}
+//   sync: 連携する。連携を持つ敵が同じサイクルに攻撃すると、それぞれダメージ+sync
+//   pool: 倒したときの学習で出るカード候補
+// encounters: 遭遇。fam は地図に出る系統、tier 1 は序盤から、2 は部屋3以降。elite / boss は特別な部屋
 window.DATA = window.DATA || {};
 DATA.foes = {
-  droneA:{name:'警備ドローン', tag:'A', kind:'drone', hp:12, start:3,
-    pat:[{n:'射撃', d:3, dl:3, p:'calc'}],
-    pool:['jab','rapid','guard','wall','emp']},
-  droneB:{name:'警備ドローン', tag:'B', kind:'drone', hp:12, start:4,
-    pat:[{n:'射撃', d:3, dl:4, p:'out'}],
-    pool:['jab','rapid','guard','wall','emp']},
-  exec:  {name:'処刑ユニット', tag:'X', kind:'exec', hp:26, start:3,
-    pat:[{n:'殴打', d:4, dl:3, p:'out'}, {n:'殴打', d:4, dl:3, p:'out'}, {n:'粉砕砲', d:12, dl:4, p:'dur', ch:true}],
-    pool:['slash','blow','wall','crackshot']},
-  hacker:{name:'ハッカー', tag:'H', kind:'hacker', hp:10, start:4,
-    pat:[{n:'割り込み', kind:'delay', v:2, dl:4}, {n:'射撃', d:2, dl:3, p:'calc'}],
-    pool:['hack','backflow','overclock','crackshot']},
-  warden:{name:'管理AI ウォーデン', tag:'W', kind:'warden', hp:44, start:3,
-    pat:[{n:'照射', d:4, dl:3, p:'calc'}, {n:'照射', d:4, dl:2, p:'arm'}, {n:'消去プロトコル', d:16, dl:5, p:'dur', ch:true}],
-    pool:[]},
-  escort:{name:'随伴ドローン', tag:'E', kind:'drone', hp:10, start:2,
-    pat:[{n:'射撃', d:2, dl:3, p:'mob'}],
-    pool:[]},
+  drone:    {name:'警備ドローン', kind:'drone', hp:33, start:4,
+    pat:[{n:'射撃', d:6, dl:6, p:'calc'}], pool:['jab','rapid','guard','flick']},
+  drone2:   {name:'警備ドローン', kind:'drone', hp:33, start:7,
+    pat:[{n:'射撃', d:6, dl:6, p:'out'}], pool:['jab','rapid','guard','flick']},
+  linkA:    {name:'連携ドローン', kind:'link', hp:28, start:6, sync:4,
+    pat:[{n:'連携射撃', d:4, dl:6, p:'arm'}], pool:['rapid','scan','backflow','hack']},
+  linkB:    {name:'連携ドローン', kind:'link', hp:28, start:6, sync:4,
+    pat:[{n:'連携射撃', d:4, dl:6, p:'mob'}], pool:['rapid','scan','backflow','hack']},
+  scout:    {name:'斥候ユニット', kind:'scout', hp:24, start:2,
+    pat:[{n:'刺突', d:3, dl:3, p:'out'}, {n:'刺突', d:3, dl:3, p:'mob'}], pool:['jab','flick','overclock','reload']},
+  turret:   {name:'迎撃タレット', kind:'turret', hp:38, start:7, react:{min:4, n:'迎撃', d:6, p:'arm'},
+    pat:[{n:'砲撃', d:8, dl:8, p:'dur'}], pool:['wall','parry','emp']},
+  exec:     {name:'処刑ユニット', kind:'exec', hp:64, start:5,
+    pat:[{n:'殴打', d:7, dl:6, p:'out'}, {n:'殴打', d:7, dl:6, p:'out'}, {n:'粉砕砲', d:21, dl:8, p:'dur', ch:true}], pool:['slash','blow','crackshot','wall']},
+  hacker:   {name:'ハッカー', kind:'hacker', hp:26, start:6,
+    pat:[{n:'割り込み', kind:'delay', v:4, dl:7}, {n:'射撃', d:5, dl:5, p:'calc'}], pool:['hack','backflow','overclock','timebomb','scan']},
+  heavyExec:{name:'重処刑ユニット', kind:'exec', hp:86, start:5,
+    pat:[{n:'殴打', d:8, dl:5, p:'out'}, {n:'薙ぎ払い', d:10, dl:6, p:'mob'}, {n:'粉砕砲', d:24, dl:7, p:'dur', ch:true}], pool:['blow','parry','timebomb','wall']},
+  turretE:  {name:'迎撃タレット改', kind:'turret', hp:46, start:6, react:{min:4, n:'迎撃', d:7, p:'arm'},
+    pat:[{n:'砲撃', d:9, dl:7, p:'dur'}], pool:['parry','emp','wall','timebomb']},
+  warden:   {name:'管理AI ウォーデン', kind:'warden', hp:150, start:5, react:{min:6, n:'排除', d:9, p:'calc'},
+    pat:[{n:'照射', d:7, dl:6, p:'calc'}, {n:'照射', d:7, dl:4, p:'arm'}, {n:'消去プロトコル', d:28, dl:9, p:'dur', ch:true}], pool:[]},
+  escort:   {name:'随伴ドローン', kind:'drone', hp:26, start:3,
+    pat:[{n:'射撃', d:5, dl:5, p:'mob'}], pool:[]},
 };
 
-// 戦闘の構成(今の試作は3戦闘の一本道)
-DATA.battles = [
-  {area:'エリア1', room:'搬入ゲート', no:2, foes:['droneA','droneB']},
-  {area:'エリア1', room:'処理区画',   no:4, foes:['exec','hacker']},
-  {area:'エリア1', room:'中枢',       no:6, boss:true, foes:['warden','escort']},
-];
-// 進行: b0 = 1戦目, learn = 学習, rest = 整備, clear = 踏破
-DATA.flow = ['b0','learn','b1','learn','rest','b2','clear'];
+DATA.encounters = {
+  n_guard:{fam:'警備', tier:1, foes:['drone','drone2']},
+  n_scout:{fam:'斥候', tier:1, foes:['scout','drone']},
+  n_link: {fam:'連携', tier:1, foes:['linkA','linkB']},
+  n_net:  {fam:'電脳', tier:2, foes:['hacker','scout']},
+  n_def:  {fam:'防衛', tier:2, foes:['turret','drone']},
+  n_proc: {fam:'処理', tier:2, foes:['exec']},
+  e_proc: {fam:'処理', elite:true, foes:['heavyExec','scout']},
+  e_def:  {fam:'防衛', elite:true, foes:['turretE','linkA','linkB']},
+  e_net:  {fam:'電脳', elite:true, foes:['exec','hacker']},
+  boss:   {fam:'中枢', boss:true, foes:['warden','escort']},
+};

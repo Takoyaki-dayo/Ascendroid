@@ -77,7 +77,7 @@ function applyCard(st, k, ti){
   if(c.block){ const n = blockOf(st, c); b.block += n; ev.push({kind:'block', n}); }
   if(c.swift){ b.swift += c.swift; ev.push({kind:'swift', n:c.swift}); }
   if(c.timer && targets[0]){ b.timers.push({id:b.uid++, left:c.timer.t, k, e:targets[0].i}); ev.push({kind:'timerSet', e:targets[0].i, t:c.timer.t}); }
-  if(c.draw){ const n = drawN(b, c.draw); ev.push({kind:'draw', n}); }
+  if(c.draw){ const n = drawN(b, c.draw); if(c.borrow) b.drawIn += c.draw * RULE.draw; ev.push({kind:'draw', n, borrow: !!c.borrow}); }
   if(c.cost === 0){ const s = fx(st, 'mob', 'zeroSwift'); if(s){ b.swift += s; ev.push({kind:'swift', n:s}); } }
   return ev;
 }

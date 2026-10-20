@@ -14,6 +14,7 @@
   - `lines.js` 独り言のセリフ
 - `tools/datadoc.js` データ一覧の資料に載せる表を data から作る
 - `tools/sim.js` 自動対戦のシミュレータ。`node tools/sim.js greedy 40` で遭遇ごと、`node tools/sim.js greedy 40 run` でラン全体
+- `tools/lab/` ゲームとは別の小さな抽象モデルで、ルールの条件を切り替えて比べる実験。`lab.js` がモデル、`exp1〜3.js` が実験(結果は同名の .json)。`node tools/lab/exp1.js` で実行
 - `manifest.webmanifest` アプリ設定(全画面・横向き)
 - `sw.js` オフライン用。データファイルを増やしたら CORE に足す
 - `icons/` アイコン(仮)

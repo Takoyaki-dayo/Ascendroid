@@ -1,7 +1,7 @@
 // 実験5: ゲーム本体のエンジンとカードで、敵の複雑さと「待てる」を比べる(実験4の確かめ)
 // 使い方: node tools/lab/variety.js [条件の記号をカンマ区切り] [乱数の種]
 // 条件:
-//   A 今の敵(data/enemies.js のまま)
+//   A 今の敵(0.6.0 の敵、enemies_06.js)
 //   B 複雑な敵・決まった順(下の FOES_X から分岐と段階変化を抜く)
 //   C 複雑な敵+分岐+段階変化(FOES_X のまま)
 //   D 今の敵+待てる / E 複雑な敵+分岐+段階+待てる
@@ -16,7 +16,8 @@ const ctx = {console}; ctx.window = ctx; ctx.globalThis = ctx; vm.createContext(
 const base = path.join(__dirname, '..', '..');
 for(const f of ['data/parts.js','data/cards.js','data/enemies.js','data/map.js','data/lines.js','js/engine.js']) vm.runInContext(fs.readFileSync(path.join(base, f), 'utf8'), ctx, {filename:f});
 const E = ctx.ENGINE, D = ctx.DATA;
-const BASE = JSON.parse(JSON.stringify(D.foes));
+// 「今の敵」は 0.6.0 の敵(enemies_06.js)。0.7.0 からゲームの敵は複雑な敵になっている
+const BASE = (() => { const c = {}; c.window = c; vm.createContext(c); vm.runInContext(fs.readFileSync(path.join(__dirname, 'enemies_06.js'), 'utf8'), c); return JSON.parse(JSON.stringify(c.DATA.foes)); })();
 
 // 複雑な敵: 今の敵と同じ顔ぶれに、行動ごとの属性・分岐・段階変化を足したもの
 const FOES_X = JSON.parse(JSON.stringify(BASE));

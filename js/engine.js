@@ -3,8 +3,8 @@
 (function(root){
 'use strict';
 const D = root.DATA;
-// freeWait: 手札があっても1サイクル待てる(実験用。既定は待てない)
-const RULE = {draw:3, handStart:5, handMax:7, view:18, freeWait:false};
+// freeWait: 手札があっても1サイクル待てる(0.7 から既定で待てる。メニューで切り替え)
+const RULE = {draw:3, handStart:5, handMax:7, view:18, freeWait:true};
 
 /* ---------- 乱数と小道具 ---------- */
 function rngFrom(seed){
@@ -73,10 +73,11 @@ function drawN(b, n){ let got = 0; for(let i = 0; i < n; i++){ const r = drawOne
 function upcoming(e, view){
   const V = view || RULE.view, out = []; let t = e.r, idx = e.idx, k = 0;
   while(t <= V && k < 8){
-    const a = e.pat[idx]; out.push({t, a, k});
-    // 多段: 残りの撃ちを1サイクルおきに
-    const rest = k === 0 && e.chain > 0 ? e.chain : (a.hits > 1 ? a.hits - 1 : 0);
-    for(let j = 1; j <= rest && t + j <= V; j++) out.push({t:t + j, a, k, hit:j});
+    const a = e.pat[idx];
+    // 多段: 残りの撃ちを1サイクルおきに。left はその撃ちの後に残る回数
+    const rest = k === 0 && e.chain > 0 ? e.chain - 1 : (a.hits > 1 ? a.hits - 1 : 0);
+    out.push({t, a, k, left:rest});
+    for(let j = 1; j <= rest && t + j <= V; j++) out.push({t:t + j, a, k, hit:j, left:rest - j});
     t += rest;
     if(e.ai === 'rand') break; // 分岐する敵は、次の行動が決まるまで見えない
     idx = (idx + 1) % e.pat.length; t += e.pat[idx].dl; k++;
@@ -142,8 +143,9 @@ function enemyAct(st, e, extra){
   const a = cur(e);
   const res = a.kind === 'delay' ? {kind:'delay', name:a.n, v:a.v} : a.d > 0 ? strike(st, e, a, (extra || 0) + (e.str || 0)) : {kind:'move', name:a.n};
   // 多段: 残りを1サイクルおきに撃つ
-  if(a.hits > 1 && !e.chain){ e.chain = a.hits - 1; e.r = 1; e.sh = 0; return res; }
-  if(e.chain > 0){ e.chain--; if(e.chain > 0){ e.r = 1; return res; } }
+  if(a.hits > 1 && !e.chain){ e.chain = a.hits - 1; e.r = 1; e.sh = 0; res.chainLeft = e.chain; return res; }
+  if(e.chain > 0){ e.chain--; if(e.chain > 0){ e.r = 1; res.chainLeft = e.chain; return res; } }
+  res.chainLeft = 0;
   if(a.rec) e.vuln = a.rec + 1;
   if(a.buff){ for(const f of (a.all ? st.b.foes.filter(f => f.alive) : [e])) f.str = (f.str || 0) + a.buff; res.buff = a.buff; }
   advance(e);

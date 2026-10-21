@@ -315,6 +315,46 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 .pin{position:absolute;width:12px;height:12px;border:2px solid var(--cy);transform:rotate(45deg);animation:pin .6s ease-out forwards}
 @keyframes pin{0%{opacity:0;transform:rotate(45deg) scale(1.8)}40%{opacity:1;transform:rotate(45deg) scale(1)}100%{opacity:0}}
 #redraw.wait b{color:var(--fg2)}
+/* 待機ボタン(手札があっても待てるとき、入れ替えの下に出す) */
+#waitBtn{display:none;position:absolute;left:742px;top:344px;width:92px;height:38px;border:1px solid #233446;border-radius:8px;background:var(--panel);color:var(--fg2);align-items:center;justify-content:center;gap:8px;transition:border-color .15s,box-shadow .15s,opacity .25s,transform .25s}
+#waitBtn svg{width:16px;height:16px}
+#waitBtn b{font-family:var(--f-num);font-size:18px;color:var(--fg2)}
+#waitBtn.sel{border:1.5px solid var(--cy);box-shadow:0 0 14px rgba(56,211,255,.25)}
+#waitBtn:disabled{opacity:.4;cursor:default}
+#shaker.fw #waitBtn{display:flex}
+#shaker.fw #redraw{height:38px;gap:6px}
+#shaker.fw #redraw svg{width:16px;height:16px}
+#shaker.fw #redraw b{font-size:18px}
+#shaker.fw #redraw.sel{top:298px}
+#shaker.selfview #waitBtn{opacity:0;pointer-events:none;transform:translateY(24px)}
+/* 敵の行動の窓(構え・ガード・反撃の構え)と隙 */
+.wb{position:absolute;height:9px;margin-left:-6px;border-radius:3px;display:flex;align-items:center;padding:0 3px;font-size:8px;font-weight:700;line-height:1;white-space:nowrap;overflow:hidden;pointer-events:none;transition:left .13s linear,width .13s linear,opacity .2s,box-shadow .15s}
+.wb.wind{background:rgba(255,184,77,.16);border:1px solid #c98a2e;color:#ffcf85}
+.wb.guard{background:rgba(143,176,196,.16);border:1px solid #6f8ea2;color:#cfe3ef}
+.wb.counter{background:rgba(255,77,106,.14);border:1px dashed var(--foe);color:var(--foe2)}
+.wb.vuln{background:rgba(56,211,255,.14);border:1px solid var(--cy-dim);color:var(--cy)}
+.wb.later{opacity:.5}
+.wb.on{box-shadow:0 0 0 2px rgba(255,255,255,.18),0 0 10px currentColor}
+.wb.out{opacity:0!important}
+.mk.move{border:1px solid #3d5163;background:var(--raised);color:var(--fg2)}
+.mk.unk{border:1px dashed #3d5163;background:transparent;color:var(--dim);opacity:.7}
+.mk.multi b{font-size:11px}
+.st.str{color:var(--foe2)}
+.at .atr{display:flex;flex-wrap:wrap;justify-content:center;gap:2px;margin-bottom:8px}
+.chip{display:inline-flex;align-items:center;padding:0 3px;border-radius:3px;font-size:9px;font-weight:700;line-height:13px;white-space:nowrap}
+.chip.wind{background:rgba(255,184,77,.16);color:#ffcf85} .chip.guard{background:rgba(143,176,196,.18);color:#cfe3ef}
+.chip.counter{background:rgba(255,77,106,.16);color:var(--foe2)} .chip.vuln{background:rgba(56,211,255,.14);color:var(--cy)}
+.chip.buff{background:rgba(255,77,106,.16);color:var(--foe2)} .chip.multi{background:#22303d;color:var(--fg2)}
+.seqh{font-size:10px;color:var(--dim);margin:6px 0 -14px}
+.ei-r.two .seq{padding:18px 0 2px}
+.ei-r.two .at{height:86px}
+.ei-r.two .at .v{font-size:22px}
+.ei-r.two .seqh{margin:2px 0 -14px}
+.ei-r.two .traits{gap:3px;margin-top:4px}
+.conn.alt{width:18px;color:var(--dim)}
+.at.mv{border:1px solid #33495d;background:var(--raised)}
+.at.mv .ty{color:var(--fg2)}
+.fshield{position:absolute;width:70px;height:84px;margin:-42px 0 0 -35px;border:1.5px solid rgba(207,227,239,.85);border-radius:45%;box-shadow:0 0 12px rgba(143,176,196,.5);animation:shield .5s ease-out forwards}
 .traits{display:flex;flex-direction:column;gap:6px;margin-top:6px}
 .trait-row{display:flex;gap:6px;align-items:center;font-size:10.5px;color:var(--fg2)}
 .trait-row .ic{color:var(--foe2)} .trait-row b{color:var(--fg)}
@@ -426,6 +466,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
       <div id="handCnt" class="np"><span class="ic" id="icHand"></span><b id="nHand"></b></div>
       <div id="hand"></div>
       <button id="redraw" type="button" aria-label="引き直し"><span id="icRedraw"></span><b id="rdCost">5</b></button>
+      <button id="waitBtn" type="button" aria-label="待機"><span id="icWait"></span><b>1</b></button>
       <div id="inner"></div>
 
       <div id="floats"></div>
@@ -443,7 +484,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 <script src="data/lines.js"></script>
 <script src="js/engine.js"></script>
 <script>
-const APP_VERSION = '0.6.0';
+const APP_VERSION = '0.7.0';
 const $ = s => document.querySelector(s);
 const EN = ENGINE, RULE = EN.RULE;
 const VIEW = RULE.view, NOW = 180, PX = 25, xs = c => NOW + c * PX, ROWY = [52, 86, 120], STRIP_Y = 150, SWIFT_VIS = 3;
@@ -508,8 +549,10 @@ const AB = {calc:'演', arm:'武', out:'出', dur:'耐', mob:'機'};
 const CARDS = DATA.cards, KW = DATA.keywords, FOES = DATA.foes, ENC = DATA.encounters, PARTDEF = DATA.parts;
 
 let S = null, sel = null, PV = null, busy = false, lastTarget = 0, snapshot = null;
+// 待機の設定(いつでも待てる / 手札がないときだけ)。端末ごとに覚える
+try{ const v = localStorage.getItem('asc.freeWait'); if(v !== null) RULE.freeWait = v === '1'; }catch(e){}
 const UI = {view:'normal', pick:null, learnOpts:[], screen:'map', mapSel:null, node:null, offers:null, partOpts:null, back:null, after:null, eventId:null};
-const markEls = new Map(), cardEls = new Map(), stripEls = new Map();
+const markEls = new Map(), cardEls = new Map(), stripEls = new Map(), bandEls = new Map();
 const partOf = slot => PARTDEF[S.run.parts[slot].id];
 
 /* ---------- preview ---------- */
@@ -517,12 +560,18 @@ function selAction(){ return !sel ? null : sel.kind === 'card' ? {type:'card', i
 function computePreview(){
   const a = selAction(); if(!a) return null;
   const cost = EN.actionCost(S, a);
-  const sim = noInt => { const c = EN.clone(S); const p = EN.beginAction(c, a); const out = EN.runGen(EN.spendGen(c, p.cost, p.k, p.t, noInt)); return {c, out}; };
+  const sim = noInt => {
+    const c = EN.clone(S); const p = EN.beginAction(c, a); const g = EN.spendGen(c, p.cost, p.k, p.t, noInt), evs = [];
+    let r; while(!(r = g.next()).done){ const v = r.value; if(v.type === 'card' || v.type === 'timer') evs.push(...v.ev); }
+    return {c, out:r.value, evs};
+  };
   const A = sim(false), P = sim(true);
+  // 崩し・ガード・反撃・隙に当たるか(帯を光らせる)
+  const fx = new Set(A.evs.filter(x => ['break','guarded','counter','vulnHit'].includes(x.kind)).map(x => x.kind + ':' + x.e));
   const react = new Set();
   if(a.type === 'card' && cost > 0) for(const e of S.b.foes) if(e.alive && e.react && cost >= e.react.min && e.reactIn == null) react.add(e.i);
   return {k:a.k || null, cost, completeAt: P.out.completeAt ?? P.out.elapsed, free: Math.min(S.b.swift, cost),
-    justSet: new Set(A.out.justs.map(j => j.i)), parts: A.c.b.parts, body: A.c.run.body, foeHp: A.c.b.foes.map(e => e.hp), react};
+    justSet: new Set(A.out.justs.map(j => j.i)), parts: A.c.b.parts, body: A.c.run.body, foeHp: A.c.b.foes.map(e => e.hp), react, fx};
 }
 
 /* ---------- cards ---------- */
@@ -570,7 +619,7 @@ function buildStatic(){
   $('#ticks').innerHTML = h;
   $('#parts').innerHTML = SLOTS.map((p, j) => `<button class="part" type="button" data-p="${p.id}" style="top:${10 + j * 48}px"><span class="ph"><span class="pico">${IC[p.id]}</span><span class="pname">${p.fn}</span><span class="pnum"></span></span><span class="pips"></span></button>`).join('');
   $('#icDeck').innerHTML = IC.deck; $('#icDisc').innerHTML = IC.disc; $('#icHand').innerHTML = IC.hand;
-  $('#menuBtn').innerHTML = IC.menu;
+  $('#menuBtn').innerHTML = IC.menu; $('#icWait').innerHTML = IC.wait;
 }
 function foeX(n, i){ return (n === 1 ? [620] : n === 2 ? [560, 690] : [494, 600, 706])[i]; }
 function buildFoes(){
@@ -578,7 +627,7 @@ function buildFoes(){
   $('#rows').innerHTML = b.foes.map(e => `<div class="rowline" data-r="${e.i}" style="top:${ROWY[e.i]}px"></div><div class="rowtag" data-r="${e.i}" style="top:${ROWY[e.i] - 8}px">${e.tag}</div><div class="rowhit" data-f="${e.i}" style="top:${ROWY[e.i] - 17}px"></div>`).join('');
   $('#foes').innerHTML = b.foes.map(e => `<div class="foe" data-f="${e.i}" style="left:${foeX(n, e.i)}px">${SPR[e.kind]}<span class="reticle"></span></div><div class="cinfo fi" data-f="${e.i}" style="left:${foeX(n, e.i) + 2}px"><span class="frow"><span class="ftag">${e.tag}</span><span class="hpb"><i></i><s></s></span><span class="hpt"></span></span><span class="sts"></span></div>`).join('');
 }
-function clearMarks(){ for(const el of markEls.values()) el.remove(); markEls.clear(); for(const el of stripEls.values()) el.remove(); stripEls.clear(); }
+function clearMarks(){ for(const m of [markEls, stripEls, bandEls]){ for(const el of m.values()) el.remove(); m.clear(); } }
 function clearCards(){ for(const el of cardEls.values()) el.remove(); cardEls.clear(); }
 const foeEl = i => document.querySelector(`.foe[data-f="${i}"]`);
 const foeCenter = i => { const n = S.b.foes.length; return {x: foeX(n, i) + 45, y: 220}; };
@@ -655,6 +704,7 @@ function renderFoes(){
     if(e.crack) sts += `<span class="st crack"><span class="ic">${IC.crack}</span>${e.crack}</span>`;
     if(e.react) sts += `<span class="st trait${PV && PV.react.has(e.i) ? ' on' : ''}"><span class="ic">${IC.eye}</span>${e.react.min}</span>`;
     if(e.sync) sts += `<span class="st trait"><span class="ic">${IC.link}</span>${e.sync}</span>`;
+    if(e.str) sts += `<span class="st str">▲${e.str}</span>`;
     info.querySelector('.sts').innerHTML = sts;
   }
 }
@@ -700,26 +750,66 @@ function placeMark(key, x, y, cls, html){
   if(el._h !== html){ el.innerHTML = html; el._h = html; }
   el.style.left = x + 'px'; el.style.top = y + 'px'; el.style.opacity = '';
 }
+// 帯: 敵の行動の前の窓(構え・ガード・反撃の構え)と、行動の後の隙
+function placeBand(key, x0, x1, y, cls, html){
+  let el = bandEls.get(key);
+  if(!el){
+    el = document.createElement('div'); el.className = 'wb';
+    el.style.left = (xs(VIEW) + 30) + 'px'; el.style.top = y + 'px'; el.style.opacity = '0'; el.style.width = '0px';
+    $('#marks').appendChild(el); bandEls.set(key, el); el.getBoundingClientRect();
+  }
+  el.className = cls;
+  if(el._h !== html){ el.innerHTML = html; el._h = html; }
+  el.style.left = x0 + 'px'; el.style.width = Math.max(10, x1 - x0) + 'px'; el.style.top = y + 'px'; el.style.opacity = '';
+}
+const WIN = {wind:'構', guard:'防', counter:'返'};
+function moveIcon(a){ return a.buff ? `<b>▲${a.buff}</b>` : a.guard ? `<span class="ic">${IC.block}</span>` : '<b>·</b>'; }
 function renderMarks(){
-  const b = S.b, seen = new Set(), syn = syncTimes();
+  const b = S.b, seen = new Set(), seenB = new Set(), syn = syncTimes(), pv = PV && !busy ? PV : null;
   for(const e of b.foes){
     if(!e.alive) continue;
-    const y = ROWY[e.i] - 11;
-    for(const m of EN.upcoming(e)){
-      const key = e.i + '-' + (e.seq + m.k); seen.add(key);
-      const a = m.a, sy = syn.has(e.i + '@' + m.t);
-      let cls = 'mk ' + (a.kind === 'delay' ? 'dl' : a.ch ? 'ch' : 'hit');
+    const y = ROWY[e.i] - 11, by = ROWY[e.i] + 12, list = EN.upcoming(e);
+    let lastT = 0;
+    for(const m of list){
+      const key = e.i + '-' + (e.seq + m.k) + '-' + m.left; seen.add(key);
+      const a = m.a, sy = syn.has(e.i + '@' + m.t), atk = a.kind !== 'delay' && a.d > 0;
+      let cls = 'mk ' + (a.kind === 'delay' ? 'dl' : a.ch ? 'ch' : atk ? 'hit' : 'move');
       if(m.k > 0 && !a.ch) cls += ' later';
       if(sy) cls += ' sync';
-      if(PV && !busy){
-        if(m.t < PV.completeAt && a.kind !== 'delay') cls += ' danger';
-        if(m.t === PV.completeAt && a.ch && PV.justSet.has(e.i)) cls += ' just';
+      if(a.hits > 1) cls += ' multi';
+      if(pv){
+        if(m.t < pv.completeAt && atk) cls += ' danger';
+        if(m.t === pv.completeAt && a.ch && pv.justSet.has(e.i)) cls += ' just';
+        if(m.k === 0 && a.wind && pv.fx.has('break:' + e.i)) cls += ' just';
       }
-      const html = a.kind === 'delay' ? `<span class="ic">${IC.delay}</span><b>${a.v}</b>` : `<b>${a.d + (sy ? e.sync : 0)}</b><span>${AB[a.p]}</span>`;
+      const html = a.kind === 'delay' ? `<span class="ic">${IC.delay}</span><b>${a.v}</b>` : atk ? `<b>${a.d + (e.str || 0) + (sy ? e.sync : 0)}</b><span>${AB[a.p]}</span>` : moveIcon(a);
       placeMark(key, xs(m.t) - 13, y, cls, html);
+      lastT = Math.max(lastT, m.t);
+      if(m.hit) continue;
+      // 行動の前の窓: その間にカードが完了すると効く
+      for(const w of ['wind', 'guard', 'counter']){
+        const W = a[w]; if(!W) continue;
+        const s0 = m.t - W.w, s1 = m.t - 1; if(s1 < 1) continue;
+        const bk = 'b' + key + w; seenB.add(bk);
+        const val = w === 'wind' ? W.poise : w === 'guard' ? (m.k === 0 ? e.sh : W.s) : W.d;
+        const on = pv && m.k === 0 && pv.fx.has((w === 'wind' ? 'break' : w === 'guard' ? 'guarded' : 'counter') + ':' + e.i);
+        placeBand(bk, s0 >= 1 ? xs(s0) : NOW + 6, xs(Math.min(s1, VIEW)) + 6, by, 'wb ' + w + (m.k > 0 ? ' later' : '') + (on ? ' on' : ''), WIN[w] + val);
+      }
+      // 行動の後の隙
+      if(a.rec){
+        const t1 = m.t + m.left + 1, t2 = m.t + m.left + a.rec;
+        if(t1 <= VIEW){ const bk = 'b' + key + 'rec'; seenB.add(bk); placeBand(bk, xs(t1), xs(Math.min(t2, VIEW)) + 6, by, 'wb vuln' + (m.k > 0 ? ' later' : '') + (pv && pv.fx.has('vulnHit:' + e.i) ? ' on' : ''), '隙'); }
+      }
+    }
+    // 今の隙
+    if(e.vuln > 1){ const bk = 'v' + e.i; seenB.add(bk); placeBand(bk, NOW + 6, xs(Math.min(e.vuln - 1, VIEW)) + 6, by, 'wb vuln' + (pv && pv.fx.has('vulnHit:' + e.i) ? ' on' : ''), '隙'); }
+    // 分岐する敵: 次の行動は決まるまで見えない
+    if(e.ai === 'rand' && list.length){
+      const t = lastT + Math.min(...e.pat.map(x => x.dl));
+      if(t <= VIEW){ const key = 'u' + e.i + '-' + e.seq; seen.add(key); placeMark(key, xs(t) - 13, y, 'mk unk', '<b>?</b>'); }
     }
     // 反応: 予定ではなく、重いカードへの返し
-    const rt = e.reactIn != null ? e.reactIn : (PV && !busy && PV.react.has(e.i) ? 1 : null);
+    const rt = e.reactIn != null ? e.reactIn : (pv && pv.react.has(e.i) ? 1 : null);
     if(rt != null && rt > 0){
       const key = 'r' + e.i; seen.add(key);
       placeMark(key, xs(rt) - 13, y, 'mk react' + (e.reactIn == null ? ' ghost' : ' danger'), `<b>${e.react.d}</b><span>${AB[e.react.p]}</span>`);
@@ -727,6 +817,9 @@ function renderMarks(){
   }
   for(const [key, el] of markEls){
     if(!seen.has(key)){ markEls.delete(key); el.classList.add('out'); setTimeout(() => el.remove(), 260); }
+  }
+  for(const [key, el] of bandEls){
+    if(!seenB.has(key)){ bandEls.delete(key); el.classList.add('out'); setTimeout(() => el.remove(), 220); }
   }
 }
 function renderStrip(){
@@ -777,13 +870,15 @@ function renderHand(){
   });
 }
 function renderSide(){
-  const b = S.b, rd = $('#redraw'), empty = !b.hand.length;
-  $('#icRedraw').innerHTML = empty ? IC.wait : IC.redraw;
-  $('#rdCost').textContent = empty ? 1 : b.hand.length;
-  rd.setAttribute('aria-label', empty ? '待機' : '入れ替え');
-  rd.classList.toggle('wait', empty);
-  rd.classList.toggle('sel', !!sel && (sel.kind === 'swap' || sel.kind === 'wait'));
-  rd.disabled = busy;
+  const b = S.b, rd = $('#redraw'), fw = RULE.freeWait, empty = !b.hand.length, asWait = empty && !fw;
+  $('#shaker').classList.toggle('fw', fw);
+  $('#icRedraw').innerHTML = asWait ? IC.wait : IC.redraw;
+  $('#rdCost').textContent = asWait ? 1 : b.hand.length;
+  rd.setAttribute('aria-label', asWait ? '待機' : '入れ替え');
+  rd.classList.toggle('wait', asWait);
+  rd.classList.toggle('sel', !!sel && (sel.kind === 'swap' || (!fw && sel.kind === 'wait')));
+  rd.disabled = busy || (fw && empty);
+  const wb = $('#waitBtn'); wb.classList.toggle('sel', fw && !!sel && sel.kind === 'wait'); wb.disabled = busy;
   $('#nDraw').textContent = b.draw.length; $('#nDisc').textContent = b.disc.length;
   $('#nHand').textContent = `${b.hand.length}/${b.handMax}`;
   $('#handCnt').classList.toggle('full', b.hand.length >= b.handMax);
@@ -802,6 +897,7 @@ function monologue(){
   if(run.body < run.bodyMax * 0.4) hit.bodyLow = {};
   const br = SLOTS.find(p => b.parts[p.id].cur <= 0); if(br) hit.partBroken = {part: br.fn};
   for(const e of b.foes){ if(!e.alive || hit.chargeSoon) continue; for(const m of EN.upcoming(e)) if(m.a.ch && m.t <= 9){ hit.chargeSoon = {enemy: e.name, move: m.a.n, t: m.t}; break; } }
+  for(const e of b.foes){ if(!e.alive) continue; if(e.vuln > 1 && !hit.vulnNow) hit.vulnNow = {enemy: e.name}; const a = EN.cur(e); if(a.wind && e.r > 0 && e.r <= a.wind.w + 2 && !hit.windNow) hit.windNow = {enemy: e.name, move: a.n, poise: a.wind.poise}; }
   if(!b.hand.length) hit.handEmpty = {};
   const worn = SLOTS.find(p => run.parts[p.id].damaged); if(worn) hit.partWorn = {part: worn.fn};
   const sum = {}; for(const e of b.foes){ if(!e.alive) continue; for(const m of EN.upcoming(e)) if(m.a.kind !== 'delay') sum[m.a.p] = (sum[m.a.p] || 0) + m.a.d; }
@@ -891,14 +987,29 @@ function cardFx(x){
     case 'swift': floatAt(150, 262, '+' + x.n, 'cy'); break;
     case 'draw': if(x.n) floatAt(41, 290, '+' + x.n, 'cy'); break;
     case 'timerSet': floatAt(xs(x.t), STRIP_Y - 10, '◆', 'cy'); break;
+    case 'guarded': { const p = foeCenter(x.e); const el = fxEl('fshield', p.x, p.y - 10); setTimeout(() => el.remove(), 520); floatAt(p.x + 26, p.y - 46, '防' + x.n, ''); break; }
+    case 'vulnHit': { const p = foeCenter(x.e); floatAt(p.x - 26, p.y - 46, '×1.5', 'cy'); break; }
+    case 'break': { justFx(x.e); const p = foeCenter(x.e); floatAt(p.x, p.y - 84, '崩し', 'cy'); break; }
+    case 'counter': { const p = foeCenter(x.e); floatAt(p.x, p.y - 84, '返', 'foe'); beam({x: DROID.sx, y: DROID.sy}, {x: p.x, y: p.y - 10}); hitMeFx(x.res); break; }
   }
+}
+// 自分が撃たれたときの演出(敵の攻撃と反撃で共通)
+function hitMeFx(r){
+  const y = partY(r.part);
+  if(r.blocked) pulse($('#stBlk'), 'flash', 360);
+  if(r.partLoss){ floatAt(70, y + 8, '−' + r.partLoss, 'foe'); pulse(document.querySelector(`.part[data-p="${r.part}"]`), 'flash', 320); }
+  if(r.broke) sparks(DROID.x, DROID.y - 30);
+  if(r.bodyLoss) floatAt(150, 268, '−' + r.bodyLoss, 'foe');
+  if(r.hurt){ pulse($('#droid'), 'hit', 320); if(r.raw >= 10) shake(); }
+  else shieldFx();
 }
 async function foeFx(i, r){
   const e = S.b.foes[i];
   pulse(foeEl(i), 'atk', 270);
-  const mk = r.react ? markEls.get('r' + i) : markEls.get(i + '-' + (e.seq - 1));
+  const mk = r.react ? markEls.get('r' + i) : markEls.get(r.chainLeft > 0 ? `${i}-${e.seq}-${r.chainLeft}` : `${i}-${e.seq - 1}-0`);
   if(mk) mk.classList.add('fire');
   await sleep(110);
+  if(r.kind === 'move'){ const p = foeCenter(i); if(r.buff) floatAt(p.x, p.y - 70, '▲' + r.buff, 'foe'); return; }
   if(r.kind === 'delay'){
     if(r.applied){ pulse($('#droid'), 'glitch', 320); floatAt(xs(1), 30, '+' + r.v, 'cy'); if(r.swift) setTimeout(afterimage, 120); }
     return;
@@ -909,13 +1020,7 @@ async function foeFx(i, r){
     floatAt(DROID.x + 10, DROID.y - 92, 'ぴったり', 'cy');
     return;
   }
-  const y = partY(r.part);
-  if(r.blocked) pulse($('#stBlk'), 'flash', 360);
-  if(r.partLoss){ floatAt(70, y + 8, '−' + r.partLoss, 'foe'); pulse(document.querySelector(`.part[data-p="${r.part}"]`), 'flash', 320); }
-  if(r.broke) sparks(DROID.x, DROID.y - 30);
-  if(r.bodyLoss) floatAt(150, 268, '−' + r.bodyLoss, 'foe');
-  if(r.hurt){ pulse($('#droid'), 'hit', 320); if(r.raw >= 10) shake(); }
-  else shieldFx();
+  hitMeFx(r);
 }
 function justFx(i){
   const el = fxEl('burst', NOW, ROWY[i]); setTimeout(() => el.remove(), 520);
@@ -939,7 +1044,12 @@ function onCard(i){
   if(sel && sel.kind === 'card' && sel.i === i){ execute(); return; }
   sel = {kind:'card', i, k, target: c.tgt ? defaultTarget() : null}; recalc();
 }
+function onWait(){
+  if(sel && sel.kind === 'wait'){ execute(); return; }
+  sel = {kind:'wait'}; recalc();
+}
 function onRedraw(){
+  if(RULE.freeWait && !S.b.hand.length) return;
   const kind = S.b.hand.length ? 'swap' : 'wait';
   if(sel && sel.kind === kind){ execute(); return; }
   sel = {kind}; recalc();
@@ -957,7 +1067,10 @@ function flyCard(el, x, y){
   el.style.left = x + 'px'; el.style.top = y + 'px'; el.style.transform = 'scale(.25) rotate(12deg)'; el.style.opacity = '0';
   setTimeout(() => el.remove(), 260);
 }
+// 耐久が減って行動が変わった敵を知らせる
+function phaseCheck(){ for(const e of S.b.foes){ if(e.phased && !e._phaseShown && e.alive){ e._phaseShown = true; const p = foeCenter(e.i); floatAt(p.x, p.y - 96, '!!', 'foe'); pulse(foeEl(e.i), 'ejust', 460); } } }
 async function showEvent(ev, k, ti){
+  if(ev.type === 'card' || ev.type === 'timer' || ev.type === 'foe') setTimeout(phaseCheck, 0);
   switch(ev.type){
     case 'tick': if(!ev.real) afterimage(); renderAll(); await sleep(ev.real ? T_TICK : T_SWIFT); break;
     case 'react': { const p = foeCenter(ev.e); floatAt(p.x, p.y - 70, '!', 'foe'); pulse(foeEl(ev.e), 'ehit', 200); renderAll(); await sleep(180); break; }
@@ -1151,24 +1264,56 @@ function infoCard(k){
   const kws = cardKw(k);
   showOv(`<div style="display:flex;gap:16px;align-items:flex-start"><div class="cards" style="margin:0"><div class="card static">${cardInner(k, S)}</div></div><div class="ckw">${kws.map(w => `<span><b>${w}</b> ${KW[w]}</span>`).join('')}</div></div>${closeRow}`, true);
 }
-function infoFoe(i){
-  const e = S.b.foes[i], n = e.pat.length;
-  let seq = '';
+// 行動の属性の小さな札(敵の詳細で使う)
+function moveChips(a){
+  const c = [];
+  if(a.hits > 1) c.push(`<span class="chip multi">×${a.hits}</span>`);
+  if(a.wind) c.push(`<span class="chip wind">構${a.wind.poise}</span>`);
+  if(a.guard) c.push(`<span class="chip guard">防${a.guard.s}</span>`);
+  if(a.counter) c.push(`<span class="chip counter">返${a.counter.d}</span>`);
+  if(a.rec) c.push(`<span class="chip vuln">隙${a.rec}</span>`);
+  if(a.buff) c.push(`<span class="chip buff">▲${a.buff}${a.all ? '全' : ''}</span>`);
+  return c.length ? `<span class="atr">${c.join('')}</span>` : '';
+}
+function moveTile(e, a, cur){
+  const atk = a.kind !== 'delay' && a.d > 0;
+  const cls = a.kind === 'delay' ? 'dl' : a.ch ? 'ch' : atk ? '' : 'mv';
+  const val = a.kind === 'delay' ? `<span class="v" style="display:flex;align-items:center;gap:3px"><span class="ic">${IC.delay.replace('viewBox', 'style="width:16px;height:16px" viewBox')}</span>${a.v}</span>`
+    : atk ? `<span class="v">${a.d + (e.str || 0)}</span>` : `<span class="v" style="font-size:20px">${a.buff ? '▲' : a.guard ? IC.block.replace('viewBox', 'style="width:22px;height:22px" viewBox') : '·'}</span>`;
+  const tp = a.kind === 'delay' ? '<span class="tp">自機</span>' : atk ? `<span class="tp"><span class="ic">${IC[a.p]}</span>${SLOT_BY[a.p].fn}</span>` : '';
+  return `<div class="at ${cls}${cur ? ' cur' : ''}">${cur ? `<span class="nx"><span class="ic">${IC.clock}</span>${e.r}</span>` : ''}<span class="ty">${a.kind === 'delay' ? IC.delay : IC.hit}</span>${a.ch ? `<span class="par">${IC.parry}</span>` : ''}${val}${tp}${moveChips(a)}<span class="an">${a.n}</span></div>`;
+}
+function seqHTML(e, pat, start, curOn, rand){
+  const n = pat.length; let h = '';
   for(let j = 0; j < n; j++){
-    const idx = (e.idx + j) % n, a = e.pat[idx];
-    if(j > 0) seq += `<div class="conn"><span class="ic">${IC.clock}</span><b>${a.dl}</b><span class="ic">${IC.arrow}</span></div>`;
-    const cls = a.kind === 'delay' ? 'dl' : a.ch ? 'ch' : '';
-    const val = a.kind === 'delay' ? `<span class="v" style="display:flex;align-items:center;gap:3px"><span class="ic">${IC.delay.replace('viewBox', 'style="width:16px;height:16px" viewBox')}</span>${a.v}</span>` : `<span class="v">${a.d}</span>`;
-    const tp = a.kind === 'delay' ? '<span class="tp">自機</span>' : `<span class="tp"><span class="ic">${IC[a.p]}</span>${SLOT_BY[a.p].fn}</span>`;
-    seq += `<div class="at ${cls}${j === 0 ? ' cur' : ''}">${j === 0 ? `<span class="nx"><span class="ic">${IC.clock}</span>${e.r}</span>` : ''}<span class="ty">${a.kind === 'delay' ? IC.delay : IC.hit}</span>${a.ch ? `<span class="par">${IC.parry}</span>` : ''}${val}${tp}<span class="an">${a.n}</span></div>`;
+    const idx = (start + j) % n, a = pat[idx];
+    if(j > 0) h += rand ? '<div class="conn alt">/</div>' : `<div class="conn"><span class="ic">${IC.clock}</span><b>${a.dl}</b><span class="ic">${IC.arrow}</span></div>`;
+    h += moveTile(e, a, curOn && j === 0);
   }
-  seq += `<div class="loop"><span class="ic">${IC.loop}</span><b>${e.pat[e.idx].dl}</b></div>`;
+  if(!rand) h += `<div class="loop"><span class="ic">${IC.loop}</span><b>${pat[start % n].dl}</b></div>`;
+  return h;
+}
+function infoFoe(i){
+  const e = S.b.foes[i], rand = e.ai === 'rand';
+  let body = '';
+  if(rand){
+    body += `<div class="seq">${moveTile(e, EN.cur(e), true)}</div>`;
+    body += `<div class="seqh">次はこの中から</div><div class="seq">${seqHTML(e, e.pat, 0, false, true)}</div>`;
+  } else body += `<div class="seq">${seqHTML(e, e.pat, e.idx, true, false)}</div>`;
+  if(e.phase && !e.phased) body += `<div class="seqh">耐久${Math.round(e.phase.at * 100)}%未満で</div><div class="seq">${seqHTML(e, e.phase.pat, 0, false, false)}</div>`;
   let st = e.crack ? `<span class="stchip"><span class="ic">${IC.crack}</span>${e.crack}</span>` : '';
+  const all = e.pat.concat(e.phase ? e.phase.pat : []), has = k => all.some(a => a[k]);
   let tr = '';
   if(e.react) tr += `<div class="trait-row"><span class="ic">${IC.eye}</span><span>コスト${e.react.min}以上を使い始めると、1サイクル後に<b>${e.react.d}</b>→${SLOT_BY[e.react.p].fn}</span></div>`;
   if(e.sync) tr += `<div class="trait-row"><span class="ic">${IC.link}</span><span>仲間と同じサイクルに攻撃すると+<b>${e.sync}</b></span></div>`;
+  if(has('wind')) tr += `<div class="trait-row"><span class="chip wind">構</span><span>行動の前の帯の間に、数字以上の一撃で潰せる</span></div>`;
+  if(has('guard')) tr += `<div class="trait-row"><span class="chip guard">防</span><span>帯の間、数字までダメージを防ぐ</span></div>`;
+  if(has('counter')) tr += `<div class="trait-row"><span class="chip counter">返</span><span>帯の間、殴るたびに数字を撃ち返す</span></div>`;
+  if(has('rec')) tr += `<div class="trait-row"><span class="chip vuln">隙</span><span>行動の後、数字のサイクルだけダメージ1.5倍</span></div>`;
+  if(has('buff')) tr += `<div class="trait-row"><span class="chip buff">▲</span><span>行動の後、攻撃力が上がる(全は仲間も)</span></div>`;
+  if(e.str) tr += `<div class="trait-row f"><span class="chip buff">▲${e.str}</span><span>攻撃力+${e.str}</span></div>`;
   if(e.crack) tr += `<div class="trait-row f"><span class="ic">${IC.crack}</span><span>受けるダメージ+${e.crack}</span></div>`;
-  showOv(`<div class="ei"><div class="ei-l"><div class="ei-spr">${SPR[e.kind].replace('width="90" height="100"', 'width="99" height="110"')}</div><div class="ei-name"><span class="ftag">${e.tag}</span>${e.name}</div><div class="ei-hp">${e.hp}<span>/${e.maxHp}</span></div><div class="ei-bar"><i style="width:${e.hp / e.maxHp * 100}%"></i></div><div class="ei-st">${st}</div></div><div class="ei-r"><div class="seq">${seq}</div>${tr ? `<div class="traits">${tr}</div>` : ''}</div></div>${closeRow}`, true);
+  showOv(`<div class="ei"><div class="ei-l"><div class="ei-spr">${SPR[e.kind].replace('width="90" height="100"', 'width="99" height="110"')}</div><div class="ei-name"><span class="ftag">${e.tag}</span>${e.name}</div><div class="ei-hp">${e.hp}<span>/${e.maxHp}</span></div><div class="ei-bar"><i style="width:${e.hp / e.maxHp * 100}%"></i></div><div class="ei-st">${st}</div></div><div class="ei-r${(rand || (e.phase && !e.phased)) ? ' two' : ''}">${body}${tr ? `<div class="traits">${tr}</div>` : ''}</div></div>${closeRow}`, true);
 }
 function infoPart(id){
   const p = SLOT_BY[id], d = partOf(id), st = S.b.parts[id], worn = S.run.parts[id].damaged;
@@ -1186,13 +1331,14 @@ function showRules(first){
     <li>奥の画面に敵ごとの攻撃予定が流れてくる。数字はダメージ、横の字は狙う部位。紫の丸は溜め技、砂時計は自分へのディレイ。</li>
     <li>完了前に被弾すると中断。ブロックで全部防ぐか、菱形のあるカードなら中断されない。完了と溜め技が同じサイクルならJUSTで潰せる。</li>
     <li>目の印の敵は、重いカードを使い始めると撃ってくる。鎖の印の敵は、仲間と同時に攻撃すると強くなる。</li>
-    <li>右下は手札の入れ替え(枚数ぶんのサイクル)。手札がないときは1サイクル待つ。</li>
+    <li>予定の下の帯は、その間にカードが完了したときに効く。<b>構</b>は数字以上の一撃で行動を潰せる。<b>防</b>は数字までダメージを防がれる。<b>返</b>は殴るたびに撃ち返される。<b>隙</b>はダメージ1.5倍。<b>?</b>は次の行動がまだ決まっていない。</li>
+    <li>右下は手札の入れ替え(枚数ぶんのサイクル)と、1サイクルの待機。</li>
     <li>上スワイプで手札を広げ、下スワイプで自分の内側を見る。長押しでカードと敵の詳細。</li>
   </ul><div class="row"><button class="btn" type="button" data-act="close">${first ? 'はじめる' : '閉じる'}</button></div>`, !first);
 }
 function showMenu(){
   const at = S.run.at, pos = !at ? '入口' : at.boss ? 'ボス' : `部屋${at.idx + 1}/${DATA.area.rooms + 1}`;
-  showOv(`<h2>${DATA.area.name} · ${UI.screen === 'battle' && UI.node ? DATA.rooms[UI.node.type].name : pos}</h2><p class="sub">Ascendroid ${APP_VERSION}</p><div class="mlist"><button class="opt" type="button" data-act="rules"><b>遊び方</b></button><button class="opt" type="button" data-act="deck"><b>デッキ</b></button><button class="opt" type="button" data-act="fs"><b>全画面</b></button><button class="opt" type="button" data-act="restart"><b>最初から</b></button></div>${closeRow}`, true);
+  showOv(`<h2>${DATA.area.name} · ${UI.screen === 'battle' && UI.node ? DATA.rooms[UI.node.type].name : pos}</h2><p class="sub">Ascendroid ${APP_VERSION}</p><div class="mlist"><button class="opt" type="button" data-act="rules"><b>遊び方</b></button><button class="opt" type="button" data-act="deck"><b>デッキ</b></button><button class="opt" type="button" data-act="fs"><b>全画面</b></button><button class="opt" type="button" data-act="toggleWait"><b>待機</b><span>${RULE.freeWait ? 'いつでも' : '手札がないときだけ'}</span></button><button class="opt" type="button" data-act="restart"><b>最初から</b></button></div>${closeRow}`, true);
 }
 async function goFull(){
   hideOv();
@@ -1207,6 +1353,11 @@ function act(a, arg, el){
     case 'rules': showRules(false); break;
     case 'deck': infoDeck(); break;
     case 'fs': goFull(); break;
+    case 'toggleWait':
+      RULE.freeWait = !RULE.freeWait;
+      try{ localStorage.setItem('asc.freeWait', RULE.freeWait ? '1' : '0'); }catch(e){}
+      if(S && S.b){ sel = null; PV = null; renderAll(); }
+      showMenu(); break;
     case 'restart': UI.pick = null; UI.learnOpts = []; newRun(); break;
     case 'retry': S = {run: JSON.parse(snapshot), b: null}; hideOv(); startBattle(UI.node); break;
     case 'node': UI.mapSel = UI.mapSel === arg ? null : arg; showMap(); break;
@@ -1284,6 +1435,7 @@ stage.addEventListener('click', ev => {
   if(!inBattle() || busy || UI.view === 'self') return;
   const card = t.closest('#hand .card[data-i]'); if(card){ onCard(+card.dataset.i); return; }
   if(t.closest('#redraw')){ onRedraw(); return; }
+  if(t.closest('#waitBtn')){ onWait(); return; }
   const f = t.closest('[data-f]'); if(f){ onFoe(+f.dataset.f); return; }
   const p = t.closest('#parts .part'); if(p){ infoPart(p.dataset.p); return; }
   if(t.closest('.pile')){ infoDeck(); return; }

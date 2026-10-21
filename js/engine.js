@@ -3,7 +3,8 @@
 (function(root){
 'use strict';
 const D = root.DATA;
-const RULE = {draw:3, handStart:5, handMax:7, view:18};
+// freeWait: 手札があっても1サイクル待てる(実験用。既定は待てない)
+const RULE = {draw:3, handStart:5, handMax:7, view:18, freeWait:false};
 
 /* ---------- 乱数と小道具 ---------- */
 function rngFrom(seed){
@@ -16,7 +17,24 @@ function shuffle(a, r){ const R = r || rand; for(let i = a.length - 1; i > 0; i-
 function pick(a, r){ return a[Math.floor((r || rand)() * a.length)]; }
 const clone = o => JSON.parse(JSON.stringify(o));
 const cur = e => e.pat[e.idx];
-function advance(e){ e.idx = (e.idx + 1) % e.pat.length; e.r = e.pat[e.idx].dl; e.seq++; }
+// 次の行動へ。ai:'rand' なら重み wt で選ぶ(同じ行動は3回続けない)。phase なら耐久が at 割を切った後に行動の並びが変わる
+function pickMove(e){
+  const h = e.hist || [], n = h.length, ok = e.pat.map((m, i) => !(n >= 2 && h[n - 1] === i && h[n - 2] === i));
+  let tot = 0; e.pat.forEach((m, i) => { if(ok[i]) tot += m.wt || 1; });
+  let x = rand() * tot;
+  for(let i = 0; i < e.pat.length; i++){ if(!ok[i]) continue; x -= e.pat[i].wt || 1; if(x <= 0) return i; }
+  return e.pat.length - 1;
+}
+function advance(e){
+  if(e.hist){ e.hist.push(e.idx); if(e.hist.length > 4) e.hist.shift(); }
+  if(e.phase && !e.phased && e.hp < e.maxHp * e.phase.at){ e.phased = true; e.pat = e.phase.pat; e.idx = 0; e.hist = []; }
+  else if(e.ai === 'rand') e.idx = pickMove(e);
+  else e.idx = (e.idx + 1) % e.pat.length;
+  const a = e.pat[e.idx];
+  e.r = a.dl; e.seq++; e.chain = 0; e.sh = a.guard ? a.guard.s : 0;
+}
+// 行動の前の窓(構え・ガード・反撃の構え)に入っているか
+const inWin = (e, w) => !!w && e.r > 0 && e.r <= w.w;
 
 /* ---------- パーツ ---------- */
 function partOf(run, slot){ return D.parts[run.parts[slot].id]; }
@@ -54,7 +72,15 @@ function drawN(b, n){ let got = 0; for(let i = 0; i < n; i++){ const r = drawOne
 /* ---------- 予定 ---------- */
 function upcoming(e, view){
   const V = view || RULE.view, out = []; let t = e.r, idx = e.idx, k = 0;
-  while(t <= V && k < 8){ out.push({t, a:e.pat[idx], k}); idx = (idx + 1) % e.pat.length; t += e.pat[idx].dl; k++; }
+  while(t <= V && k < 8){
+    const a = e.pat[idx]; out.push({t, a, k});
+    // 多段: 残りの撃ちを1サイクルおきに
+    const rest = k === 0 && e.chain > 0 ? e.chain : (a.hits > 1 ? a.hits - 1 : 0);
+    for(let j = 1; j <= rest && t + j <= V; j++) out.push({t:t + j, a, k, hit:j});
+    t += rest;
+    if(e.ai === 'rand') break; // 分岐する敵は、次の行動が決まるまで見えない
+    idx = (idx + 1) % e.pat.length; t += e.pat[idx].dl; k++;
+  }
   return out;
 }
 // 次に手札が届くサイクル(今から何サイクル後か)の一覧
@@ -65,12 +91,22 @@ function hurtFoe(b, e, d, ev){
   e.hp -= d; ev.push({kind:'dmg', e:e.i, n:d});
   if(e.hp <= 0){ e.hp = 0; e.alive = false; e.reactIn = null; ev.push({kind:'kill', e:e.i}); }
 }
+// カードや時限の一撃。隙なら1.5倍、ガード中は防がれ、反撃の構えなら撃ち返され、構え中に poise 以上なら行動が潰れる
+function hitFoe(st, e, n, ev){
+  const b = st.b, a = cur(e);
+  let d = n;
+  if(e.vuln > 0){ d = Math.round(d * 1.5); b.vulnHits = (b.vulnHits || 0) + 1; ev.push({kind:'vulnHit', e:e.i}); }
+  if(inWin(e, a.guard) && e.sh > 0){ const ab = Math.min(e.sh, d); e.sh -= ab; d -= ab; b.guarded = (b.guarded || 0) + ab; ev.push({kind:'guarded', e:e.i, n:ab}); }
+  if(inWin(e, a.counter)){ const res = strike(st, e, {n:a.n, d:a.counter.d, p:a.p || 'dur'}, 0, true); b.countered = (b.countered || 0) + 1; ev.push({kind:'counter', e:e.i, res}); }
+  if(d > 0) hurtFoe(b, e, d, ev);
+  if(e.alive && inWin(e, a.wind) && n >= a.wind.poise){ const nm = a.n; advance(e); b.breaks = (b.breaks || 0) + 1; ev.push({kind:'break', e:e.i, name:nm}); }
+}
 function applyCard(st, k, ti){
   const c = D.cards[k], b = st.b, ev = [];
   const targets = c.all ? b.foes.filter(e => e.alive) : (c.tgt ? [b.foes[ti]].filter(e => e && e.alive) : []);
   if(c.dmg){
     const n = dmgOf(st, c);
-    for(const e of targets) for(let h = 0; h < (c.dmg.x || 1); h++){ if(!e.alive) break; hurtFoe(b, e, n + e.crack, ev); }
+    for(const e of targets) for(let h = 0; h < (c.dmg.x || 1); h++){ if(!e.alive) break; hitFoe(st, e, n + e.crack, ev); }
   }
   if(c.crack) for(const e of targets) if(e.alive){ e.crack += c.crack; ev.push({kind:'crack', e:e.i, n:c.crack}); }
   if(c.delay) for(const e of targets) if(e.alive){ e.r += c.delay; ev.push({kind:'delay', e:e.i, n:c.delay}); }
@@ -85,13 +121,13 @@ function fireTimer(st, t){
   const b = st.b, c = D.cards[t.k], ev = [];
   let e = b.foes[t.e];
   if(!e || !e.alive) e = b.foes.find(f => f.alive);
-  if(e) hurtFoe(b, e, dmgOf(st, c, c.timer.dmg) + e.crack, ev);
+  if(e) hitFoe(st, e, dmgOf(st, c, c.timer.dmg) + e.crack, ev);
   return ev;
 }
 // 敵の攻撃1回。extra は連携の上乗せ
-function strike(st, e, a, extra){
+function strike(st, e, a, extra, noParry){
   const b = st.b, raw = a.d + (extra || 0);
-  if(b.parryNow){ const ev = []; hurtFoe(b, e, raw, ev); return {kind:'parried', name:a.n, raw, ev}; }
+  if(b.parryNow && !noParry){ const ev = []; hurtFoe(b, e, raw, ev); return {kind:'parried', name:a.n, raw, ev}; }
   const ab = Math.min(b.block, raw); b.block -= ab;
   const rem = raw - ab, p = b.parts[a.p];
   let partLoss = 0, bodyLoss = 0, broke = false;
@@ -104,7 +140,12 @@ function strike(st, e, a, extra){
 }
 function enemyAct(st, e, extra){
   const a = cur(e);
-  const res = a.kind === 'delay' ? {kind:'delay', name:a.n, v:a.v} : strike(st, e, a, extra);
+  const res = a.kind === 'delay' ? {kind:'delay', name:a.n, v:a.v} : a.d > 0 ? strike(st, e, a, (extra || 0) + (e.str || 0)) : {kind:'move', name:a.n};
+  // 多段: 残りを1サイクルおきに撃つ
+  if(a.hits > 1 && !e.chain){ e.chain = a.hits - 1; e.r = 1; e.sh = 0; return res; }
+  if(e.chain > 0){ e.chain--; if(e.chain > 0){ e.r = 1; return res; } }
+  if(a.rec) e.vuln = a.rec + 1;
+  if(a.buff){ for(const f of (a.all ? st.b.foes.filter(f => f.alive) : [e])) f.str = (f.str || 0) + a.buff; res.buff = a.buff; }
   advance(e);
   return res;
 }
@@ -124,6 +165,7 @@ function* spendGen(st, cost, k, ti, noInt){
   if(cost <= 0){
     if(c){ const ev = applyCard(st, k, ti); yield {type:'card', ev}; }
     b.cast = null; out.completeAt = 0;
+    if(st.run.body <= 0) out.dead = true;
     if(!b.foes.some(e => e.alive)) out.won = true;
     return out;
   }
@@ -133,7 +175,7 @@ function* spendGen(st, cost, k, ti, noInt){
     left--; b.cast.left = left;
     if(real){
       b.T++; out.elapsed++; b.drawIn--;
-      for(const e of b.foes) if(e.alive){ e.r--; if(e.reactIn != null) e.reactIn--; }
+      for(const e of b.foes) if(e.alive){ e.r--; if(e.reactIn != null) e.reactIn--; if(e.vuln > 0) e.vuln--; }
       for(const t of b.timers) t.left--;
     }
     yield {type:'tick', real};
@@ -152,7 +194,7 @@ function* spendGen(st, cost, k, ti, noInt){
       out.completeAt = out.elapsed;
       if(c){
         if(real) for(const e of b.foes){
-          if(e.alive && e.r <= 0 && cur(e).ch){
+          if(e.alive && e.r <= 0 && cur(e).ch && !e.chain){
             const nm = cur(e).n; advance(e);
             const cr = fx(st, 'calc', 'justCrack'); e.crack += cr;
             const sw = fx(st, 'calc', 'justSwift'); b.swift += sw;
@@ -163,6 +205,7 @@ function* spendGen(st, cost, k, ti, noInt){
         const ev = applyCard(st, k, ti);
         b.cast = null;
         yield {type:'card', ev};
+        if(st.run.body <= 0){ out.dead = true; b.parryNow = false; return out; }
       }
       b.cast = null;
       if(!b.foes.some(e => e.alive)){ b.parryNow = false; out.won = true; return out; }
@@ -206,8 +249,9 @@ function newBattle(run, encKey){
   const foes = E.foes.map((key, i) => {
     const f = D.foes[key];
     return {key, i, name:f.name, tag:'ABC'[i], kind:f.kind, hp:f.hp, maxHp:f.hp, pat:f.pat, idx:0, r:f.start, seq:0, alive:true, crack:0,
-      react:f.react || null, sync:f.sync || 0, reactIn:null};
+      react:f.react || null, sync:f.sync || 0, reactIn:null, ai:f.ai || null, phase:f.phase || null, phased:false, hist:[], chain:0, sh:0, vuln:0, str:0};
   });
+  for(const e of foes){ if(e.ai === 'rand') e.idx = pickMove(e); const a = cur(e); e.sh = a.guard ? a.guard.s : 0; }
   let uid = 1;
   const cards = shuffle(battleDeck(run).map(k => ({k, id:uid++})));
   const b = {enc:encKey, T:0, block:0, swift:0, foes, parts, draw:cards, disc:[], hand:[], cast:null, broken:{}, over:false, timers:[], drawIn:RULE.draw, handMax:RULE.handMax, uid:1000, parryNow:false};
@@ -226,7 +270,8 @@ function actions(st){
     const ts = c.tgt ? b.foes.filter(e => e.alive).map(e => e.i) : [null];
     for(const t of ts){ const key = cd.k + '|' + t; if(seen.has(key)) continue; seen.add(key); out.push({type:'card', i, k:cd.k, t}); }
   });
-  if(b.hand.length) out.push({type:'swap'}); else out.push({type:'wait'});
+  if(b.hand.length) out.push({type:'swap'});
+  if(!b.hand.length || RULE.freeWait) out.push({type:'wait'});
   return out;
 }
 function actionCost(st, a){ return a.type === 'card' ? D.cards[a.k].cost : a.type === 'swap' ? st.b.hand.length : 1; }

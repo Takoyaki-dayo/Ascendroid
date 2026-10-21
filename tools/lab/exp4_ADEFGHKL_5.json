@@ -1,0 +1,6640 @@
+[
+ {
+  "id": "A",
+  "name": "今の形",
+  "cond": {
+   "level": 0
+  },
+  "encMul": {
+   "pair": 1.086,
+   "chip": 0.876,
+   "shield": 0.861,
+   "mirror": 0.936,
+   "amp": 1.071,
+   "react": 0.627,
+   "boss": 0.56
+  },
+  "order": {
+   "light": [
+    "D1",
+    "A2",
+    "A1",
+    "B1"
+   ],
+   "mixed": [
+    "A2",
+    "A1",
+    "D1",
+    "A3",
+    "B1",
+    "A6",
+    "B3",
+    "A4"
+   ],
+   "heavy": [
+    "D3",
+    "A4",
+    "B1",
+    "B3",
+    "B4",
+    "A3",
+    "A6"
+   ],
+   "draw": [
+    "A1",
+    "A2",
+    "B1",
+    "D1",
+    "R3"
+   ]
+  },
+  "auto": {
+   "light": {
+    "taken": 29.145,
+    "n": 420,
+    "won": 0.99,
+    "t": 80.45,
+    "justs": 0.357,
+    "breaks": 0,
+    "intr": 0.162,
+    "decisions": 31.414,
+    "rel": 0,
+    "off": 0,
+    "absorbed": 0,
+    "countered": 0,
+    "vulnHits": 0,
+    "waits": 0,
+    "per": {
+     "pair": {
+      "taken": 44.87,
+      "won": 0.98,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "chip": {
+      "taken": 27.33,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "shield": {
+      "taken": 28.77,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "mirror": {
+      "taken": 18.27,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "amp": {
+      "taken": 40.23,
+      "won": 0.95,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "react": {
+      "taken": 13.93,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "boss": {
+      "taken": 30.62,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     }
+    }
+   },
+   "mixed": {
+    "taken": 34.688,
+    "n": 420,
+    "won": 0.91,
+    "t": 62.693,
+    "justs": 0.355,
+    "breaks": 0,
+    "intr": 3.564,
+    "decisions": 24.826,
+    "rel": 0,
+    "off": 0,
+    "absorbed": 0,
+    "countered": 0,
+    "vulnHits": 0,
+    "waits": 0,
+    "per": {
+     "pair": {
+      "taken": 45.65,
+      "won": 0.73,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "chip": {
+      "taken": 37.15,
+      "won": 0.85,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "shield": {
+      "taken": 31.77,
+      "won": 0.98,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "mirror": {
+      "taken": 28.87,
+      "won": 0.98,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "amp": {
+      "taken": 30.72,
+      "won": 0.92,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "react": {
+      "taken": 32.67,
+      "won": 0.98,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "boss": {
+      "taken": 36,
+      "won": 0.92,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     }
+    }
+   },
+   "heavy": {
+    "taken": 34.526,
+    "n": 420,
+    "won": 0.731,
+    "t": 75.436,
+    "justs": 0.493,
+    "breaks": 0,
+    "intr": 4.729,
+    "decisions": 26.471,
+    "rel": 0,
+    "off": 0,
+    "absorbed": 0,
+    "countered": 0,
+    "vulnHits": 0,
+    "waits": 0,
+    "per": {
+     "pair": {
+      "taken": 41.43,
+      "won": 0.92,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "chip": {
+      "taken": 45.02,
+      "won": 0.5,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "shield": {
+      "taken": 29.12,
+      "won": 0.95,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "mirror": {
+      "taken": 40.95,
+      "won": 0.75,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "amp": {
+      "taken": 19.88,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "react": {
+      "taken": 60,
+      "won": 0,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "boss": {
+      "taken": 5.28,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     }
+    }
+   },
+   "draw": {
+    "taken": 22.357,
+    "n": 420,
+    "won": 0.979,
+    "t": 56.786,
+    "justs": 0.662,
+    "breaks": 0,
+    "intr": 1.367,
+    "decisions": 34.36,
+    "rel": 0,
+    "off": 0,
+    "absorbed": 0,
+    "countered": 0,
+    "vulnHits": 0,
+    "waits": 0,
+    "per": {
+     "pair": {
+      "taken": 38.13,
+      "won": 0.92,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "chip": {
+      "taken": 19.23,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "shield": {
+      "taken": 29.33,
+      "won": 0.98,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "mirror": {
+      "taken": 20.08,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "amp": {
+      "taken": 26.28,
+      "won": 0.95,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "react": {
+      "taken": 14.52,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "boss": {
+      "taken": 8.92,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     }
+    }
+   }
+  },
+  "roll": {
+   "light": {
+    "taken": 27.655,
+    "n": 168,
+    "won": 0.994,
+    "t": 80.006,
+    "justs": 0.393,
+    "breaks": 0,
+    "intr": 0.095,
+    "decisions": 31.256,
+    "rel": 0.014,
+    "off": 0.114,
+    "absorbed": 0,
+    "countered": 0,
+    "vulnHits": 0,
+    "waits": 0,
+    "per": {
+     "pair": {
+      "taken": 39.96,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 86,
+      "blk": 24,
+      "heavyRate": null,
+      "blockRate": 0.279
+     },
+     "chip": {
+      "taken": 25.04,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 73,
+      "blk": 30,
+      "heavyRate": null,
+      "blockRate": 0.411
+     },
+     "shield": {
+      "taken": 27.46,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 84,
+      "blk": 27,
+      "heavyRate": null,
+      "blockRate": 0.321
+     },
+     "mirror": {
+      "taken": 16.58,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 68,
+      "blk": 19,
+      "heavyRate": null,
+      "blockRate": 0.279
+     },
+     "amp": {
+      "taken": 35.38,
+      "won": 0.96,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 63,
+      "blk": 21,
+      "heavyRate": null,
+      "blockRate": 0.333
+     },
+     "react": {
+      "taken": 13.42,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 75,
+      "blk": 18,
+      "heavyRate": null,
+      "blockRate": 0.24
+     },
+     "boss": {
+      "taken": 35.75,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 81,
+      "blk": 22,
+      "heavyRate": null,
+      "blockRate": 0.272
+     }
+    }
+   },
+   "mixed": {
+    "taken": 23.685,
+    "n": 168,
+    "won": 0.988,
+    "t": 55.815,
+    "justs": 0.512,
+    "breaks": 0,
+    "intr": 1.994,
+    "decisions": 22.333,
+    "rel": 0.262,
+    "off": 0.272,
+    "absorbed": 0,
+    "countered": 0,
+    "vulnHits": 0,
+    "waits": 0,
+    "per": {
+     "pair": {
+      "taken": 30.08,
+      "won": 0.92,
+      "n": 24,
+      "lh": 98,
+      "heavy": 32,
+      "ba": 179,
+      "blk": 58,
+      "heavyRate": 0.327,
+      "blockRate": 0.324
+     },
+     "chip": {
+      "taken": 22.33,
+      "won": 1,
+      "n": 24,
+      "lh": 80,
+      "heavy": 18,
+      "ba": 142,
+      "blk": 56,
+      "heavyRate": 0.225,
+      "blockRate": 0.394
+     },
+     "shield": {
+      "taken": 20.71,
+      "won": 1,
+      "n": 24,
+      "lh": 101,
+      "heavy": 34,
+      "ba": 148,
+      "blk": 54,
+      "heavyRate": 0.337,
+      "blockRate": 0.365
+     },
+     "mirror": {
+      "taken": 21.29,
+      "won": 1,
+      "n": 24,
+      "lh": 91,
+      "heavy": 29,
+      "ba": 158,
+      "blk": 52,
+      "heavyRate": 0.319,
+      "blockRate": 0.329
+     },
+     "amp": {
+      "taken": 20.13,
+      "won": 1,
+      "n": 24,
+      "lh": 107,
+      "heavy": 30,
+      "ba": 168,
+      "blk": 63,
+      "heavyRate": 0.28,
+      "blockRate": 0.375
+     },
+     "react": {
+      "taken": 23.96,
+      "won": 1,
+      "n": 24,
+      "lh": 76,
+      "heavy": 25,
+      "ba": 158,
+      "blk": 49,
+      "heavyRate": 0.329,
+      "blockRate": 0.31
+     },
+     "boss": {
+      "taken": 27.29,
+      "won": 1,
+      "n": 24,
+      "lh": 89,
+      "heavy": 39,
+      "ba": 151,
+      "blk": 48,
+      "heavyRate": 0.438,
+      "blockRate": 0.318
+     }
+    }
+   },
+   "heavy": {
+    "taken": 21.452,
+    "n": 168,
+    "won": 0.899,
+    "t": 63.333,
+    "justs": 0.673,
+    "breaks": 0,
+    "intr": 2.631,
+    "decisions": 20.107,
+    "rel": 0.395,
+    "off": 0.554,
+    "absorbed": 0,
+    "countered": 0,
+    "vulnHits": 0,
+    "waits": 0,
+    "per": {
+     "pair": {
+      "taken": 32.29,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 322,
+      "blk": 142,
+      "heavyRate": null,
+      "blockRate": 0.441
+     },
+     "chip": {
+      "taken": 17.29,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 377,
+      "blk": 165,
+      "heavyRate": null,
+      "blockRate": 0.438
+     },
+     "shield": {
+      "taken": 17.92,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 347,
+      "blk": 170,
+      "heavyRate": null,
+      "blockRate": 0.49
+     },
+     "mirror": {
+      "taken": 22.13,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 319,
+      "blk": 157,
+      "heavyRate": null,
+      "blockRate": 0.492
+     },
+     "amp": {
+      "taken": 7.58,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 362,
+      "blk": 151,
+      "heavyRate": null,
+      "blockRate": 0.417
+     },
+     "react": {
+      "taken": 51.58,
+      "won": 0.29,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 227,
+      "blk": 93,
+      "heavyRate": null,
+      "blockRate": 0.41
+     },
+     "boss": {
+      "taken": 1.38,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 635,
+      "blk": 243,
+      "heavyRate": null,
+      "blockRate": 0.383
+     }
+    }
+   },
+   "draw": {
+    "taken": 15.982,
+    "n": 168,
+    "won": 1,
+    "t": 53.488,
+    "justs": 0.815,
+    "breaks": 0,
+    "intr": 0.506,
+    "decisions": 33.75,
+    "rel": 0.178,
+    "off": 0.385,
+    "absorbed": 0,
+    "countered": 0,
+    "vulnHits": 0,
+    "waits": 0,
+    "per": {
+     "pair": {
+      "taken": 30.04,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 199,
+      "blk": 66,
+      "heavyRate": null,
+      "blockRate": 0.332
+     },
+     "chip": {
+      "taken": 16.08,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 258,
+      "blk": 66,
+      "heavyRate": null,
+      "blockRate": 0.256
+     },
+     "shield": {
+      "taken": 22.83,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 248,
+      "blk": 68,
+      "heavyRate": null,
+      "blockRate": 0.274
+     },
+     "mirror": {
+      "taken": 17.88,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 193,
+      "blk": 44,
+      "heavyRate": null,
+      "blockRate": 0.228
+     },
+     "amp": {
+      "taken": 12.17,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 304,
+      "blk": 89,
+      "heavyRate": null,
+      "blockRate": 0.293
+     },
+     "react": {
+      "taken": 8.42,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 276,
+      "blk": 70,
+      "heavyRate": null,
+      "blockRate": 0.254
+     },
+     "boss": {
+      "taken": 4.46,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 583,
+      "blk": 170,
+      "heavyRate": null,
+      "blockRate": 0.292
+     }
+    }
+   }
+  },
+  "interaction": 8.68,
+  "bestDeck": {
+   "pair": "draw",
+   "chip": "draw",
+   "shield": "heavy",
+   "mirror": "light",
+   "amp": "heavy",
+   "react": "draw",
+   "boss": "heavy"
+  },
+  "winners": 3,
+  "spread": 11.7,
+  "think": 11,
+  "heavyRange": 0.21,
+  "blockRange": 0.08
+ },
+ {
+  "id": "D",
+  "name": "全属性・決まった順",
+  "cond": {
+   "level": 3
+  },
+  "encMul": {
+   "pair": 1.086,
+   "chip": 1.071,
+   "shield": 0.898,
+   "mirror": 1.064,
+   "amp": 0.808,
+   "react": 0.627,
+   "boss": 0.522
+  },
+  "order": {
+   "light": [
+    "D1",
+    "A2",
+    "B1",
+    "A1"
+   ],
+   "mixed": [
+    "A4",
+    "A3",
+    "B1",
+    "B3",
+    "A1",
+    "D1",
+    "A2",
+    "A6"
+   ],
+   "heavy": [
+    "B1",
+    "B4",
+    "B3",
+    "D3",
+    "A4",
+    "A3",
+    "A6"
+   ],
+   "draw": [
+    "A1",
+    "B1",
+    "A2",
+    "D1",
+    "R3"
+   ]
+  },
+  "auto": {
+   "light": {
+    "taken": 29.15,
+    "n": 420,
+    "won": 0.988,
+    "t": 88.669,
+    "justs": 0.376,
+    "breaks": 0.086,
+    "intr": 0.26,
+    "decisions": 34.157,
+    "rel": 0,
+    "off": 0,
+    "absorbed": 11.833,
+    "countered": 0.507,
+    "vulnHits": 0.995,
+    "waits": 0,
+    "per": {
+     "pair": {
+      "taken": 32.43,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "chip": {
+      "taken": 34.73,
+      "won": 0.98,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "shield": {
+      "taken": 29.45,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "mirror": {
+      "taken": 29.62,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "amp": {
+      "taken": 33.33,
+      "won": 0.93,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "react": {
+      "taken": 13.68,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "boss": {
+      "taken": 30.8,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     }
+    }
+   },
+   "mixed": {
+    "taken": 35.124,
+    "n": 420,
+    "won": 0.886,
+    "t": 66.19,
+    "justs": 0.29,
+    "breaks": 0.443,
+    "intr": 3.869,
+    "decisions": 25.95,
+    "rel": 0,
+    "off": 0,
+    "absorbed": 7.65,
+    "countered": 0.379,
+    "vulnHits": 0.657,
+    "waits": 0,
+    "per": {
+     "pair": {
+      "taken": 37.45,
+      "won": 0.83,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "chip": {
+      "taken": 39.73,
+      "won": 0.82,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "shield": {
+      "taken": 29.1,
+      "won": 0.97,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "mirror": {
+      "taken": 39.73,
+      "won": 0.83,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "amp": {
+      "taken": 31.42,
+      "won": 0.92,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "react": {
+      "taken": 33.92,
+      "won": 0.97,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "boss": {
+      "taken": 34.52,
+      "won": 0.87,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     }
+    }
+   },
+   "heavy": {
+    "taken": 30.157,
+    "n": 420,
+    "won": 0.807,
+    "t": 84.838,
+    "justs": 0.498,
+    "breaks": 0.448,
+    "intr": 4.252,
+    "decisions": 29.381,
+    "rel": 0,
+    "off": 0,
+    "absorbed": 7.3,
+    "countered": 0.081,
+    "vulnHits": 0.56,
+    "waits": 0,
+    "per": {
+     "pair": {
+      "taken": 33.63,
+      "won": 0.97,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "chip": {
+      "taken": 37.53,
+      "won": 0.85,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "shield": {
+      "taken": 23.8,
+      "won": 0.97,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "mirror": {
+      "taken": 36.77,
+      "won": 0.87,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "amp": {
+      "taken": 20.85,
+      "won": 0.93,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "react": {
+      "taken": 57.6,
+      "won": 0.07,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "boss": {
+      "taken": 0.92,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     }
+    }
+   },
+   "draw": {
+    "taken": 21.552,
+    "n": 420,
+    "won": 0.986,
+    "t": 60.748,
+    "justs": 0.736,
+    "breaks": 0.167,
+    "intr": 1.312,
+    "decisions": 36.395,
+    "rel": 0,
+    "off": 0,
+    "absorbed": 8.471,
+    "countered": 0.688,
+    "vulnHits": 0.602,
+    "waits": 0,
+    "per": {
+     "pair": {
+      "taken": 31.05,
+      "won": 0.92,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "chip": {
+      "taken": 17.58,
+      "won": 0.98,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "shield": {
+      "taken": 26.7,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "mirror": {
+      "taken": 34.8,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "amp": {
+      "taken": 17.17,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "react": {
+      "taken": 14.6,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "boss": {
+      "taken": 8.97,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     }
+    }
+   }
+  },
+  "roll": {
+   "light": {
+    "taken": 27.798,
+    "n": 168,
+    "won": 1,
+    "t": 87.101,
+    "justs": 0.387,
+    "breaks": 0.304,
+    "intr": 0.131,
+    "decisions": 33.631,
+    "rel": 0.03,
+    "off": 0.108,
+    "absorbed": 11.702,
+    "countered": 0.393,
+    "vulnHits": 1.018,
+    "waits": 0,
+    "per": {
+     "pair": {
+      "taken": 29.79,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 76,
+      "blk": 34,
+      "heavyRate": null,
+      "blockRate": 0.447
+     },
+     "chip": {
+      "taken": 28.21,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 76,
+      "blk": 36,
+      "heavyRate": null,
+      "blockRate": 0.474
+     },
+     "shield": {
+      "taken": 27.63,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 72,
+      "blk": 34,
+      "heavyRate": null,
+      "blockRate": 0.472
+     },
+     "mirror": {
+      "taken": 29.17,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 87,
+      "blk": 31,
+      "heavyRate": null,
+      "blockRate": 0.356
+     },
+     "amp": {
+      "taken": 31.75,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 83,
+      "blk": 32,
+      "heavyRate": null,
+      "blockRate": 0.386
+     },
+     "react": {
+      "taken": 13.25,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 88,
+      "blk": 29,
+      "heavyRate": null,
+      "blockRate": 0.33
+     },
+     "boss": {
+      "taken": 34.79,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 76,
+      "blk": 32,
+      "heavyRate": null,
+      "blockRate": 0.421
+     }
+    }
+   },
+   "mixed": {
+    "taken": 21.649,
+    "n": 168,
+    "won": 0.988,
+    "t": 58.054,
+    "justs": 0.47,
+    "breaks": 0.607,
+    "intr": 2,
+    "decisions": 23.179,
+    "rel": 0.281,
+    "off": 0.277,
+    "absorbed": 6.506,
+    "countered": 0.161,
+    "vulnHits": 0.417,
+    "waits": 0,
+    "per": {
+     "pair": {
+      "taken": 24,
+      "won": 1,
+      "n": 24,
+      "lh": 120,
+      "heavy": 58,
+      "ba": 154,
+      "blk": 67,
+      "heavyRate": 0.483,
+      "blockRate": 0.435
+     },
+     "chip": {
+      "taken": 18.38,
+      "won": 1,
+      "n": 24,
+      "lh": 104,
+      "heavy": 61,
+      "ba": 151,
+      "blk": 66,
+      "heavyRate": 0.587,
+      "blockRate": 0.437
+     },
+     "shield": {
+      "taken": 18.25,
+      "won": 1,
+      "n": 24,
+      "lh": 100,
+      "heavy": 60,
+      "ba": 151,
+      "blk": 57,
+      "heavyRate": 0.6,
+      "blockRate": 0.377
+     },
+     "mirror": {
+      "taken": 21.96,
+      "won": 1,
+      "n": 24,
+      "lh": 121,
+      "heavy": 56,
+      "ba": 132,
+      "blk": 66,
+      "heavyRate": 0.463,
+      "blockRate": 0.5
+     },
+     "amp": {
+      "taken": 15.04,
+      "won": 1,
+      "n": 24,
+      "lh": 111,
+      "heavy": 62,
+      "ba": 171,
+      "blk": 74,
+      "heavyRate": 0.559,
+      "blockRate": 0.433
+     },
+     "react": {
+      "taken": 28.33,
+      "won": 1,
+      "n": 24,
+      "lh": 95,
+      "heavy": 46,
+      "ba": 145,
+      "blk": 45,
+      "heavyRate": 0.484,
+      "blockRate": 0.31
+     },
+     "boss": {
+      "taken": 25.58,
+      "won": 0.92,
+      "n": 24,
+      "lh": 116,
+      "heavy": 68,
+      "ba": 145,
+      "blk": 58,
+      "heavyRate": 0.586,
+      "blockRate": 0.4
+     }
+    }
+   },
+   "heavy": {
+    "taken": 17.185,
+    "n": 168,
+    "won": 0.899,
+    "t": 63.714,
+    "justs": 0.542,
+    "breaks": 0.762,
+    "intr": 2.042,
+    "decisions": 20.411,
+    "rel": 0.475,
+    "off": 0.55,
+    "absorbed": 2.137,
+    "countered": 0,
+    "vulnHits": 0.506,
+    "waits": 0,
+    "per": {
+     "pair": {
+      "taken": 18.29,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 319,
+      "blk": 179,
+      "heavyRate": null,
+      "blockRate": 0.561
+     },
+     "chip": {
+      "taken": 12.67,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 310,
+      "blk": 153,
+      "heavyRate": null,
+      "blockRate": 0.494
+     },
+     "shield": {
+      "taken": 9.54,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 360,
+      "blk": 177,
+      "heavyRate": null,
+      "blockRate": 0.492
+     },
+     "mirror": {
+      "taken": 15.25,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 284,
+      "blk": 168,
+      "heavyRate": null,
+      "blockRate": 0.592
+     },
+     "amp": {
+      "taken": 8.71,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 355,
+      "blk": 172,
+      "heavyRate": null,
+      "blockRate": 0.485
+     },
+     "react": {
+      "taken": 55.04,
+      "won": 0.29,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 204,
+      "blk": 83,
+      "heavyRate": null,
+      "blockRate": 0.407
+     },
+     "boss": {
+      "taken": 0.79,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 664,
+      "blk": 303,
+      "heavyRate": null,
+      "blockRate": 0.456
+     }
+    }
+   },
+   "draw": {
+    "taken": 14.03,
+    "n": 168,
+    "won": 0.994,
+    "t": 54.619,
+    "justs": 0.786,
+    "breaks": 0.327,
+    "intr": 0.458,
+    "decisions": 34.589,
+    "rel": 0.203,
+    "off": 0.38,
+    "absorbed": 3.905,
+    "countered": 0.214,
+    "vulnHits": 0.607,
+    "waits": 0,
+    "per": {
+     "pair": {
+      "taken": 20.54,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 226,
+      "blk": 76,
+      "heavyRate": null,
+      "blockRate": 0.336
+     },
+     "chip": {
+      "taken": 14.83,
+      "won": 0.96,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 252,
+      "blk": 68,
+      "heavyRate": null,
+      "blockRate": 0.27
+     },
+     "shield": {
+      "taken": 18.71,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 238,
+      "blk": 80,
+      "heavyRate": null,
+      "blockRate": 0.336
+     },
+     "mirror": {
+      "taken": 18.54,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 160,
+      "blk": 59,
+      "heavyRate": null,
+      "blockRate": 0.369
+     },
+     "amp": {
+      "taken": 11.17,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 314,
+      "blk": 97,
+      "heavyRate": null,
+      "blockRate": 0.309
+     },
+     "react": {
+      "taken": 8.83,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 283,
+      "blk": 75,
+      "heavyRate": null,
+      "blockRate": 0.265
+     },
+     "boss": {
+      "taken": 5.58,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 628,
+      "blk": 201,
+      "heavyRate": null,
+      "blockRate": 0.32
+     }
+    }
+   }
+  },
+  "interaction": 8.76,
+  "bestDeck": {
+   "pair": "heavy",
+   "chip": "heavy",
+   "shield": "heavy",
+   "mirror": "heavy",
+   "amp": "heavy",
+   "react": "draw",
+   "boss": "heavy"
+  },
+  "winners": 2,
+  "spread": 13.8,
+  "think": 13.5,
+  "heavyRange": 0.14,
+  "blockRange": 0.19
+ },
+ {
+  "id": "E",
+  "name": "全属性+分岐+段階",
+  "cond": {
+   "level": 4
+  },
+  "encMul": {
+   "pair": 1.086,
+   "chip": 0.973,
+   "shield": 0.861,
+   "mirror": 0.898,
+   "amp": 0.838,
+   "react": 0.688,
+   "boss": 0.5
+  },
+  "order": {
+   "light": [
+    "A1",
+    "D1",
+    "B1",
+    "A2"
+   ],
+   "mixed": [
+    "A2",
+    "A6",
+    "A1",
+    "D1",
+    "B1",
+    "A3",
+    "A4",
+    "B3"
+   ],
+   "heavy": [
+    "B4",
+    "B3",
+    "B1",
+    "A4",
+    "D3",
+    "A3",
+    "A6"
+   ],
+   "draw": [
+    "A1",
+    "D1",
+    "B1",
+    "R3",
+    "A2"
+   ]
+  },
+  "auto": {
+   "light": {
+    "taken": 28.912,
+    "n": 420,
+    "won": 0.988,
+    "t": 85.598,
+    "justs": 0.524,
+    "breaks": 0.143,
+    "intr": 0.238,
+    "decisions": 33.129,
+    "rel": 0,
+    "off": 0,
+    "absorbed": 8.469,
+    "countered": 0.531,
+    "vulnHits": 1.021,
+    "waits": 0,
+    "per": {
+     "pair": {
+      "taken": 31.03,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "chip": {
+      "taken": 34.72,
+      "won": 0.97,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "shield": {
+      "taken": 28.55,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "mirror": {
+      "taken": 17.78,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "amp": {
+      "taken": 36.62,
+      "won": 0.95,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "react": {
+      "taken": 23.15,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "boss": {
+      "taken": 30.53,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     }
+    }
+   },
+   "mixed": {
+    "taken": 34.81,
+    "n": 420,
+    "won": 0.857,
+    "t": 65.91,
+    "justs": 0.429,
+    "breaks": 0.305,
+    "intr": 3.907,
+    "decisions": 25.869,
+    "rel": 0,
+    "off": 0,
+    "absorbed": 5.457,
+    "countered": 0.407,
+    "vulnHits": 0.695,
+    "waits": 0,
+    "per": {
+     "pair": {
+      "taken": 41.27,
+      "won": 0.67,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "chip": {
+      "taken": 34.73,
+      "won": 0.87,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "shield": {
+      "taken": 29.77,
+      "won": 0.93,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "mirror": {
+      "taken": 23.5,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "amp": {
+      "taken": 34.95,
+      "won": 0.82,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "react": {
+      "taken": 45.33,
+      "won": 0.85,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "boss": {
+      "taken": 34.12,
+      "won": 0.87,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     }
+    }
+   },
+   "heavy": {
+    "taken": 30.495,
+    "n": 420,
+    "won": 0.779,
+    "t": 79.919,
+    "justs": 0.54,
+    "breaks": 0.481,
+    "intr": 4.51,
+    "decisions": 27.881,
+    "rel": 0,
+    "off": 0,
+    "absorbed": 6.055,
+    "countered": 0.026,
+    "vulnHits": 0.633,
+    "waits": 0,
+    "per": {
+     "pair": {
+      "taken": 40.75,
+      "won": 0.83,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "chip": {
+      "taken": 42.5,
+      "won": 0.7,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "shield": {
+      "taken": 18.47,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "mirror": {
+      "taken": 27.42,
+      "won": 0.98,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "amp": {
+      "taken": 21.25,
+      "won": 0.93,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "react": {
+      "taken": 59.6,
+      "won": 0.02,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "boss": {
+      "taken": 3.48,
+      "won": 0.98,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     }
+    }
+   },
+   "draw": {
+    "taken": 23.248,
+    "n": 420,
+    "won": 0.979,
+    "t": 62.619,
+    "justs": 0.717,
+    "breaks": 0.202,
+    "intr": 1.633,
+    "decisions": 37.229,
+    "rel": 0,
+    "off": 0,
+    "absorbed": 6.667,
+    "countered": 0.588,
+    "vulnHits": 0.776,
+    "waits": 0,
+    "per": {
+     "pair": {
+      "taken": 36.28,
+      "won": 0.97,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "chip": {
+      "taken": 24.63,
+      "won": 0.92,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "shield": {
+      "taken": 26.18,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "mirror": {
+      "taken": 20.58,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "amp": {
+      "taken": 22.12,
+      "won": 0.97,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "react": {
+      "taken": 22.65,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "boss": {
+      "taken": 10.28,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     }
+    }
+   }
+  },
+  "roll": {
+   "light": {
+    "taken": 27.905,
+    "n": 168,
+    "won": 0.982,
+    "t": 85.208,
+    "justs": 0.619,
+    "breaks": 0.155,
+    "intr": 0.185,
+    "decisions": 33.012,
+    "rel": 0.034,
+    "off": 0.111,
+    "absorbed": 9.173,
+    "countered": 0.405,
+    "vulnHits": 1.089,
+    "waits": 0,
+    "per": {
+     "pair": {
+      "taken": 28.54,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 86,
+      "blk": 31,
+      "heavyRate": null,
+      "blockRate": 0.36
+     },
+     "chip": {
+      "taken": 30.83,
+      "won": 0.96,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 76,
+      "blk": 24,
+      "heavyRate": null,
+      "blockRate": 0.316
+     },
+     "shield": {
+      "taken": 30.54,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 74,
+      "blk": 29,
+      "heavyRate": null,
+      "blockRate": 0.392
+     },
+     "mirror": {
+      "taken": 16.42,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 76,
+      "blk": 29,
+      "heavyRate": null,
+      "blockRate": 0.382
+     },
+     "amp": {
+      "taken": 38.92,
+      "won": 0.92,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 81,
+      "blk": 26,
+      "heavyRate": null,
+      "blockRate": 0.321
+     },
+     "react": {
+      "taken": 18.75,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 89,
+      "blk": 19,
+      "heavyRate": null,
+      "blockRate": 0.213
+     },
+     "boss": {
+      "taken": 31.33,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 76,
+      "blk": 19,
+      "heavyRate": null,
+      "blockRate": 0.25
+     }
+    }
+   },
+   "mixed": {
+    "taken": 22.637,
+    "n": 168,
+    "won": 0.982,
+    "t": 58.75,
+    "justs": 0.554,
+    "breaks": 0.482,
+    "intr": 2.292,
+    "decisions": 23.512,
+    "rel": 0.228,
+    "off": 0.26,
+    "absorbed": 6.054,
+    "countered": 0.256,
+    "vulnHits": 0.589,
+    "waits": 0,
+    "per": {
+     "pair": {
+      "taken": 26.29,
+      "won": 0.96,
+      "n": 24,
+      "lh": 87,
+      "heavy": 33,
+      "ba": 148,
+      "blk": 37,
+      "heavyRate": 0.379,
+      "blockRate": 0.25
+     },
+     "chip": {
+      "taken": 22.75,
+      "won": 1,
+      "n": 24,
+      "lh": 96,
+      "heavy": 37,
+      "ba": 156,
+      "blk": 47,
+      "heavyRate": 0.385,
+      "blockRate": 0.301
+     },
+     "shield": {
+      "taken": 16.88,
+      "won": 1,
+      "n": 24,
+      "lh": 79,
+      "heavy": 25,
+      "ba": 158,
+      "blk": 55,
+      "heavyRate": 0.316,
+      "blockRate": 0.348
+     },
+     "mirror": {
+      "taken": 16.63,
+      "won": 1,
+      "n": 24,
+      "lh": 87,
+      "heavy": 25,
+      "ba": 153,
+      "blk": 49,
+      "heavyRate": 0.287,
+      "blockRate": 0.32
+     },
+     "amp": {
+      "taken": 16.46,
+      "won": 1,
+      "n": 24,
+      "lh": 114,
+      "heavy": 37,
+      "ba": 178,
+      "blk": 59,
+      "heavyRate": 0.325,
+      "blockRate": 0.331
+     },
+     "react": {
+      "taken": 31.46,
+      "won": 1,
+      "n": 24,
+      "lh": 79,
+      "heavy": 40,
+      "ba": 135,
+      "blk": 32,
+      "heavyRate": 0.506,
+      "blockRate": 0.237
+     },
+     "boss": {
+      "taken": 28,
+      "won": 0.92,
+      "n": 24,
+      "lh": 96,
+      "heavy": 37,
+      "ba": 153,
+      "blk": 55,
+      "heavyRate": 0.385,
+      "blockRate": 0.359
+     }
+    }
+   },
+   "heavy": {
+    "taken": 17.369,
+    "n": 168,
+    "won": 0.857,
+    "t": 59.756,
+    "justs": 0.542,
+    "breaks": 0.833,
+    "intr": 2.179,
+    "decisions": 18.774,
+    "rel": 0.461,
+    "off": 0.577,
+    "absorbed": 1.702,
+    "countered": 0,
+    "vulnHits": 0.512,
+    "waits": 0,
+    "per": {
+     "pair": {
+      "taken": 19.13,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 298,
+      "blk": 172,
+      "heavyRate": null,
+      "blockRate": 0.577
+     },
+     "chip": {
+      "taken": 20.67,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 332,
+      "blk": 164,
+      "heavyRate": null,
+      "blockRate": 0.494
+     },
+     "shield": {
+      "taken": 5.08,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 344,
+      "blk": 186,
+      "heavyRate": null,
+      "blockRate": 0.541
+     },
+     "mirror": {
+      "taken": 9.71,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 280,
+      "blk": 151,
+      "heavyRate": null,
+      "blockRate": 0.539
+     },
+     "amp": {
+      "taken": 5.83,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 343,
+      "blk": 180,
+      "heavyRate": null,
+      "blockRate": 0.525
+     },
+     "react": {
+      "taken": 60,
+      "won": 0,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 131,
+      "blk": 50,
+      "heavyRate": null,
+      "blockRate": 0.382
+     },
+     "boss": {
+      "taken": 1.17,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 610,
+      "blk": 274,
+      "heavyRate": null,
+      "blockRate": 0.449
+     }
+    }
+   },
+   "draw": {
+    "taken": 14.708,
+    "n": 168,
+    "won": 1,
+    "t": 55.982,
+    "justs": 0.839,
+    "breaks": 0.292,
+    "intr": 0.583,
+    "decisions": 35.036,
+    "rel": 0.196,
+    "off": 0.376,
+    "absorbed": 3.798,
+    "countered": 0.155,
+    "vulnHits": 0.524,
+    "waits": 0,
+    "per": {
+     "pair": {
+      "taken": 22.71,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 222,
+      "blk": 63,
+      "heavyRate": null,
+      "blockRate": 0.284
+     },
+     "chip": {
+      "taken": 15.08,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 289,
+      "blk": 78,
+      "heavyRate": null,
+      "blockRate": 0.27
+     },
+     "shield": {
+      "taken": 17.29,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 261,
+      "blk": 94,
+      "heavyRate": null,
+      "blockRate": 0.36
+     },
+     "mirror": {
+      "taken": 14.96,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 201,
+      "blk": 70,
+      "heavyRate": null,
+      "blockRate": 0.348
+     },
+     "amp": {
+      "taken": 13.08,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 305,
+      "blk": 92,
+      "heavyRate": null,
+      "blockRate": 0.302
+     },
+     "react": {
+      "taken": 14.25,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 272,
+      "blk": 88,
+      "heavyRate": null,
+      "blockRate": 0.324
+     },
+     "boss": {
+      "taken": 5.58,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 566,
+      "blk": 184,
+      "heavyRate": null,
+      "blockRate": 0.325
+     }
+    }
+   }
+  },
+  "interaction": 9.27,
+  "bestDeck": {
+   "pair": "heavy",
+   "chip": "draw",
+   "shield": "heavy",
+   "mirror": "heavy",
+   "amp": "heavy",
+   "react": "draw",
+   "boss": "heavy"
+  },
+  "winners": 2,
+  "spread": 13.2,
+  "think": 12.2,
+  "heavyRange": 0.22,
+  "blockRange": 0.12
+ },
+ {
+  "id": "F",
+  "name": "問いの敵から属性を抜く",
+  "cond": {
+   "level": 0,
+   "roster": "q"
+  },
+  "encMul": {
+   "pair": 0.913,
+   "chip": 0.853,
+   "shield": 0.748,
+   "mirror": 1.071,
+   "amp": 1.124,
+   "react": 0.312,
+   "boss": 0.5
+  },
+  "order": {
+   "light": [
+    "D1",
+    "A2",
+    "A1",
+    "B1"
+   ],
+   "mixed": [
+    "A2",
+    "A6",
+    "A1",
+    "D1",
+    "B1",
+    "A4",
+    "B3",
+    "A3"
+   ],
+   "heavy": [
+    "B4",
+    "B1",
+    "D3",
+    "A4",
+    "B3",
+    "A3",
+    "A6"
+   ],
+   "draw": [
+    "B1",
+    "A2",
+    "A1",
+    "D1",
+    "R3"
+   ]
+  },
+  "auto": {
+   "light": {
+    "taken": 28.543,
+    "n": 420,
+    "won": 0.952,
+    "t": 79.221,
+    "justs": 0.362,
+    "breaks": 0,
+    "intr": 0.102,
+    "decisions": 30.995,
+    "rel": 0,
+    "off": 0,
+    "absorbed": 0,
+    "countered": 0,
+    "vulnHits": 0,
+    "waits": 0,
+    "per": {
+     "pair": {
+      "taken": 22.13,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "chip": {
+      "taken": 32.18,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "shield": {
+      "taken": 34.85,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "mirror": {
+      "taken": 21.3,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "amp": {
+      "taken": 50.9,
+      "won": 0.67,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "react": {
+      "taken": 1.2,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "boss": {
+      "taken": 37.23,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     }
+    }
+   },
+   "mixed": {
+    "taken": 32.2,
+    "n": 420,
+    "won": 0.874,
+    "t": 62.574,
+    "justs": 0.419,
+    "breaks": 0,
+    "intr": 3.619,
+    "decisions": 24.731,
+    "rel": 0,
+    "off": 0,
+    "absorbed": 0,
+    "countered": 0,
+    "vulnHits": 0,
+    "waits": 0,
+    "per": {
+     "pair": {
+      "taken": 23.45,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "chip": {
+      "taken": 38.17,
+      "won": 0.77,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "shield": {
+      "taken": 30.12,
+      "won": 0.98,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "mirror": {
+      "taken": 30.88,
+      "won": 0.98,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "amp": {
+      "taken": 44.27,
+      "won": 0.53,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "react": {
+      "taken": 20.05,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "boss": {
+      "taken": 38.47,
+      "won": 0.85,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     }
+    }
+   },
+   "heavy": {
+    "taken": 32.024,
+    "n": 420,
+    "won": 0.729,
+    "t": 75.995,
+    "justs": 0.469,
+    "breaks": 0,
+    "intr": 4.576,
+    "decisions": 26.357,
+    "rel": 0,
+    "off": 0,
+    "absorbed": 0,
+    "countered": 0,
+    "vulnHits": 0,
+    "waits": 0,
+    "per": {
+     "pair": {
+      "taken": 11.55,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "chip": {
+      "taken": 43.92,
+      "won": 0.77,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "shield": {
+      "taken": 19.92,
+      "won": 0.98,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "mirror": {
+      "taken": 49.1,
+      "won": 0.52,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "amp": {
+      "taken": 34.8,
+      "won": 0.78,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "react": {
+      "taken": 58.62,
+      "won": 0.05,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "boss": {
+      "taken": 6.27,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     }
+    }
+   },
+   "draw": {
+    "taken": 20.119,
+    "n": 420,
+    "won": 0.986,
+    "t": 57.89,
+    "justs": 0.733,
+    "breaks": 0,
+    "intr": 1.381,
+    "decisions": 34.324,
+    "rel": 0,
+    "off": 0,
+    "absorbed": 0,
+    "countered": 0,
+    "vulnHits": 0,
+    "waits": 0,
+    "per": {
+     "pair": {
+      "taken": 21.45,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "chip": {
+      "taken": 21.02,
+      "won": 0.98,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "shield": {
+      "taken": 31.22,
+      "won": 0.98,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "mirror": {
+      "taken": 21.02,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "amp": {
+      "taken": 25.32,
+      "won": 0.93,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "react": {
+      "taken": 8.52,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "boss": {
+      "taken": 12.3,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     }
+    }
+   }
+  },
+  "roll": {
+   "light": {
+    "taken": 26.69,
+    "n": 168,
+    "won": 0.97,
+    "t": 79.083,
+    "justs": 0.417,
+    "breaks": 0,
+    "intr": 0.089,
+    "decisions": 30.952,
+    "rel": 0.013,
+    "off": 0.147,
+    "absorbed": 0,
+    "countered": 0,
+    "vulnHits": 0,
+    "waits": 0,
+    "per": {
+     "pair": {
+      "taken": 21,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 80,
+      "blk": 24,
+      "heavyRate": null,
+      "blockRate": 0.3
+     },
+     "chip": {
+      "taken": 32.29,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 78,
+      "blk": 27,
+      "heavyRate": null,
+      "blockRate": 0.346
+     },
+     "shield": {
+      "taken": 33.17,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 83,
+      "blk": 33,
+      "heavyRate": null,
+      "blockRate": 0.398
+     },
+     "mirror": {
+      "taken": 16.92,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 68,
+      "blk": 26,
+      "heavyRate": null,
+      "blockRate": 0.382
+     },
+     "amp": {
+      "taken": 48,
+      "won": 0.79,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 85,
+      "blk": 28,
+      "heavyRate": null,
+      "blockRate": 0.329
+     },
+     "react": {
+      "taken": 0.29,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 63,
+      "blk": 26,
+      "heavyRate": null,
+      "blockRate": 0.413
+     },
+     "boss": {
+      "taken": 35.17,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 73,
+      "blk": 28,
+      "heavyRate": null,
+      "blockRate": 0.384
+     }
+    }
+   },
+   "mixed": {
+    "taken": 20.107,
+    "n": 168,
+    "won": 0.982,
+    "t": 55.369,
+    "justs": 0.595,
+    "breaks": 0,
+    "intr": 1.881,
+    "decisions": 22.125,
+    "rel": 0.208,
+    "off": 0.295,
+    "absorbed": 0,
+    "countered": 0,
+    "vulnHits": 0,
+    "waits": 0,
+    "per": {
+     "pair": {
+      "taken": 14.63,
+      "won": 1,
+      "n": 24,
+      "lh": 99,
+      "heavy": 29,
+      "ba": 155,
+      "blk": 62,
+      "heavyRate": 0.293,
+      "blockRate": 0.4
+     },
+     "chip": {
+      "taken": 26.63,
+      "won": 0.88,
+      "n": 24,
+      "lh": 96,
+      "heavy": 34,
+      "ba": 140,
+      "blk": 44,
+      "heavyRate": 0.354,
+      "blockRate": 0.314
+     },
+     "shield": {
+      "taken": 22.13,
+      "won": 1,
+      "n": 24,
+      "lh": 103,
+      "heavy": 37,
+      "ba": 169,
+      "blk": 58,
+      "heavyRate": 0.359,
+      "blockRate": 0.343
+     },
+     "mirror": {
+      "taken": 23.25,
+      "won": 1,
+      "n": 24,
+      "lh": 88,
+      "heavy": 30,
+      "ba": 136,
+      "blk": 56,
+      "heavyRate": 0.341,
+      "blockRate": 0.412
+     },
+     "amp": {
+      "taken": 18.33,
+      "won": 1,
+      "n": 24,
+      "lh": 105,
+      "heavy": 40,
+      "ba": 179,
+      "blk": 59,
+      "heavyRate": 0.381,
+      "blockRate": 0.33
+     },
+     "react": {
+      "taken": 10.88,
+      "won": 1,
+      "n": 24,
+      "lh": 76,
+      "heavy": 42,
+      "ba": 137,
+      "blk": 38,
+      "heavyRate": 0.553,
+      "blockRate": 0.277
+     },
+     "boss": {
+      "taken": 24.92,
+      "won": 1,
+      "n": 24,
+      "lh": 104,
+      "heavy": 51,
+      "ba": 153,
+      "blk": 47,
+      "heavyRate": 0.49,
+      "blockRate": 0.307
+     }
+    }
+   },
+   "heavy": {
+    "taken": 19.083,
+    "n": 168,
+    "won": 0.863,
+    "t": 61.298,
+    "justs": 0.833,
+    "breaks": 0,
+    "intr": 2.923,
+    "decisions": 19.268,
+    "rel": 0.375,
+    "off": 0.577,
+    "absorbed": 0,
+    "countered": 0,
+    "vulnHits": 0,
+    "waits": 0,
+    "per": {
+     "pair": {
+      "taken": 6,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 307,
+      "blk": 170,
+      "heavyRate": null,
+      "blockRate": 0.554
+     },
+     "chip": {
+      "taken": 24.17,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 324,
+      "blk": 149,
+      "heavyRate": null,
+      "blockRate": 0.46
+     },
+     "shield": {
+      "taken": 10.79,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 351,
+      "blk": 183,
+      "heavyRate": null,
+      "blockRate": 0.521
+     },
+     "mirror": {
+      "taken": 24.83,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 280,
+      "blk": 136,
+      "heavyRate": null,
+      "blockRate": 0.486
+     },
+     "amp": {
+      "taken": 8.67,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 385,
+      "blk": 159,
+      "heavyRate": null,
+      "blockRate": 0.413
+     },
+     "react": {
+      "taken": 57.88,
+      "won": 0.04,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 97,
+      "blk": 30,
+      "heavyRate": null,
+      "blockRate": 0.309
+     },
+     "boss": {
+      "taken": 1.25,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 664,
+      "blk": 267,
+      "heavyRate": null,
+      "blockRate": 0.402
+     }
+    }
+   },
+   "draw": {
+    "taken": 14.81,
+    "n": 168,
+    "won": 1,
+    "t": 54.494,
+    "justs": 0.917,
+    "breaks": 0,
+    "intr": 0.649,
+    "decisions": 34.101,
+    "rel": 0.208,
+    "off": 0.426,
+    "absorbed": 0,
+    "countered": 0,
+    "vulnHits": 0,
+    "waits": 0,
+    "per": {
+     "pair": {
+      "taken": 15.83,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 248,
+      "blk": 99,
+      "heavyRate": null,
+      "blockRate": 0.399
+     },
+     "chip": {
+      "taken": 18.5,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 253,
+      "blk": 83,
+      "heavyRate": null,
+      "blockRate": 0.328
+     },
+     "shield": {
+      "taken": 20.54,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 283,
+      "blk": 122,
+      "heavyRate": null,
+      "blockRate": 0.431
+     },
+     "mirror": {
+      "taken": 18.67,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 200,
+      "blk": 84,
+      "heavyRate": null,
+      "blockRate": 0.42
+     },
+     "amp": {
+      "taken": 16.13,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 275,
+      "blk": 90,
+      "heavyRate": null,
+      "blockRate": 0.327
+     },
+     "react": {
+      "taken": 5.54,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 224,
+      "blk": 73,
+      "heavyRate": null,
+      "blockRate": 0.326
+     },
+     "boss": {
+      "taken": 8.46,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 524,
+      "blk": 186,
+      "heavyRate": null,
+      "blockRate": 0.355
+     }
+    }
+   }
+  },
+  "interaction": 11.53,
+  "bestDeck": {
+   "pair": "heavy",
+   "chip": "draw",
+   "shield": "heavy",
+   "mirror": "light",
+   "amp": "heavy",
+   "react": "light",
+   "boss": "heavy"
+  },
+  "winners": 3,
+  "spread": 11.9,
+  "think": 12.1,
+  "heavyRange": 0.26,
+  "blockRange": 0.13
+ },
+ {
+  "id": "G",
+  "name": "問いの敵・決まった順",
+  "cond": {
+   "level": 3,
+   "roster": "q"
+  },
+  "encMul": {
+   "pair": 1.086,
+   "chip": 0.928,
+   "shield": 0.545,
+   "mirror": 0.876,
+   "amp": 0.808,
+   "react": 0.312,
+   "boss": 0.5
+  },
+  "order": {
+   "light": [
+    "A2",
+    "B1",
+    "D1",
+    "A1"
+   ],
+   "mixed": [
+    "B1",
+    "B3",
+    "A4",
+    "A2",
+    "A1",
+    "A6",
+    "A3",
+    "D1"
+   ],
+   "heavy": [
+    "B1",
+    "B3",
+    "D3",
+    "B4",
+    "A4",
+    "A3",
+    "A6"
+   ],
+   "draw": [
+    "A1",
+    "D1",
+    "B1",
+    "R3",
+    "A2"
+   ]
+  },
+  "auto": {
+   "light": {
+    "taken": 33.826,
+    "n": 420,
+    "won": 0.895,
+    "t": 120.824,
+    "justs": 0.395,
+    "breaks": 0.012,
+    "intr": 0.283,
+    "decisions": 44.843,
+    "rel": 0,
+    "off": 0,
+    "absorbed": 62.731,
+    "countered": 2.783,
+    "vulnHits": 3.805,
+    "waits": 0,
+    "per": {
+     "pair": {
+      "taken": 34.17,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "chip": {
+      "taken": 31.38,
+      "won": 0.97,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "shield": {
+      "taken": 56.02,
+      "won": 0.45,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "mirror": {
+      "taken": 36.43,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "amp": {
+      "taken": 38.75,
+      "won": 0.88,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "react": {
+      "taken": 0.63,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "boss": {
+      "taken": 39.4,
+      "won": 0.97,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     }
+    }
+   },
+   "mixed": {
+    "taken": 36.317,
+    "n": 420,
+    "won": 0.84,
+    "t": 79.414,
+    "justs": 0.364,
+    "breaks": 0.267,
+    "intr": 4.514,
+    "decisions": 30.383,
+    "rel": 0,
+    "off": 0,
+    "absorbed": 40.15,
+    "countered": 1.933,
+    "vulnHits": 2.029,
+    "waits": 0,
+    "per": {
+     "pair": {
+      "taken": 43.43,
+      "won": 0.67,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "chip": {
+      "taken": 37.68,
+      "won": 0.82,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "shield": {
+      "taken": 36.47,
+      "won": 0.93,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "mirror": {
+      "taken": 35.23,
+      "won": 0.95,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "amp": {
+      "taken": 38.85,
+      "won": 0.77,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "react": {
+      "taken": 21.27,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "boss": {
+      "taken": 41.28,
+      "won": 0.75,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     }
+    }
+   },
+   "heavy": {
+    "taken": 28.133,
+    "n": 420,
+    "won": 0.802,
+    "t": 122.96,
+    "justs": 0.443,
+    "breaks": 0.345,
+    "intr": 4.657,
+    "decisions": 41.817,
+    "rel": 0,
+    "off": 0,
+    "absorbed": 64.574,
+    "countered": 0.45,
+    "vulnHits": 2.29,
+    "waits": 0,
+    "per": {
+     "pair": {
+      "taken": 33.25,
+      "won": 0.97,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "chip": {
+      "taken": 34.45,
+      "won": 0.83,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "shield": {
+      "taken": 7.38,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "mirror": {
+      "taken": 19.73,
+      "won": 0.98,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "amp": {
+      "taken": 39.52,
+      "won": 0.75,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "react": {
+      "taken": 54.37,
+      "won": 0.1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "boss": {
+      "taken": 8.23,
+      "won": 0.98,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     }
+    }
+   },
+   "draw": {
+    "taken": 23.36,
+    "n": 420,
+    "won": 0.967,
+    "t": 82.843,
+    "justs": 0.819,
+    "breaks": 0.095,
+    "intr": 1.671,
+    "decisions": 49.217,
+    "rel": 0,
+    "off": 0,
+    "absorbed": 52.2,
+    "countered": 2.505,
+    "vulnHits": 3.288,
+    "waits": 0,
+    "per": {
+     "pair": {
+      "taken": 32.32,
+      "won": 0.95,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "chip": {
+      "taken": 23.23,
+      "won": 0.98,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "shield": {
+      "taken": 20.8,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "mirror": {
+      "taken": 40.97,
+      "won": 0.95,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "amp": {
+      "taken": 30.03,
+      "won": 0.88,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "react": {
+      "taken": 8.25,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "boss": {
+      "taken": 7.92,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     }
+    }
+   }
+  },
+  "roll": {
+   "light": {
+    "taken": 33.929,
+    "n": 168,
+    "won": 0.881,
+    "t": 103.798,
+    "justs": 0.423,
+    "breaks": 0.083,
+    "intr": 0.214,
+    "decisions": 39.185,
+    "rel": 0.016,
+    "off": 0.166,
+    "absorbed": 42.667,
+    "countered": 2.738,
+    "vulnHits": 2.917,
+    "waits": 0,
+    "per": {
+     "pair": {
+      "taken": 31.5,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 71,
+      "blk": 25,
+      "heavyRate": null,
+      "blockRate": 0.352
+     },
+     "chip": {
+      "taken": 32.21,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 94,
+      "blk": 27,
+      "heavyRate": null,
+      "blockRate": 0.287
+     },
+     "shield": {
+      "taken": 58.29,
+      "won": 0.25,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 82,
+      "blk": 23,
+      "heavyRate": null,
+      "blockRate": 0.28
+     },
+     "mirror": {
+      "taken": 39.08,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 80,
+      "blk": 28,
+      "heavyRate": null,
+      "blockRate": 0.35
+     },
+     "amp": {
+      "taken": 36.13,
+      "won": 0.92,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 86,
+      "blk": 29,
+      "heavyRate": null,
+      "blockRate": 0.337
+     },
+     "react": {
+      "taken": 0.63,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 85,
+      "blk": 24,
+      "heavyRate": null,
+      "blockRate": 0.282
+     },
+     "boss": {
+      "taken": 39.67,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 75,
+      "blk": 25,
+      "heavyRate": null,
+      "blockRate": 0.333
+     }
+    }
+   },
+   "mixed": {
+    "taken": 23.232,
+    "n": 168,
+    "won": 0.958,
+    "t": 69.155,
+    "justs": 0.548,
+    "breaks": 0.333,
+    "intr": 2.393,
+    "decisions": 26.762,
+    "rel": 0.238,
+    "off": 0.271,
+    "absorbed": 34.917,
+    "countered": 1.268,
+    "vulnHits": 1.881,
+    "waits": 0,
+    "per": {
+     "pair": {
+      "taken": 26.46,
+      "won": 0.96,
+      "n": 24,
+      "lh": 107,
+      "heavy": 40,
+      "ba": 160,
+      "blk": 69,
+      "heavyRate": 0.374,
+      "blockRate": 0.431
+     },
+     "chip": {
+      "taken": 17.46,
+      "won": 0.96,
+      "n": 24,
+      "lh": 95,
+      "heavy": 37,
+      "ba": 121,
+      "blk": 57,
+      "heavyRate": 0.389,
+      "blockRate": 0.471
+     },
+     "shield": {
+      "taken": 23.33,
+      "won": 1,
+      "n": 24,
+      "lh": 139,
+      "heavy": 71,
+      "ba": 207,
+      "blk": 78,
+      "heavyRate": 0.511,
+      "blockRate": 0.377
+     },
+     "mirror": {
+      "taken": 24.71,
+      "won": 1,
+      "n": 24,
+      "lh": 104,
+      "heavy": 38,
+      "ba": 109,
+      "blk": 63,
+      "heavyRate": 0.365,
+      "blockRate": 0.578
+     },
+     "amp": {
+      "taken": 24.08,
+      "won": 0.96,
+      "n": 24,
+      "lh": 106,
+      "heavy": 35,
+      "ba": 134,
+      "blk": 68,
+      "heavyRate": 0.33,
+      "blockRate": 0.507
+     },
+     "react": {
+      "taken": 11.33,
+      "won": 1,
+      "n": 24,
+      "lh": 68,
+      "heavy": 42,
+      "ba": 124,
+      "blk": 36,
+      "heavyRate": 0.618,
+      "blockRate": 0.29
+     },
+     "boss": {
+      "taken": 35.25,
+      "won": 0.83,
+      "n": 24,
+      "lh": 99,
+      "heavy": 46,
+      "ba": 135,
+      "blk": 52,
+      "heavyRate": 0.465,
+      "blockRate": 0.385
+     }
+    }
+   },
+   "heavy": {
+    "taken": 15.923,
+    "n": 168,
+    "won": 0.881,
+    "t": 70.149,
+    "justs": 0.571,
+    "breaks": 0.601,
+    "intr": 2.738,
+    "decisions": 22.042,
+    "rel": 0.391,
+    "off": 0.577,
+    "absorbed": 21.048,
+    "countered": 0.06,
+    "vulnHits": 1.256,
+    "waits": 0,
+    "per": {
+     "pair": {
+      "taken": 16.79,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 299,
+      "blk": 162,
+      "heavyRate": null,
+      "blockRate": 0.542
+     },
+     "chip": {
+      "taken": 10.75,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 329,
+      "blk": 164,
+      "heavyRate": null,
+      "blockRate": 0.498
+     },
+     "shield": {
+      "taken": 4.21,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 705,
+      "blk": 308,
+      "heavyRate": null,
+      "blockRate": 0.437
+     },
+     "mirror": {
+      "taken": 8.29,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 301,
+      "blk": 155,
+      "heavyRate": null,
+      "blockRate": 0.515
+     },
+     "amp": {
+      "taken": 14.92,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 391,
+      "blk": 185,
+      "heavyRate": null,
+      "blockRate": 0.473
+     },
+     "react": {
+      "taken": 54.08,
+      "won": 0.17,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 124,
+      "blk": 33,
+      "heavyRate": null,
+      "blockRate": 0.266
+     },
+     "boss": {
+      "taken": 2.42,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 646,
+      "blk": 274,
+      "heavyRate": null,
+      "blockRate": 0.424
+     }
+    }
+   },
+   "draw": {
+    "taken": 15.47,
+    "n": 168,
+    "won": 0.994,
+    "t": 65.619,
+    "justs": 0.887,
+    "breaks": 0.214,
+    "intr": 0.708,
+    "decisions": 40.964,
+    "rel": 0.204,
+    "off": 0.393,
+    "absorbed": 28.262,
+    "countered": 1.125,
+    "vulnHits": 2.524,
+    "waits": 0,
+    "per": {
+     "pair": {
+      "taken": 25.58,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 222,
+      "blk": 70,
+      "heavyRate": null,
+      "blockRate": 0.315
+     },
+     "chip": {
+      "taken": 13.88,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 237,
+      "blk": 79,
+      "heavyRate": null,
+      "blockRate": 0.333
+     },
+     "shield": {
+      "taken": 14.96,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 734,
+      "blk": 225,
+      "heavyRate": null,
+      "blockRate": 0.307
+     },
+     "mirror": {
+      "taken": 24.08,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 195,
+      "blk": 72,
+      "heavyRate": null,
+      "blockRate": 0.369
+     },
+     "amp": {
+      "taken": 18.67,
+      "won": 0.96,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 310,
+      "blk": 94,
+      "heavyRate": null,
+      "blockRate": 0.303
+     },
+     "react": {
+      "taken": 6.21,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 231,
+      "blk": 59,
+      "heavyRate": null,
+      "blockRate": 0.255
+     },
+     "boss": {
+      "taken": 4.92,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 641,
+      "blk": 182,
+      "heavyRate": null,
+      "blockRate": 0.284
+     }
+    }
+   }
+  },
+  "interaction": 12.15,
+  "bestDeck": {
+   "pair": "heavy",
+   "chip": "heavy",
+   "shield": "heavy",
+   "mirror": "heavy",
+   "amp": "heavy",
+   "react": "light",
+   "boss": "heavy"
+  },
+  "winners": 2,
+  "spread": 18.5,
+  "think": 13.1,
+  "heavyRange": 0.29,
+  "blockRange": 0.29
+ },
+ {
+  "id": "H",
+  "name": "問いの敵+分岐+段階",
+  "cond": {
+   "level": 4,
+   "roster": "q"
+  },
+  "encMul": {
+   "pair": 0.913,
+   "chip": 0.831,
+   "shield": 0.545,
+   "mirror": 0.748,
+   "amp": 0.748,
+   "react": 0.312,
+   "boss": 0.477
+  },
+  "order": {
+   "light": [
+    "A2",
+    "A1",
+    "B1",
+    "D1"
+   ],
+   "mixed": [
+    "B3",
+    "A4",
+    "A6",
+    "A1",
+    "A2",
+    "D1",
+    "B1",
+    "A3"
+   ],
+   "heavy": [
+    "D3",
+    "B3",
+    "B1",
+    "B4",
+    "A4",
+    "A3",
+    "A6"
+   ],
+   "draw": [
+    "A2",
+    "A1",
+    "B1",
+    "D1",
+    "R3"
+   ]
+  },
+  "auto": {
+   "light": {
+    "taken": 24.836,
+    "n": 420,
+    "won": 0.976,
+    "t": 104.398,
+    "justs": 0.55,
+    "breaks": 0.117,
+    "intr": 0.252,
+    "decisions": 39.398,
+    "rel": 0,
+    "off": 0,
+    "absorbed": 37.581,
+    "countered": 1.431,
+    "vulnHits": 2.602,
+    "waits": 0,
+    "per": {
+     "pair": {
+      "taken": 21.65,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "chip": {
+      "taken": 31.7,
+      "won": 0.95,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "shield": {
+      "taken": 45.77,
+      "won": 0.92,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "mirror": {
+      "taken": 19.12,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "amp": {
+      "taken": 31.15,
+      "won": 0.97,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "react": {
+      "taken": 0.77,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "boss": {
+      "taken": 23.7,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     }
+    }
+   },
+   "mixed": {
+    "taken": 28.152,
+    "n": 420,
+    "won": 0.929,
+    "t": 75.231,
+    "justs": 0.443,
+    "breaks": 0.162,
+    "intr": 3.926,
+    "decisions": 28.983,
+    "rel": 0,
+    "off": 0,
+    "absorbed": 29.455,
+    "countered": 0.917,
+    "vulnHits": 1.71,
+    "waits": 0,
+    "per": {
+     "pair": {
+      "taken": 28.93,
+      "won": 0.93,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "chip": {
+      "taken": 35.3,
+      "won": 0.83,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "shield": {
+      "taken": 31.78,
+      "won": 0.97,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "mirror": {
+      "taken": 18.5,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "amp": {
+      "taken": 33.28,
+      "won": 0.85,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "react": {
+      "taken": 22.58,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "boss": {
+      "taken": 26.68,
+      "won": 0.92,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     }
+    }
+   },
+   "heavy": {
+    "taken": 22.69,
+    "n": 420,
+    "won": 0.819,
+    "t": 105.036,
+    "justs": 0.469,
+    "breaks": 0.302,
+    "intr": 4.467,
+    "decisions": 35.662,
+    "rel": 0,
+    "off": 0,
+    "absorbed": 38.855,
+    "countered": 0.098,
+    "vulnHits": 1.679,
+    "waits": 0,
+    "per": {
+     "pair": {
+      "taken": 27.07,
+      "won": 0.92,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "chip": {
+      "taken": 26.45,
+      "won": 0.88,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "shield": {
+      "taken": 11.82,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "mirror": {
+      "taken": 6.17,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "amp": {
+      "taken": 26.05,
+      "won": 0.92,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "react": {
+      "taken": 58,
+      "won": 0.03,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "boss": {
+      "taken": 3.28,
+      "won": 0.98,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     }
+    }
+   },
+   "draw": {
+    "taken": 16.745,
+    "n": 420,
+    "won": 0.988,
+    "t": 70,
+    "justs": 0.698,
+    "breaks": 0.117,
+    "intr": 1.26,
+    "decisions": 41.598,
+    "rel": 0,
+    "off": 0,
+    "absorbed": 32.048,
+    "countered": 1.295,
+    "vulnHits": 2.252,
+    "waits": 0,
+    "per": {
+     "pair": {
+      "taken": 20.08,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "chip": {
+      "taken": 18.28,
+      "won": 0.97,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "shield": {
+      "taken": 24.62,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "mirror": {
+      "taken": 19.7,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "amp": {
+      "taken": 19.02,
+      "won": 0.95,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "react": {
+      "taken": 8.72,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "boss": {
+      "taken": 6.8,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     }
+    }
+   }
+  },
+  "roll": {
+   "light": {
+    "taken": 25.113,
+    "n": 168,
+    "won": 0.935,
+    "t": 104.685,
+    "justs": 0.673,
+    "breaks": 0.095,
+    "intr": 0.119,
+    "decisions": 39.482,
+    "rel": 0.029,
+    "off": 0.151,
+    "absorbed": 40.333,
+    "countered": 1.345,
+    "vulnHits": 2.637,
+    "waits": 0,
+    "per": {
+     "pair": {
+      "taken": 19.21,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 79,
+      "blk": 28,
+      "heavyRate": null,
+      "blockRate": 0.354
+     },
+     "chip": {
+      "taken": 27.96,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 77,
+      "blk": 28,
+      "heavyRate": null,
+      "blockRate": 0.364
+     },
+     "shield": {
+      "taken": 52.67,
+      "won": 0.63,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 72,
+      "blk": 21,
+      "heavyRate": null,
+      "blockRate": 0.292
+     },
+     "mirror": {
+      "taken": 17.79,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 72,
+      "blk": 32,
+      "heavyRate": null,
+      "blockRate": 0.444
+     },
+     "amp": {
+      "taken": 34.17,
+      "won": 0.92,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 78,
+      "blk": 25,
+      "heavyRate": null,
+      "blockRate": 0.321
+     },
+     "react": {
+      "taken": 0.42,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 72,
+      "blk": 16,
+      "heavyRate": null,
+      "blockRate": 0.222
+     },
+     "boss": {
+      "taken": 23.58,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 81,
+      "blk": 21,
+      "heavyRate": null,
+      "blockRate": 0.259
+     }
+    }
+   },
+   "mixed": {
+    "taken": 18.292,
+    "n": 168,
+    "won": 0.982,
+    "t": 64.726,
+    "justs": 0.548,
+    "breaks": 0.292,
+    "intr": 2.339,
+    "decisions": 25.256,
+    "rel": 0.202,
+    "off": 0.296,
+    "absorbed": 23.935,
+    "countered": 0.619,
+    "vulnHits": 1.333,
+    "waits": 0,
+    "per": {
+     "pair": {
+      "taken": 15.92,
+      "won": 1,
+      "n": 24,
+      "lh": 89,
+      "heavy": 43,
+      "ba": 149,
+      "blk": 58,
+      "heavyRate": 0.483,
+      "blockRate": 0.389
+     },
+     "chip": {
+      "taken": 19.08,
+      "won": 1,
+      "n": 24,
+      "lh": 106,
+      "heavy": 44,
+      "ba": 132,
+      "blk": 63,
+      "heavyRate": 0.415,
+      "blockRate": 0.477
+     },
+     "shield": {
+      "taken": 31.38,
+      "won": 0.96,
+      "n": 24,
+      "lh": 107,
+      "heavy": 45,
+      "ba": 175,
+      "blk": 75,
+      "heavyRate": 0.421,
+      "blockRate": 0.429
+     },
+     "mirror": {
+      "taken": 12.29,
+      "won": 1,
+      "n": 24,
+      "lh": 123,
+      "heavy": 42,
+      "ba": 139,
+      "blk": 66,
+      "heavyRate": 0.341,
+      "blockRate": 0.475
+     },
+     "amp": {
+      "taken": 13.54,
+      "won": 1,
+      "n": 24,
+      "lh": 121,
+      "heavy": 60,
+      "ba": 179,
+      "blk": 69,
+      "heavyRate": 0.496,
+      "blockRate": 0.385
+     },
+     "react": {
+      "taken": 11.58,
+      "won": 1,
+      "n": 24,
+      "lh": 82,
+      "heavy": 37,
+      "ba": 135,
+      "blk": 46,
+      "heavyRate": 0.451,
+      "blockRate": 0.341
+     },
+     "boss": {
+      "taken": 24.25,
+      "won": 0.92,
+      "n": 24,
+      "lh": 109,
+      "heavy": 44,
+      "ba": 158,
+      "blk": 54,
+      "heavyRate": 0.404,
+      "blockRate": 0.342
+     }
+    }
+   },
+   "heavy": {
+    "taken": 12.345,
+    "n": 168,
+    "won": 0.869,
+    "t": 65.101,
+    "justs": 0.429,
+    "breaks": 0.595,
+    "intr": 2.673,
+    "decisions": 20.488,
+    "rel": 0.376,
+    "off": 0.616,
+    "absorbed": 11.637,
+    "countered": 0,
+    "vulnHits": 1.119,
+    "waits": 0,
+    "per": {
+     "pair": {
+      "taken": 9.21,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 288,
+      "blk": 160,
+      "heavyRate": null,
+      "blockRate": 0.556
+     },
+     "chip": {
+      "taken": 9.33,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 334,
+      "blk": 162,
+      "heavyRate": null,
+      "blockRate": 0.485
+     },
+     "shield": {
+      "taken": 2.67,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 537,
+      "blk": 243,
+      "heavyRate": null,
+      "blockRate": 0.453
+     },
+     "mirror": {
+      "taken": 1.88,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 283,
+      "blk": 149,
+      "heavyRate": null,
+      "blockRate": 0.527
+     },
+     "amp": {
+      "taken": 6.83,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 379,
+      "blk": 181,
+      "heavyRate": null,
+      "blockRate": 0.478
+     },
+     "react": {
+      "taken": 56.04,
+      "won": 0.08,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 125,
+      "blk": 41,
+      "heavyRate": null,
+      "blockRate": 0.328
+     },
+     "boss": {
+      "taken": 0.46,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 621,
+      "blk": 252,
+      "heavyRate": null,
+      "blockRate": 0.406
+     }
+    }
+   },
+   "draw": {
+    "taken": 11.917,
+    "n": 168,
+    "won": 1,
+    "t": 61.065,
+    "justs": 0.726,
+    "breaks": 0.161,
+    "intr": 0.798,
+    "decisions": 37.69,
+    "rel": 0.188,
+    "off": 0.402,
+    "absorbed": 18.226,
+    "countered": 0.44,
+    "vulnHits": 2.083,
+    "waits": 0,
+    "per": {
+     "pair": {
+      "taken": 15.67,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 186,
+      "blk": 66,
+      "heavyRate": null,
+      "blockRate": 0.355
+     },
+     "chip": {
+      "taken": 16.67,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 242,
+      "blk": 69,
+      "heavyRate": null,
+      "blockRate": 0.285
+     },
+     "shield": {
+      "taken": 17.21,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 561,
+      "blk": 182,
+      "heavyRate": null,
+      "blockRate": 0.324
+     },
+     "mirror": {
+      "taken": 11.88,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 184,
+      "blk": 65,
+      "heavyRate": null,
+      "blockRate": 0.353
+     },
+     "amp": {
+      "taken": 11.25,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 269,
+      "blk": 83,
+      "heavyRate": null,
+      "blockRate": 0.309
+     },
+     "react": {
+      "taken": 8.29,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 217,
+      "blk": 57,
+      "heavyRate": null,
+      "blockRate": 0.263
+     },
+     "boss": {
+      "taken": 2.46,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 537,
+      "blk": 150,
+      "heavyRate": null,
+      "blockRate": 0.279
+     }
+    }
+   }
+  },
+  "interaction": 11.58,
+  "bestDeck": {
+   "pair": "heavy",
+   "chip": "heavy",
+   "shield": "heavy",
+   "mirror": "heavy",
+   "amp": "heavy",
+   "react": "light",
+   "boss": "heavy"
+  },
+  "winners": 2,
+  "spread": 13.2,
+  "think": 9.9,
+  "heavyRange": 0.15,
+  "blockRange": 0.14
+ },
+ {
+  "id": "K",
+  "name": "今の形+待てる",
+  "cond": {
+   "level": 0,
+   "wait": true
+  },
+  "encMul": {
+   "pair": 1.086,
+   "chip": 1.071,
+   "shield": 0.77,
+   "mirror": 0.936,
+   "amp": 1.357,
+   "react": 0.688,
+   "boss": 0.643
+  },
+  "order": {
+   "light": [
+    "D1",
+    "A2",
+    "A1",
+    "B1"
+   ],
+   "mixed": [
+    "B1",
+    "A1",
+    "A3",
+    "A2",
+    "A4",
+    "D1",
+    "B3",
+    "A6"
+   ],
+   "heavy": [
+    "A4",
+    "A3",
+    "B1",
+    "B3",
+    "D3",
+    "B4",
+    "A6"
+   ],
+   "draw": [
+    "A2",
+    "A1",
+    "B1",
+    "D1",
+    "R3"
+   ]
+  },
+  "auto": {
+   "light": {
+    "taken": 36.421,
+    "n": 420,
+    "won": 0.84,
+    "t": 79.24,
+    "justs": 0.343,
+    "breaks": 0,
+    "intr": 0.2,
+    "decisions": 30.969,
+    "rel": 0,
+    "off": 0,
+    "absorbed": 0,
+    "countered": 0,
+    "vulnHits": 0,
+    "waits": 0,
+    "per": {
+     "pair": {
+      "taken": 45.57,
+      "won": 0.98,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "chip": {
+      "taken": 38.47,
+      "won": 0.93,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "shield": {
+      "taken": 25.23,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "mirror": {
+      "taken": 16.85,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "amp": {
+      "taken": 57.35,
+      "won": 0.28,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "react": {
+      "taken": 19.62,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "boss": {
+      "taken": 51.87,
+      "won": 0.68,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     }
+    }
+   },
+   "mixed": {
+    "taken": 44.64,
+    "n": 420,
+    "won": 0.702,
+    "t": 62.188,
+    "justs": 0.319,
+    "breaks": 0,
+    "intr": 4.336,
+    "decisions": 24.752,
+    "rel": 0,
+    "off": 0,
+    "absorbed": 0,
+    "countered": 0,
+    "vulnHits": 0,
+    "waits": 0,
+    "per": {
+     "pair": {
+      "taken": 46.32,
+      "won": 0.63,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "chip": {
+      "taken": 49.6,
+      "won": 0.65,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "shield": {
+      "taken": 36.67,
+      "won": 0.95,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "mirror": {
+      "taken": 33.67,
+      "won": 0.97,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "amp": {
+      "taken": 48.58,
+      "won": 0.47,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "react": {
+      "taken": 45.38,
+      "won": 0.8,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "boss": {
+      "taken": 52.27,
+      "won": 0.45,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     }
+    }
+   },
+   "heavy": {
+    "taken": 39.843,
+    "n": 420,
+    "won": 0.69,
+    "t": 65.929,
+    "justs": 0.407,
+    "breaks": 0,
+    "intr": 4.51,
+    "decisions": 23.676,
+    "rel": 0,
+    "off": 0,
+    "absorbed": 0,
+    "countered": 0,
+    "vulnHits": 0,
+    "waits": 0,
+    "per": {
+     "pair": {
+      "taken": 44.08,
+      "won": 0.92,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "chip": {
+      "taken": 52.68,
+      "won": 0.38,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "shield": {
+      "taken": 23.77,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "mirror": {
+      "taken": 34.47,
+      "won": 0.92,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "amp": {
+      "taken": 44.58,
+      "won": 0.58,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "react": {
+      "taken": 59.3,
+      "won": 0.05,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "boss": {
+      "taken": 20.02,
+      "won": 0.98,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     }
+    }
+   },
+   "draw": {
+    "taken": 25.495,
+    "n": 420,
+    "won": 0.976,
+    "t": 56.702,
+    "justs": 0.66,
+    "breaks": 0,
+    "intr": 1.243,
+    "decisions": 34.124,
+    "rel": 0,
+    "off": 0,
+    "absorbed": 0,
+    "countered": 0,
+    "vulnHits": 0,
+    "waits": 0,
+    "per": {
+     "pair": {
+      "taken": 37.52,
+      "won": 0.98,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "chip": {
+      "taken": 24.68,
+      "won": 0.98,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "shield": {
+      "taken": 23.65,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "mirror": {
+      "taken": 20.5,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "amp": {
+      "taken": 36.3,
+      "won": 0.87,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "react": {
+      "taken": 18.42,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "boss": {
+      "taken": 17.4,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     }
+    }
+   }
+  },
+  "roll": {
+   "light": {
+    "taken": 24.256,
+    "n": 168,
+    "won": 0.976,
+    "t": 78.333,
+    "justs": 1.167,
+    "breaks": 0,
+    "intr": 0.03,
+    "decisions": 52.196,
+    "rel": 0.023,
+    "off": 0.506,
+    "absorbed": 0,
+    "countered": 0,
+    "vulnHits": 0,
+    "waits": 21.542,
+    "per": {
+     "pair": {
+      "taken": 41.42,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 146,
+      "blk": 41,
+      "heavyRate": null,
+      "blockRate": 0.281
+     },
+     "chip": {
+      "taken": 19.63,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 137,
+      "blk": 40,
+      "heavyRate": null,
+      "blockRate": 0.292
+     },
+     "shield": {
+      "taken": 23.17,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 188,
+      "blk": 53,
+      "heavyRate": null,
+      "blockRate": 0.282
+     },
+     "mirror": {
+      "taken": 19.54,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 156,
+      "blk": 39,
+      "heavyRate": null,
+      "blockRate": 0.25
+     },
+     "amp": {
+      "taken": 36.58,
+      "won": 0.83,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 133,
+      "blk": 32,
+      "heavyRate": null,
+      "blockRate": 0.241
+     },
+     "react": {
+      "taken": 16.17,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 171,
+      "blk": 42,
+      "heavyRate": null,
+      "blockRate": 0.246
+     },
+     "boss": {
+      "taken": 13.29,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 259,
+      "blk": 60,
+      "heavyRate": null,
+      "blockRate": 0.232
+     }
+    }
+   },
+   "mixed": {
+    "taken": 22.679,
+    "n": 168,
+    "won": 0.994,
+    "t": 51.976,
+    "justs": 0.869,
+    "breaks": 0,
+    "intr": 1.286,
+    "decisions": 26.369,
+    "rel": 0.346,
+    "off": 0.468,
+    "absorbed": 0,
+    "countered": 0,
+    "vulnHits": 0,
+    "waits": 5.548,
+    "per": {
+     "pair": {
+      "taken": 29.63,
+      "won": 0.96,
+      "n": 24,
+      "lh": 109,
+      "heavy": 43,
+      "ba": 191,
+      "blk": 73,
+      "heavyRate": 0.394,
+      "blockRate": 0.382
+     },
+     "chip": {
+      "taken": 21.17,
+      "won": 1,
+      "n": 24,
+      "lh": 111,
+      "heavy": 52,
+      "ba": 167,
+      "blk": 59,
+      "heavyRate": 0.468,
+      "blockRate": 0.353
+     },
+     "shield": {
+      "taken": 19.04,
+      "won": 1,
+      "n": 24,
+      "lh": 113,
+      "heavy": 47,
+      "ba": 205,
+      "blk": 77,
+      "heavyRate": 0.416,
+      "blockRate": 0.376
+     },
+     "mirror": {
+      "taken": 19.38,
+      "won": 1,
+      "n": 24,
+      "lh": 112,
+      "heavy": 43,
+      "ba": 189,
+      "blk": 70,
+      "heavyRate": 0.384,
+      "blockRate": 0.37
+     },
+     "amp": {
+      "taken": 21.58,
+      "won": 1,
+      "n": 24,
+      "lh": 130,
+      "heavy": 49,
+      "ba": 212,
+      "blk": 73,
+      "heavyRate": 0.377,
+      "blockRate": 0.344
+     },
+     "react": {
+      "taken": 27.21,
+      "won": 1,
+      "n": 24,
+      "lh": 116,
+      "heavy": 38,
+      "ba": 202,
+      "blk": 81,
+      "heavyRate": 0.328,
+      "blockRate": 0.401
+     },
+     "boss": {
+      "taken": 20.75,
+      "won": 1,
+      "n": 24,
+      "lh": 179,
+      "heavy": 68,
+      "ba": 352,
+      "blk": 124,
+      "heavyRate": 0.38,
+      "blockRate": 0.352
+     }
+    }
+   },
+   "heavy": {
+    "taken": 25.226,
+    "n": 168,
+    "won": 0.881,
+    "t": 60.708,
+    "justs": 0.988,
+    "breaks": 0,
+    "intr": 2.726,
+    "decisions": 21.435,
+    "rel": 0.515,
+    "off": 0.54,
+    "absorbed": 0,
+    "countered": 0,
+    "vulnHits": 0,
+    "waits": 2.167,
+    "per": {
+     "pair": {
+      "taken": 33.33,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 348,
+      "blk": 139,
+      "heavyRate": null,
+      "blockRate": 0.399
+     },
+     "chip": {
+      "taken": 22.13,
+      "won": 0.96,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 411,
+      "blk": 135,
+      "heavyRate": null,
+      "blockRate": 0.328
+     },
+     "shield": {
+      "taken": 18.88,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 374,
+      "blk": 162,
+      "heavyRate": null,
+      "blockRate": 0.433
+     },
+     "mirror": {
+      "taken": 21.33,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 360,
+      "blk": 143,
+      "heavyRate": null,
+      "blockRate": 0.397
+     },
+     "amp": {
+      "taken": 16.92,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 430,
+      "blk": 136,
+      "heavyRate": null,
+      "blockRate": 0.316
+     },
+     "react": {
+      "taken": 55.96,
+      "won": 0.21,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 268,
+      "blk": 76,
+      "heavyRate": null,
+      "blockRate": 0.284
+     },
+     "boss": {
+      "taken": 8.04,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 694,
+      "blk": 218,
+      "heavyRate": null,
+      "blockRate": 0.314
+     }
+    }
+   },
+   "draw": {
+    "taken": 19.81,
+    "n": 168,
+    "won": 1,
+    "t": 54.881,
+    "justs": 0.958,
+    "breaks": 0,
+    "intr": 0.423,
+    "decisions": 38.72,
+    "rel": 0.223,
+    "off": 0.479,
+    "absorbed": 0,
+    "countered": 0,
+    "vulnHits": 0,
+    "waits": 5.756,
+    "per": {
+     "pair": {
+      "taken": 30.33,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 240,
+      "blk": 64,
+      "heavyRate": null,
+      "blockRate": 0.267
+     },
+     "chip": {
+      "taken": 23.08,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 332,
+      "blk": 71,
+      "heavyRate": null,
+      "blockRate": 0.214
+     },
+     "shield": {
+      "taken": 20.5,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 299,
+      "blk": 81,
+      "heavyRate": null,
+      "blockRate": 0.271
+     },
+     "mirror": {
+      "taken": 15.54,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 227,
+      "blk": 64,
+      "heavyRate": null,
+      "blockRate": 0.282
+     },
+     "amp": {
+      "taken": 23.04,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 378,
+      "blk": 93,
+      "heavyRate": null,
+      "blockRate": 0.246
+     },
+     "react": {
+      "taken": 13.04,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 274,
+      "blk": 73,
+      "heavyRate": null,
+      "blockRate": 0.266
+     },
+     "boss": {
+      "taken": 13.13,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 854,
+      "blk": 176,
+      "heavyRate": null,
+      "blockRate": 0.206
+     }
+    }
+   }
+  },
+  "interaction": 7.19,
+  "bestDeck": {
+   "pair": "mixed",
+   "chip": "light",
+   "shield": "heavy",
+   "mirror": "draw",
+   "amp": "heavy",
+   "react": "draw",
+   "boss": "heavy"
+  },
+  "winners": 4,
+  "spread": 5.4,
+  "think": 22,
+  "heavyRange": 0.14,
+  "blockRange": 0.06
+ },
+ {
+  "id": "L",
+  "name": "問いの敵+分岐+段階+待てる",
+  "cond": {
+   "level": 4,
+   "roster": "q",
+   "wait": true
+  },
+  "encMul": {
+   "pair": 1.169,
+   "chip": 1.146,
+   "shield": 0.582,
+   "mirror": 0.928,
+   "amp": 0.748,
+   "react": 0.312,
+   "boss": 0.612
+  },
+  "order": {
+   "light": [
+    "A1",
+    "D1",
+    "B1",
+    "A2"
+   ],
+   "mixed": [
+    "A2",
+    "A1",
+    "A3",
+    "B1",
+    "A4",
+    "D1",
+    "B3",
+    "A6"
+   ],
+   "heavy": [
+    "B1",
+    "D3",
+    "B3",
+    "B4",
+    "A4",
+    "A3",
+    "A6"
+   ],
+   "draw": [
+    "B1",
+    "A2",
+    "A1",
+    "D1",
+    "R3"
+   ]
+  },
+  "auto": {
+   "light": {
+    "taken": 39.136,
+    "n": 420,
+    "won": 0.776,
+    "t": 103.167,
+    "justs": 0.44,
+    "breaks": 0.114,
+    "intr": 0.202,
+    "decisions": 38.9,
+    "rel": 0,
+    "off": 0,
+    "absorbed": 41.636,
+    "countered": 3.148,
+    "vulnHits": 2.774,
+    "waits": 0,
+    "per": {
+     "pair": {
+      "taken": 40.97,
+      "won": 0.98,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "chip": {
+      "taken": 54.63,
+      "won": 0.23,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "shield": {
+      "taken": 48.05,
+      "won": 0.85,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "mirror": {
+      "taken": 42.67,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "amp": {
+      "taken": 31.57,
+      "won": 0.92,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "react": {
+      "taken": 0.77,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "boss": {
+      "taken": 55.3,
+      "won": 0.45,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     }
+    }
+   },
+   "mixed": {
+    "taken": 39.324,
+    "n": 420,
+    "won": 0.679,
+    "t": 70.257,
+    "justs": 0.29,
+    "breaks": 0.281,
+    "intr": 4.426,
+    "decisions": 27.426,
+    "rel": 0,
+    "off": 0,
+    "absorbed": 27.202,
+    "countered": 1.933,
+    "vulnHits": 1.386,
+    "waits": 0,
+    "per": {
+     "pair": {
+      "taken": 49.18,
+      "won": 0.52,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "chip": {
+      "taken": 49.77,
+      "won": 0.38,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "shield": {
+      "taken": 30.73,
+      "won": 0.95,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "mirror": {
+      "taken": 42.95,
+      "won": 0.73,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "amp": {
+      "taken": 27.02,
+      "won": 0.95,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "react": {
+      "taken": 20.17,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "boss": {
+      "taken": 55.45,
+      "won": 0.22,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     }
+    }
+   },
+   "heavy": {
+    "taken": 32.581,
+    "n": 420,
+    "won": 0.698,
+    "t": 100.817,
+    "justs": 0.479,
+    "breaks": 0.314,
+    "intr": 5.343,
+    "decisions": 34.831,
+    "rel": 0,
+    "off": 0,
+    "absorbed": 38.005,
+    "countered": 0.59,
+    "vulnHits": 1.59,
+    "waits": 0,
+    "per": {
+     "pair": {
+      "taken": 50.98,
+      "won": 0.57,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "chip": {
+      "taken": 46.67,
+      "won": 0.52,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "shield": {
+      "taken": 9.38,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "mirror": {
+      "taken": 33.55,
+      "won": 0.83,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "amp": {
+      "taken": 23.93,
+      "won": 0.88,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "react": {
+      "taken": 55.97,
+      "won": 0.1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "boss": {
+      "taken": 7.58,
+      "won": 0.98,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     }
+    }
+   },
+   "draw": {
+    "taken": 25.326,
+    "n": 420,
+    "won": 0.945,
+    "t": 71.569,
+    "justs": 0.71,
+    "breaks": 0.081,
+    "intr": 1.695,
+    "decisions": 41.933,
+    "rel": 0,
+    "off": 0,
+    "absorbed": 32.579,
+    "countered": 2.414,
+    "vulnHits": 2.34,
+    "waits": 0,
+    "per": {
+     "pair": {
+      "taken": 40.85,
+      "won": 0.85,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "chip": {
+      "taken": 32.73,
+      "won": 0.85,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "shield": {
+      "taken": 22.72,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "mirror": {
+      "taken": 35.9,
+      "won": 0.97,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "amp": {
+      "taken": 12.52,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "react": {
+      "taken": 8.38,
+      "won": 1,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     },
+     "boss": {
+      "taken": 24.18,
+      "won": 0.95,
+      "n": 60,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 0,
+      "blk": 0,
+      "heavyRate": null,
+      "blockRate": null
+     }
+    }
+   }
+  },
+  "roll": {
+   "light": {
+    "taken": 24.524,
+    "n": 168,
+    "won": 0.946,
+    "t": 85.363,
+    "justs": 1.339,
+    "breaks": 0.089,
+    "intr": 0.048,
+    "decisions": 56.315,
+    "rel": 0.044,
+    "off": 0.535,
+    "absorbed": 15.315,
+    "countered": 1.369,
+    "vulnHits": 1.548,
+    "waits": 23.446,
+    "per": {
+     "pair": {
+      "taken": 38.04,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 201,
+      "blk": 44,
+      "heavyRate": null,
+      "blockRate": 0.219
+     },
+     "chip": {
+      "taken": 41.75,
+      "won": 0.71,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 183,
+      "blk": 45,
+      "heavyRate": null,
+      "blockRate": 0.246
+     },
+     "shield": {
+      "taken": 35.38,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 222,
+      "blk": 67,
+      "heavyRate": null,
+      "blockRate": 0.302
+     },
+     "mirror": {
+      "taken": 29.79,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 150,
+      "blk": 37,
+      "heavyRate": null,
+      "blockRate": 0.247
+     },
+     "amp": {
+      "taken": 14.25,
+      "won": 0.96,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 156,
+      "blk": 45,
+      "heavyRate": null,
+      "blockRate": 0.288
+     },
+     "react": {
+      "taken": 0.83,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 142,
+      "blk": 29,
+      "heavyRate": null,
+      "blockRate": 0.204
+     },
+     "boss": {
+      "taken": 11.63,
+      "won": 0.96,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 237,
+      "blk": 65,
+      "heavyRate": null,
+      "blockRate": 0.274
+     }
+    }
+   },
+   "mixed": {
+    "taken": 23.19,
+    "n": 168,
+    "won": 0.964,
+    "t": 58.143,
+    "justs": 0.768,
+    "breaks": 0.256,
+    "intr": 1.869,
+    "decisions": 29.839,
+    "rel": 0.331,
+    "off": 0.477,
+    "absorbed": 15.589,
+    "countered": 0.679,
+    "vulnHits": 1.077,
+    "waits": 7.036,
+    "per": {
+     "pair": {
+      "taken": 30.08,
+      "won": 1,
+      "n": 24,
+      "lh": 106,
+      "heavy": 31,
+      "ba": 186,
+      "blk": 64,
+      "heavyRate": 0.292,
+      "blockRate": 0.344
+     },
+     "chip": {
+      "taken": 25.46,
+      "won": 0.96,
+      "n": 24,
+      "lh": 104,
+      "heavy": 36,
+      "ba": 196,
+      "blk": 65,
+      "heavyRate": 0.346,
+      "blockRate": 0.332
+     },
+     "shield": {
+      "taken": 23.46,
+      "won": 1,
+      "n": 24,
+      "lh": 159,
+      "heavy": 57,
+      "ba": 311,
+      "blk": 95,
+      "heavyRate": 0.358,
+      "blockRate": 0.305
+     },
+     "mirror": {
+      "taken": 23.17,
+      "won": 1,
+      "n": 24,
+      "lh": 105,
+      "heavy": 21,
+      "ba": 175,
+      "blk": 72,
+      "heavyRate": 0.2,
+      "blockRate": 0.411
+     },
+     "amp": {
+      "taken": 12.17,
+      "won": 1,
+      "n": 24,
+      "lh": 135,
+      "heavy": 41,
+      "ba": 251,
+      "blk": 74,
+      "heavyRate": 0.304,
+      "blockRate": 0.295
+     },
+     "react": {
+      "taken": 17.04,
+      "won": 1,
+      "n": 24,
+      "lh": 95,
+      "heavy": 49,
+      "ba": 194,
+      "blk": 52,
+      "heavyRate": 0.516,
+      "blockRate": 0.268
+     },
+     "boss": {
+      "taken": 30.96,
+      "won": 0.79,
+      "n": 24,
+      "lh": 154,
+      "heavy": 53,
+      "ba": 376,
+      "blk": 103,
+      "heavyRate": 0.344,
+      "blockRate": 0.274
+     }
+    }
+   },
+   "heavy": {
+    "taken": 17.149,
+    "n": 168,
+    "won": 0.893,
+    "t": 70.565,
+    "justs": 0.631,
+    "breaks": 0.661,
+    "intr": 2.565,
+    "decisions": 25.065,
+    "rel": 0.568,
+    "off": 0.64,
+    "absorbed": 10.333,
+    "countered": 0.06,
+    "vulnHits": 0.905,
+    "waits": 3.262,
+    "per": {
+     "pair": {
+      "taken": 32.46,
+      "won": 0.96,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 361,
+      "blk": 174,
+      "heavyRate": null,
+      "blockRate": 0.482
+     },
+     "chip": {
+      "taken": 21.75,
+      "won": 0.96,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 396,
+      "blk": 182,
+      "heavyRate": null,
+      "blockRate": 0.46
+     },
+     "shield": {
+      "taken": 2.08,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 619,
+      "blk": 256,
+      "heavyRate": null,
+      "blockRate": 0.414
+     },
+     "mirror": {
+      "taken": 11.83,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 358,
+      "blk": 182,
+      "heavyRate": null,
+      "blockRate": 0.508
+     },
+     "amp": {
+      "taken": 3.54,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 401,
+      "blk": 191,
+      "heavyRate": null,
+      "blockRate": 0.476
+     },
+     "react": {
+      "taken": 45.04,
+      "won": 0.33,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 286,
+      "blk": 97,
+      "heavyRate": null,
+      "blockRate": 0.339
+     },
+     "boss": {
+      "taken": 3.33,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 764,
+      "blk": 300,
+      "heavyRate": null,
+      "blockRate": 0.393
+     }
+    }
+   },
+   "draw": {
+    "taken": 18.476,
+    "n": 168,
+    "won": 1,
+    "t": 63.101,
+    "justs": 1.024,
+    "breaks": 0.119,
+    "intr": 0.583,
+    "decisions": 44.667,
+    "rel": 0.26,
+    "off": 0.522,
+    "absorbed": 15.577,
+    "countered": 1.131,
+    "vulnHits": 1.905,
+    "waits": 7.53,
+    "per": {
+     "pair": {
+      "taken": 31.42,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 208,
+      "blk": 83,
+      "heavyRate": null,
+      "blockRate": 0.399
+     },
+     "chip": {
+      "taken": 23.71,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 345,
+      "blk": 111,
+      "heavyRate": null,
+      "blockRate": 0.322
+     },
+     "shield": {
+      "taken": 19.54,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 702,
+      "blk": 256,
+      "heavyRate": null,
+      "blockRate": 0.365
+     },
+     "mirror": {
+      "taken": 27.21,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 222,
+      "blk": 97,
+      "heavyRate": null,
+      "blockRate": 0.437
+     },
+     "amp": {
+      "taken": 10.13,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 362,
+      "blk": 121,
+      "heavyRate": null,
+      "blockRate": 0.334
+     },
+     "react": {
+      "taken": 4.63,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 318,
+      "blk": 93,
+      "heavyRate": null,
+      "blockRate": 0.292
+     },
+     "boss": {
+      "taken": 12.71,
+      "won": 1,
+      "n": 24,
+      "lh": 0,
+      "heavy": 0,
+      "ba": 688,
+      "blk": 207,
+      "heavyRate": null,
+      "blockRate": 0.301
+     }
+    }
+   }
+  },
+  "interaction": 9.36,
+  "bestDeck": {
+   "pair": "mixed",
+   "chip": "heavy",
+   "shield": "heavy",
+   "mirror": "heavy",
+   "amp": "heavy",
+   "react": "light",
+   "boss": "heavy"
+  },
+  "winners": 3,
+  "spread": 7.4,
+  "think": 16.1,
+  "heavyRange": 0.32,
+  "blockRange": 0.14
+ }
+]

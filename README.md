@@ -14,7 +14,10 @@
   - `lines.js` 独り言のセリフ
 - `tools/datadoc.js` データ一覧の資料に載せる表を data から作る
 - `tools/sim.js` 自動対戦のシミュレータ。`node tools/sim.js greedy 40` で遭遇ごと、`node tools/sim.js greedy 40 run` でラン全体
-- `tools/lab/` ゲームとは別の小さな抽象モデルで、ルールの条件を切り替えて比べる実験。`lab.js` がモデル、`exp1〜3.js` が実験(結果は同名の .json)。`node tools/lab/exp1.js` で実行
+- `tools/lab/` ルールの条件を切り替えて比べる実験
+  - `lab.js` と `exp1〜3.js`: 抽象モデルで、決め方・手札の補給・強さの曲線・中断などを比べる(結果は同名の .json)
+  - `lab2.js` と `exp4.js`: 抽象モデルで、敵の行動の複雑さと「待てる」を比べる。`node tools/lab/exp4.js A,D,K 5`(条件の記号、乱数の種)
+  - `variety.js`: 同じ比較をゲーム本体のエンジンと本物のカードで行う。`node tools/lab/variety.js A,B,C,D,E 5 10`
 - `manifest.webmanifest` アプリ設定(全画面・横向き)
 - `sw.js` オフライン用。データファイルを増やしたら CORE に足す
 - `icons/` アイコン(仮)

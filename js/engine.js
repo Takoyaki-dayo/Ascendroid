@@ -4,7 +4,10 @@
 'use strict';
 const D = root.DATA;
 // freeWait: 手札があっても1サイクル待てる(0.7 から既定で待てる。メニューで切り替え)
-const RULE = {draw:3, handStart:5, handMax:7, view:18, freeWait:true};
+// blockDecay: ブロックの減り方(実験用。null なら使い切るまで残る)
+//   {type:'hit'} 敵の攻撃を受けると余りも消える(多段は撃ち終わりで) / {type:'lin', v} 毎サイクル v 減る
+//   {type:'mul', v} 毎サイクル v 倍(端数切り捨て) / {type:'life', v} 最後に得てから v サイクルで消える / {type:'cap', v} 持てる上限 v
+const RULE = {draw:3, handStart:5, handMax:7, view:18, freeWait:true, blockDecay:null};
 
 /* ---------- 乱数と小道具 ---------- */
 function rngFrom(seed){
@@ -98,9 +101,24 @@ function hitFoe(st, e, n, ev){
   let d = n;
   if(e.vuln > 0){ d = Math.round(d * 1.5); b.vulnHits = (b.vulnHits || 0) + 1; ev.push({kind:'vulnHit', e:e.i}); }
   if(inWin(e, a.guard) && e.sh > 0){ const ab = Math.min(e.sh, d); e.sh -= ab; d -= ab; b.guarded = (b.guarded || 0) + ab; ev.push({kind:'guarded', e:e.i, n:ab}); }
-  if(inWin(e, a.counter)){ const res = strike(st, e, {n:a.n, d:a.counter.d, p:a.p || 'dur'}, 0, true); b.countered = (b.countered || 0) + 1; ev.push({kind:'counter', e:e.i, res}); }
+  if(inWin(e, a.counter)){ const res = strike(st, e, {n:a.n, d:a.counter.d, p:a.p || 'dur'}, 0, true); afterHit(b); b.countered = (b.countered || 0) + 1; ev.push({kind:'counter', e:e.i, res}); }
   if(d > 0) hurtFoe(b, e, d, ev);
   if(e.alive && inWin(e, a.wind) && n >= a.wind.poise){ const nm = a.n; advance(e); b.breaks = (b.breaks || 0) + 1; ev.push({kind:'break', e:e.i, name:nm}); }
+}
+function gainBlock(b, n){
+  const bd = RULE.blockDecay;
+  b.block += n; b.blockGain = (b.blockGain || 0) + n;
+  if(bd && bd.type === 'cap') b.block = Math.min(b.block, bd.v);
+  if(bd && bd.type === 'life') b.blockExp = b.T + bd.v;
+}
+// 攻撃を受けた後(多段は撃ち終わり)。'hit' なら余りのブロックが消える
+function afterHit(b){ const bd = RULE.blockDecay; if(bd && bd.type === 'hit') b.block = 0; }
+// 1サイクルたったときのブロックの目減り
+function decayBlock(b){
+  const bd = RULE.blockDecay; if(!bd || !b.block) return;
+  if(bd.type === 'lin') b.block = Math.max(0, b.block - bd.v);
+  else if(bd.type === 'mul') b.block = Math.floor(b.block * bd.v);
+  else if(bd.type === 'life' && b.T >= b.blockExp) b.block = 0;
 }
 function applyCard(st, k, ti){
   const c = D.cards[k], b = st.b, ev = [];
@@ -111,7 +129,7 @@ function applyCard(st, k, ti){
   }
   if(c.crack) for(const e of targets) if(e.alive){ e.crack += c.crack; ev.push({kind:'crack', e:e.i, n:c.crack}); }
   if(c.delay) for(const e of targets) if(e.alive){ e.r += c.delay; ev.push({kind:'delay', e:e.i, n:c.delay}); }
-  if(c.block){ const n = blockOf(st, c); b.block += n; ev.push({kind:'block', n}); }
+  if(c.block){ const n = blockOf(st, c); gainBlock(b, n); ev.push({kind:'block', n}); }
   if(c.swift){ b.swift += c.swift; ev.push({kind:'swift', n:c.swift}); }
   if(c.timer && targets[0]){ b.timers.push({id:b.uid++, left:c.timer.t, k, e:targets[0].i}); ev.push({kind:'timerSet', e:targets[0].i, t:c.timer.t}); }
   if(c.draw){ const n = drawN(b, c.draw); if(c.borrow) b.drawIn += c.draw * RULE.draw; ev.push({kind:'draw', n, borrow: !!c.borrow}); }
@@ -129,7 +147,7 @@ function fireTimer(st, t){
 function strike(st, e, a, extra, noParry){
   const b = st.b, raw = a.d + (extra || 0);
   if(b.parryNow && !noParry){ const ev = []; hurtFoe(b, e, raw, ev); return {kind:'parried', name:a.n, raw, ev}; }
-  const ab = Math.min(b.block, raw); b.block -= ab;
+  const ab = Math.min(b.block, raw); b.block -= ab; b.blockUsed = (b.blockUsed || 0) + ab;
   const rem = raw - ab, p = b.parts[a.p];
   let partLoss = 0, bodyLoss = 0, broke = false;
   if(rem > 0){
@@ -146,6 +164,7 @@ function enemyAct(st, e, extra){
   if(a.hits > 1 && !e.chain){ e.chain = a.hits - 1; e.r = 1; e.sh = 0; res.chainLeft = e.chain; return res; }
   if(e.chain > 0){ e.chain--; if(e.chain > 0){ e.r = 1; res.chainLeft = e.chain; return res; } }
   res.chainLeft = 0;
+  if(a.d > 0 && res.kind === 'hit') afterHit(st.b);
   if(a.rec) e.vuln = a.rec + 1;
   if(a.buff){ for(const f of (a.all ? st.b.foes.filter(f => f.alive) : [e])) f.str = (f.str || 0) + a.buff; res.buff = a.buff; }
   advance(e);
@@ -179,6 +198,7 @@ function* spendGen(st, cost, k, ti, noInt){
     if(real){
       b.T++; out.elapsed++; b.drawIn--;
       for(const e of b.foes) if(e.alive){ e.r--; if(e.reactIn != null) e.reactIn--; if(e.vuln > 0) e.vuln--; }
+      decayBlock(b);
       for(const t of b.timers) t.left--;
     }
     yield {type:'tick', real};
@@ -223,7 +243,7 @@ function* spendGen(st, cost, k, ti, noInt){
       for(const kind of acts){
         if(!e.alive) break;
         let res;
-        if(kind === 'react') res = Object.assign(strike(st, e, e.react, 0), {react:true});
+        if(kind === 'react'){ res = Object.assign(strike(st, e, e.react, 0), {react:true}); if(res.kind === 'hit') afterHit(b); }
         else res = enemyAct(st, e, e.sync && syncN >= 2 ? e.sync : 0);
         if(res.kind === 'delay' && b.cast){
           left += res.v; b.cast.left = left; res.applied = true;
@@ -260,7 +280,7 @@ function newBattle(run, encKey){
   const b = {enc:encKey, T:0, block:0, swift:0, foes, parts, draw:cards, disc:[], hand:[], cast:null, broken:{}, over:false, timers:[], drawIn:RULE.draw, handMax:RULE.handMax, uid:1000, parryNow:false};
   st.b = b;
   b.handMax += fx(st, 'calc', 'handMax');
-  b.block += fx(st, 'dur', 'startBlock');
+  const sb = fx(st, 'dur', 'startBlock'); if(sb) gainBlock(b, sb);
   b.swift += fx(st, 'mob', 'startSwift');
   drawN(b, RULE.handStart + fx(st, 'mob', 'startHand'));
   return st;

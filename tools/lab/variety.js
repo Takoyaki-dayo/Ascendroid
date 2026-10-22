@@ -112,7 +112,7 @@ function battle(F, enc, m, deck, agent, order, K){
     if(o.won || o.dead) break;
   }
   const b = st.b;
-  return {loss:Math.min(83, loss(st, run0)), won:!!(o && o.won), T:b.T, intr, justs, breaks:b.breaks || 0, guarded:b.guarded || 0, countered:b.countered || 0, vulnHits:b.vulnHits || 0, ...stats};
+  return {loss:Math.min(83, loss(st, run0)), won:!!(o && o.won), T:b.T, intr, justs, breaks:b.breaks || 0, guarded:b.guarded || 0, countered:b.countered || 0, vulnHits:b.vulnHits || 0, blockGain:b.blockGain || 0, blockUsed:b.blockUsed || 0, ...stats};
 }
 function measure(F, mult, deckName, agent, N, seed, order, encs, K){
   R = E.rngFrom(seed); E.setRandom(R);

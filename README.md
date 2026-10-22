@@ -18,6 +18,7 @@
   - `lab.js` と `exp1〜3.js`: 抽象モデルで、決め方・手札の補給・強さの曲線・中断などを比べる(結果は同名の .json)
   - `lab2.js` と `exp4.js`: 抽象モデルで、敵の行動の複雑さと「待てる」を比べる。`node tools/lab/exp4.js A,D,K 5`(条件の記号、乱数の種)
   - `variety.js`: 同じ比較をゲーム本体のエンジンと本物のカードで行う。`node tools/lab/variety.js A,B,C,D,E 5 10`
+  - `block.js`: ブロックの減り方(エンジンの RULE.blockDecay)を比べる。`node tools/lab/block.js A,B,C 5 8`
 - `manifest.webmanifest` アプリ設定(全画面・横向き)
 - `sw.js` オフライン用。データファイルを増やしたら CORE に足す
 - `icons/` アイコン(仮)

@@ -355,6 +355,8 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 .at.mv{border:1px solid #33495d;background:var(--raised)}
 .at.mv .ty{color:var(--fg2)}
 .box.wide{max-width:800px}
+.sm.tb{top:30px;height:128px;width:0;margin-left:-1px;border-left:1.5px dashed var(--cy-dim);opacity:.8}
+.st.arm{color:#cfe3ef} .st.mark{color:var(--foe2)}
 .dbg-sum{font-size:11px;color:var(--fg2);margin:-4px 0 10px}
 .dbg-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:0 0 12px}
 .dbg-grid .opt{width:auto;padding:8px 10px;gap:3px}
@@ -501,7 +503,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 <script src="data/lines.js"></script>
 <script src="js/engine.js"></script>
 <script>
-const APP_VERSION = '0.7.1';
+const APP_VERSION = '0.8.0';
 const $ = s => document.querySelector(s);
 const EN = ENGINE, RULE = EN.RULE;
 const VIEW = RULE.view, NOW = 180, PX = 25, xs = c => NOW + c * PX, ROWY = [52, 86, 120], STRIP_Y = 150, SWIFT_VIS = 3;
@@ -530,6 +532,7 @@ const IC = {
   disc:'<svg viewBox="0 0 14 14"><rect x="3" y="2" width="9" height="11" rx="1.5" stroke="currentColor" stroke-width="1.2" fill="none" transform="rotate(12 7 7)"/><path d="M5 6L9 10M9 6L5 10" stroke="currentColor" stroke-width="1.2"/></svg>',
   hand:'<svg viewBox="0 0 14 14"><rect x="1" y="3" width="6" height="9" rx="1.2" stroke="currentColor" stroke-width="1.2" fill="none" transform="rotate(-10 4 7)"/><rect x="6" y="2" width="6" height="9" rx="1.2" stroke="currentColor" stroke-width="1.2" fill="none" transform="rotate(8 9 7)"/></svg>',
   redraw:'<svg viewBox="0 0 20 20"><path d="M16 7A7 7 0 1 0 17 11" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/><path d="M16 2V7H11" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  junk:'<svg viewBox="0 0 12 12"><path d="M1 6L3 3L5 9L7 2L9 8L11 5" stroke="currentColor" stroke-width="1.3" fill="none"/></svg>',
   wait:'<svg viewBox="0 0 20 20"><path d="M5 2H15M5 18H15M6 2C6 7 14 7 14 10C14 13 6 13 6 18M14 2C14 7 6 7 6 10" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>',
   menu:'<svg width="12" height="9" viewBox="0 0 14 10"><path d="M0 1h14M0 5h14M0 9h14" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>',
   repair:'<svg viewBox="0 0 12 12"><path d="M8 1.5A2.5 2.5 0 0 0 5.6 4.7L1.5 8.8L3.2 10.5L7.3 6.4A2.5 2.5 0 0 0 10.5 4L9 5.5L7.5 4.5L6.5 3Z" stroke="currentColor" stroke-width="1.1" fill="none" stroke-linejoin="round"/></svg>',
@@ -592,12 +595,13 @@ function computePreview(){
 }
 
 /* ---------- cards ---------- */
-function cardType(c){ return c.timer ? 'timer' : c.parry ? 'parry' : c.dmg ? c.dmg.t : c.block ? 'block' : c.delay ? 'delay' : c.swift ? 'swift' : c.draw ? 'draw' : 'crack'; }
+function cardType(c){ return c.junk ? 'junk' : c.timer ? 'timer' : c.parry ? 'parry' : c.dmg ? c.dmg.t : c.block ? 'block' : c.delay ? 'delay' : c.swift ? 'swift' : c.draw ? 'draw' : 'crack'; }
 const stv = st => st && st.b ? st : {run: S ? S.run : null, b: null};
 function vDmg(st, c, d){ return st && st.run ? EN.dmgOf(stv(st), c, d) : (d || c.dmg).n; }
 function vBlock(st, c){ return st && st.run ? EN.blockOf(stv(st), c) : c.block; }
 function cardVal(k, st){
   const c = CARDS[k];
+  if(c.junk) return '';
   if(c.timer) return vDmg(st, c, c.timer.dmg);
   if(c.parry) return vBlock(st, c);
   if(c.dmg) return vDmg(st, c) + (c.dmg.x ? '×' + c.dmg.x : '');
@@ -609,6 +613,7 @@ function cardVal(k, st){
 }
 function cardText(k, st){
   const c = CARDS[k], s = [];
+  if(c.junk) return '何もしない。使うと消える';
   if(c.dmg) s.push(`${c.all ? '敵全員に' : ''}${c.dmg.t === 'phys' ? '物理' : '光学'}<b>${vDmg(st, c)}</b>ダメージ${c.dmg.x ? '×' + c.dmg.x : ''}`);
   if(c.timer) s.push(`<span class="kw">時限</span>${c.timer.t}: 光学<b>${vDmg(st, c, c.timer.dmg)}</b>`);
   if(c.crack) s.push(`<span class="kw-f">クラック</span>${c.crack}`);
@@ -669,6 +674,7 @@ function renderMe(){
   let st = '';
   if(S.b.block) st += `<span class="st blk" id="stBlk"><span class="ic">${IC.block}</span>${S.b.block}</span>`;
   if(S.b.swift) st += `<span class="st swf"><span class="ic">${IC.swift}</span>${S.b.swift}</span>`;
+  if(S.b.mark) st += `<span class="st mark">照+${S.b.mark}</span>`;
   $('#meSts').innerHTML = st;
 }
 function incoming(){
@@ -722,6 +728,7 @@ function renderFoes(){
     if(e.react) sts += `<span class="st trait${PV && PV.react.has(e.i) ? ' on' : ''}"><span class="ic">${IC.eye}</span>${e.react.min}</span>`;
     if(e.sync) sts += `<span class="st trait"><span class="ic">${IC.link}</span>${e.sync}</span>`;
     if(e.str) sts += `<span class="st str">▲${e.str}</span>`;
+    if(e.armor) sts += `<span class="st arm">装${e.armor}</span>`;
     info.querySelector('.sts').innerHTML = sts;
   }
 }
@@ -780,7 +787,7 @@ function placeBand(key, x0, x1, y, cls, html){
   el.style.left = x0 + 'px'; el.style.width = Math.max(10, x1 - x0) + 'px'; el.style.top = y + 'px'; el.style.opacity = '';
 }
 const WIN = {wind:'構', guard:'防', counter:'返'};
-function moveIcon(a){ return a.buff ? `<b>▲${a.buff}</b>` : a.guard ? `<span class="ic">${IC.block}</span>` : '<b>·</b>'; }
+function moveIcon(a){ return a.buff ? `<b>▲${a.buff}</b>` : a.armor ? `<b>装</b>` : a.heal ? `<b>+${a.heal}</b>` : a.mark ? `<b>照</b>` : a.noise ? `<span class="ic">${IC.junk}</span>` : a.summon ? `<b>援</b>` : a.guard ? `<span class="ic">${IC.block}</span>` : '<b>·</b>'; }
 function renderMarks(){
   const b = S.b, seen = new Set(), seenB = new Set(), syn = syncTimes(), pv = PV && !busy ? PV : null;
   for(const e of b.foes){
@@ -848,8 +855,14 @@ function renderStrip(){
     el.className = cls; if(el._h !== html){ el.innerHTML = html; el._h = html; }
     el.style.left = x + 'px'; el.style.opacity = '';
   };
-  // 手札が満杯なら、次に届く1枚はあふれる
-  EN.arrivals(b).forEach((t, n) => put('a' + (b.T + t), xs(t), 'sm arr' + (n === 0 && room <= 0 ? ' over' : ''), ''));
+  const ec = RULE.econ;
+  if(!ec){
+    // 手札が満杯なら、次に届く1枚はあふれる
+    EN.arrivals(b).forEach((t, n) => put('a' + (b.T + t), xs(t), 'sm arr' + (n === 0 && room <= 0 ? ' over' : ''), ''));
+  } else if(ec.type === 'turn'){
+    // 固定ターンの区切り
+    for(let t = b.turnIn; t <= VIEW; t += ec.len) put('tb' + (b.T + t), xs(t), 'sm tb', '');
+  }
   for(const t of b.timers){ if(t.left <= VIEW) put('t' + t.id, xs(t.left), 'sm tmr', `<span class="ic">${IC.timer}</span>${b.foes[t.e] && b.foes[t.e].alive ? b.foes[t.e].tag : ''}`); }
   for(const [key, el] of stripEls){ if(!seen.has(key)){ stripEls.delete(key); el.style.opacity = '0'; el.style.left = (parseFloat(el.style.left) - 10) + 'px'; setTimeout(() => el.remove(), 220); } }
 }
@@ -886,15 +899,20 @@ function renderHand(){
     else place();
   });
 }
+function rdKind(){ const ec = RULE.econ; return ec && ec.type === 'turn' ? 'pass' : ec && ec.type === 'reload' ? 'reload' : (S.b.hand.length ? 'swap' : 'wait'); }
 function renderSide(){
-  const b = S.b, rd = $('#redraw'), fw = RULE.freeWait, empty = !b.hand.length, asWait = empty && !fw;
+  const b = S.b, rd = $('#redraw'), ec = RULE.econ, kind = rdKind();
+  // 下段の待機ボタンを出すか(固定ターンは常に、再装填と今は「待機: いつでも」のとき)
+  const fw = (ec && ec.type === 'turn') || (RULE.freeWait && (!ec || ec.type === 'reload'));
+  const empty = !b.hand.length, asWait = !ec && empty && !fw;
   $('#shaker').classList.toggle('fw', fw);
-  $('#icRedraw').innerHTML = asWait ? IC.wait : IC.redraw;
-  $('#rdCost').textContent = asWait ? 1 : b.hand.length;
-  rd.setAttribute('aria-label', asWait ? '待機' : '入れ替え');
-  rd.classList.toggle('wait', asWait);
-  rd.classList.toggle('sel', !!sel && (sel.kind === 'swap' || (!fw && sel.kind === 'wait')));
-  rd.disabled = busy || (fw && empty);
+  const ico = kind === 'pass' ? IC.wait : kind === 'reload' ? IC.redraw : asWait ? IC.wait : IC.redraw;
+  const cost = kind === 'pass' ? Math.max(1, b.turnIn) : kind === 'reload' ? EN.reloadCost(S) : asWait ? 1 : b.hand.length;
+  $('#icRedraw').innerHTML = ico; $('#rdCost').textContent = cost;
+  rd.setAttribute('aria-label', kind === 'pass' ? '区切りまで待つ' : kind === 'reload' ? '再装填' : asWait ? '待機' : '入れ替え');
+  rd.classList.toggle('wait', asWait || kind === 'pass');
+  rd.classList.toggle('sel', !!sel && (sel.kind === kind || (!fw && sel.kind === 'wait')));
+  rd.disabled = busy || (!ec && fw && empty);
   const wb = $('#waitBtn'); wb.classList.toggle('sel', fw && !!sel && sel.kind === 'wait'); wb.disabled = busy;
   $('#nDraw').textContent = b.draw.length; $('#nDisc').textContent = b.disc.length;
   $('#nHand').textContent = `${b.hand.length}/${b.handMax}`;
@@ -1005,6 +1023,7 @@ function cardFx(x){
     case 'draw': if(x.n) floatAt(41, 290, '+' + x.n, 'cy'); break;
     case 'timerSet': floatAt(xs(x.t), STRIP_Y - 10, '◆', 'cy'); break;
     case 'guarded': { const p = foeCenter(x.e); const el = fxEl('fshield', p.x, p.y - 10); setTimeout(() => el.remove(), 520); floatAt(p.x + 26, p.y - 46, '防' + x.n, ''); break; }
+    case 'armored': { const p = foeCenter(x.e); floatAt(p.x + 26, p.y - 46, '装' + x.n, ''); break; }
     case 'vulnHit': { const p = foeCenter(x.e); floatAt(p.x - 26, p.y - 46, '×1.5', 'cy'); break; }
     case 'break': { justFx(x.e); const p = foeCenter(x.e); floatAt(p.x, p.y - 84, '崩し', 'cy'); break; }
     case 'counter': { const p = foeCenter(x.e); floatAt(p.x, p.y - 84, '返', 'foe'); beam({x: DROID.sx, y: DROID.sy}, {x: p.x, y: p.y - 10}); hitMeFx(x.res); break; }
@@ -1026,7 +1045,16 @@ async function foeFx(i, r){
   const mk = r.react ? markEls.get('r' + i) : markEls.get(r.chainLeft > 0 ? `${i}-${e.seq}-${r.chainLeft}` : `${i}-${e.seq - 1}-0`);
   if(mk) mk.classList.add('fire');
   await sleep(110);
-  if(r.kind === 'move'){ const p = foeCenter(i); if(r.buff) floatAt(p.x, p.y - 70, '▲' + r.buff, 'foe'); return; }
+  if(r.kind === 'move'){
+    const p = foeCenter(i);
+    if(r.buff) floatAt(p.x, p.y - 70, '▲' + r.buff, 'foe');
+    if(r.armor){ const el = fxEl('fshield', p.x, p.y - 10); setTimeout(() => el.remove(), 520); floatAt(p.x, p.y - 70, '装+' + r.armor, ''); }
+    if(r.heal) floatAt(p.x, p.y - 70, '+' + r.heal, 'cy');
+    if(r.mark){ floatAt(DROID.x + 10, DROID.y - 92, '照準+' + r.mark, 'foe'); pulse($('#droid'), 'glitch', 320); }
+    if(r.noise){ floatAt(41, 300, 'ノイズ+' + r.noise, 'foe'); pulse($('#pileDraw'), 'flash', 360); }
+    if(r.summon != null){ buildFoes(); floatAt(foeCenter(r.summon).x, 150, '増援', 'foe'); }
+    return;
+  }
   if(r.kind === 'delay'){
     if(r.applied){ pulse($('#droid'), 'glitch', 320); floatAt(xs(1), 30, '+' + r.v, 'cy'); if(r.swift) setTimeout(afterimage, 120); }
     return;
@@ -1066,8 +1094,8 @@ function onWait(){
   sel = {kind:'wait'}; recalc();
 }
 function onRedraw(){
-  if(RULE.freeWait && !S.b.hand.length) return;
-  const kind = S.b.hand.length ? 'swap' : 'wait';
+  if(!RULE.econ && RULE.freeWait && !S.b.hand.length) return;
+  const kind = rdKind();
   if(sel && sel.kind === kind){ execute(); return; }
   sel = {kind}; recalc();
 }
@@ -1094,6 +1122,12 @@ async function showEvent(ev, k, ti){
     case 'just': justFx(ev.e); renderAll(); await sleep(420); break;
     case 'card': if(k) cardMotion(k, ti); for(const x of ev.ev) cardFx(x); renderAll(); await sleep(320); break;
     case 'timer': { const p = foeCenter(ev.t.e); const el = fxEl('burst', p.x, p.y - 10); setTimeout(() => el.remove(), 520); for(const x of ev.ev) cardFx(x); renderAll(); await sleep(320); break; }
+    case 'turn': {
+      const ids = new Set(S.b.hand.map(c => c.id));
+      for(const [id, el] of cardEls) if(!ids.has(id)){ cardEls.delete(id); flyCard(el, 20, 340); }
+      floatAt(NOW + 8, STRIP_Y - 14, '区切り', 'cy');
+      renderAll(); await sleep(380); break;
+    }
     case 'arrive': if(ev.r && ev.r.burn) floatAt(41, 290, '溢', 'foe'); renderAll(); await sleep(90); break;
     case 'foe': await foeFx(ev.e, ev.res); renderAll(); await sleep(190); break;
     case 'interrupt': interruptFx(); renderAll(); await sleep(420); break;
@@ -1104,7 +1138,7 @@ async function execute(){
   if(a.type === 'card'){
     if(a.t != null) lastTarget = a.t;
     const cd = b.hand[a.i], el = cardEls.get(cd.id); cardEls.delete(cd.id); flyCard(el, DROID.x - 48, DROID.y - 60);
-  } else if(a.type === 'swap'){
+  } else if(a.type === 'swap' || a.type === 'reload'){
     b.hand.forEach((cd, n) => { const el = cardEls.get(cd.id); cardEls.delete(cd.id); setTimeout(() => flyCard(el, 20, 340), n * 30); });
   }
   const p = EN.beginAction(S, a);
@@ -1188,6 +1222,7 @@ function completeRoom(){
   showMap();
 }
 function startBattle(n){
+  applyEcon();
   snapshot = JSON.stringify(S.run);
   S = EN.newBattle(S.run, n.enc);
   sel = null; PV = null; busy = false; lastTarget = 0; UI.view = 'normal'; UI.screen = 'battle';
@@ -1292,13 +1327,18 @@ function moveChips(a){
   if(a.counter) c.push(`<span class="chip counter">返${a.counter.d}</span>`);
   if(a.rec) c.push(`<span class="chip vuln">隙${a.rec}</span>`);
   if(a.buff) c.push(`<span class="chip buff">▲${a.buff}${a.all ? '全' : ''}</span>`);
+  if(a.armor) c.push(`<span class="chip guard">装${a.armor}</span>`);
+  if(a.heal) c.push(`<span class="chip buff">修${a.heal}</span>`);
+  if(a.mark) c.push(`<span class="chip counter">照${a.mark}</span>`);
+  if(a.noise) c.push(`<span class="chip multi">ノイズ${a.noise}</span>`);
+  if(a.summon) c.push(`<span class="chip buff">援</span>`);
   return c.length ? `<span class="atr">${c.join('')}</span>` : '';
 }
 function moveTile(e, a, cur){
   const atk = a.kind !== 'delay' && a.d > 0;
   const cls = a.kind === 'delay' ? 'dl' : a.ch ? 'ch' : atk ? '' : 'mv';
   const val = a.kind === 'delay' ? `<span class="v" style="display:flex;align-items:center;gap:3px"><span class="ic">${IC.delay.replace('viewBox', 'style="width:16px;height:16px" viewBox')}</span>${a.v}</span>`
-    : atk ? `<span class="v">${a.d + (e.str || 0)}</span>` : `<span class="v" style="font-size:20px">${a.buff ? '▲' : a.guard ? IC.block.replace('viewBox', 'style="width:22px;height:22px" viewBox') : '·'}</span>`;
+    : atk ? `<span class="v">${a.d + (e.str || 0)}</span>` : `<span class="v" style="font-size:20px">${a.buff ? '▲' : a.armor ? '装' : a.heal ? '修' : a.mark ? '照' : a.summon ? '援' : a.noise ? IC.junk.replace('viewBox', 'style="width:22px;height:22px" viewBox') : a.guard ? IC.block.replace('viewBox', 'style="width:22px;height:22px" viewBox') : '·'}</span>`;
   const tp = a.kind === 'delay' ? '<span class="tp">自機</span>' : atk ? `<span class="tp"><span class="ic">${IC[a.p]}</span>${SLOT_BY[a.p].fn}</span>` : '';
   return `<div class="at ${cls}${cur ? ' cur' : ''}">${cur ? `<span class="nx"><span class="ic">${IC.clock}</span>${e.r}</span>` : ''}<span class="ty">${a.kind === 'delay' ? IC.delay : IC.hit}</span>${a.ch ? `<span class="par">${IC.parry}</span>` : ''}${val}${tp}${moveChips(a)}<span class="an">${a.n}</span></div>`;
 }
@@ -1329,7 +1369,13 @@ function infoFoe(i){
   if(has('guard')) tr += `<div class="trait-row"><span class="chip guard">防</span><span>帯の間、数字までダメージを防ぐ</span></div>`;
   if(has('counter')) tr += `<div class="trait-row"><span class="chip counter">返</span><span>帯の間、殴るたびに数字を撃ち返す</span></div>`;
   if(has('rec')) tr += `<div class="trait-row"><span class="chip vuln">隙</span><span>行動の後、数字のサイクルだけダメージ1.5倍</span></div>`;
+  if(has('armor')) tr += `<div class="trait-row"><span class="chip guard">装</span><span>消えない装甲を重ねる。ダメージは先に装甲が受ける</span></div>`;
+  if(has('heal')) tr += `<div class="trait-row"><span class="chip buff">修</span><span>耐久を戻す</span></div>`;
+  if(has('mark')) tr += `<div class="trait-row"><span class="chip counter">照</span><span>照準: こちらが受ける攻撃がすべて+数字(重なる)</span></div>`;
+  if(has('noise')) tr += `<div class="trait-row"><span class="chip multi">ノイズ</span><span>山札に何もしないカードを混ぜる</span></div>`;
+  if(has('summon')) tr += `<div class="trait-row"><span class="chip buff">援</span><span>仲間を呼ぶ</span></div>`;
   if(has('buff')) tr += `<div class="trait-row"><span class="chip buff">▲</span><span>行動の後、攻撃力が上がる(全は仲間も)</span></div>`;
+  if(e.armor) tr += `<div class="trait-row f"><span class="chip guard">装${e.armor}</span><span>装甲${e.armor}</span></div>`;
   if(e.str) tr += `<div class="trait-row f"><span class="chip buff">▲${e.str}</span><span>攻撃力+${e.str}</span></div>`;
   if(e.crack) tr += `<div class="trait-row f"><span class="ic">${IC.crack}</span><span>受けるダメージ+${e.crack}</span></div>`;
   showOv(`<div class="ei"><div class="ei-l"><div class="ei-spr">${SPR[e.kind].replace('width="90" height="100"', 'width="99" height="110"')}</div><div class="ei-name"><span class="ftag">${e.tag}</span>${e.name}</div><div class="ei-hp">${e.hp}<span>/${e.maxHp}</span></div><div class="ei-bar"><i style="width:${e.hp / e.maxHp * 100}%"></i></div><div class="ei-st">${st}</div></div><div class="ei-r${(rand || (e.phase && !e.phased)) ? ' two' : ''}">${body}${tr ? `<div class="traits">${tr}</div>` : ''}</div></div>${closeRow}`, true);
@@ -1342,6 +1388,29 @@ function infoDeck(){
   const own = groupDeck(S.run.deck), extra = groupDeck(EN.partCards(S.run));
   const tiles = Object.keys(own).map(k => `<div class="card static">${cardInner(k, S, own[k])}</div>`).concat(Object.keys(extra).map(k => `<div class="card static src">${cardInner(k, S, extra[k])}</div>`));
   showOv(`<h2>デッキ ${EN.battleDeck(S.run).length}</h2><div class="cards">${tiles.join('')}</div>${closeRow}`, true);
+}
+/* ---------- 補給の型(実験) ---------- */
+// 今(3サイクルで1枚届く)/ 固定ターン / 再装填。区切りの型では、コスト2以下のカードの数値を半分にし(強さを時間に比例させる)、
+// 敵を放置の代償つき(DATA.foesEsc)にして、難しさを揃えるため敵の攻撃力に倍率をかける(tools/lab/turns.js の結果から)
+const CARDS0 = JSON.parse(JSON.stringify(CARDS)), FOES0 = JSON.parse(JSON.stringify(FOES));
+const ECON_NAME = {now:'今', turn:'固定ターン', reload:'再装填'};
+const RELOAD_MUL = {2:0.7, 3:0.55, 4:0.45};
+function applyEcon(){
+  if(!DBG) dbgLoad();
+  const m = DBG.econ || 'now', alt = m !== 'now';
+  RULE.econ = m === 'turn' ? {type:'turn', len:DBG.turnLen, hand:5, blockReset:true} : m === 'reload' ? {type:'reload', r:DBG.reloadR, hand:5, blockReset:'start'} : null;
+  for(const [k, c0] of Object.entries(CARDS0)){
+    const c = JSON.parse(JSON.stringify(c0));
+    if(alt && !c.junk && c.cost < 3){ const h = x => Math.max(1, Math.round(x * 0.5)); if(c.dmg) c.dmg.n = h(c.dmg.n); if(c.block) c.block = h(c.block); if(c.timer) c.timer.dmg.n = h(c.timer.dmg.n); }
+    CARDS[k] = c;
+  }
+  const mul = m === 'turn' ? 0.8 : m === 'reload' ? (RELOAD_MUL[DBG.reloadR] || 0.55) : 1, sc = x => Math.max(1, Math.round(x * mul));
+  const fix = pat => pat.map(a => { const o = JSON.parse(JSON.stringify(a)); if(o.d > 0) o.d = sc(o.d); if(o.counter) o.counter.d = sc(o.counter.d); return o; });
+  for(const [k, f0] of Object.entries(FOES0)){
+    const f = JSON.parse(JSON.stringify(alt && DATA.foesEsc[k] ? {...f0, ...DATA.foesEsc[k]} : f0));
+    f.pat = fix(f.pat); if(f.phase) f.phase = {at: f.phase.at, pat: fix(f.phase.pat)}; if(f.react) f.react = {...f.react, d: sc(f.react.d)};
+    FOES[k] = f;
+  }
 }
 /* ---------- debug ---------- */
 // 調整用: 遭遇・デッキ・パーツ・数値を選んで、ランの外で1戦だけ戦う。設定は端末ごとに覚える
@@ -1356,7 +1425,7 @@ const DBG_PRESET = {
 const DBG_PRESET_NAME = {start:'最初', light:'軽い', heavy:'重い', control:'制御', all:'全種1枚', empty:'空'};
 let DBG = null;
 function dbgLoad(){
-  const def = {deck: DATA.startDeck.slice(), parts: {...DATA.startParts}, body: DATA.bodyMax, dmg: 1, hp: 1, custom: ['drone', null, null], enc: null};
+  const def = {deck: DATA.startDeck.slice(), parts: {...DATA.startParts}, body: DATA.bodyMax, dmg: 1, hp: 1, custom: ['drone', null, null], enc: null, econ: 'now', turnLen: 6, reloadR: 3};
   let v = null; try{ v = JSON.parse(localStorage.getItem('asc.dbg') || 'null'); }catch(e){}
   DBG = Object.assign(def, v || {});
   DBG.deck = DBG.deck.filter(k => CARDS[k]);
@@ -1368,7 +1437,7 @@ function dbgSave(){ try{ localStorage.setItem('asc.dbg', JSON.stringify(DBG)); }
 const dbgMul = x => '×' + x;
 function dbgSummary(){
   const parts = SLOTS.map(p => PARTDEF[DBG.parts[p.id]].name.replace(/[〘〙]/g, '')).join(' / ');
-  return `デッキ ${DBG.deck.length}枚 · ${parts} · 本体${DBG.body} · 敵の攻撃${dbgMul(DBG.dmg)} 耐久${dbgMul(DBG.hp)} · 待機${RULE.freeWait ? 'いつでも' : '手札がないときだけ'}`;
+  return `補給 ${ECON_NAME[DBG.econ]}${DBG.econ === 'turn' ? DBG.turnLen : DBG.econ === 'reload' ? DBG.reloadR : ''} · デッキ ${DBG.deck.length}枚 · ${parts} · 本体${DBG.body} · 敵の攻撃${dbgMul(DBG.dmg)} 耐久${dbgMul(DBG.hp)} · 待機${RULE.freeWait ? 'いつでも' : '手札がないときだけ'}`;
 }
 function encLabel(k){ const E = ENC[k]; return `${E.boss ? 'ボス' : E.elite ? 'エリート' : '通常'} · ${E.fam}`; }
 function showDebug(){
@@ -1404,6 +1473,8 @@ function showDebugNums(){
   UI.dbgView = 'nums';
   const seg = (key, vals, fmt) => `<div class="seg">${vals.map(v => `<button type="button" class="${DBG[key] === v ? 'on' : ''}" data-act="dbgNum" data-arg="${key}:${v}">${fmt ? fmt(v) : v}</button>`).join('')}</div>`;
   showOv(`<h2>数値</h2>
+    <div class="dbg-h">補給の型(通常のランにも効く)</div><div class="seg">${Object.entries(ECON_NAME).map(([k, n]) => `<button type="button" class="${DBG.econ === k ? 'on' : ''}" data-act="dbgEcon" data-arg="${k}">${n}</button>`).join('')}</div>
+    ${DBG.econ === 'turn' ? `<div class="dbg-h">ターンの長さ</div>${seg('turnLen', [5, 6, 8])}` : ''}${DBG.econ === 'reload' ? `<div class="dbg-h">再装填のサイクル</div>${seg('reloadR', [2, 3, 4])}` : ''}
     <div class="dbg-h">本体耐久</div>${seg('body', [20, 50, 100, 999])}
     <div class="dbg-h">敵の攻撃</div>${seg('dmg', [0.5, 1, 1.5, 2, 3], dbgMul)}
     <div class="dbg-h">敵の耐久</div>${seg('hp', [0.5, 1, 1.5, 2, 3], dbgMul)}
@@ -1448,7 +1519,9 @@ function showDebugResult(won){
 function showRules(first){
   showOv(`<h2>遊び方</h2><ul>
     <li>時間はカードを使ったときだけ進む。カード左上の数字が、かかるサイクル。0は即時。</li>
-    <li>手札は3サイクルごとに1枚届く(最大${RULE.handMax}枚)。届く時刻はタイムラインの下の段。軽いカードを続けると手札が減り、重いカードの間に手札がたまる。</li>
+    ${!RULE.econ ? `<li>手札は3サイクルごとに1枚届く(最大${RULE.handMax}枚)。届く時刻はタイムラインの下の段。軽いカードを続けると手札が減り、重いカードの間に手札がたまる。</li>`
+      : RULE.econ.type === 'turn' ? `<li>${RULE.econ.len}サイクルごとに区切り(点線)。区切りで手札を捨てて${RULE.econ.hand}枚引き、ブロックも消える。右下の上段は区切りまで待つ。</li>`
+      : `<li>手札は届かない。尽きるか自分で選んだら、右下の再装填(${RULE.econ.r}サイクル)で手札を捨てて${RULE.econ.hand}枚引く。再装填を始めるとブロックが消える。</li>`}
     <li>奥の画面に敵ごとの攻撃予定が流れてくる。数字はダメージ、横の字は狙う部位。紫の丸は溜め技、砂時計は自分へのディレイ。</li>
     <li>完了前に被弾すると中断。ブロックで全部防ぐか、菱形のあるカードなら中断されない。完了と溜め技が同じサイクルならJUSTで潰せる。</li>
     <li>目の印の敵は、重いカードを使い始めると撃ってくる。鎖の印の敵は、仲間と同時に攻撃すると強くなる。</li>
@@ -1459,7 +1532,7 @@ function showRules(first){
 }
 function showMenu(){
   const at = S.run.at, pos = !at ? '入口' : at.boss ? 'ボス' : `部屋${at.idx + 1}/${DATA.area.rooms + 1}`;
-  showOv(`<h2>${DATA.area.name} · ${UI.screen === 'battle' && UI.node ? DATA.rooms[UI.node.type].name : pos}</h2><p class="sub">Ascendroid ${APP_VERSION}</p><div class="mlist"><button class="opt" type="button" data-act="rules"><b>遊び方</b></button><button class="opt" type="button" data-act="deck"><b>デッキ</b></button><button class="opt" type="button" data-act="fs"><b>全画面</b></button><button class="opt" type="button" data-act="toggleWait"><b>待機</b><span>${RULE.freeWait ? 'いつでも' : '手札がないときだけ'}</span></button><button class="opt" type="button" data-act="restart"><b>最初から</b></button><button class="opt" type="button" data-act="debug"><b>デバッグ</b></button></div>${closeRow}`, true);
+  showOv(`<h2>${DATA.area.name} · ${UI.screen === 'battle' && UI.node ? DATA.rooms[UI.node.type].name : pos}</h2><p class="sub">Ascendroid ${APP_VERSION}${RULE.econ ? ' · 補給: ' + ECON_NAME[DBG.econ] : ''}</p><div class="mlist"><button class="opt" type="button" data-act="rules"><b>遊び方</b></button><button class="opt" type="button" data-act="deck"><b>デッキ</b></button><button class="opt" type="button" data-act="fs"><b>全画面</b></button><button class="opt" type="button" data-act="toggleWait"><b>待機</b><span>${RULE.freeWait ? 'いつでも' : '手札がないときだけ'}</span></button><button class="opt" type="button" data-act="restart"><b>最初から</b></button><button class="opt" type="button" data-act="debug"><b>デバッグ</b></button></div>${closeRow}`, true);
 }
 async function goFull(){
   hideOv();
@@ -1483,7 +1556,8 @@ function act(a, arg, el){
     case 'dbgPreset': DBG.deck = DBG_PRESET[arg](); dbgSave(); showDebugDeck(); break;
     case 'dbgCard': { const [k, d] = arg.split(':'); if(+d > 0) DBG.deck.push(k); else { const i = DBG.deck.lastIndexOf(k); if(i >= 0) DBG.deck.splice(i, 1); } dbgSave(); showDebugDeck(); break; }
     case 'dbgPart': { const [sl, id] = arg.split(':'); DBG.parts[sl] = id; dbgSave(); showDebugParts(); break; }
-    case 'dbgNum': { const [key, v] = arg.split(':'); DBG[key] = +v; dbgSave(); showDebugNums(); break; }
+    case 'dbgNum': { const [key, v] = arg.split(':'); DBG[key] = +v; dbgSave(); applyEcon(); showDebugNums(); break; }
+    case 'dbgEcon': DBG.econ = arg; dbgSave(); applyEcon(); showDebugNums(); break;
     case 'dbgWait': RULE.freeWait = arg === '1'; try{ localStorage.setItem('asc.freeWait', arg); }catch(e){} showDebugNums(); break;
     case 'dbgSlot': { const [i, k] = arg.split(':'); DBG.custom[+i] = k || null; dbgSave(); showDebugCustom(); break; }
     case 'toggleWait':
@@ -1584,6 +1658,7 @@ addEventListener('resize', fit);
 for(const el of [$('#wrap'), stage]) el.addEventListener('scroll', () => { el.scrollTop = 0; el.scrollLeft = 0; });
 fit();
 buildStatic();
+dbgLoad(); applyEcon();
 newRun();
 showRules(true);
 </script>

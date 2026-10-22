@@ -14,6 +14,8 @@
 //     wt               分岐のときの重み
 //   ai:'rand'  行動を重み wt で選ぶ(同じ行動は3回続けない)。次の行動は決まるまで見えない
 //   phase:{at, pat}  耐久が at 割を切ると、行動の並びが pat に変わる
+//   (放置の代償)armor 装甲を重ねる(消えずに積もり、ダメージを先に受ける) / heal 修復 / mark 照準(こちらが受ける攻撃すべて+mark)
+//     noise ノイズを山札に混ぜる / summon 仲間を呼ぶ(敵の種類のキー)
 //   react: 反応する。コスト min 以上のカードを使い始めると、1サイクル後に撃つ {min, n, d, p}
 //   sync: 連携する。連携を持つ敵が同じサイクルに攻撃すると、それぞれダメージ+sync
 //   pool: 倒したときの学習で出るカード候補
@@ -51,6 +53,20 @@ DATA.foes = {
     pool:[]},
   escort:   {name:'随伴ドローン', kind:'drone', hp:26, start:3, ai:'rand',
     pat:[{n:'射撃', d:6, dl:5, p:'mob', wt:2}, {n:'増幅', d:0, dl:6, buff:2, all:true, wt:1}], pool:[]},
+};
+
+// 放置の代償を持つ版(区切りの型=固定ターン・再装填で使う)。ここにある敵は行動の並びを差し替える
+DATA.foesEsc = {
+  drone:  {pat:[{n:'射撃', d:7, dl:6, p:'calc', wt:2}, {n:'連射', d:4, hits:2, dl:5, p:'out', wt:1}, {n:'照準', d:0, dl:5, mark:1, wt:1}]},
+  drone2: {pat:[{n:'射撃', d:7, dl:6, p:'out', wt:2}, {n:'連射', d:4, hits:2, dl:5, p:'mob', wt:1}, {n:'照準', d:0, dl:5, mark:1, wt:1}]},
+  linkA:  {pat:[{n:'連携射撃', d:6, dl:6, p:'arm'}, {n:'陣形', d:0, dl:4, armor:5}]},
+  linkB:  {pat:[{n:'連携射撃', d:6, dl:6, p:'mob'}, {n:'陣形', d:0, dl:4, armor:5}]},
+  turret: {pat:[{n:'砲撃', d:9, dl:8, p:'dur'}, {n:'装甲を重ねる', d:0, dl:4, armor:8}]},
+  turretE:{pat:[{n:'砲撃', d:10, dl:7, p:'dur'}, {n:'装甲を重ねる', d:0, dl:4, armor:10}]},
+  exec:   {pat:[{n:'殴打', d:8, dl:6, p:'out'}, {n:'充填', d:0, dl:5, buff:3, wind:{w:3, poise:12}}, {n:'粉砕砲', d:22, dl:7, p:'dur', ch:true, wind:{w:3, poise:12}, rec:3}]},
+  hacker: {pat:[{n:'割り込み', kind:'delay', v:4, dl:7}, {n:'射撃', d:7, dl:5, p:'calc', counter:{w:5, d:3}}, {n:'ノイズ注入', d:0, dl:5, noise:2}]},
+  warden: {pat:[{n:'照射', d:8, dl:6, p:'calc'}, {n:'照射', d:8, dl:4, p:'arm'}, {n:'修復', d:0, dl:5, heal:15, wind:{w:4, poise:15}}, {n:'消去プロトコル', d:30, dl:9, p:'dur', ch:true, wind:{w:4, poise:15}, rec:3}],
+    phase:{at:0.5, pat:[{n:'照射', d:8, dl:5, p:'calc'}, {n:'増援要請', d:0, dl:5, summon:'escort', wind:{w:4, poise:15}}, {n:'報復態勢', d:10, dl:6, p:'arm', counter:{w:5, d:4}}, {n:'消去プロトコル', d:30, dl:8, p:'dur', ch:true, wind:{w:4, poise:15}, rec:3}]}},
 };
 
 DATA.encounters = {

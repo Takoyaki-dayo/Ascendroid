@@ -338,13 +338,13 @@ function actions(st){
     if(RULE.freeWait || (ec.type === 'mag' && !b.hand.length)) out.push({type:'wait'});
     return out;
   }
-  if(ec.type === 'turn'){ out.push({type:'wait'}); return out; }
+  if(ec.type === 'turn'){ out.push({type:'wait'}); out.push({type:'pass'}); return out; }
   if(b.hand.length) out.push({type:'swap'});
   if(!b.hand.length || RULE.freeWait) out.push({type:'wait'});
   return out;
 }
 function reloadCost(st){ const ec = econ(); return ec.type === 'mag' ? (ec.r || 1) : (ec.r || 2) + (ec.heat || 0) * st.b.reloads; }
-function actionCost(st, a){ return a.type === 'card' ? D.cards[a.k].cost : a.type === 'swap' ? st.b.hand.length : a.type === 'reload' ? reloadCost(st) : 1; }
+function actionCost(st, a){ return a.type === 'card' ? D.cards[a.k].cost : a.type === 'swap' ? st.b.hand.length : a.type === 'reload' ? reloadCost(st) : a.type === 'pass' ? Math.max(1, st.b.turnIn) : 1; }
 // 行動を1つ、手札の出し入れまで含めて準備する。spendGen の前に呼ぶ
 function beginAction(st, a){
   const b = st.b;
@@ -356,6 +356,7 @@ function beginAction(st, a){
     const ev = boundary(st, 'start'); b.reloads++;
     return {card:null, cost, k:null, t:null, n:Math.max(0, (ec.hand || 5) - b.hand.length), reload:true, ev};
   }
+  if(a.type === 'pass'){ b.waiting = true; return {card:null, cost:Math.max(1, b.turnIn), k:null, t:null, n:0}; } // 固定ターン: 区切りまで待つ
   b.waiting = true; // 待機はスウィフトを使わない(使うと敵の時間が進まず、待った意味がなくなる)
   return {card:null, cost:1, k:null, t:null, n:0};
 }

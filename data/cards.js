@@ -27,6 +27,8 @@ DATA.cards = {
   charge:   {name:'チャージショット', cost:4, tgt:true, atomic:true, dmg:{t:'opt', n:10}},
   emp:      {name:'EMPパルス',        cost:4, all:true, dmg:{t:'opt', n:5}},
   blow:     {name:'過負荷打撃',       cost:6, tgt:true, dmg:{t:'phys', n:20}},
+  // 敵のノイズ注入で山札に混ざる。何もせず、使うと消える(ショップや学習には出ない)
+  noise:    {name:'ノイズ',           cost:1, junk:true},
 };
 
 // 最初のデッキ(パーツが加えるカードは別。武装の《チャージショット》2枚が足される)

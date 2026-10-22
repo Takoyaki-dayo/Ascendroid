@@ -7,7 +7,12 @@ const D = root.DATA;
 // blockDecay: ブロックの減り方(実験用。null なら使い切るまで残る)
 //   {type:'hit'} 敵の攻撃を受けると余りも消える(多段は撃ち終わりで) / {type:'lin', v} 毎サイクル v 減る
 //   {type:'mul', v} 毎サイクル v 倍(端数切り捨て) / {type:'life', v} 最後に得てから v サイクルで消える / {type:'cap', v} 持てる上限 v
-const RULE = {draw:3, handStart:5, handMax:7, view:18, freeWait:true, blockDecay:null};
+// econ: 手札の補給の型(実験用。null なら今の「3サイクルごとに1枚届く」)
+//   {type:'turn', len, hand, blockReset, eject}  固定のターン: len サイクルごとに区切り。手札を捨てて hand 枚引く
+//   {type:'reload', r, hand, heat, blockReset, eject, keep}  再装填: 自分で区切る(手札がなければ区切るしかない)。r(+heat×回数)サイクルかけて hand 枚引く。keep なら手札を残して hand 枚まで引く
+//   {type:'mag', r, cap}  弾倉: 3サイクルごとに1枚が弾倉にたまり、区切り(r サイクル)でまとめて手札へ
+//   blockReset: 区切りでブロックが消える('start' 区切りの始め / true・'end' 終わり) / eject: 区切りで捨てたカード1枚ごとのブロック
+const RULE = {draw:3, handStart:5, handMax:7, view:18, freeWait:true, blockDecay:null, econ:null};
 
 /* ---------- 乱数と小道具 ---------- */
 function rngFrom(seed){
@@ -101,6 +106,7 @@ function hitFoe(st, e, n, ev){
   let d = n;
   if(e.vuln > 0){ d = Math.round(d * 1.5); b.vulnHits = (b.vulnHits || 0) + 1; ev.push({kind:'vulnHit', e:e.i}); }
   if(inWin(e, a.guard) && e.sh > 0){ const ab = Math.min(e.sh, d); e.sh -= ab; d -= ab; b.guarded = (b.guarded || 0) + ab; ev.push({kind:'guarded', e:e.i, n:ab}); }
+  if(e.armor > 0 && d > 0){ const ab = Math.min(e.armor, d); e.armor -= ab; d -= ab; b.guarded = (b.guarded || 0) + ab; ev.push({kind:'armored', e:e.i, n:ab}); }
   if(inWin(e, a.counter)){ const res = strike(st, e, {n:a.n, d:a.counter.d, p:a.p || 'dur'}, 0, true); afterHit(b); b.countered = (b.countered || 0) + 1; ev.push({kind:'counter', e:e.i, res}); }
   if(d > 0) hurtFoe(b, e, d, ev);
   if(e.alive && inWin(e, a.wind) && n >= a.wind.poise){ const nm = a.n; advance(e); b.breaks = (b.breaks || 0) + 1; ev.push({kind:'break', e:e.i, name:nm}); }
@@ -145,7 +151,7 @@ function fireTimer(st, t){
 }
 // 敵の攻撃1回。extra は連携の上乗せ
 function strike(st, e, a, extra, noParry){
-  const b = st.b, raw = a.d + (extra || 0);
+  const b = st.b, raw = a.d + (extra || 0) + (b.mark || 0);
   if(b.parryNow && !noParry){ const ev = []; hurtFoe(b, e, raw, ev); return {kind:'parried', name:a.n, raw, ev}; }
   const ab = Math.min(b.block, raw); b.block -= ab; b.blockUsed = (b.blockUsed || 0) + ab;
   const rem = raw - ab, p = b.parts[a.p];
@@ -167,6 +173,13 @@ function enemyAct(st, e, extra){
   if(a.d > 0 && res.kind === 'hit') afterHit(st.b);
   if(a.rec) e.vuln = a.rec + 1;
   if(a.buff){ for(const f of (a.all ? st.b.foes.filter(f => f.alive) : [e])) f.str = (f.str || 0) + a.buff; res.buff = a.buff; }
+  // 放置の代償になる行動
+  const b = st.b;
+  if(a.armor){ e.armor = (e.armor || 0) + a.armor; res.armor = a.armor; }                // 装甲を重ねる(消えない)
+  if(a.heal){ const h = Math.min(a.heal, e.maxHp - e.hp); e.hp += h; res.heal = h; }     // 修復
+  if(a.mark){ b.mark = (b.mark || 0) + a.mark; res.mark = a.mark; }                       // 照準: こちらが受ける攻撃すべて+mark
+  if(a.noise){ for(let i = 0; i < a.noise; i++){ const at = Math.floor(rand() * (b.draw.length + 1)); b.draw.splice(at, 0, {k:'noise', id:b.uid++}); } res.noise = a.noise; } // ノイズ注入
+  if(a.summon && b.foes.filter(f => f.alive).length < 3){ const nf = makeFoe(a.summon, b.foes.length); b.foes.push(nf); res.summon = nf.i; } // 増援
   advance(e);
   return res;
 }
@@ -210,8 +223,17 @@ function* spendGen(st, cost, k, ti, noInt){
         for(const t of due){ const ev = fireTimer(st, t); yield {type:'timer', t, ev}; }
         if(!b.foes.some(e => e.alive)){ b.cast = null; out.won = true; return out; }
       }
-      // 手札が届く
-      if(b.drawIn <= 0){ b.drawIn = RULE.draw; const r = drawOne(b); yield {type:'arrive', r}; }
+      // 手札が届く(型によって、弾倉にたまる / 届かない)
+      const ec = econ();
+      if(ec.type === 'trickle' || ec.type === 'mag'){
+        if(b.drawIn <= 0){
+          b.drawIn = RULE.draw;
+          if(ec.type === 'mag'){ if(b.mag.length < (ec.cap || 7)){ if(!b.draw.length){ b.draw = shuffle(b.disc); b.disc = []; } if(b.draw.length) b.mag.push(b.draw.pop()); } yield {type:'mag'}; }
+          else { const r = drawOne(b); yield {type:'arrive', r}; }
+        }
+      } else if(ec.type === 'turn'){
+        if(--b.turnIn <= 0){ b.turnIn = ec.len; const ev = boundary(st, 'turn'); drawN(b, ec.hand); yield {type:'turn', ev}; }
+      }
     }
     if(left === 0){
       out.completeAt = out.elapsed;
@@ -264,17 +286,32 @@ function* spendGen(st, cost, k, ti, noInt){
 function runGen(g){ let r; while(!(r = g.next()).done){} return r.value; }
 
 /* ---------- 戦闘の準備と、行動の候補 ---------- */
+function makeFoe(key, i){
+  const f = D.foes[key];
+  const e = {key, i, name:f.name, tag:'ABCDEF'[i], kind:f.kind, hp:f.hp, maxHp:f.hp, pat:f.pat, idx:0, r:f.start, seq:0, alive:true, crack:0,
+    react:f.react || null, sync:f.sync || 0, reactIn:null, ai:f.ai || null, phase:f.phase || null, phased:false, hist:[], chain:0, sh:0, vuln:0, str:0, armor:f.armor || 0};
+  if(e.ai === 'rand') e.idx = pickMove(e);
+  const a = cur(e); e.sh = a.guard ? a.guard.s : 0;
+  return e;
+}
+const econ = () => RULE.econ || {type:'trickle'};
+// 区切り: 手札を捨て(排莢)、ブロックを消す。引くのは呼ぶ側
+function boundary(st, when){
+  const b = st.b, ec = econ(), ev = {kind:'boundary', n:b.hand.length};
+  const ej = (ec.eject || 0) * b.hand.filter(c => c.k !== 'noise').length;
+  if((when === 'start' && !ec.keep) || when === 'turn'){ for(const c of b.hand) if(c.k !== 'noise') b.disc.push(c); b.hand = []; }
+  else if(when === 'start'){ b.hand = b.hand.filter(c => c.k !== 'noise'); } // keep: 手札を残し、足りない分だけ引く(ノイズは消える)
+  if(ec.blockReset && (ec.blockReset === when || when === 'turn')) b.block = 0; // 再装填で true/'end' のときは終わりに消す(endAction)
+  if(ej) gainBlock(b, ej);
+  ev.eject = ej;
+  return ev;
+}
 function newBattle(run, encKey){
   const E = D.encounters[encKey];
   const st = {run, b:null};
   const parts = {};
   for(const s of D.slots){ const mx = partMax(run, s.id); parts[s.id] = {cur: run.parts[s.id].damaged ? Math.ceil(mx / 2) : mx, max:mx}; }
-  const foes = E.foes.map((key, i) => {
-    const f = D.foes[key];
-    return {key, i, name:f.name, tag:'ABC'[i], kind:f.kind, hp:f.hp, maxHp:f.hp, pat:f.pat, idx:0, r:f.start, seq:0, alive:true, crack:0,
-      react:f.react || null, sync:f.sync || 0, reactIn:null, ai:f.ai || null, phase:f.phase || null, phased:false, hist:[], chain:0, sh:0, vuln:0, str:0};
-  });
-  for(const e of foes){ if(e.ai === 'rand') e.idx = pickMove(e); const a = cur(e); e.sh = a.guard ? a.guard.s : 0; }
+  const foes = E.foes.map((key, i) => makeFoe(key, i));
   let uid = 1;
   const cards = shuffle(battleDeck(run).map(k => ({k, id:uid++})));
   const b = {enc:encKey, T:0, block:0, swift:0, foes, parts, draw:cards, disc:[], hand:[], cast:null, broken:{}, over:false, timers:[], drawIn:RULE.draw, handMax:RULE.handMax, uid:1000, parryNow:false};
@@ -282,7 +319,9 @@ function newBattle(run, encKey){
   b.handMax += fx(st, 'calc', 'handMax');
   const sb = fx(st, 'dur', 'startBlock'); if(sb) gainBlock(b, sb);
   b.swift += fx(st, 'mob', 'startSwift');
-  drawN(b, RULE.handStart + fx(st, 'mob', 'startHand'));
+  const ec = econ();
+  b.turnIn = ec.type === 'turn' ? ec.len : 0; b.reloads = 0; b.mag = [];
+  drawN(b, (ec.hand || RULE.handStart) + fx(st, 'mob', 'startHand'));
   return st;
 }
 // 今できる行動: カード(対象ごと)、入れ替え(手札があるとき)、待機(手札がないとき)
@@ -293,22 +332,38 @@ function actions(st){
     const ts = c.tgt ? b.foes.filter(e => e.alive).map(e => e.i) : [null];
     for(const t of ts){ const key = cd.k + '|' + t; if(seen.has(key)) continue; seen.add(key); out.push({type:'card', i, k:cd.k, t}); }
   });
+  const ec = econ();
+  if(ec.type === 'reload' || ec.type === 'mag'){
+    if(ec.type === 'reload' || b.mag.length) out.push({type:'reload'});
+    if(RULE.freeWait || (ec.type === 'mag' && !b.hand.length)) out.push({type:'wait'});
+    return out;
+  }
+  if(ec.type === 'turn'){ out.push({type:'wait'}); return out; }
   if(b.hand.length) out.push({type:'swap'});
   if(!b.hand.length || RULE.freeWait) out.push({type:'wait'});
   return out;
 }
-function actionCost(st, a){ return a.type === 'card' ? D.cards[a.k].cost : a.type === 'swap' ? st.b.hand.length : 1; }
+function reloadCost(st){ const ec = econ(); return ec.type === 'mag' ? (ec.r || 1) : (ec.r || 2) + (ec.heat || 0) * st.b.reloads; }
+function actionCost(st, a){ return a.type === 'card' ? D.cards[a.k].cost : a.type === 'swap' ? st.b.hand.length : a.type === 'reload' ? reloadCost(st) : 1; }
 // 行動を1つ、手札の出し入れまで含めて準備する。spendGen の前に呼ぶ
 function beginAction(st, a){
   const b = st.b;
   if(a.type === 'card'){ const cd = b.hand.splice(a.i, 1)[0]; return {card:cd, cost:D.cards[cd.k].cost, k:cd.k, t:a.t, n:0}; }
   if(a.type === 'swap'){ const n = b.hand.length; b.disc.push(...b.hand); b.hand = []; return {card:null, cost:n, k:null, t:null, n}; }
+  if(a.type === 'reload'){
+    const ec = econ(), cost = reloadCost(st);
+    if(ec.type === 'mag') return {card:null, cost, k:null, t:null, n:0, mag:true};
+    const ev = boundary(st, 'start'); b.reloads++;
+    return {card:null, cost, k:null, t:null, n:Math.max(0, (ec.hand || 5) - b.hand.length), reload:true, ev};
+  }
   b.waiting = true; // 待機はスウィフトを使わない(使うと敵の時間が進まず、待った意味がなくなる)
   return {card:null, cost:1, k:null, t:null, n:0};
 }
 function endAction(st, p, out){
   const b = st.b;
-  if(p.card) b.disc.push(p.card);
+  if(p.card && p.card.k !== 'noise') b.disc.push(p.card); // ノイズは使うと消える
+  if(p.reload && !out.dead && !out.won){ const ec = econ(); if(ec.blockReset === 'end' || ec.blockReset === true) b.block = 0; }
+  if(p.mag && !out.dead && !out.won){ while(b.mag.length && b.hand.length < b.handMax) b.hand.push(b.mag.shift()); }
   if(p.n && !out.dead && !out.won) drawN(b, p.n);
 }
 // まとめて実行(シミュレータ用)
@@ -380,7 +435,7 @@ function nextNodes(run){
   return [m.nodes[at.lane][at.idx + 1]];
 }
 
-const API = {RULE, rngFrom, setRandom, shuffle, pick, clone, cur, advance, partOf, fx, partCards, battleDeck, partMax, dmgOf, blockOf,
+const API = {RULE, makeFoe, reloadCost, rngFrom, setRandom, shuffle, pick, clone, cur, advance, partOf, fx, partCards, battleDeck, partMax, dmgOf, blockOf,
   drawOne, drawN, upcoming, arrivals, applyCard, enemyAct, spendGen, runGen, newBattle, actions, actionCost, beginAction, endAction, doAction,
   newRun, genMap, nextNodes, reachAfter};
 root.ENGINE = API;

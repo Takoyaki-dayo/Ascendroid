@@ -19,6 +19,7 @@
   - `lab2.js` と `exp4.js`: 抽象モデルで、敵の行動の複雑さと「待てる」を比べる。`node tools/lab/exp4.js A,D,K 5`(条件の記号、乱数の種)
   - `variety.js`: 同じ比較をゲーム本体のエンジンと本物のカードで行う。`node tools/lab/variety.js A,B,C,D,E 5 10`
   - `block.js`: ブロックの減り方(エンジンの RULE.blockDecay)を比べる。`node tools/lab/block.js A,B,C 5 8`
+  - `turns.js`: 擬似ターン(手札の区切り、エンジンの RULE.econ)を、アーキタイプの試作デッキで比べる。`node tools/lab/turns.js T-flat-w,A6-prop-w,B4-prop-n 5 6 base`(記号は 型-強さの表-待機、最後は敵 base/esc)。`turns_sum.js` で種を平均した表(turns_summary_*.txt)
 - `manifest.webmanifest` アプリ設定(全画面・横向き)
 - `sw.js` オフライン用。データファイルを増やしたら CORE に足す
 - `icons/` アイコン(仮)

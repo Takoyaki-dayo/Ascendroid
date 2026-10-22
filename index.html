@@ -1252,7 +1252,7 @@ function showDefrag(){
 const price = k => DATA.shop.price[CARDS[k].cost] ?? 30;
 function showShop(){
   const sh = DATA.shop, run = S.run;
-  if(!UI.offers){ const pool = Object.keys(CARDS).filter(k => !['charge','scatter'].includes(k)); UI.offers = EN.shuffle(pool).slice(0, sh.offers); }
+  if(!UI.offers){ const pool = Object.keys(CARDS).filter(k => !['charge','scatter'].includes(k) && !CARDS[k].junk); UI.offers = EN.shuffle(pool).slice(0, sh.offers); }
   const pk = UI.pick, can = c => run.scrap >= c;
   const offers = UI.offers.map((k, i) => k ? `<div class="sitem"><button class="card static${pk === 'c' + i ? ' picked' : ''}${can(price(k)) ? '' : ' off'}" type="button" data-act="pick" data-arg="c${i}" data-view="shop">${cardInner(k, null)}</button><span class="price${can(price(k)) ? '' : ' no'}"><span class="ic">${IC.scrap}</span>${price(k)}</span></div>` : '<div class="sitem sold"></div>').join('');
   const svc = (id, ic, name, sub, c) => `<button class="opt${pk === id ? ' picked' : ''}${can(c) ? '' : ' off'}" type="button" data-act="pick" data-arg="${id}" data-view="shop"><span class="ic">${IC[ic]}</span><b>${name}</b><span>${sub}</span><span class="price${can(c) ? '' : ' no'}"><span class="ic">${IC.scrap}</span>${c}</span></button>`;
@@ -1350,7 +1350,7 @@ const DBG_PRESET = {
   light: () => ['jab','jab','jab','rapid','rapid','flick','flick','guard','guard','hack','reload','timebomb','scan'],
   heavy: () => ['slash','slash','slash','wall','wall','blow','emp','backflow','guard','scan','parry'],
   control: () => ['hack','hack','backflow','timebomb','timebomb','parry','crackshot','crackshot','jab','guard','scan','overclock'],
-  all: () => Object.keys(CARDS),
+  all: () => Object.keys(CARDS).filter(k => !CARDS[k].junk),
   empty: () => [],
 };
 const DBG_PRESET_NAME = {start:'最初', light:'軽い', heavy:'重い', control:'制御', all:'全種1枚', empty:'空'};
@@ -1388,7 +1388,7 @@ function showDebugDeck(){
   UI.dbgView = 'deck';
   const cnt = {}; for(const k of DBG.deck) cnt[k] = (cnt[k] || 0) + 1;
   const presets = Object.keys(DBG_PRESET).map(k => `<button type="button" data-act="dbgPreset" data-arg="${k}">${DBG_PRESET_NAME[k]}</button>`).join('');
-  const cards = Object.keys(CARDS).sort((a, c) => CARDS[a].cost - CARDS[c].cost).map(k => `<div class="dcard"><i>${CARDS[k].cost}</i><span>${CARDS[k].name}</span><button type="button" data-act="dbgCard" data-arg="${k}:-1">−</button><b class="${cnt[k] ? '' : 'z'}">${cnt[k] || 0}</b><button type="button" data-act="dbgCard" data-arg="${k}:1">+</button></div>`).join('');
+  const cards = Object.keys(CARDS).filter(k => !CARDS[k].junk).sort((a, c) => CARDS[a].cost - CARDS[c].cost).map(k => `<div class="dcard"><i>${CARDS[k].cost}</i><span>${CARDS[k].name}</span><button type="button" data-act="dbgCard" data-arg="${k}:-1">−</button><b class="${cnt[k] ? '' : 'z'}">${cnt[k] || 0}</b><button type="button" data-act="dbgCard" data-arg="${k}:1">+</button></div>`).join('');
   const extra = EN.partCards({parts: Object.fromEntries(SLOTS.map(p => [p.id, {id: DBG.parts[p.id]}]))});
   showOv(`<h2>デッキ ${DBG.deck.length}枚${extra.length ? ` <span style="color:var(--dim);font-size:11px;font-weight:400">+パーツ ${extra.map(k => CARDS[k].name).join('・')}</span>` : ''}</h2>
     <div class="seg">${presets}</div><div class="dbg-grid">${cards}</div>

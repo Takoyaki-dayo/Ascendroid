@@ -156,7 +156,8 @@ function enemyAct(st, e, extra){
    カード(k あり)、入れ替え・待機(k なし)のどれも、cost サイクルぶん時間を進める。
    1サイクルごとにイベントを返すので、画面はそれを見て演出し、プレビューは最後まで回して結果だけを見る */
 function* spendGen(st, cost, k, ti, noInt){
-  const b = st.b, c = k ? D.cards[k] : null, atomic = !c || !!c.atomic;
+  const b = st.b, c = k ? D.cards[k] : null, atomic = !c || !!c.atomic, waiting = !c && !!b.waiting;
+  b.waiting = false;
   let left = cost;
   const out = {elapsed:0, completeAt:null, interruptedAt:null, justs:[], dead:false, won:false};
   b.cast = {k, left};
@@ -173,7 +174,7 @@ function* spendGen(st, cost, k, ti, noInt){
   }
   while(left > 0){
     let real = true;
-    if(b.swift > 0){ b.swift--; real = false; }
+    if(b.swift > 0 && !waiting){ b.swift--; real = false; }
     left--; b.cast.left = left;
     if(real){
       b.T++; out.elapsed++; b.drawIn--;
@@ -282,6 +283,7 @@ function beginAction(st, a){
   const b = st.b;
   if(a.type === 'card'){ const cd = b.hand.splice(a.i, 1)[0]; return {card:cd, cost:D.cards[cd.k].cost, k:cd.k, t:a.t, n:0}; }
   if(a.type === 'swap'){ const n = b.hand.length; b.disc.push(...b.hand); b.hand = []; return {card:null, cost:n, k:null, t:null, n}; }
+  b.waiting = true; // 待機はスウィフトを使わない(使うと敵の時間が進まず、待った意味がなくなる)
   return {card:null, cost:1, k:null, t:null, n:0};
 }
 function endAction(st, p, out){

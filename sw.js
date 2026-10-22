@@ -1,6 +1,6 @@
 // Ascendroid サービスワーカー
 // 更新するときは VERSION をアプリのバージョン(index.html の APP_VERSION)と同じ値にする
-const VERSION = '0.7.0';
+const VERSION = '0.7.1';
 const CACHE = 'tower-' + VERSION;
 const CORE = [
   './',
@@ -18,7 +18,8 @@ const CORE = [
 ];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE)).then(() => self.skipWaiting()));
+  // ブラウザのHTTPキャッシュを通さずに取る(古いJSが新しい版のキャッシュに混ざらないように)
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE.map(u => new Request(u, {cache:'reload'})))).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', e => {
@@ -43,7 +44,17 @@ self.addEventListener('fetch', e => {
     return;
   }
 
-  // それ以外(アイコン、フォント等): キャッシュ優先、裏で取り直す
+  // 同じサイトのファイル(データ・エンジンなど): ネット優先。ページと版がずれないように、圏外のときだけキャッシュ
+  if (new URL(req.url).origin === location.origin) {
+    e.respondWith(
+      fetch(req, {cache:'no-cache'})
+        .then(res => { if (res && res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(req, copy)); } return res; })
+        .catch(() => caches.match(req, {ignoreSearch:true}))
+    );
+    return;
+  }
+
+  // ほかのサイト(フォント等): キャッシュ優先、裏で取り直す
   e.respondWith(
     caches.match(req).then(hit => {
       const net = fetch(req).then(res => {

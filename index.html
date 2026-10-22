@@ -354,6 +354,23 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 .conn.alt{width:18px;color:var(--dim)}
 .at.mv{border:1px solid #33495d;background:var(--raised)}
 .at.mv .ty{color:var(--fg2)}
+.box.wide{max-width:800px}
+.dbg-sum{font-size:11px;color:var(--fg2);margin:-4px 0 10px}
+.dbg-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:0 0 12px}
+.dbg-grid .opt{width:auto;padding:8px 10px;gap:3px}
+.opt.sel{border-color:var(--cy);box-shadow:0 0 0 1px var(--cy)}
+.dbg-h{font-size:10.5px;color:var(--dim);margin:8px 0 4px}
+.seg{display:flex;flex-wrap:wrap;gap:4px;margin:0 0 8px}
+.seg button{border:1px solid var(--line);background:var(--bg);color:var(--fg2);border-radius:5px;padding:5px 10px;font-size:11.5px}
+.seg button.on{border-color:var(--cy);color:var(--cy);background:#0d2230}
+.dcard{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:6px;padding:4px 6px;font-size:11.5px;background:var(--bg)}
+.dcard i{font-style:normal;font-family:var(--f-num);font-weight:700;color:var(--cy);width:12px;text-align:center}
+.dcard span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dcard b{font-family:var(--f-num);width:16px;text-align:center}
+.dcard b.z{color:var(--dim2)}
+.dcard button{width:26px;height:24px;border:1px solid var(--line);border-radius:4px;background:var(--panel);color:var(--fg);padding:0;font-size:15px;line-height:1}
+.dslot{display:flex;align-items:center;gap:8px;margin:0 0 6px}
+.dslot .dn{width:44px;flex:none;font-size:11px;color:var(--fg2);display:flex;gap:4px;align-items:center}
 .fshield{position:absolute;width:70px;height:84px;margin:-42px 0 0 -35px;border:1.5px solid rgba(207,227,239,.85);border-radius:45%;box-shadow:0 0 12px rgba(143,176,196,.5);animation:shield .5s ease-out forwards}
 .traits{display:flex;flex-direction:column;gap:6px;margin-top:6px}
 .trait-row{display:flex;gap:6px;align-items:center;font-size:10.5px;color:var(--fg2)}
@@ -484,7 +501,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 <script src="data/lines.js"></script>
 <script src="js/engine.js"></script>
 <script>
-const APP_VERSION = '0.7.0';
+const APP_VERSION = '0.7.1';
 const $ = s => document.querySelector(s);
 const EN = ENGINE, RULE = EN.RULE;
 const VIEW = RULE.view, NOW = 180, PX = 25, xs = c => NOW + c * PX, ROWY = [52, 86, 120], STRIP_Y = 150, SWIFT_VIS = 3;
@@ -570,7 +587,7 @@ function computePreview(){
   const fx = new Set(A.evs.filter(x => ['break','guarded','counter','vulnHit'].includes(x.kind)).map(x => x.kind + ':' + x.e));
   const react = new Set();
   if(a.type === 'card' && cost > 0) for(const e of S.b.foes) if(e.alive && e.react && cost >= e.react.min && e.reactIn == null) react.add(e.i);
-  return {k:a.k || null, cost, completeAt: P.out.completeAt ?? P.out.elapsed, free: Math.min(S.b.swift, cost),
+  return {k:a.k || null, cost, completeAt: P.out.completeAt ?? P.out.elapsed, free: a.type === 'wait' ? 0 : Math.min(S.b.swift, cost),
     justSet: new Set(A.out.justs.map(j => j.i)), parts: A.c.b.parts, body: A.c.run.body, foeHp: A.c.b.foes.map(e => e.hp), react, fx};
 }
 
@@ -1187,12 +1204,14 @@ function partTiles(){
 }
 function bodyLine(){ return `<div class="bodyline"><span class="ic" style="color:var(--cy)">${IC.core}</span>${S.run.body}/${S.run.bodyMax}<span class="ic" style="color:var(--fg2);margin-left:10px">${IC.scrap}</span>${S.run.scrap}</div>`; }
 function onWin(){
+  if(UI.node && UI.node.debug){ showDebugResult(true); return; }
   for(const p of SLOTS) S.run.parts[p.id].damaged = !!S.b.broken[p.id];
   const n = UI.node, gain = n.type === 'elite' ? DATA.rewards.elite : n.type === 'battle' ? DATA.rewards.battle : 0;
   S.run.scrap += gain;
   showOv(`<h2>戦闘終了</h2>${bodyLine()}${partTiles()}${gain ? `<p class="gain"><span class="ic">${IC.scrap}</span>+${gain}</p>` : ''}<div class="row"><button class="btn" type="button" data-act="afterWin">次へ</button></div>`);
 }
 function onLose(){
+  if(UI.node && UI.node.debug){ showDebugResult(false); return; }
   showOv(`<h2>機能停止</h2><div class="row"><button class="btn ghost" type="button" data-act="restart">最初から</button><button class="btn" type="button" data-act="retry">この戦闘をやり直す</button></div>`);
 }
 function learnPool(){ return [...new Set(ENC[UI.node.enc].foes.flatMap(k => FOES[k].pool))]; }
@@ -1324,6 +1343,108 @@ function infoDeck(){
   const tiles = Object.keys(own).map(k => `<div class="card static">${cardInner(k, S, own[k])}</div>`).concat(Object.keys(extra).map(k => `<div class="card static src">${cardInner(k, S, extra[k])}</div>`));
   showOv(`<h2>デッキ ${EN.battleDeck(S.run).length}</h2><div class="cards">${tiles.join('')}</div>${closeRow}`, true);
 }
+/* ---------- debug ---------- */
+// 調整用: 遭遇・デッキ・パーツ・数値を選んで、ランの外で1戦だけ戦う。設定は端末ごとに覚える
+const DBG_PRESET = {
+  start: () => DATA.startDeck.slice(),
+  light: () => ['jab','jab','jab','rapid','rapid','flick','flick','guard','guard','hack','reload','timebomb','scan'],
+  heavy: () => ['slash','slash','slash','wall','wall','blow','emp','backflow','guard','scan','parry'],
+  control: () => ['hack','hack','backflow','timebomb','timebomb','parry','crackshot','crackshot','jab','guard','scan','overclock'],
+  all: () => Object.keys(CARDS),
+  empty: () => [],
+};
+const DBG_PRESET_NAME = {start:'最初', light:'軽い', heavy:'重い', control:'制御', all:'全種1枚', empty:'空'};
+let DBG = null;
+function dbgLoad(){
+  const def = {deck: DATA.startDeck.slice(), parts: {...DATA.startParts}, body: DATA.bodyMax, dmg: 1, hp: 1, custom: ['drone', null, null], enc: null};
+  let v = null; try{ v = JSON.parse(localStorage.getItem('asc.dbg') || 'null'); }catch(e){}
+  DBG = Object.assign(def, v || {});
+  DBG.deck = DBG.deck.filter(k => CARDS[k]);
+  for(const p of SLOTS) if(!PARTDEF[DBG.parts[p.id]] || PARTDEF[DBG.parts[p.id]].slot !== p.id) DBG.parts[p.id] = DATA.startParts[p.id];
+  DBG.custom = [0, 1, 2].map(i => DBG.custom[i] && FOES[DBG.custom[i]] ? DBG.custom[i] : null);
+  if(DBG.enc && DBG.enc !== 'dbg' && !ENC[DBG.enc]) DBG.enc = null;
+}
+function dbgSave(){ try{ localStorage.setItem('asc.dbg', JSON.stringify(DBG)); }catch(e){} }
+const dbgMul = x => '×' + x;
+function dbgSummary(){
+  const parts = SLOTS.map(p => PARTDEF[DBG.parts[p.id]].name.replace(/[〘〙]/g, '')).join(' / ');
+  return `デッキ ${DBG.deck.length}枚 · ${parts} · 本体${DBG.body} · 敵の攻撃${dbgMul(DBG.dmg)} 耐久${dbgMul(DBG.hp)} · 待機${RULE.freeWait ? 'いつでも' : '手札がないときだけ'}`;
+}
+function encLabel(k){ const E = ENC[k]; return `${E.boss ? 'ボス' : E.elite ? 'エリート' : '通常'} · ${E.fam}`; }
+function showDebug(){
+  UI.dbgView = 'top';
+  const opts = Object.keys(ENC).filter(k => k !== 'dbg').map(k => `<button class="opt${UI.pick === k ? ' sel' : ''}" type="button" data-act="dbgPick" data-arg="${k}"><b>${encLabel(k)}</b><span>${encFoes(k)}</span></button>`).join('')
+    + `<button class="opt${UI.pick === 'dbg' ? ' sel' : ''}" type="button" data-act="dbgPick" data-arg="dbg"><b>自由に組む</b><span>${DBG.custom.filter(Boolean).map(f => FOES[f].name).join('・') || '—'}</span></button>`;
+  showOv(`<h2>デバッグ</h2><p class="dbg-sum">${dbgSummary()}</p>
+    <div class="dbg-grid">${opts}</div>
+    <div class="row" style="justify-content:space-between"><span class="row" style="justify-content:flex-start">
+      <button class="btn ghost" type="button" data-act="dbgView" data-arg="deck">デッキ</button>
+      <button class="btn ghost" type="button" data-act="dbgView" data-arg="parts">パーツ</button>
+      <button class="btn ghost" type="button" data-act="dbgView" data-arg="nums">数値</button>
+      <button class="btn ghost" type="button" data-act="dbgView" data-arg="custom">自由に組む</button></span>
+      <span class="row"><button class="btn ghost" type="button" data-act="restart">通常のランへ</button><button class="btn" type="button" data-act="dbgGo" ${UI.pick ? '' : 'disabled'}>決定</button></span></div>`, false, true);
+}
+function showDebugDeck(){
+  UI.dbgView = 'deck';
+  const cnt = {}; for(const k of DBG.deck) cnt[k] = (cnt[k] || 0) + 1;
+  const presets = Object.keys(DBG_PRESET).map(k => `<button type="button" data-act="dbgPreset" data-arg="${k}">${DBG_PRESET_NAME[k]}</button>`).join('');
+  const cards = Object.keys(CARDS).sort((a, c) => CARDS[a].cost - CARDS[c].cost).map(k => `<div class="dcard"><i>${CARDS[k].cost}</i><span>${CARDS[k].name}</span><button type="button" data-act="dbgCard" data-arg="${k}:-1">−</button><b class="${cnt[k] ? '' : 'z'}">${cnt[k] || 0}</b><button type="button" data-act="dbgCard" data-arg="${k}:1">+</button></div>`).join('');
+  const extra = EN.partCards({parts: Object.fromEntries(SLOTS.map(p => [p.id, {id: DBG.parts[p.id]}]))});
+  showOv(`<h2>デッキ ${DBG.deck.length}枚${extra.length ? ` <span style="color:var(--dim);font-size:11px;font-weight:400">+パーツ ${extra.map(k => CARDS[k].name).join('・')}</span>` : ''}</h2>
+    <div class="seg">${presets}</div><div class="dbg-grid">${cards}</div>
+    <div class="row"><button class="btn" type="button" data-act="dbgBack">戻る</button></div>`, false, true);
+}
+function showDebugParts(){
+  UI.dbgView = 'parts';
+  const rows = SLOTS.map(p => `<div class="dslot"><span class="dn"><span class="ic">${IC[p.id]}</span>${p.fn}</span><div class="seg" style="margin:0">${Object.entries(PARTDEF).filter(([, d]) => d.slot === p.id).map(([id, d]) => `<button type="button" class="${DBG.parts[p.id] === id ? 'on' : ''}" data-act="dbgPart" data-arg="${p.id}:${id}" title="${d.text}">${d.name.replace(/[〘〙]/g, '')}</button>`).join('')}</div></div>`).join('');
+  const notes = SLOTS.map(p => { const d = PARTDEF[DBG.parts[p.id]]; return `<div class="trait-row"><span class="ic">${IC[p.id]}</span><span>${d.text}</span></div>`; }).join('');
+  showOv(`<h2>パーツ</h2>${rows}<div class="traits" style="margin:6px 0 12px">${notes}</div><div class="row"><button class="btn" type="button" data-act="dbgBack">戻る</button></div>`, false, true);
+}
+function showDebugNums(){
+  UI.dbgView = 'nums';
+  const seg = (key, vals, fmt) => `<div class="seg">${vals.map(v => `<button type="button" class="${DBG[key] === v ? 'on' : ''}" data-act="dbgNum" data-arg="${key}:${v}">${fmt ? fmt(v) : v}</button>`).join('')}</div>`;
+  showOv(`<h2>数値</h2>
+    <div class="dbg-h">本体耐久</div>${seg('body', [20, 50, 100, 999])}
+    <div class="dbg-h">敵の攻撃</div>${seg('dmg', [0.5, 1, 1.5, 2, 3], dbgMul)}
+    <div class="dbg-h">敵の耐久</div>${seg('hp', [0.5, 1, 1.5, 2, 3], dbgMul)}
+    <div class="dbg-h">待機</div><div class="seg"><button type="button" class="${RULE.freeWait ? 'on' : ''}" data-act="dbgWait" data-arg="1">いつでも</button><button type="button" class="${RULE.freeWait ? '' : 'on'}" data-act="dbgWait" data-arg="0">手札がないときだけ</button></div>
+    <div class="row"><button class="btn" type="button" data-act="dbgBack">戻る</button></div>`, false, true);
+}
+function showDebugCustom(){
+  UI.dbgView = 'custom';
+  const keys = Object.keys(FOES);
+  const rows = [0, 1, 2].map(i => `<div class="dslot"><span class="dn">${'ABC'[i]}</span><div class="seg" style="margin:0"><button type="button" class="${DBG.custom[i] ? '' : 'on'}" data-act="dbgSlot" data-arg="${i}:">なし</button>${keys.map(k => `<button type="button" class="${DBG.custom[i] === k ? 'on' : ''}" data-act="dbgSlot" data-arg="${i}:${k}">${FOES[k].name}${['drone2','linkB'].includes(k) ? '′' : ''}</button>`).join('')}</div></div>`).join('');
+  showOv(`<h2>自由に組む</h2>${rows}<div class="row"><button class="btn" type="button" data-act="dbgBack">戻る</button></div>`, false, true);
+}
+function dbgRedraw(){ ({top:showDebug, deck:showDebugDeck, parts:showDebugParts, nums:showDebugNums, custom:showDebugCustom})[UI.dbgView || 'top'](); }
+// 選んだ設定で1戦だけ始める
+function startDebugBattle(enc){
+  const run = EN.newRun(Math.floor(Math.random() * 1e9));
+  run.deck = DBG.deck.slice();
+  for(const p of SLOTS) run.parts[p.id] = {id: DBG.parts[p.id], damaged: false};
+  run.body = run.bodyMax = DBG.body;
+  S = {run, b: null};
+  const custom = enc === 'dbg';
+  if(custom) ENC.dbg = {fam:'自由', foes: DBG.custom.filter(Boolean)};
+  const E = ENC[enc];
+  UI.node = {type: E.boss ? 'boss' : E.elite ? 'elite' : 'battle', enc, debug: true};
+  UI.dbgEnc = enc; hideOv();
+  startBattle(UI.node);
+  if(custom) delete ENC.dbg; // 地図の生成に混ざらないように
+  // 敵の攻撃と耐久の倍率
+  const sc = x => Math.max(1, Math.round(x * DBG.dmg));
+  const fixPat = pat => pat.map(a => { const o = JSON.parse(JSON.stringify(a)); if(o.d > 0) o.d = sc(o.d); if(o.counter) o.counter.d = sc(o.counter.d); return o; });
+  for(const e of S.b.foes){
+    e.hp = e.maxHp = Math.max(1, Math.round(e.maxHp * DBG.hp));
+    e.pat = fixPat(e.pat);
+    if(e.phase) e.phase = {at: e.phase.at, pat: fixPat(e.phase.pat)};
+    if(e.react) e.react = {...e.react, d: sc(e.react.d)};
+  }
+  renderAll();
+}
+function showDebugResult(won){
+  showOv(`<h2>${won ? '勝利' : '機能停止'}</h2>${bodyLine()}${partTiles()}<p class="sub" style="margin:8px 0 10px">${S.b.T}サイクル</p><div class="row"><button class="btn ghost" type="button" data-act="debug">デバッグへ</button><button class="btn" type="button" data-act="dbgAgain">もう一度</button></div>`);
+}
 function showRules(first){
   showOv(`<h2>遊び方</h2><ul>
     <li>時間はカードを使ったときだけ進む。カード左上の数字が、かかるサイクル。0は即時。</li>
@@ -1334,17 +1455,17 @@ function showRules(first){
     <li>予定の下の帯は、その間にカードが完了したときに効く。<b>構</b>は数字以上の一撃で行動を潰せる。<b>防</b>は数字までダメージを防がれる。<b>返</b>は殴るたびに撃ち返される。<b>隙</b>はダメージ1.5倍。<b>?</b>は次の行動がまだ決まっていない。</li>
     <li>右下は手札の入れ替え(枚数ぶんのサイクル)と、1サイクルの待機。</li>
     <li>上スワイプで手札を広げ、下スワイプで自分の内側を見る。長押しでカードと敵の詳細。</li>
-  </ul><div class="row"><button class="btn" type="button" data-act="close">${first ? 'はじめる' : '閉じる'}</button></div>`, !first);
+  </ul><div class="row">${first ? '<button class="btn ghost" type="button" data-act="debug">デバッグ</button>' : ''}<button class="btn" type="button" data-act="close">${first ? 'はじめる' : '閉じる'}</button></div>`, !first);
 }
 function showMenu(){
   const at = S.run.at, pos = !at ? '入口' : at.boss ? 'ボス' : `部屋${at.idx + 1}/${DATA.area.rooms + 1}`;
-  showOv(`<h2>${DATA.area.name} · ${UI.screen === 'battle' && UI.node ? DATA.rooms[UI.node.type].name : pos}</h2><p class="sub">Ascendroid ${APP_VERSION}</p><div class="mlist"><button class="opt" type="button" data-act="rules"><b>遊び方</b></button><button class="opt" type="button" data-act="deck"><b>デッキ</b></button><button class="opt" type="button" data-act="fs"><b>全画面</b></button><button class="opt" type="button" data-act="toggleWait"><b>待機</b><span>${RULE.freeWait ? 'いつでも' : '手札がないときだけ'}</span></button><button class="opt" type="button" data-act="restart"><b>最初から</b></button></div>${closeRow}`, true);
+  showOv(`<h2>${DATA.area.name} · ${UI.screen === 'battle' && UI.node ? DATA.rooms[UI.node.type].name : pos}</h2><p class="sub">Ascendroid ${APP_VERSION}</p><div class="mlist"><button class="opt" type="button" data-act="rules"><b>遊び方</b></button><button class="opt" type="button" data-act="deck"><b>デッキ</b></button><button class="opt" type="button" data-act="fs"><b>全画面</b></button><button class="opt" type="button" data-act="toggleWait"><b>待機</b><span>${RULE.freeWait ? 'いつでも' : '手札がないときだけ'}</span></button><button class="opt" type="button" data-act="restart"><b>最初から</b></button><button class="opt" type="button" data-act="debug"><b>デバッグ</b></button></div>${closeRow}`, true);
 }
 async function goFull(){
   hideOv();
   try{ await document.documentElement.requestFullscreen(); try{ await screen.orientation.lock('landscape'); }catch(e){} }catch(e){}
 }
-function showOv(html, closable){ const ov = $('#ov'); $('#ovbox').innerHTML = html; ov.dataset.closable = closable ? '1' : ''; ov.hidden = false; }
+function showOv(html, closable, wide){ const ov = $('#ov'); $('#ovbox').innerHTML = html; $('#ovbox').classList.toggle('wide', !!wide); ov.dataset.closable = closable ? '1' : ''; ov.hidden = false; }
 function hideOv(){ $('#ov').hidden = true; }
 function act(a, arg, el){
   switch(a){
@@ -1353,6 +1474,18 @@ function act(a, arg, el){
     case 'rules': showRules(false); break;
     case 'deck': infoDeck(); break;
     case 'fs': goFull(); break;
+    case 'debug': if(!DBG) dbgLoad(); UI.pick = DBG.enc; showDebug(); break;
+    case 'dbgPick': UI.pick = UI.pick === arg ? null : arg; DBG.enc = UI.pick; dbgSave(); showDebug(); break;
+    case 'dbgGo': if(UI.pick && (UI.pick !== 'dbg' || DBG.custom.some(Boolean))){ const k = UI.pick; UI.pick = null; startDebugBattle(k); } break;
+    case 'dbgAgain': startDebugBattle(UI.dbgEnc); break;
+    case 'dbgView': ({deck:showDebugDeck, parts:showDebugParts, nums:showDebugNums, custom:showDebugCustom})[arg](); break;
+    case 'dbgBack': showDebug(); break;
+    case 'dbgPreset': DBG.deck = DBG_PRESET[arg](); dbgSave(); showDebugDeck(); break;
+    case 'dbgCard': { const [k, d] = arg.split(':'); if(+d > 0) DBG.deck.push(k); else { const i = DBG.deck.lastIndexOf(k); if(i >= 0) DBG.deck.splice(i, 1); } dbgSave(); showDebugDeck(); break; }
+    case 'dbgPart': { const [sl, id] = arg.split(':'); DBG.parts[sl] = id; dbgSave(); showDebugParts(); break; }
+    case 'dbgNum': { const [key, v] = arg.split(':'); DBG[key] = +v; dbgSave(); showDebugNums(); break; }
+    case 'dbgWait': RULE.freeWait = arg === '1'; try{ localStorage.setItem('asc.freeWait', arg); }catch(e){} showDebugNums(); break;
+    case 'dbgSlot': { const [i, k] = arg.split(':'); DBG.custom[+i] = k || null; dbgSave(); showDebugCustom(); break; }
     case 'toggleWait':
       RULE.freeWait = !RULE.freeWait;
       try{ localStorage.setItem('asc.freeWait', RULE.freeWait ? '1' : '0'); }catch(e){}

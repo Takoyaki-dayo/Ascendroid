@@ -7,7 +7,7 @@ const D = ctx.DATA, SL = Object.fromEntries(D.slots.map(s => [s.id, s]));
 const ver = (fs.readFileSync(path.join(__dirname, '../index.html'), 'utf8').match(/APP_VERSION = '([\d.]+)'/) || [])[1];
 const out = {};
 const K = D.classes[D.defaultClass];
-out.intro = `バージョン ${ver} のゲームの中身をまとめた一覧です。数値などの元データはリポジトリの data フォルダ、名前や説明などの文章は text フォルダの CSV にあり、ゲームが変わるたびにここも作り直します。敵は全キャラ共通で、キャラごとに変わるのは手札の補給の型とカードの数値です(下の「キャラ」の節)。最初のキャラは${K.name}(補給は「リフレッシュ」: 手札は自動では届かず、好きなときに${K.econ.r}サイクル使って手札を全部捨てて${K.econ.hand}枚引く。始めにブロックをすべて失う)。`;
+out.intro = `バージョン ${ver} のゲームの中身をまとめた一覧です。数値などの元データはリポジトリの data フォルダ、名前や説明などの文章は text フォルダの CSV にあり、ゲームが変わるたびにここも作り直します。敵は全キャラ共通で、キャラごとに変わるのは手札の補給の型・待機の有無・カードの数値です(下の「キャラ」の節)。最初のキャラは${K.name}(補給は「リフレッシュ」: 手札は自動では届かず、好きなときに${K.econ.r}サイクル使って手札を全部捨てて${K.econ.hand}枚引く。始めにブロックをすべて失う。待機なし)。`;
 const withCls = (c, o) => { if(!o) return c; c = JSON.parse(JSON.stringify(c)); if(o.dmg != null && c.dmg) c.dmg.n = o.dmg; if(o.block != null) c.block = o.block; if(o.timer != null && c.timer) c.timer.dmg.n = o.timer; return c; };
 const fxCards = Object.values(D.parts).filter(p => p.fx.cards);
 out.parts = `## 部位とパーツ\n\n本体耐久は${D.bodyMax}。部位が壊れるとそのパーツの効果が止まり、あふれたダメージは本体に通ります。★が最初に付いているパーツで、ほかはエリートや一部のイベントで付け替えられます。\n\n| 部位 | 場所 | パーツ | 耐久 | 効果 |\n| --- | --- | --- | --- | --- |\n` +

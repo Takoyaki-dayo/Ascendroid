@@ -398,6 +398,26 @@ window.DATA = window.DATA || {};
   "slot.dur": "耐久",
   "slot.mob": "機動",
   "ui.repair": "本体を{n}回復する。部位の損傷を直す。",
-  "ui.defrag": "デッキからカードを1枚取り除く。"
+  "ui.defrag": "デッキからカードを1枚取り除く。",
+  "ui.mv.atk": "{part}に{d}ダメージを与える。",
+  "ui.mv.hits": "{part}に{d}ダメージを{hits}回与える。",
+  "ui.mv.delay": "こちらにディレイ{v}を与える。",
+  "ui.mv.charge": "溜め技。JUSTで潰せる。",
+  "ui.mv.wind": "構え{poise}：行動の{w}サイクル前から、{poise}以上の一撃でこの行動を潰せる。",
+  "ui.mv.guard": "ガード{s}：行動の{w}サイクル前から、{s}までのダメージを防ぐ。",
+  "ui.mv.counter": "反撃{cd}：行動の{w}サイクル前から、攻撃するたびに{cd}ダメージを返してくる。",
+  "ui.mv.rec": "隙{rec}：行動の後{rec}サイクル、受けるダメージが1.5倍になる。",
+  "ui.mv.buff": "行動の後、攻撃力+{buff}。",
+  "ui.mv.buffAll": "行動の後、味方全員の攻撃力+{buff}。",
+  "ui.mv.armor": "装甲{armor}を得る。装甲は消えず、ダメージを先に受ける。",
+  "ui.mv.heal": "耐久を{heal}回復する。",
+  "ui.mv.mark": "照準{mark}を与える。こちらが受ける攻撃すべてのダメージ+{mark}。重なる。",
+  "ui.mv.noise": "山札にノイズ{noise}枚を混ぜる。",
+  "ui.mv.summon": "{name}を呼ぶ。",
+  "ui.mv.none": "攻撃はしない。",
+  "ui.foe.react": "反応：コスト{min}以上のカードを使い始めると、1サイクル後に{part}に{d}ダメージを与える。",
+  "ui.foe.sync": "連携：仲間と同じサイクルに攻撃すると、ダメージ+{sync}。",
+  "ui.foe.rand": "行動は毎回この中から選ぶ。同じ行動は3回続かない。",
+  "ui.foe.phase": "耐久{at}%未満"
  }
 });

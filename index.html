@@ -400,6 +400,48 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 .pt-h .ic svg{width:14px;height:14px}
 .pt-m{margin-left:auto;font-family:var(--f-num)}
 .opt .pt-cur{font-size:9.5px;color:var(--dim2)}
+/* 敵の詳細: カメラが敵に寄る */
+#shaker.focus #world{transition:transform .45s cubic-bezier(.2,.8,.2,1),filter .32s}
+#shaker.focus #tl,#shaker.focus #droid,#shaker.focus #meInfo,#shaker.focus .cinfo{opacity:0;transition:opacity .25s}
+#shaker.focus .foe:not(.fo){opacity:.08}
+#shaker.focus #parts,#shaker.focus #hand,#shaker.focus .pile,#shaker.focus #redraw,#shaker.focus #waitBtn,#shaker.focus #handCnt,#shaker.focus #menuBtn,#shaker.focus #handShade{opacity:0;pointer-events:none;transition:opacity .2s}
+#focus{position:absolute;inset:0;z-index:30;padding:16px 0 12px 24px;width:470px;display:flex;flex-direction:column;gap:6px;opacity:0;pointer-events:none;transform:translateX(-16px);transition:opacity .3s .1s,transform .3s .1s;
+  background:linear-gradient(90deg,var(--bg) 0,rgba(10,15,21,.96) 74%,transparent)}
+#shaker.focus #focus{opacity:1;pointer-events:auto;transform:none}
+#shaker.focus::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 260px 220px at 650px 212px,transparent 40%,rgba(10,15,21,.6))}
+.fhead{display:flex;align-items:center;gap:8px;padding-right:24px}
+#focus>*{flex:none}
+.fhead b{font-size:18px;letter-spacing:.04em}
+.fhp{display:flex;align-items:center;gap:4px;font-family:var(--f-num)}
+.fhp b{font-size:24px;line-height:1} .fhp>span:not(.ei-bar){color:var(--dim);font-size:12px;margin:5px 10px 0 0}
+.fst{display:inline-flex;align-items:center;gap:3px;font-family:var(--f-num);font-weight:700;font-size:12px;color:var(--fg2);padding:1px 6px;border:1px solid var(--line);border-radius:4px;margin-right:4px}
+.fst.f{color:var(--foe2)} .fst .g{font-family:var(--f-body);font-size:10px} .fst .ic svg{width:11px;height:11px}
+#focus .ei-bar{display:block;width:180px;margin-right:10px}
+.fmoves{display:flex;flex-direction:column;gap:6px}
+.frow-m{display:flex;align-items:center;gap:0;padding-top:12px}
+.fnote{font-size:10.5px;color:var(--dim);margin-top:2px}
+.fm{position:relative;width:46px;height:50px;flex:none;border:1px solid #2a3b4c;border-radius:7px;background:var(--panel);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:var(--fg);transition:border-color .15s,box-shadow .15s,transform .15s}
+.fm.atk{border-color:rgba(255,77,106,.55)} .fm.ch{border-color:rgba(177,140,255,.75)} .fm.dl{border-color:#2d4a5c}
+.fm.on{border-width:2px;border-color:var(--cy);box-shadow:0 0 0 3px rgba(56,211,255,.15);transform:translateY(-2px)}
+.fm-v{display:flex;align-items:baseline;gap:1px;font-family:var(--f-num);line-height:1}
+.fm-v b{font-size:19px} .fm-v b.g{font-family:var(--f-body);font-size:16px;color:var(--fg2)} .fm-v i{font-style:normal;font-size:10px;color:var(--fg2)}
+.fm.ch .fm-v b{color:var(--just2)}
+.fm-v .ic svg{width:13px;height:13px}
+.fm-p{height:12px;font-size:9px;color:var(--dim);display:flex;align-items:center} .fm-p .ic svg{width:11px;height:11px}
+.fm-now{position:absolute;top:-13px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:2px;font-family:var(--f-num);font-weight:700;font-size:10px;color:var(--cy)}
+.fm-now .ic svg{width:9px;height:9px}
+.fg{width:22px;flex:none;display:flex;flex-direction:column;align-items:center;gap:1px;font-family:var(--f-num);font-size:10px;color:var(--dim)}
+.fg i{display:block;width:14px;height:1px;background:#33495d}
+.fg.r{width:8px}
+.fg.loop{width:34px;flex-direction:row;gap:3px;justify-content:center} .fg.loop .ic svg{width:16px!important;height:11px!important}
+.fdet{margin-top:6px;border-left:2px solid var(--cy-dim);padding:2px 0 2px 10px;max-width:400px}
+.fdet.ch{border-left-color:var(--just)}
+.fdn{font-weight:700;font-size:14px;margin-bottom:3px}
+.fdet p,.ftr p{margin:0;font-size:11.5px;line-height:1.55;color:var(--fg2)}
+.fdet b,.ftr b{color:var(--fg)}
+.ftr{max-width:400px;padding-top:4px;border-top:1px solid var(--line)}
+.ftr p{font-size:10.5px}
+.fclose{margin-left:auto;padding:4px 14px}
 /* 交換の確認(2枚目の重ね) */
 #ov2{position:absolute;inset:0;background:rgba(5,9,14,.6);display:flex;align-items:center;justify-content:center;z-index:55;padding:12px}
 #ovbox2{max-width:520px;border-color:var(--cy-dim);box-shadow:0 12px 40px rgba(0,0,0,.5)}
@@ -513,6 +555,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
       <button id="redraw" type="button" aria-label="引き直し"><span id="icRedraw"></span><b id="rdCost">5</b></button>
       <button id="waitBtn" type="button" aria-label="待機"><span id="icWait"></span><b>1</b></button>
       <div id="inner"></div>
+      <div id="focus"></div>
 
       <div id="floats"></div>
       <div id="toast"></div>
@@ -532,7 +575,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 <script src="data/text.js"></script>
 <script src="js/engine.js"></script>
 <script>
-const APP_VERSION = '0.12.0';
+const APP_VERSION = '0.13.0';
 const $ = s => document.querySelector(s);
 const EN = ENGINE, RULE = EN.RULE;
 const VIEW = RULE.view, NOW = 180, PX = 25, xs = c => NOW + c * PX, ROWY = [52, 86, 120], STRIP_Y = 150, SWIFT_VIS = 3;
@@ -1264,7 +1307,7 @@ function startBattle(n){
   applyEcon();
   snapshot = JSON.stringify(S.run);
   S = EN.newBattle(S.run, n.enc);
-  sel = null; PV = null; busy = false; lastTarget = 0; UI.view = 'normal'; UI.screen = 'battle';
+  sel = null; PV = null; busy = false; lastTarget = 0; UI.view = 'normal'; UI.screen = 'battle'; closeFocus();
   $('#mapScr').hidden = true;
   clearCards(); clearMarks(); buildFoes();
   renderAll();
@@ -1380,66 +1423,82 @@ function infoCard(k){
   showOv(`<div style="display:flex;gap:16px;align-items:flex-start"><div class="cards" style="margin:0"><div class="card static">${cardInner(k, S)}</div></div><div class="ckw">${kws.map(w => `<span><b>${w}</b> ${KW[w]}</span>`).join('')}</div></div>${closeRow}`, true);
 }
 // 行動の属性の小さな札(敵の詳細で使う)
-function moveChips(a){
-  const c = [];
-  if(a.hits > 1) c.push(`<span class="chip multi">×${a.hits}</span>`);
-  if(a.wind) c.push(`<span class="chip wind">構${a.wind.poise}</span>`);
-  if(a.guard) c.push(`<span class="chip guard">防${a.guard.s}</span>`);
-  if(a.counter) c.push(`<span class="chip counter">返${a.counter.d}</span>`);
-  if(a.rec) c.push(`<span class="chip vuln">隙${a.rec}</span>`);
-  if(a.buff) c.push(`<span class="chip buff">▲${a.buff}${a.all ? '全' : ''}</span>`);
-  if(a.armor) c.push(`<span class="chip guard">装${a.armor}</span>`);
-  if(a.heal) c.push(`<span class="chip buff">修${a.heal}</span>`);
-  if(a.mark) c.push(`<span class="chip counter">照${a.mark}</span>`);
-  if(a.noise) c.push(`<span class="chip multi">ノイズ${a.noise}</span>`);
-  if(a.summon) c.push(`<span class="chip buff">援</span>`);
-  return c.length ? `<span class="atr">${c.join('')}</span>` : '';
+/* ---------- 敵の詳細(カメラが敵に寄り、右に敵、左に情報) ---------- */
+// 行動を押すと、その行動が何をするかを文で出す(文は text/terms.csv の ui.mv.* / ui.foe.*)
+const fillUi = (k, v) => (DATA.ui[k] || '').replace(/\{(\w+)\}/g, (m, n) => n in v ? `<b>${v[n]}</b>` : m);
+const FOCUS = {scale: 2.5, x: 650, y: 212};
+function moveLines(e, a){
+  const L = [], part = a.p ? SLOT_BY[a.p].fn : '', d = (a.d || 0) + (e.str || 0);
+  if(a.kind === 'delay') L.push(fillUi('mv.delay', {v: a.v}));
+  else if(a.d > 0) L.push(fillUi(a.hits > 1 ? 'mv.hits' : 'mv.atk', {part, d, hits: a.hits}));
+  if(a.ch) L.push(fillUi('mv.charge', {}));
+  if(a.armor) L.push(fillUi('mv.armor', {armor: a.armor}));
+  if(a.heal) L.push(fillUi('mv.heal', {heal: a.heal}));
+  if(a.mark) L.push(fillUi('mv.mark', {mark: a.mark}));
+  if(a.noise) L.push(fillUi('mv.noise', {noise: a.noise}));
+  if(a.summon) L.push(fillUi('mv.summon', {name: FOES[a.summon].name}));
+  if(a.buff) L.push(fillUi(a.all ? 'mv.buffAll' : 'mv.buff', {buff: a.buff}));
+  if(a.wind) L.push(fillUi('mv.wind', {w: a.wind.w, poise: a.wind.poise}));
+  if(a.guard) L.push(fillUi('mv.guard', {w: a.guard.w, s: a.guard.s}));
+  if(a.counter) L.push(fillUi('mv.counter', {w: a.counter.w, cd: a.counter.d}));
+  if(a.rec) L.push(fillUi('mv.rec', {rec: a.rec}));
+  if(!L.length) L.push(fillUi('mv.none', {}));
+  return L;
 }
-function moveTile(e, a, cur){
-  const atk = a.kind !== 'delay' && a.d > 0;
-  const cls = a.kind === 'delay' ? 'dl' : a.ch ? 'ch' : atk ? '' : 'mv';
-  const val = a.kind === 'delay' ? `<span class="v" style="display:flex;align-items:center;gap:3px"><span class="ic">${IC.delay.replace('viewBox', 'style="width:16px;height:16px" viewBox')}</span>${a.v}</span>`
-    : atk ? `<span class="v">${a.d + (e.str || 0)}</span>` : `<span class="v" style="font-size:20px">${a.buff ? '▲' : a.armor ? '装' : a.heal ? '修' : a.mark ? '照' : a.summon ? '援' : a.noise ? IC.junk.replace('viewBox', 'style="width:22px;height:22px" viewBox') : a.guard ? IC.block.replace('viewBox', 'style="width:22px;height:22px" viewBox') : '·'}</span>`;
-  const tp = a.kind === 'delay' ? '<span class="tp">自機</span>' : atk ? `<span class="tp"><span class="ic">${IC[a.p]}</span>${SLOT_BY[a.p].fn}</span>` : '';
-  return `<div class="at ${cls}${cur ? ' cur' : ''}">${cur ? `<span class="nx"><span class="ic">${IC.clock}</span>${e.r}</span>` : ''}<span class="ty">${a.kind === 'delay' ? IC.delay : IC.hit}</span>${a.ch ? `<span class="par">${IC.parry}</span>` : ''}${val}${tp}${moveChips(a)}<span class="an">${a.n}</span></div>`;
+function moveGlyph(e, a){
+  if(a.kind === 'delay') return `<span class="ic">${IC.delay}</span><b>${a.v}</b>`;
+  if(a.d > 0) return `<b>${a.d + (e.str || 0)}</b>${a.hits > 1 ? `<i>×${a.hits}</i>` : ''}`;
+  const g = a.armor ? '装' : a.heal ? '修' : a.mark ? '照' : a.summon ? '援' : a.buff ? '▲' : a.noise ? '雑' : a.guard ? '防' : '·';
+  return `<b class="g">${g}</b>`;
 }
-function seqHTML(e, pat, start, curOn, rand){
+function moveBtn(e, a, key, isCur, selKey){
+  const cls = a.kind === 'delay' ? 'dl' : a.ch ? 'ch' : a.d > 0 ? 'atk' : 'mv';
+  const under = a.kind === 'delay' ? '自機' : a.d > 0 ? `<span class="ic">${IC[a.p]}</span>` : '';
+  return `<button type="button" class="fm ${cls}${selKey === key ? ' on' : ''}" data-act="foeMove" data-arg="${key}">${isCur ? `<span class="fm-now"><span class="ic">${IC.clock}</span>${e.r}</span>` : ''}<span class="fm-v">${moveGlyph(e, a)}</span><span class="fm-p">${under}</span></button>`;
+}
+function moveRow(e, pat, tag, start, curOn, rand, selKey){
   const n = pat.length; let h = '';
   for(let j = 0; j < n; j++){
-    const idx = (start + j) % n, a = pat[idx];
-    if(j > 0) h += rand ? '<div class="conn alt">/</div>' : `<div class="conn"><span class="ic">${IC.clock}</span><b>${a.dl}</b><span class="ic">${IC.arrow}</span></div>`;
-    h += moveTile(e, a, curOn && j === 0);
+    const idx = rand ? j : (start + j) % n;
+    if(j > 0) h += rand ? '<span class="fg r"></span>' : `<span class="fg"><b>${pat[idx].dl}</b><i></i></span>`;
+    h += moveBtn(e, pat[idx], tag + ':' + idx, curOn && (rand ? idx === e.pat.indexOf(EN.cur(e)) : j === 0), selKey);
   }
-  if(!rand) h += `<div class="loop"><span class="ic">${IC.loop}</span><b>${pat[start % n].dl}</b></div>`;
-  return h;
+  if(!rand) h += `<span class="fg loop"><b>${pat[start % n].dl}</b><span class="ic">${IC.loop}</span></span>`;
+  return `<div class="frow-m">${h}</div>`;
+}
+function renderFocus(){
+  const f = UI.focus, e = S.b.foes[f.i], rand = e.ai === 'rand';
+  const pat = e.pat;
+  if(!f.sel){ const ci = rand ? pat.indexOf(EN.cur(e)) : e.idx % pat.length; f.sel = 'p:' + Math.max(0, ci); }
+  const [tag, idx] = f.sel.split(':'), a = (tag === 'h' ? e.phase.pat : pat)[+idx] || EN.cur(e);
+  let rows = moveRow(e, pat, 'p', rand ? 0 : e.idx, true, rand, f.sel);
+  if(rand) rows = `<div class="fnote">${fillUi('foe.rand', {})}</div>` + rows;
+  if(e.phase && !e.phased) rows += `<div class="fnote">${fillUi('foe.phase', {at: Math.round(e.phase.at * 100)})}</div>` + moveRow(e, e.phase.pat, 'h', 0, false, false, f.sel);
+  const st = [e.armor ? `<span class="fst"><span class="g">装</span>${e.armor}</span>` : '', e.str ? `<span class="fst"><span class="g">▲</span>${e.str}</span>` : '', e.crack ? `<span class="fst f"><span class="ic">${IC.crack}</span>${e.crack}</span>` : ''].join('');
+  const tr = [e.react ? fillUi('foe.react', {min: e.react.min, part: SLOT_BY[e.react.p].fn, d: e.react.d}) : '', e.sync ? fillUi('foe.sync', {sync: e.sync}) : ''].filter(Boolean);
+  $('#focus').innerHTML = `<div class="fhead"><span class="ftag">${e.tag}</span><b>${e.name}</b><button class="btn ghost fclose" type="button" data-act="foeClose">戻る</button></div>
+    <div class="fhp"><b>${e.hp}</b><span>/${e.maxHp}</span><span class="ei-bar"><i style="width:${e.hp / e.maxHp * 100}%"></i></span>${st}</div>
+    <div class="fmoves">${rows}</div>
+    <div class="fdet${a.ch ? ' ch' : ''}"><div class="fdn">${a.n}</div>${moveLines(e, a).map(t => `<p>${t}</p>`).join('')}</div>
+    ${tr.length ? `<div class="ftr">${tr.map(t => `<p>${t}</p>`).join('')}</div>` : ''}`;
 }
 function infoFoe(i){
-  const e = S.b.foes[i], rand = e.ai === 'rand';
-  let body = '';
-  if(rand){
-    body += `<div class="seq">${moveTile(e, EN.cur(e), true)}</div>`;
-    body += `<div class="seqh">次はこの中から</div><div class="seq">${seqHTML(e, e.pat, 0, false, true)}</div>`;
-  } else body += `<div class="seq">${seqHTML(e, e.pat, e.idx, true, false)}</div>`;
-  if(e.phase && !e.phased) body += `<div class="seqh">耐久${Math.round(e.phase.at * 100)}%未満で</div><div class="seq">${seqHTML(e, e.phase.pat, 0, false, false)}</div>`;
-  let st = e.crack ? `<span class="stchip"><span class="ic">${IC.crack}</span>${e.crack}</span>` : '';
-  const all = e.pat.concat(e.phase ? e.phase.pat : []), has = k => all.some(a => a[k]);
-  let tr = '';
-  if(e.react) tr += `<div class="trait-row"><span class="ic">${IC.eye}</span><span>コスト${e.react.min}以上を使い始めると、1サイクル後に<b>${e.react.d}</b>→${SLOT_BY[e.react.p].fn}</span></div>`;
-  if(e.sync) tr += `<div class="trait-row"><span class="ic">${IC.link}</span><span>仲間と同じサイクルに攻撃すると+<b>${e.sync}</b></span></div>`;
-  if(has('wind')) tr += `<div class="trait-row"><span class="chip wind">構</span><span>行動の前の帯の間に、数字以上の一撃で潰せる</span></div>`;
-  if(has('guard')) tr += `<div class="trait-row"><span class="chip guard">防</span><span>帯の間、数字までダメージを防ぐ</span></div>`;
-  if(has('counter')) tr += `<div class="trait-row"><span class="chip counter">返</span><span>帯の間、殴るたびに数字を撃ち返す</span></div>`;
-  if(has('rec')) tr += `<div class="trait-row"><span class="chip vuln">隙</span><span>行動の後、数字のサイクルだけダメージ1.5倍</span></div>`;
-  if(has('armor')) tr += `<div class="trait-row"><span class="chip guard">装</span><span>消えない装甲を重ねる。ダメージは先に装甲が受ける</span></div>`;
-  if(has('heal')) tr += `<div class="trait-row"><span class="chip buff">修</span><span>耐久を戻す</span></div>`;
-  if(has('mark')) tr += `<div class="trait-row"><span class="chip counter">照</span><span>照準: こちらが受ける攻撃がすべて+数字(重なる)</span></div>`;
-  if(has('noise')) tr += `<div class="trait-row"><span class="chip multi">ノイズ</span><span>山札に何もしないカードを混ぜる</span></div>`;
-  if(has('summon')) tr += `<div class="trait-row"><span class="chip buff">援</span><span>仲間を呼ぶ</span></div>`;
-  if(has('buff')) tr += `<div class="trait-row"><span class="chip buff">▲</span><span>行動の後、攻撃力が上がる(全は仲間も)</span></div>`;
-  if(e.armor) tr += `<div class="trait-row f"><span class="chip guard">装${e.armor}</span><span>装甲${e.armor}</span></div>`;
-  if(e.str) tr += `<div class="trait-row f"><span class="chip buff">▲${e.str}</span><span>攻撃力+${e.str}</span></div>`;
-  if(e.crack) tr += `<div class="trait-row f"><span class="ic">${IC.crack}</span><span>受けるダメージ+${e.crack}</span></div>`;
-  showOv(`<div class="ei"><div class="ei-l"><div class="ei-spr">${SPR[e.kind].replace('width="90" height="100"', 'width="99" height="110"')}</div><div class="ei-name"><span class="ftag">${e.tag}</span>${e.name}</div><div class="ei-hp">${e.hp}<span>/${e.maxHp}</span></div><div class="ei-bar"><i style="width:${e.hp / e.maxHp * 100}%"></i></div><div class="ei-st">${st}</div></div><div class="ei-r${(rand || (e.phase && !e.phased)) ? ' two' : ''}">${body}${tr ? `<div class="traits">${tr}</div>` : ''}</div></div>${closeRow}`, true);
+  const e = S.b.foes[i]; if(!e || !e.alive) return;
+  sel = null; PV = null; renderAll();
+  UI.focus = {i, sel: null};
+  const c = foeCenter(i), z = FOCUS.scale;
+  $('#world').style.transform = `translate(${FOCUS.x - z * c.x}px, ${FOCUS.y - z * c.y}px) scale(${z})`;
+  $('#world').style.transformOrigin = '0 0';
+  $('#shaker').classList.add('focus');
+  document.querySelectorAll('.foe').forEach(el => el.classList.toggle('fo', +el.dataset.f === i));
+  renderFocus();
+}
+function closeFocus(){
+  if(!UI.focus) return;
+  UI.focus = null;
+  $('#world').style.transform = ''; $('#world').style.transformOrigin = '';
+  $('#shaker').classList.remove('focus');
+  document.querySelectorAll('.foe.fo').forEach(el => el.classList.remove('fo'));
 }
 function infoPart(id){
   const p = SLOT_BY[id], d = partOf(id), st = S.b.parts[id], worn = S.run.parts[id].damaged;
@@ -1608,6 +1667,8 @@ function hideOv2(){ $('#ov2').hidden = true; }
 function act(a, arg, el){
   switch(a){
     case 'close': hideOv(); break;
+    case 'foeMove': if(UI.focus){ UI.focus.sel = arg; renderFocus(); } break;
+    case 'foeClose': closeFocus(); break;
     case 'menu': if(!busy) showMenu(); break;
     case 'rules': showRules(false); break;
     case 'deck': infoDeck(); break;
@@ -1667,7 +1728,7 @@ let lpTimer = null, longFired = false, swipe = null, swallow = false;
 const inBattle = () => UI.screen === 'battle' && S && S.b;
 stage.addEventListener('pointerdown', ev => {
   swipe = {x: ev.clientX, y: ev.clientY};
-  if(!inBattle() || busy || !$('#ov').hidden || UI.view === 'self') return;
+  if(!inBattle() || busy || !$('#ov').hidden || UI.view === 'self' || UI.focus) return;
   const c = ev.target.closest('#hand .card[data-i]'), f = ev.target.closest('.foe[data-f],.fi[data-f]');
   if(!c && !f) return;
   clearTimeout(lpTimer);
@@ -1684,7 +1745,7 @@ stage.addEventListener('pointerup', ev => {
   if(!swipe) return;
   const dy = ev.clientY - swipe.y, dx = ev.clientX - swipe.x, s = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--s')) || 1;
   swipe = null;
-  if(inBattle() && $('#ov').hidden && !busy && Math.abs(dy) > 34 * s && Math.abs(dy) > Math.abs(dx) * 1.3){
+  if(inBattle() && $('#ov').hidden && !busy && !UI.focus && Math.abs(dy) > 34 * s && Math.abs(dy) > Math.abs(dx) * 1.3){
     let v = UI.view;
     if(dy < 0) v = v === 'self' ? 'normal' : v === 'normal' ? 'hand' : v;
     else v = v === 'hand' ? 'normal' : v === 'normal' ? 'self' : v;
@@ -1702,6 +1763,7 @@ stage.addEventListener('click', ev => {
   if(!$('#ov2').hidden){ if(t === $('#ov2')) hideOv2(); return; }
   const ov = $('#ov');
   if(!ov.hidden){ if(t === ov && ov.dataset.closable) hideOv(); return; }
+  if(UI.focus){ if(!t.closest('#focus')) closeFocus(); return; }
   if(!inBattle() || busy || UI.view === 'self') return;
   const card = t.closest('#hand .card[data-i]'); if(card){ onCard(+card.dataset.i); return; }
   if(t.closest('#redraw')){ onRedraw(); return; }

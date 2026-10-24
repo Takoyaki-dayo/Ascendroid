@@ -1,0 +1,14 @@
+﻿条件,セリフ
+bodyLow,本体の損耗が限界に近い。
+partBroken,{part}、機能停止。
+vulnNow,{enemy}に隙がある。
+windNow,{enemy}が構えた。{poise}以上の一撃で崩せる。
+chargeSoon,{enemy}の{move}まで{t}サイクル。
+handEmpty,手札がない。
+partWorn,{part}の損傷が直っていない。
+focus,{part}に攻撃が集中している。
+room:battle,搬入区画。
+room:battle,処理区画。
+room:battle,配電区画。
+room:elite,大型の反応がある。
+room:boss,中枢区画。

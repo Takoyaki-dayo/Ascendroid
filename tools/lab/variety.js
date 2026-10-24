@@ -14,7 +14,7 @@
 const fs = require('fs'), vm = require('vm'), path = require('path');
 const ctx = {console}; ctx.window = ctx; ctx.globalThis = ctx; vm.createContext(ctx);
 const base = path.join(__dirname, '..', '..');
-for(const f of ['data/parts.js','data/cards.js','data/enemies.js','data/map.js','data/lines.js','js/engine.js']) vm.runInContext(fs.readFileSync(path.join(base, f), 'utf8'), ctx, {filename:f});
+for(const f of ['data/parts.js','data/cards.js','data/enemies.js','data/map.js','data/text.js','js/engine.js']) vm.runInContext(fs.readFileSync(path.join(base, f), 'utf8'), ctx, {filename:f});
 const E = ctx.ENGINE, D = ctx.DATA;
 // 「今の敵」は 0.6.0 の敵(enemies_06.js)。0.7.0 からゲームの敵は複雑な敵になっている
 const BASE = (() => { const c = {}; c.window = c; vm.createContext(c); vm.runInContext(fs.readFileSync(path.join(__dirname, 'enemies_06.js'), 'utf8'), c); return JSON.parse(JSON.stringify(c.DATA.foes)); })();

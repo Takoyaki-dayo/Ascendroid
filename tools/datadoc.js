@@ -2,24 +2,25 @@
 // 使い方: node tools/datadoc.js > out.json
 const fs = require('fs'), vm = require('vm'), path = require('path');
 const ctx = {}; ctx.window = ctx; vm.createContext(ctx);
-for(const f of ['parts','cards','enemies','map','lines','classes']) vm.runInContext(fs.readFileSync(path.join(__dirname, '../data', f + '.js'), 'utf8'), ctx);
+for(const f of ['parts','cards','enemies','map','classes','text']) vm.runInContext(fs.readFileSync(path.join(__dirname, '../data', f + '.js'), 'utf8'), ctx);
 const D = ctx.DATA, SL = Object.fromEntries(D.slots.map(s => [s.id, s]));
 const ver = (fs.readFileSync(path.join(__dirname, '../index.html'), 'utf8').match(/APP_VERSION = '([\d.]+)'/) || [])[1];
 const out = {};
 const K = D.classes[D.defaultClass];
-out.intro = `バージョン ${ver} のゲームの中身をまとめた一覧です。元データはリポジトリの data フォルダ(parts.js / cards.js / enemies.js / map.js / lines.js / classes.js)にあり、ゲームが変わるたびにここも作り直します。敵は全キャラ共通で、キャラごとに変わるのは手札の補給の型とカードの数値です(下の「キャラ」の節)。既定のキャラは${K.name}(補給は「リフレッシュ」: 手札は自動では届かず、好きなときに${K.econ.r}サイクル使って手札を全部捨てて${K.econ.hand}枚引く。始めにブロックをすべて失う)。`;
+out.intro = `バージョン ${ver} のゲームの中身をまとめた一覧です。数値などの元データはリポジトリの data フォルダ、名前や説明などの文章は text フォルダの CSV にあり、ゲームが変わるたびにここも作り直します。敵は全キャラ共通で、キャラごとに変わるのは手札の補給の型とカードの数値です(下の「キャラ」の節)。最初のキャラは${K.name}(補給は「リフレッシュ」: 手札は自動では届かず、好きなときに${K.econ.r}サイクル使って手札を全部捨てて${K.econ.hand}枚引く。始めにブロックをすべて失う)。`;
 const withCls = (c, o) => { if(!o) return c; c = JSON.parse(JSON.stringify(c)); if(o.dmg != null && c.dmg) c.dmg.n = o.dmg; if(o.block != null) c.block = o.block; if(o.timer != null && c.timer) c.timer.dmg.n = o.timer; return c; };
 const fxCards = Object.values(D.parts).filter(p => p.fx.cards);
 out.parts = `## 部位とパーツ\n\n本体耐久は${D.bodyMax}。部位が壊れるとそのパーツの効果が止まり、あふれたダメージは本体に通ります。★が最初に付いているパーツで、ほかはエリートや一部のイベントで付け替えられます。\n\n| 部位 | 場所 | パーツ | 耐久 | 効果 |\n| --- | --- | --- | --- | --- |\n` +
   D.slots.flatMap(s => Object.entries(D.parts).filter(([, p]) => p.slot === s.id).map(([id, p]) => `| ${s.fn} | ${s.pt || '—'} | ${D.startParts[s.id] === id ? '★' : ''}${p.name} | ${p.max} | ${p.text} |`)).join('\n');
 const tname = t => t === 'phys' ? '物理' : '光学';
-const eff = c => { const s = []; if(c.dmg) s.push(`${c.all ? '敵全員に' : ''}${tname(c.dmg.t)}${c.dmg.n}${c.dmg.x ? '×' + c.dmg.x : ''}`); if(c.timer) s.push(`時限${c.timer.t}: ${tname(c.timer.dmg.t)}${c.timer.dmg.n}`); if(c.crack) s.push('クラック' + c.crack); if(c.delay) s.push(`${c.all ? '敵全員に' : ''}ディレイ${c.delay}`); if(c.block) s.push('ブロック' + c.block); if(c.parry) s.push('ぴったりで攻撃を返す'); if(c.swift) s.push('スウィフト' + c.swift); if(c.draw) s.push(c.draw + '枚引く'); return s.join('、'); };
+// カードの文(text/cards.csv の型)に、パーツの補正の前の数値を入れる
+const eff = c => { const v = {dmg: c.dmg ? c.dmg.n : '', x: c.dmg && c.dmg.x || '', block: c.block ?? '', delay: c.delay || '', swift: c.swift || '', crack: c.crack || '', draw: c.draw || '', t: c.timer ? c.timer.t : '', tdmg: c.timer ? c.timer.dmg.n : ''}; return (c.text || '').replace(/\{(\w+)\}/g, (m, n) => n in v ? v[n] : m); };
 const zone = c => c === 0 ? '即時' : c < 3 ? '速い' : c === 3 ? '標準' : '重い';
 const learn = k => [...new Set(Object.values(D.foes).filter(f => f.pool.includes(k)).map(f => f.name))].join('、');
 const cnt = k => D.startDeck.filter(x => x === k).length;
 const fromPart = k => fxCards.filter(p => p.fx.cards.includes(k)).map(p => p.name).join('、');
-out.cards = `## カード\n\n全部${Object.values(D.cards).filter(c => !c.junk).length}種。最初のデッキは${D.startDeck.length}枚と、武装パーツが加える《チャージショット》2枚。数値はパーツの補正(標準パーツなら物理+2、光学+2、ブロック+2)を足す前の値です。「効果」は${K.name}での数値、「基準」は data/cards.js の値(常時供給のキャラはこのまま)。\n\n| カード | コスト | 区分 | 効果 | 基準 | 備考 | 最初のデッキ | 手に入る場所 |\n| --- | --- | --- | --- | --- | --- | --- | --- |\n` +
-  Object.entries(D.cards).filter(([, c]) => !c.junk).sort((a, b) => a[1].cost - b[1].cost).map(([k, c]) => `| ${c.name} | ${c.cost} | ${zone(c.cost)} | ${eff(withCls(c, K.cards[k]))} | ${eff(withCls(c, K.cards[k])) !== eff(c) ? eff(c) : '同じ'} | ${[c.atomic ? 'アトミック' : '', fromPart(k) ? fromPart(k) + 'が加える' : ''].filter(Boolean).join('、') || '—'} | ${cnt(k) ? cnt(k) + '枚' : '—'} | ${[fromPart(k) ? '' : '学習' + (learn(k) ? '(' + learn(k) + 'でわずかに出やすい)' : ''), D.rareCards.includes(k) ? 'イベント' : '', fromPart(k) ? '' : 'ショップ'].filter(Boolean).join('、')} |`).join('\n');
+out.cards = `## カード\n\n全部${Object.values(D.cards).filter(c => !c.junk).length}種。最初のデッキは${D.startDeck.length}枚と、武装パーツが加える《チャージショット》2枚。数値はパーツの補正(標準パーツなら物理+2、光学+2、ブロック+2)を足す前の値です。「効果」は${K.name}での数値、「基準」は data/cards.js の値(常時供給のキャラはこのまま)。\n\n| カード | コスト | 区分 | 種類 | 効果 | 基準 | 備考 | 最初のデッキ | 手に入る場所 |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- |\n` +
+  Object.entries(D.cards).filter(([, c]) => !c.junk).sort((a, b) => a[1].cost - b[1].cost).map(([k, c]) => `| ${c.name} | ${c.cost} | ${zone(c.cost)} | ${c.dmg ? tname(c.dmg.t) : c.timer ? tname(c.timer.dmg.t) : '—'} | ${eff(withCls(c, K.cards[k]))} | ${eff(withCls(c, K.cards[k])) !== eff(c) ? eff(c) : '同じ'} | ${[fromPart(k) ? fromPart(k) + 'が加える' : ''].filter(Boolean).join('、') || '—'} | ${cnt(k) ? cnt(k) + '枚' : '—'} | ${[fromPart(k) ? '' : '学習' + (learn(k) ? '(' + learn(k) + 'でわずかに出やすい)' : ''), D.rareCards.includes(k) ? 'イベント' : '', fromPart(k) ? '' : 'ショップ'].filter(Boolean).join('、')} |`).join('\n');
 out.kw = `## キーワード\n\nカードを長押ししたときに出る説明と同じ文です。\n\n| キーワード | 意味 |\n| --- | --- |\n` + Object.entries(D.keywords).map(([k, v]) => `| ${k} | ${v} |`).join('\n');
 const attrs = a => [a.hits > 1 ? `${a.hits}回` : '', a.wind ? `構え${a.wind.w}・${a.wind.poise}以上で潰れる` : '', a.guard ? `ガード${a.guard.w}・${a.guard.s}` : '', a.counter ? `反撃の構え${a.counter.w}・${a.counter.d}` : '', a.rec ? `隙${a.rec}` : '', a.buff ? `強化+${a.buff}${a.all ? '(全員)' : ''}` : '', a.armor ? `装甲+${a.armor}` : '', a.heal ? `修復${a.heal}` : '', a.mark ? `照準+${a.mark}` : '', a.noise ? `ノイズ${a.noise}枚` : '', a.summon ? `増援(${D.foes[a.summon].name})` : ''].filter(Boolean).join('、');
 const act = a => {

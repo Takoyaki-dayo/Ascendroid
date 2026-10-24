@@ -196,7 +196,11 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 .ctx{display:block;padding:5px 7px 0;font-size:10px;line-height:1.4;color:var(--fg2)}
 .ctx b{color:var(--fg)}
 .kwp{display:inline-block;margin-top:3px;font-size:9px;font-weight:700;border:1px solid #33495d;border-radius:3px;padding:0 4px;line-height:13px;color:var(--fg)}
-.kw-f{font-weight:700;color:var(--foe2)} .kw{font-weight:700;color:var(--fg)}
+.kw-f{font-weight:700;color:var(--foe2)} .kw{font-weight:700;color:var(--fg)} .kw-j{font-weight:700;color:var(--just2)}
+.ctx .kwp{display:inline;margin:0;border:0;padding:0;font-size:inherit;line-height:inherit}
+/* 文が長いカードは絵を低くして5行まで入れる */
+.card:has(.ctx.long) .cart{height:36px}
+.ctx.long{font-size:9.5px;line-height:1.35}
 .cnt{position:absolute;right:5px;bottom:5px;font-family:var(--f-num);font-size:11px;font-weight:700;color:var(--cy)}
 #redraw{position:absolute;left:742px;top:302px;width:92px;height:80px;border:1px solid #233446;border-radius:8px;background:var(--panel);color:var(--fg2);display:flex;align-items:center;justify-content:center;gap:8px;transition:top .15s,border-color .15s,box-shadow .15s,opacity .25s,transform .25s}
 #redraw svg{width:20px;height:20px}
@@ -524,11 +528,11 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 <script src="data/cards.js"></script>
 <script src="data/enemies.js"></script>
 <script src="data/map.js"></script>
-<script src="data/lines.js"></script>
 <script src="data/classes.js"></script>
+<script src="data/text.js"></script>
 <script src="js/engine.js"></script>
 <script>
-const APP_VERSION = '0.11.0';
+const APP_VERSION = '0.12.0';
 const $ = s => document.querySelector(s);
 const EN = ENGINE, RULE = EN.RULE;
 const VIEW = RULE.view, NOW = 180, PX = 25, xs = c => NOW + c * PX, ROWY = [52, 86, 120], STRIP_Y = 150, SWIFT_VIS = 3;
@@ -636,27 +640,27 @@ function cardVal(k, st){
   if(c.draw) return c.draw;
   return c.crack;
 }
+// カードの文は text/cards.csv の型に数値を差し込む。{dmg} などはパーツの補正込みの値。キーワードの名前は色を付ける
+function cardVals(c, st){
+  return {dmg: c.dmg ? vDmg(st, c) : '', x: c.dmg && c.dmg.x || '', block: c.block != null ? vBlock(st, c) : '', delay: c.delay || '', swift: c.swift || '',
+    crack: c.crack || '', draw: c.draw || '', t: c.timer ? c.timer.t : '', tdmg: c.timer ? vDmg(st, c, c.timer.dmg) : ''};
+}
+const KW_CLS = {crack:'kw-f', atomic:'kwp', just:'kw-j'};
+const kwList = () => Object.entries(DATA.kwName).sort((a, b) => b[1].length - a[1].length);
 function cardText(k, st){
-  const c = CARDS[k], s = [];
-  if(c.junk) return '何もしない。使うと消える';
-  if(c.dmg) s.push(`${c.all ? '敵全員に' : ''}${c.dmg.t === 'phys' ? '物理' : '光学'}<b>${vDmg(st, c)}</b>ダメージ${c.dmg.x ? '×' + c.dmg.x : ''}`);
-  if(c.timer) s.push(`<span class="kw">時限</span>${c.timer.t}: 光学<b>${vDmg(st, c, c.timer.dmg)}</b>`);
-  if(c.crack) s.push(`<span class="kw-f">クラック</span>${c.crack}`);
-  if(c.delay) s.push(`${c.all ? '敵全員に' : ''}<span class="kw">ディレイ</span>${c.delay}`);
-  if(c.block) s.push(`<span class="kw">ブロック</span><b>${vBlock(st, c)}</b>`);
-  if(c.parry) s.push(`<span class="kw">ぴったり</span>で攻撃を返す`);
-  if(c.swift) s.push(`<span class="kw">スウィフト</span>${c.swift}`);
-  if(c.draw) s.push(`<b>${c.draw}</b>枚引く`);
-  return s.join('<br>') + (c.atomic ? '<br><span class="kwp">アトミック</span>' : '');
+  const c = CARDS[k], v = cardVals(c, st);
+  let h = (c.text || '').replace(/[&<>]/g, x => ({'&':'&amp;', '<':'&lt;', '>':'&gt;'})[x]).replace(/\{(\w+)\}/g, (m, n) => n in v ? `<b>${v[n]}</b>` : m);
+  for(const [key, name] of kwList()) h = h.split(name).join(`\u0000${key}\u0000`);
+  return h.replace(/\u0000(\w+)\u0000/g, (m, key) => `<span class="${KW_CLS[key] || 'kw'}">${DATA.kwName[key]}</span>`);
 }
 function cardInner(k, st, count){
   const c = CARDS[k];
-  return `<span class="chd"><span class="cost${c.cost === 0 ? ' zero' : ''}">${c.cost}</span><span class="cname">${c.name}</span></span><span class="cart">${c.atomic ? '<i class="atom"></i>' : ''}<span class="cval"><span class="ic">${IC[cardType(c)]}</span><b>${cardVal(k, st)}</b></span></span><span class="ctx">${cardText(k, st)}</span>${count > 1 ? `<span class="cnt">×${count}</span>` : ''}`;
+  return `<span class="chd"><span class="cost${c.cost === 0 ? ' zero' : ''}">${c.cost}</span><span class="cname">${c.name}</span></span><span class="cart">${c.atomic ? '<i class="atom"></i>' : ''}<span class="cval"><span class="ic">${IC[cardType(c)]}</span><b>${cardVal(k, st)}</b></span></span><span class="ctx${(CARDS[k].text || '').replace(/\{\w+\}/g, '00').length > 27 ? ' long' : ''}">${cardText(k, st)}</span>${count > 1 ? `<span class="cnt">×${count}</span>` : ''}`;
 }
+// 長押しで説明を出すキーワード: カードの文に出てくるもの
 function cardKw(k){
-  const c = CARDS[k], kw = [];
-  if(c.block) kw.push('ブロック'); if(c.delay) kw.push('ディレイ'); if(c.swift) kw.push('スウィフト'); if(c.crack) kw.push('クラック'); if(c.atomic) kw.push('アトミック'); if(c.timer) kw.push('時限'); if(c.parry) kw.push('ぴったり');
-  return kw;
+  const t = CARDS[k].text || '';
+  return Object.values(DATA.kwName).filter(n => t.includes(n));
 }
 
 /* ---------- static build ---------- */
@@ -1087,7 +1091,7 @@ async function foeFx(i, r){
   if(r.kind === 'parried'){
     shieldFx(); const p = foeCenter(i); beam(p, {x: DROID.sx + 10, y: DROID.sy + 20});
     for(const x of r.ev) cardFx(x);
-    floatAt(DROID.x + 10, DROID.y - 92, 'ぴったり', 'cy');
+    floatAt(DROID.x + 10, DROID.y - 92, DATA.kwName.just, 'cy');
     return;
   }
   hitMeFx(r);
@@ -1334,7 +1338,7 @@ function showSwap(){
 }
 function showRest(){
   const pk = UI.pick;
-  showRoom('rest', `<h2>整備</h2><div class="rs-opts"><button class="opt${pk === 'repair' ? ' picked' : ''}" type="button" data-act="pick" data-arg="repair" data-view="rest"><span class="ic">${IC.repair}</span><b>修理</b><span>本体+15・損傷を修復</span></button><button class="opt${pk === 'defrag' ? ' picked' : ''}" type="button" data-act="pick" data-arg="defrag" data-view="rest"><span class="ic">${IC.defrag}</span><b>デフラグ</b><span>カードを1枚消去</span></button></div><div class="row"><button class="btn" type="button" data-act="rest" ${pk ? '' : 'disabled'}>決定</button></div>`, true);
+  showRoom('rest', `<h2>整備</h2><div class="rs-opts"><button class="opt${pk === 'repair' ? ' picked' : ''}" type="button" data-act="pick" data-arg="repair" data-view="rest"><span class="ic">${IC.repair}</span><b>修理</b><span>${DATA.ui.repair.replace('{n}', 15)}</span></button><button class="opt${pk === 'defrag' ? ' picked' : ''}" type="button" data-act="pick" data-arg="defrag" data-view="rest"><span class="ic">${IC.defrag}</span><b>デフラグ</b><span>${DATA.ui.defrag}</span></button></div><div class="row"><button class="btn" type="button" data-act="rest" ${pk ? '' : 'disabled'}>決定</button></div>`, true);
 }
 function groupDeck(list){ const counts = {}; for(const k of list) counts[k] = (counts[k] || 0) + 1; return counts; }
 function showDefrag(){
@@ -1349,7 +1353,7 @@ function showShop(){
   const offers = UI.offers.map((k, i) => k ? `<div class="sitem"><button class="card static${pk === 'c' + i ? ' picked' : ''}${can(price(k)) ? '' : ' off'}" type="button" data-act="pick" data-arg="c${i}" data-view="shop">${cardInner(k, null)}</button><span class="price${can(price(k)) ? '' : ' no'}"><span class="ic">${IC.scrap}</span>${price(k)}</span></div>` : '<div class="sitem sold"></div>').join('');
   const svc = (id, ic, name, sub, c) => `<button class="opt${pk === id ? ' picked' : ''}${can(c) ? '' : ' off'}" type="button" data-act="pick" data-arg="${id}" data-view="shop"><span class="ic">${IC[ic]}</span><b>${name}</b><span>${sub}</span><span class="price${can(c) ? '' : ' no'}"><span class="ic">${IC.scrap}</span>${c}</span></button>`;
   const cost = pk ? (pk[0] === 'c' ? price(UI.offers[+pk.slice(1)]) : pk === 'defrag' ? sh.defrag : sh.repairCost) : 0;
-  showRoom('shop', `<h2>ショップ</h2><div class="shop"><div class="cards">${offers}</div><div class="svc">${svc('defrag', 'defrag', 'デフラグ', 'カードを1枚消去', sh.defrag)}${svc('repair', 'repair', '修理', `本体+${sh.repairBody}・損傷を修復`, sh.repairCost)}</div></div><div class="row"><button class="btn ghost" type="button" data-act="leave">出る</button><button class="btn" type="button" data-act="buy" ${pk && can(cost) ? '' : 'disabled'}>購入</button></div>`, false);
+  showRoom('shop', `<h2>ショップ</h2><div class="shop"><div class="cards">${offers}</div><div class="svc">${svc('defrag', 'defrag', 'デフラグ', DATA.ui.defrag, sh.defrag)}${svc('repair', 'repair', '修理', DATA.ui.repair.replace('{n}', sh.repairBody), sh.repairCost)}</div></div><div class="row"><button class="btn ghost" type="button" data-act="leave">出る</button><button class="btn" type="button" data-act="buy" ${pk && can(cost) ? '' : 'disabled'}>購入</button></div>`, false);
 }
 function showEventRoom(){
   const ev = DATA.events.find(e => e.id === UI.eventId), pk = UI.pick;

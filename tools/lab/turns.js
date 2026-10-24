@@ -16,7 +16,7 @@
 const fs = require('fs'), vm = require('vm'), path = require('path');
 const ctx = {console}; ctx.window = ctx; ctx.globalThis = ctx; vm.createContext(ctx);
 const base = path.join(__dirname, '..', '..');
-for(const f of ['data/parts.js','data/cards.js','tools/lab/enemies_07.js','data/map.js','data/lines.js','js/engine.js']) vm.runInContext(fs.readFileSync(path.join(base, f), 'utf8'), ctx, {filename:f});
+for(const f of ['data/parts.js','data/cards.js','tools/lab/enemies_07.js','data/map.js','data/text.js','js/engine.js']) vm.runInContext(fs.readFileSync(path.join(base, f), 'utf8'), ctx, {filename:f});
 const E = ctx.ENGINE, D = ctx.DATA;
 const CARDS0 = JSON.parse(JSON.stringify(D.cards)), FOES0 = JSON.parse(JSON.stringify(D.foes));
 

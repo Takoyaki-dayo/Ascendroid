@@ -1,6 +1,6 @@
 // Ascendroid サービスワーカー
 // 更新するときは VERSION をアプリのバージョン(index.html の APP_VERSION)と同じ値にする
-const VERSION = '0.9.0';
+const VERSION = '0.10.0';
 const CACHE = 'tower-' + VERSION;
 const CORE = [
   './',
@@ -11,6 +11,7 @@ const CORE = [
   'data/enemies.js',
   'data/map.js',
   'data/lines.js',
+  'data/classes.js',
   'js/engine.js',
   'icons/icon-192.png',
   'icons/icon-512.png',

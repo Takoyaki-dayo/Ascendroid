@@ -501,9 +501,10 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 <script src="data/enemies.js"></script>
 <script src="data/map.js"></script>
 <script src="data/lines.js"></script>
+<script src="data/classes.js"></script>
 <script src="js/engine.js"></script>
 <script>
-const APP_VERSION = '0.9.0';
+const APP_VERSION = '0.10.0';
 const $ = s => document.querySelector(s);
 const EN = ENGINE, RULE = EN.RULE;
 const VIEW = RULE.view, NOW = 180, PX = 25, xs = c => NOW + c * PX, ROWY = [52, 86, 120], STRIP_Y = 150, SWIFT_VIS = 3;
@@ -1402,29 +1403,22 @@ function infoDeck(){
   const tiles = Object.keys(own).map(k => `<div class="card static">${cardInner(k, S, own[k])}</div>`).concat(Object.keys(extra).map(k => `<div class="card static src">${cardInner(k, S, extra[k])}</div>`));
   showOv(`<h2>デッキ ${EN.battleDeck(S.run).length}</h2><div class="cards">${tiles.join('')}</div>${closeRow}`, true);
 }
-/* ---------- 補給の型(実験) ---------- */
-// リフレッシュ(既定のキャラ: 自動では引かず、任意のタイミングで2サイクル使って手札を全部捨てて5枚引く。始めにブロックをすべて失う)
-// / 常時供給(0.8 までの「今」: 3サイクルで1枚届く)/ 固定ターン。区切りの型では、コスト2以下のカードの数値を半分にし(強さを時間に比例させる)、
-// 敵を放置の代償つき(DATA.foesEsc)にして、難しさを揃えるため敵の攻撃力に倍率をかける(tools/lab/turns.js の結果から)
-const CARDS0 = JSON.parse(JSON.stringify(CARDS)), FOES0 = JSON.parse(JSON.stringify(FOES));
-const ECON_NAME = {now:'常時供給', turn:'固定ターン', reload:'リフレッシュ'};
-const RELOAD_MUL = {2:0.7, 3:0.6, 4:0.47};
+/* ---------- キャラ(クラス) ---------- */
+// 敵は全キャラ共通。キャラごとに補給の型(RULE.econ)とカードの数値(DATA.classes の cards)を切り替える
+// デバッグでリフレッシュのサイクル(reloadR)とターンの長さ(turnLen)だけ上書きできる
+const CARDS0 = JSON.parse(JSON.stringify(CARDS));
+const CLS = DATA.classes;
+const clsKey = () => (DBG && CLS[DBG.cls]) ? DBG.cls : DATA.defaultClass;
 function applyEcon(){
   if(!DBG) dbgLoad();
-  const m = DBG.econ || 'now', alt = m !== 'now';
-  RULE.econ = m === 'turn' ? {type:'turn', len:DBG.turnLen, hand:5, blockReset:true} : m === 'reload' ? {type:'reload', r:DBG.reloadR, hand:5, blockReset:'start'} : null;
+  const C = CLS[clsKey()];
+  RULE.econ = C.econ ? {...C.econ} : null;
+  if(RULE.econ && RULE.econ.type === 'reload' && DBG.reloadR) RULE.econ.r = DBG.reloadR;
+  if(RULE.econ && RULE.econ.type === 'turn' && DBG.turnLen) RULE.econ.len = DBG.turnLen;
   for(const [k, c0] of Object.entries(CARDS0)){
-    const c = JSON.parse(JSON.stringify(c0));
-    if(alt && !c.junk && c.cost < 3){ const h = x => Math.max(1, Math.round(x * 0.5)); if(c.dmg) c.dmg.n = h(c.dmg.n); if(c.block) c.block = h(c.block); if(c.timer) c.timer.dmg.n = h(c.timer.dmg.n); }
+    const c = JSON.parse(JSON.stringify(c0)), o = C.cards[k];
+    if(o){ if(o.dmg != null && c.dmg) c.dmg.n = o.dmg; if(o.block != null) c.block = o.block; if(o.timer != null && c.timer) c.timer.dmg.n = o.timer; }
     CARDS[k] = c;
-  }
-  // 敵の攻撃力の倍率: 常時供給(0.7 の敵)と同じ難しさになるよう turns.js の較正から
-  const mul = m === 'turn' ? 0.85 : m === 'reload' ? (RELOAD_MUL[DBG.reloadR] || 0.55) : 1, sc = x => Math.max(1, Math.round(x * mul));
-  const fix = pat => pat.map(a => { const o = JSON.parse(JSON.stringify(a)); if(o.d > 0) o.d = sc(o.d); if(o.counter) o.counter.d = sc(o.counter.d); return o; });
-  for(const [k, f0] of Object.entries(FOES0)){
-    const f = JSON.parse(JSON.stringify(alt && DATA.foesEsc[k] ? {...f0, ...DATA.foesEsc[k]} : f0));
-    f.pat = fix(f.pat); if(f.phase) f.phase = {at: f.phase.at, pat: fix(f.phase.pat)}; if(f.react) f.react = {...f.react, d: sc(f.react.d)};
-    FOES[k] = f;
   }
 }
 /* ---------- debug ---------- */
@@ -1440,10 +1434,12 @@ const DBG_PRESET = {
 const DBG_PRESET_NAME = {start:'最初', light:'軽い', heavy:'重い', control:'制御', all:'全種1枚', empty:'空'};
 let DBG = null;
 function dbgLoad(){
-  const def = {deck: DATA.startDeck.slice(), parts: {...DATA.startParts}, body: DATA.bodyMax, dmg: 1, hp: 1, custom: ['drone', null, null], enc: null, econ: 'reload', turnLen: 6, reloadR: 2, v: 2};
+  const def = {deck: DATA.startDeck.slice(), parts: {...DATA.startParts}, body: DATA.bodyMax, dmg: 1, hp: 1, custom: ['drone', null, null], enc: null, cls: DATA.defaultClass, turnLen: 6, reloadR: 2, v: 3};
   let v = null; try{ v = JSON.parse(localStorage.getItem('asc.dbg') || 'null'); }catch(e){}
   // v2(0.9.0): 既定のキャラをリフレッシュ(2サイクル・5枚)に。古い設定は補給の型だけ既定に戻す
   if(v && !(v.v >= 2)){ v.econ = 'reload'; v.reloadR = 2; v.v = 2; }
+  // v3(0.10.0): 補給の型はキャラで決まる。econ を cls に読み替える
+  if(v && !(v.v >= 3)){ v.cls = {reload:'k7', now:'war', turn:'turn'}[v.econ] || DATA.defaultClass; delete v.econ; v.v = 3; }
   DBG = Object.assign(def, v || {});
   DBG.deck = DBG.deck.filter(k => CARDS[k]);
   for(const p of SLOTS) if(!PARTDEF[DBG.parts[p.id]] || PARTDEF[DBG.parts[p.id]].slot !== p.id) DBG.parts[p.id] = DATA.startParts[p.id];
@@ -1454,7 +1450,8 @@ function dbgSave(){ try{ localStorage.setItem('asc.dbg', JSON.stringify(DBG)); }
 const dbgMul = x => '×' + x;
 function dbgSummary(){
   const parts = SLOTS.map(p => PARTDEF[DBG.parts[p.id]].name.replace(/[〘〙]/g, '')).join(' / ');
-  return `補給 ${ECON_NAME[DBG.econ]}${DBG.econ === 'turn' ? DBG.turnLen : DBG.econ === 'reload' ? DBG.reloadR : ''} · デッキ ${DBG.deck.length}枚 · ${parts} · 本体${DBG.body} · 敵の攻撃${dbgMul(DBG.dmg)} 耐久${dbgMul(DBG.hp)} · 待機${RULE.freeWait ? 'いつでも' : '手札がないときだけ'}`;
+  const C = CLS[clsKey()];
+  return `${C.name}(${C.sys}${C.econ && C.econ.type === 'turn' ? DBG.turnLen : C.econ && C.econ.type === 'reload' ? DBG.reloadR : ''}) · デッキ ${DBG.deck.length}枚 · ${parts} · 本体${DBG.body} · 敵の攻撃${dbgMul(DBG.dmg)} 耐久${dbgMul(DBG.hp)} · 待機${RULE.freeWait ? 'いつでも' : '手札がないときだけ'}`;
 }
 function encLabel(k){ const E = ENC[k]; return `${E.boss ? 'ボス' : E.elite ? 'エリート' : '通常'} · ${E.fam}`; }
 function showDebug(){
@@ -1490,8 +1487,8 @@ function showDebugNums(){
   UI.dbgView = 'nums';
   const seg = (key, vals, fmt) => `<div class="seg">${vals.map(v => `<button type="button" class="${DBG[key] === v ? 'on' : ''}" data-act="dbgNum" data-arg="${key}:${v}">${fmt ? fmt(v) : v}</button>`).join('')}</div>`;
   showOv(`<h2>数値</h2>
-    <div class="dbg-h">補給の型(通常のランにも効く)</div><div class="seg">${Object.entries(ECON_NAME).map(([k, n]) => `<button type="button" class="${DBG.econ === k ? 'on' : ''}" data-act="dbgEcon" data-arg="${k}">${n}</button>`).join('')}</div>
-    ${DBG.econ === 'turn' ? `<div class="dbg-h">ターンの長さ</div>${seg('turnLen', [5, 6, 8])}` : ''}${DBG.econ === 'reload' ? `<div class="dbg-h">リフレッシュのサイクル</div>${seg('reloadR', [2, 3, 4])}` : ''}
+    <div class="dbg-h">キャラ(通常のランにも効く)</div><div class="seg">${Object.entries(CLS).map(([k, c]) => `<button type="button" class="${clsKey() === k ? 'on' : ''}" data-act="dbgCls" data-arg="${k}">${c.name}・${c.sys}</button>`).join('')}</div>
+    ${CLS[clsKey()].econ && CLS[clsKey()].econ.type === 'turn' ? `<div class="dbg-h">ターンの長さ</div>${seg('turnLen', [5, 6, 8])}` : ''}${CLS[clsKey()].econ && CLS[clsKey()].econ.type === 'reload' ? `<div class="dbg-h">リフレッシュのサイクル</div>${seg('reloadR', [2, 3, 4])}` : ''}
     <div class="dbg-h">本体耐久</div>${seg('body', [20, 50, 100, 999])}
     <div class="dbg-h">敵の攻撃</div>${seg('dmg', [0.5, 1, 1.5, 2, 3], dbgMul)}
     <div class="dbg-h">敵の耐久</div>${seg('hp', [0.5, 1, 1.5, 2, 3], dbgMul)}
@@ -1543,13 +1540,13 @@ function showRules(first){
     <li>完了前に被弾すると中断。ブロックで全部防ぐか、菱形のあるカードなら中断されない。完了と溜め技が同じサイクルならJUSTで潰せる。</li>
     <li>目の印の敵は、重いカードを使い始めると撃ってくる。鎖の印の敵は、仲間と同時に攻撃すると強くなる。</li>
     <li>予定の下の帯は、その間にカードが完了したときに効く。<b>構</b>は数字以上の一撃で行動を潰せる。<b>防</b>は数字までダメージを防がれる。<b>返</b>は殴るたびに撃ち返される。<b>隙</b>はダメージ1.5倍。<b>?</b>は次の行動がまだ決まっていない。</li>
-    <li>右下は手札の入れ替え(枚数ぶんのサイクル)と、1サイクルの待機。</li>
+    <li>${!RULE.econ ? '右下は手札の入れ替え(枚数ぶんのサイクル)と、1サイクルの待機。' : '右下の下段は1サイクルの待機。'}</li>
     <li>上スワイプで手札を広げ、下スワイプで自分の内側を見る。長押しでカードと敵の詳細。</li>
   </ul><div class="row">${first ? '<button class="btn ghost" type="button" data-act="debug">デバッグ</button>' : ''}<button class="btn" type="button" data-act="close">${first ? 'はじめる' : '閉じる'}</button></div>`, !first);
 }
 function showMenu(){
   const at = S.run.at, pos = !at ? '入口' : at.boss ? 'ボス' : `部屋${at.idx + 1}/${DATA.area.rooms + 1}`;
-  showOv(`<h2>${DATA.area.name} · ${UI.screen === 'battle' && UI.node ? DATA.rooms[UI.node.type].name : pos}</h2><p class="sub">Ascendroid ${APP_VERSION}${RULE.econ ? ' · 補給: ' + ECON_NAME[DBG.econ] : ''}</p><div class="mlist"><button class="opt" type="button" data-act="rules"><b>遊び方</b></button><button class="opt" type="button" data-act="deck"><b>デッキ</b></button><button class="opt" type="button" data-act="fs"><b>全画面</b></button><button class="opt" type="button" data-act="toggleWait"><b>待機</b><span>${RULE.freeWait ? 'いつでも' : '手札がないときだけ'}</span></button><button class="opt" type="button" data-act="restart"><b>最初から</b></button><button class="opt" type="button" data-act="debug"><b>デバッグ</b></button></div>${closeRow}`, true);
+  showOv(`<h2>${DATA.area.name} · ${UI.screen === 'battle' && UI.node ? DATA.rooms[UI.node.type].name : pos}</h2><p class="sub">Ascendroid ${APP_VERSION} · ${CLS[clsKey()].name}</p><div class="mlist"><button class="opt" type="button" data-act="rules"><b>遊び方</b></button><button class="opt" type="button" data-act="deck"><b>デッキ</b></button><button class="opt" type="button" data-act="fs"><b>全画面</b></button><button class="opt" type="button" data-act="toggleWait"><b>待機</b><span>${RULE.freeWait ? 'いつでも' : '手札がないときだけ'}</span></button><button class="opt" type="button" data-act="restart"><b>最初から</b></button><button class="opt" type="button" data-act="debug"><b>デバッグ</b></button></div>${closeRow}`, true);
 }
 async function goFull(){
   hideOv();
@@ -1574,7 +1571,7 @@ function act(a, arg, el){
     case 'dbgCard': { const [k, d] = arg.split(':'); if(+d > 0) DBG.deck.push(k); else { const i = DBG.deck.lastIndexOf(k); if(i >= 0) DBG.deck.splice(i, 1); } dbgSave(); showDebugDeck(); break; }
     case 'dbgPart': { const [sl, id] = arg.split(':'); DBG.parts[sl] = id; dbgSave(); showDebugParts(); break; }
     case 'dbgNum': { const [key, v] = arg.split(':'); DBG[key] = +v; dbgSave(); applyEcon(); showDebugNums(); break; }
-    case 'dbgEcon': DBG.econ = arg; dbgSave(); applyEcon(); showDebugNums(); break;
+    case 'dbgCls': DBG.cls = arg; dbgSave(); applyEcon(); showDebugNums(); break;
     case 'dbgWait': RULE.freeWait = arg === '1'; try{ localStorage.setItem('asc.freeWait', arg); }catch(e){} showDebugNums(); break;
     case 'dbgSlot': { const [i, k] = arg.split(':'); DBG.custom[+i] = k || null; dbgSave(); showDebugCustom(); break; }
     case 'toggleWait':

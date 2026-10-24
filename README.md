@@ -12,14 +12,16 @@
   - `enemies.js` 敵(行動パターン、反応・連携、学習で出るカード)と遭遇
   - `map.js` 地図(道の性格と部屋の中身)、報酬、ショップ、イベント
   - `lines.js` 独り言のセリフ
+  - `classes.js` キャラごとの手札の補給の型とカードの数値(敵は全キャラ共通)
 - `tools/datadoc.js` データ一覧の資料に載せる表を data から作る
-- `tools/sim.js` 自動対戦のシミュレータ。`node tools/sim.js greedy 40` で遭遇ごと、`node tools/sim.js greedy 40 run` でラン全体
+- `tools/sim.js` 自動対戦のシミュレータ。`node tools/sim.js greedy 40` で遭遇ごと、`node tools/sim.js greedy 40 run` でラン全体。キャラは `CLS=k7` のように環境変数で選ぶ(省略時は常時供給)
 - `tools/lab/` ルールの条件を切り替えて比べる実験
   - `lab.js` と `exp1〜3.js`: 抽象モデルで、決め方・手札の補給・強さの曲線・中断などを比べる(結果は同名の .json)
   - `lab2.js` と `exp4.js`: 抽象モデルで、敵の行動の複雑さと「待てる」を比べる。`node tools/lab/exp4.js A,D,K 5`(条件の記号、乱数の種)
   - `variety.js`: 同じ比較をゲーム本体のエンジンと本物のカードで行う。`node tools/lab/variety.js A,B,C,D,E 5 10`
   - `block.js`: ブロックの減り方(エンジンの RULE.blockDecay)を比べる。`node tools/lab/block.js A,B,C 5 8`
-  - `turns.js`: 擬似ターン(手札の区切り、エンジンの RULE.econ)を、アーキタイプの試作デッキで比べる。`node tools/lab/turns.js T-flat-w,A6-prop-w,B4-prop-n 5 6 base`(記号は 型-強さの表-待機、最後は敵 base/esc)。`turns_sum.js` で種を平均した表(turns_summary_*.txt)
+  - `turns.js`: 擬似ターン(手札の区切り、エンジンの RULE.econ)を、アーキタイプの試作デッキで比べる。`node tools/lab/turns.js T-flat-w,A6-prop-w,B4-prop-n 5 6 base`(記号は 型-強さの表-待機、最後は敵 base/esc)。`turns_sum.js` で種を平均した表(turns_summary_*.txt)。敵は 0.9 までのものを `enemies_07.js` に固定している
+  - `k7tune.js`: 敵を変えずに、キャラのカードの数値を探す(標準デッキの損傷が常時供給と同じになる倍率)。`node tools/lab/k7tune.js 5 '[[0.5,1.55]]'`(最後に turn を付けると固定ターン)
 - `manifest.webmanifest` アプリ設定(全画面・横向き)
 - `sw.js` オフライン用。データファイルを増やしたら CORE に足す
 - `icons/` アイコン(仮)
@@ -34,6 +36,7 @@
 
 | バージョン | コミット | 以前の呼び方 | 内容 |
 | --- | --- | --- | --- |
+| 0.10.0 | (このコミット) | — | 敵の強さを全キャラ共通に(放置の代償つきの行動を全員に。補給の型による攻撃力の倍率をやめた)。難しさはキャラごとのカードの数値で揃える(`data/classes.js`)。K-7 はコスト2以下を約0.78倍、コスト3以上を約1.55倍。デバッグの「補給の型」を「キャラ」に |
 | 0.9.0 | 8d48d75 | — | 既定のキャラの補給を「リフレッシュ」に(自動では引かず、好きなときに2サイクルで手札を全部捨てて5枚引く。ブロックをすべて失う)。0.8 までの補給は「常時供給」としてデバッグに残す |
 | 0.8.1 | 6aac7b2 | — | 学習の候補を全カードから(倒した敵のカードがごくわずかに出やすい)。地図から敵の表示を消した |
 | 0.8.0 | febea74 | — | デバッグメニューで補給の型(今/固定ターン/再装填)を切り替えられるように。区切りの型ではカードの強さを時間に比例させ、敵を放置の代償つき(照準・装甲・充填・ノイズ・修復・増援)に |

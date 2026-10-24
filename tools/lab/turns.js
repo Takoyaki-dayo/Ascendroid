@@ -16,7 +16,7 @@
 const fs = require('fs'), vm = require('vm'), path = require('path');
 const ctx = {console}; ctx.window = ctx; ctx.globalThis = ctx; vm.createContext(ctx);
 const base = path.join(__dirname, '..', '..');
-for(const f of ['data/parts.js','data/cards.js','data/enemies.js','data/map.js','data/lines.js','js/engine.js']) vm.runInContext(fs.readFileSync(path.join(base, f), 'utf8'), ctx, {filename:f});
+for(const f of ['data/parts.js','data/cards.js','tools/lab/enemies_07.js','data/map.js','data/lines.js','js/engine.js']) vm.runInContext(fs.readFileSync(path.join(base, f), 'utf8'), ctx, {filename:f});
 const E = ctx.ENGINE, D = ctx.DATA;
 const CARDS0 = JSON.parse(JSON.stringify(D.cards)), FOES0 = JSON.parse(JSON.stringify(D.foes));
 
@@ -197,7 +197,7 @@ function runCond(cond, SEED, NR){
   r.T = S.T; r.intr = S.intr; r.justs = S.justs; r.reloads = S.reloads; r.early = S.early; r.waits = S.waits;
   return r;
 }
-module.exports = {E, D, DECKS, ARCH, NAME, ECON, CURVES, FOES_ESC, FOES0, runCond, setCurve, setFoes};
+module.exports = {E, D, DECKS, ARCH, NAME, ECON, CURVES, FOES_ESC, FOES0, CARDS0, runCond, setCurve, setFoes, measure, bestOrder};
 
 if(require.main === module){
   const ids = (process.argv[2] || 'T-flat-w').split(','), SEED = +(process.argv[3] || 5), NR = +(process.argv[4] || 4), FO = process.argv[5] || 'base';

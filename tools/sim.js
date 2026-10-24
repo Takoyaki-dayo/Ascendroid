@@ -1,11 +1,14 @@
 // 自動対戦のシミュレータ。js/engine.js と data/*.js をそのまま使う
 // 使い方: node tools/sim.js [打ち方 greedy|expert|random] [回数]
 //   遭遇ごとに、最初のデッキ・無傷の状態から戦わせて、勝率や被ダメージを出す
+//   キャラは環境変数 CLS で選ぶ(data/classes.js のキー。省略時は常時供給の war = data/cards.js の数値そのまま)。例: CLS=k7 node tools/sim.js greedy 40
 const fs = require('fs'), vm = require('vm'), path = require('path');
 const ctx = {console}; ctx.window = ctx; ctx.globalThis = ctx; vm.createContext(ctx);
 const base = path.join(__dirname, '..');
-for(const f of ['data/parts.js','data/cards.js','data/enemies.js','data/map.js','data/lines.js','js/engine.js']) vm.runInContext(fs.readFileSync(path.join(base, f), 'utf8'), ctx, {filename:f});
+for(const f of ['data/parts.js','data/cards.js','data/enemies.js','data/map.js','data/lines.js','data/classes.js','js/engine.js']) vm.runInContext(fs.readFileSync(path.join(base, f), 'utf8'), ctx, {filename:f});
 const E = ctx.ENGINE, D = ctx.DATA;
+{ const C = D.classes[process.env.CLS || 'war']; E.RULE.econ = C.econ ? {...C.econ} : null;
+  for(const [k, o] of Object.entries(C.cards)){ const c = D.cards[k]; if(o.dmg != null && c.dmg) c.dmg.n = o.dmg; if(o.block != null) c.block = o.block; if(o.timer != null && c.timer) c.timer.dmg.n = o.timer; } }
 
 function threat(st){ let s = 0; for(const e of st.b.foes) if(e.alive){ s += e.pat.reduce((a, x) => a + (x.d || 0), 0) / e.pat.reduce((a, x) => a + x.dl, 0); } return s; }
 const zero = () => ({dmg:0, kills:0, justs:0, bodyLoss:0, partLoss:0, breaks:0, elapsed:0, won:false, dead:false});

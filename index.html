@@ -396,6 +396,28 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 .pt-h .ic svg{width:14px;height:14px}
 .pt-m{margin-left:auto;font-family:var(--f-num)}
 .opt .pt-cur{font-size:9.5px;color:var(--dim2)}
+/* 交換の確認(2枚目の重ね) */
+#ov2{position:absolute;inset:0;background:rgba(5,9,14,.6);display:flex;align-items:center;justify-content:center;z-index:55;padding:12px}
+#ovbox2{max-width:520px;border-color:var(--cy-dim);box-shadow:0 12px 40px rgba(0,0,0,.5)}
+.swap{display:flex;align-items:stretch;gap:10px;margin:4px 0 14px}
+.sw-p{flex:1;border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:6px}
+.sw-p:last-child{border:1.5px solid var(--cy)}
+.sw-p b{font-size:13px} .sw-p>span{color:var(--dim);font-size:10.5px}
+.sw-p .sw-dmg{color:var(--foe2);font-weight:700}
+.sw-ar{align-self:center;color:var(--cy);display:flex} .sw-ar svg{width:18px;height:18px}
+/* 部屋(整備・ショップ・イベント) */
+#roomScr{position:absolute;inset:0;z-index:41;background:var(--bg)}
+.rs-still{position:absolute;left:12px;top:52px;width:330px;bottom:12px;border:1px solid var(--line);border-radius:10px;background:radial-gradient(ellipse 200px 160px at 50% 55%,rgba(56,211,255,.08),transparent 70%),linear-gradient(180deg,#0f1822,#0a1018);display:flex;align-items:center;justify-content:center;color:var(--cy-dim)}
+.rs-still .ic svg{width:72px;height:72px;opacity:.5}
+.rs-main{position:absolute;left:358px;right:12px;top:52px;bottom:12px;display:flex;flex-direction:column;overflow:auto}
+.rs-main.full{left:12px}
+.rs-main h2{font-size:16px;margin:2px 0 10px;letter-spacing:.04em}
+.rs-text{color:var(--fg2);margin:0 0 12px;line-height:1.6}
+.rs-opts{display:flex;flex-direction:column;gap:8px;margin:0 0 12px}
+.rs-opts .opt{width:auto;flex-direction:row;align-items:center;gap:10px;padding:12px 14px}
+.rs-opts .opt span:last-child{margin-left:auto}
+.rs-main .row{margin-top:auto}
+.rs-main.full .shop{flex:1;padding-top:8px}
 /* map */
 #mapScr{position:absolute;inset:0;z-index:40;background:radial-gradient(ellipse 520px 260px at 420px 200px,rgba(56,211,255,.05),transparent 70%),var(--bg)}
 .mh-bar{position:absolute;left:0;right:0;top:0;height:40px;display:flex;align-items:center;gap:14px;padding:0 12px;border-bottom:1px solid var(--line);background:rgba(15,23,32,.85)}
@@ -492,7 +514,9 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
       <div id="toast"></div>
     </div>
     <div id="mapScr" hidden></div>
+    <div id="roomScr" hidden></div>
     <div id="ov" hidden><div class="box" id="ovbox"></div></div>
+    <div id="ov2" hidden><div class="box" id="ovbox2"></div></div>
   </div>
 </div>
 
@@ -504,7 +528,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 <script src="data/classes.js"></script>
 <script src="js/engine.js"></script>
 <script>
-const APP_VERSION = '0.10.0';
+const APP_VERSION = '0.11.0';
 const $ = s => document.querySelector(s);
 const EN = ENGINE, RULE = EN.RULE;
 const VIEW = RULE.view, NOW = 180, PX = 25, xs = c => NOW + c * PX, ROWY = [52, 86, 120], STRIP_Y = 150, SWIFT_VIS = 3;
@@ -515,6 +539,7 @@ const T_TICK = 110, T_SWIFT = 70;
 const CARD = {W: 96, H: 136, gap: 8, x0: 84, low: 302, up: 248, right: 734};
 
 const IC = {
+  next:'<svg viewBox="0 0 12 12"><path d="M1 6H10M7 3L10 6L7 9" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>',
   phys:'<svg viewBox="0 0 12 12"><path d="M2 10L10 2M7 2H10V5" stroke="currentColor" stroke-width="1.6" fill="none"/></svg>',
   opt:'<svg viewBox="0 0 12 12"><path d="M1 6H8" stroke="currentColor" stroke-width="1.6"/><circle cx="9.5" cy="6" r="2" fill="currentColor"/></svg>',
   block:'<svg viewBox="0 0 12 12"><path d="M6 1L11 3V6C11 9 8.5 10.5 6 11C3.5 10.5 1 9 1 6V3Z" stroke="currentColor" stroke-width="1.4" fill="none"/></svg>',
@@ -571,7 +596,6 @@ const CARDS = DATA.cards, KW = DATA.keywords, FOES = DATA.foes, ENC = DATA.encou
 
 let S = null, sel = null, PV = null, busy = false, lastTarget = 0, snapshot = null;
 // 待機の設定(いつでも待てる / 手札がないときだけ)。端末ごとに覚える
-try{ const v = localStorage.getItem('asc.freeWait'); if(v !== null) RULE.freeWait = v === '1'; }catch(e){}
 const UI = {view:'normal', pick:null, learnOpts:[], screen:'map', mapSel:null, node:null, offers:null, partOpts:null, back:null, after:null, eventId:null};
 const markEls = new Map(), cardEls = new Map(), stripEls = new Map(), bandEls = new Map();
 const partOf = slot => PARTDEF[S.run.parts[slot].id];
@@ -1198,12 +1222,22 @@ function showMap(){
     const E = s.enc ? ENC[s.enc] : null;
     info = `<span class="ic">${IC[s.type]}</span><b>${DATA.rooms[s.type].name}</b>${s.type !== 'boss' ? `<span class="mi-l">${DATA.lanes[m.lanes[s.lane]].name}の道</span>` : ''}`;
   }
-  const partsMini = SLOTS.map(p => `<span class="pm${run.parts[p.id].damaged ? ' dmg' : ''}" title="${p.fn}"><span class="ic">${IC[p.id]}</span></span>`).join('');
-  $('#mapScr').innerHTML = `<div class="mh-bar"><b>${DATA.area.name}</b><span class="mb"><span class="ic">${IC.core}</span>${run.body}/${run.bodyMax}</span><span class="mb">${partsMini}</span><span class="mb"><span class="ic">${IC.scrap}</span>${run.scrap}</span><span class="sp"></span><button class="mbtn" type="button" data-act="deck"><span class="ic">${IC.deck}</span>${EN.battleDeck(run).length}</button><button class="mbtn" type="button" data-act="menu" aria-label="メニュー">${IC.menu}</button></div>
+  $('#mapScr').innerHTML = `${topBar(DATA.area.name)}
     <svg class="medges" width="844" height="390" viewBox="0 0 844 390" aria-hidden="true">${lines}</svg>
     <span class="mn start${atKey === 'start' ? ' here' : ''}" style="left:${st.x}px;top:${st.y}px"><span class="ic">${IC.start}</span></span>${labels}${all.map(btn).join('')}
     <div class="minfo">${info || '<span class="mi-h">次の部屋を選択</span>'}<span class="sp"></span><button class="btn" type="button" data-act="go" ${s && reach.has(UI.mapSel) ? '' : 'disabled'}>決定</button></div>`;
   $('#mapScr').hidden = false;
+}
+// 地図と部屋の画面の上の帯(本体・部位・スクラップ・デッキ・メニュー)
+function topBar(title){
+  const run = S.run, partsMini = SLOTS.map(p => `<span class="pm${run.parts[p.id].damaged ? ' dmg' : ''}" title="${p.fn}"><span class="ic">${IC[p.id]}</span></span>`).join('');
+  return `<div class="mh-bar"><b>${title}</b><span class="mb"><span class="ic">${IC.core}</span>${run.body}/${run.bodyMax}</span><span class="mb">${partsMini}</span><span class="mb"><span class="ic">${IC.scrap}</span>${run.scrap}</span><span class="sp"></span><button class="mbtn" type="button" data-act="deck"><span class="ic">${IC.deck}</span>${EN.battleDeck(run).length}</button><button class="mbtn" type="button" data-act="menu" aria-label="メニュー">${IC.menu}</button></div>`;
+}
+// 整備・ショップ・イベントは画面ごと切り替える(左はいずれスチルを置く枠)。still なしは全幅
+function showRoom(kind, body, still){
+  UI.screen = 'room'; hideOv(); hideOv2();
+  $('#roomScr').innerHTML = `${topBar(DATA.area.name)}${still ? `<div class="rs-still ${kind}"><span class="ic">${IC[kind]}</span></div>` : ''}<div class="rs-main${still ? '' : ' full'}">${body}</div>`;
+  $('#roomScr').hidden = false; $('#mapScr').hidden = true;
 }
 function findNode(k){ const m = S.run.map; if(k === 'boss') return m.boss; const [l, i] = k.split('-').map(Number); return m.nodes[l][i]; }
 function enterRoom(n){
@@ -1218,7 +1252,7 @@ function completeRoom(){
   run.at = n.type === 'boss' ? {boss:true} : {lane:n.lane, idx:n.idx};
   run.visited.push(nodeKey(n));
   UI.pick = null; UI.learnOpts = []; UI.partOpts = null; UI.after = null;
-  hideOv();
+  hideOv(); hideOv2(); $('#roomScr').hidden = true;
   if(n.type === 'boss'){ showClear(); return; }
   showMap();
 }
@@ -1289,9 +1323,18 @@ function showPartOffer(){
   const tile = id => { const d = PARTDEF[id], cur = partOf(d.slot); return `<button class="opt popt${pk === id ? ' picked' : ''}" type="button" data-act="pick" data-arg="${id}" data-view="part"><span class="pt-h"><span class="ic">${IC[d.slot]}</span>${SLOT_BY[d.slot].fn}<span class="pt-m">${d.max}</span></span><b>${d.name}</b><span>${d.text}</span><span class="pt-cur">今: ${cur.name}</span></button>`; };
   showOv(`<h2>鹵獲</h2><div class="opts">${UI.partOpts.map(tile).join('')}</div><div class="row"><button class="btn ghost" type="button" data-act="skipPart">取り込まない</button><button class="btn" type="button" data-act="takePart" ${pk ? '' : 'disabled'}>決定</button></div>`);
 }
+// 鹵獲で選んだパーツと今のパーツを並べて、交換するか確かめる(鹵獲の画面の上に重ねる)
+function partBox(id, damaged){
+  const d = PARTDEF[id];
+  return `<div class="sw-p"><span class="pt-h"><span class="ic">${IC[d.slot]}</span>${SLOT_BY[d.slot].fn}<span class="pt-m">${d.max}</span></span><b>${d.name}</b><span>${d.text}</span>${damaged ? '<span class="sw-dmg">損傷</span>' : ''}</div>`;
+}
+function showSwap(){
+  const d = PARTDEF[UI.pick], cur = S.run.parts[d.slot];
+  showOv2(`<h2>交換</h2><div class="swap">${partBox(cur.id, cur.damaged)}<span class="sw-ar">${IC.next || '→'}</span>${partBox(UI.pick, false)}</div><div class="row"><button class="btn ghost" type="button" data-act="swapBack">戻る</button><span class="sp"></span><button class="btn" type="button" data-act="swapGo">交換する</button></div>`);
+}
 function showRest(){
   const pk = UI.pick;
-  showOv(`<h2>整備</h2>${bodyLine()}${partTiles()}<div class="opts"><button class="opt${pk === 'repair' ? ' picked' : ''}" type="button" data-act="pick" data-arg="repair" data-view="rest"><span class="ic">${IC.repair}</span><b>修理</b><span>本体+15・損傷を修復</span></button><button class="opt${pk === 'defrag' ? ' picked' : ''}" type="button" data-act="pick" data-arg="defrag" data-view="rest"><span class="ic">${IC.defrag}</span><b>デフラグ</b><span>カードを1枚消去</span></button></div><div class="row"><button class="btn" type="button" data-act="rest" ${pk ? '' : 'disabled'}>決定</button></div>`);
+  showRoom('rest', `<h2>整備</h2><div class="rs-opts"><button class="opt${pk === 'repair' ? ' picked' : ''}" type="button" data-act="pick" data-arg="repair" data-view="rest"><span class="ic">${IC.repair}</span><b>修理</b><span>本体+15・損傷を修復</span></button><button class="opt${pk === 'defrag' ? ' picked' : ''}" type="button" data-act="pick" data-arg="defrag" data-view="rest"><span class="ic">${IC.defrag}</span><b>デフラグ</b><span>カードを1枚消去</span></button></div><div class="row"><button class="btn" type="button" data-act="rest" ${pk ? '' : 'disabled'}>決定</button></div>`, true);
 }
 function groupDeck(list){ const counts = {}; for(const k of list) counts[k] = (counts[k] || 0) + 1; return counts; }
 function showDefrag(){
@@ -1306,11 +1349,11 @@ function showShop(){
   const offers = UI.offers.map((k, i) => k ? `<div class="sitem"><button class="card static${pk === 'c' + i ? ' picked' : ''}${can(price(k)) ? '' : ' off'}" type="button" data-act="pick" data-arg="c${i}" data-view="shop">${cardInner(k, null)}</button><span class="price${can(price(k)) ? '' : ' no'}"><span class="ic">${IC.scrap}</span>${price(k)}</span></div>` : '<div class="sitem sold"></div>').join('');
   const svc = (id, ic, name, sub, c) => `<button class="opt${pk === id ? ' picked' : ''}${can(c) ? '' : ' off'}" type="button" data-act="pick" data-arg="${id}" data-view="shop"><span class="ic">${IC[ic]}</span><b>${name}</b><span>${sub}</span><span class="price${can(c) ? '' : ' no'}"><span class="ic">${IC.scrap}</span>${c}</span></button>`;
   const cost = pk ? (pk[0] === 'c' ? price(UI.offers[+pk.slice(1)]) : pk === 'defrag' ? sh.defrag : sh.repairCost) : 0;
-  showOv(`<h2>ショップ</h2>${bodyLine()}<div class="shop"><div class="cards">${offers}</div><div class="svc">${svc('defrag', 'defrag', 'デフラグ', 'カードを1枚消去', sh.defrag)}${svc('repair', 'repair', '修理', `本体+${sh.repairBody}・損傷を修復`, sh.repairCost)}</div></div><div class="row"><button class="btn ghost" type="button" data-act="leave">出る</button><button class="btn" type="button" data-act="buy" ${pk && can(cost) ? '' : 'disabled'}>購入</button></div>`);
+  showRoom('shop', `<h2>ショップ</h2><div class="shop"><div class="cards">${offers}</div><div class="svc">${svc('defrag', 'defrag', 'デフラグ', 'カードを1枚消去', sh.defrag)}${svc('repair', 'repair', '修理', `本体+${sh.repairBody}・損傷を修復`, sh.repairCost)}</div></div><div class="row"><button class="btn ghost" type="button" data-act="leave">出る</button><button class="btn" type="button" data-act="buy" ${pk && can(cost) ? '' : 'disabled'}>購入</button></div>`, false);
 }
 function showEventRoom(){
   const ev = DATA.events.find(e => e.id === UI.eventId), pk = UI.pick;
-  showOv(`<h2>${ev.title}</h2><p class="sub">${ev.text}</p>${bodyLine()}<div class="opts">${ev.choices.map((c, i) => `<button class="opt${pk === String(i) ? ' picked' : ''}" type="button" data-act="pick" data-arg="${i}" data-view="event"><b>${c.label}</b><span>${c.sub}</span></button>`).join('')}</div><div class="row"><button class="btn" type="button" data-act="choose" ${pk != null ? '' : 'disabled'}>決定</button></div>`);
+  showRoom('event', `<h2>${ev.title}</h2><p class="rs-text">${ev.text}</p><div class="rs-opts">${ev.choices.map((c, i) => `<button class="opt${pk === String(i) ? ' picked' : ''}" type="button" data-act="pick" data-arg="${i}" data-view="event"><b>${c.label}</b><span>${c.sub}</span></button>`).join('')}</div><div class="row"><button class="btn" type="button" data-act="choose" ${pk != null ? '' : 'disabled'}>決定</button></div>`, true);
 }
 function applyEvent(fx){
   const run = S.run;
@@ -1413,6 +1456,8 @@ function applyEcon(){
   if(!DBG) dbgLoad();
   const C = CLS[clsKey()];
   RULE.econ = C.econ ? {...C.econ} : null;
+  // 待機(1サイクル)を持つかもキャラで決まる。デバッグで上書きできる(DBG.wait: null ならキャラどおり)
+  RULE.freeWait = DBG.wait == null ? !!C.wait : DBG.wait;
   if(RULE.econ && RULE.econ.type === 'reload' && DBG.reloadR) RULE.econ.r = DBG.reloadR;
   if(RULE.econ && RULE.econ.type === 'turn' && DBG.turnLen) RULE.econ.len = DBG.turnLen;
   for(const [k, c0] of Object.entries(CARDS0)){
@@ -1434,7 +1479,7 @@ const DBG_PRESET = {
 const DBG_PRESET_NAME = {start:'最初', light:'軽い', heavy:'重い', control:'制御', all:'全種1枚', empty:'空'};
 let DBG = null;
 function dbgLoad(){
-  const def = {deck: DATA.startDeck.slice(), parts: {...DATA.startParts}, body: DATA.bodyMax, dmg: 1, hp: 1, custom: ['drone', null, null], enc: null, cls: DATA.defaultClass, turnLen: 6, reloadR: 2, v: 3};
+  const def = {deck: DATA.startDeck.slice(), parts: {...DATA.startParts}, body: DATA.bodyMax, dmg: 1, hp: 1, custom: ['drone', null, null], enc: null, cls: DATA.defaultClass, turnLen: 6, reloadR: 2, wait: null, v: 3};
   let v = null; try{ v = JSON.parse(localStorage.getItem('asc.dbg') || 'null'); }catch(e){}
   // v2(0.9.0): 既定のキャラをリフレッシュ(2サイクル・5枚)に。古い設定は補給の型だけ既定に戻す
   if(v && !(v.v >= 2)){ v.econ = 'reload'; v.reloadR = 2; v.v = 2; }
@@ -1451,7 +1496,7 @@ const dbgMul = x => '×' + x;
 function dbgSummary(){
   const parts = SLOTS.map(p => PARTDEF[DBG.parts[p.id]].name.replace(/[〘〙]/g, '')).join(' / ');
   const C = CLS[clsKey()];
-  return `${C.name}(${C.sys}${C.econ && C.econ.type === 'turn' ? DBG.turnLen : C.econ && C.econ.type === 'reload' ? DBG.reloadR : ''}) · デッキ ${DBG.deck.length}枚 · ${parts} · 本体${DBG.body} · 敵の攻撃${dbgMul(DBG.dmg)} 耐久${dbgMul(DBG.hp)} · 待機${RULE.freeWait ? 'いつでも' : '手札がないときだけ'}`;
+  return `${C.name}(${C.sys}${C.econ && C.econ.type === 'turn' ? DBG.turnLen : C.econ && C.econ.type === 'reload' ? DBG.reloadR : ''}) · デッキ ${DBG.deck.length}枚 · ${parts} · 本体${DBG.body} · 敵の攻撃${dbgMul(DBG.dmg)} 耐久${dbgMul(DBG.hp)} · 待機${DBG.wait == null ? '' : '(上書き)'}${RULE.freeWait ? 'あり' : 'なし'}`;
 }
 function encLabel(k){ const E = ENC[k]; return `${E.boss ? 'ボス' : E.elite ? 'エリート' : '通常'} · ${E.fam}`; }
 function showDebug(){
@@ -1492,7 +1537,7 @@ function showDebugNums(){
     <div class="dbg-h">本体耐久</div>${seg('body', [20, 50, 100, 999])}
     <div class="dbg-h">敵の攻撃</div>${seg('dmg', [0.5, 1, 1.5, 2, 3], dbgMul)}
     <div class="dbg-h">敵の耐久</div>${seg('hp', [0.5, 1, 1.5, 2, 3], dbgMul)}
-    <div class="dbg-h">待機</div><div class="seg"><button type="button" class="${RULE.freeWait ? 'on' : ''}" data-act="dbgWait" data-arg="1">いつでも</button><button type="button" class="${RULE.freeWait ? '' : 'on'}" data-act="dbgWait" data-arg="0">手札がないときだけ</button></div>
+    <div class="dbg-h">待機</div><div class="seg">${[['c', 'キャラどおり'], ['1', 'あり'], ['0', 'なし']].map(([k, n]) => `<button type="button" class="${(DBG.wait == null ? 'c' : DBG.wait ? '1' : '0') === k ? 'on' : ''}" data-act="dbgWait" data-arg="${k}">${n}</button>`).join('')}</div>
     <div class="row"><button class="btn" type="button" data-act="dbgBack">戻る</button></div>`, false, true);
 }
 function showDebugCustom(){
@@ -1540,13 +1585,13 @@ function showRules(first){
     <li>完了前に被弾すると中断。ブロックで全部防ぐか、菱形のあるカードなら中断されない。完了と溜め技が同じサイクルならJUSTで潰せる。</li>
     <li>目の印の敵は、重いカードを使い始めると撃ってくる。鎖の印の敵は、仲間と同時に攻撃すると強くなる。</li>
     <li>予定の下の帯は、その間にカードが完了したときに効く。<b>構</b>は数字以上の一撃で行動を潰せる。<b>防</b>は数字までダメージを防がれる。<b>返</b>は殴るたびに撃ち返される。<b>隙</b>はダメージ1.5倍。<b>?</b>は次の行動がまだ決まっていない。</li>
-    <li>${!RULE.econ ? '右下は手札の入れ替え(枚数ぶんのサイクル)と、1サイクルの待機。' : '右下の下段は1サイクルの待機。'}</li>
+    ${!RULE.econ ? `<li>右下は手札の入れ替え(枚数ぶんのサイクル)${RULE.freeWait ? 'と、1サイクルの待機' : '。手札がないときは1サイクルの待機'}。</li>` : RULE.freeWait || RULE.econ.type === 'turn' ? '<li>右下の下段は1サイクルの待機。</li>' : ''}
     <li>上スワイプで手札を広げ、下スワイプで自分の内側を見る。長押しでカードと敵の詳細。</li>
   </ul><div class="row">${first ? '<button class="btn ghost" type="button" data-act="debug">デバッグ</button>' : ''}<button class="btn" type="button" data-act="close">${first ? 'はじめる' : '閉じる'}</button></div>`, !first);
 }
 function showMenu(){
   const at = S.run.at, pos = !at ? '入口' : at.boss ? 'ボス' : `部屋${at.idx + 1}/${DATA.area.rooms + 1}`;
-  showOv(`<h2>${DATA.area.name} · ${UI.screen === 'battle' && UI.node ? DATA.rooms[UI.node.type].name : pos}</h2><p class="sub">Ascendroid ${APP_VERSION} · ${CLS[clsKey()].name}</p><div class="mlist"><button class="opt" type="button" data-act="rules"><b>遊び方</b></button><button class="opt" type="button" data-act="deck"><b>デッキ</b></button><button class="opt" type="button" data-act="fs"><b>全画面</b></button><button class="opt" type="button" data-act="toggleWait"><b>待機</b><span>${RULE.freeWait ? 'いつでも' : '手札がないときだけ'}</span></button><button class="opt" type="button" data-act="restart"><b>最初から</b></button><button class="opt" type="button" data-act="debug"><b>デバッグ</b></button></div>${closeRow}`, true);
+  showOv(`<h2>${DATA.area.name} · ${UI.screen === 'battle' && UI.node ? DATA.rooms[UI.node.type].name : pos}</h2><p class="sub">Ascendroid ${APP_VERSION} · ${CLS[clsKey()].name}</p><div class="mlist"><button class="opt" type="button" data-act="rules"><b>遊び方</b></button><button class="opt" type="button" data-act="deck"><b>デッキ</b></button><button class="opt" type="button" data-act="fs"><b>全画面</b></button><button class="opt" type="button" data-act="restart"><b>最初から</b></button><button class="opt" type="button" data-act="debug"><b>デバッグ</b></button></div>${closeRow}`, true);
 }
 async function goFull(){
   hideOv();
@@ -1554,6 +1599,8 @@ async function goFull(){
 }
 function showOv(html, closable, wide){ const ov = $('#ov'); $('#ovbox').innerHTML = html; $('#ovbox').classList.toggle('wide', !!wide); ov.dataset.closable = closable ? '1' : ''; ov.hidden = false; }
 function hideOv(){ $('#ov').hidden = true; }
+function showOv2(html){ $('#ovbox2').innerHTML = html; $('#ov2').hidden = false; }
+function hideOv2(){ $('#ov2').hidden = true; }
 function act(a, arg, el){
   switch(a){
     case 'close': hideOv(); break;
@@ -1572,13 +1619,8 @@ function act(a, arg, el){
     case 'dbgPart': { const [sl, id] = arg.split(':'); DBG.parts[sl] = id; dbgSave(); showDebugParts(); break; }
     case 'dbgNum': { const [key, v] = arg.split(':'); DBG[key] = +v; dbgSave(); applyEcon(); showDebugNums(); break; }
     case 'dbgCls': DBG.cls = arg; dbgSave(); applyEcon(); showDebugNums(); break;
-    case 'dbgWait': RULE.freeWait = arg === '1'; try{ localStorage.setItem('asc.freeWait', arg); }catch(e){} showDebugNums(); break;
+    case 'dbgWait': DBG.wait = arg === 'c' ? null : arg === '1'; dbgSave(); applyEcon(); showDebugNums(); break;
     case 'dbgSlot': { const [i, k] = arg.split(':'); DBG.custom[+i] = k || null; dbgSave(); showDebugCustom(); break; }
-    case 'toggleWait':
-      RULE.freeWait = !RULE.freeWait;
-      try{ localStorage.setItem('asc.freeWait', RULE.freeWait ? '1' : '0'); }catch(e){}
-      if(S && S.b){ sel = null; PV = null; renderAll(); }
-      showMenu(); break;
     case 'restart': UI.pick = null; UI.learnOpts = []; newRun(); break;
     case 'retry': S = {run: JSON.parse(snapshot), b: null}; hideOv(); startBattle(UI.node); break;
     case 'node': UI.mapSel = UI.mapSel === arg ? null : arg; showMap(); break;
@@ -1592,7 +1634,9 @@ function act(a, arg, el){
     }
     case 'learn': if(UI.pick){ S.run.deck.push(UI.pick); afterLearn(); } break;
     case 'skipLearn': afterLearn(); break;
-    case 'takePart': if(UI.pick){ const d = PARTDEF[UI.pick]; S.run.parts[d.slot] = {id:UI.pick, damaged:false}; UI.pick = null; completeRoom(); } break;
+    case 'takePart': if(UI.pick) showSwap(); break;
+    case 'swapBack': hideOv2(); break;
+    case 'swapGo': if(UI.pick){ const d = PARTDEF[UI.pick]; S.run.parts[d.slot] = {id:UI.pick, damaged:false}; UI.pick = null; completeRoom(); } break;
     case 'skipPart': UI.pick = null; completeRoom(); break;
     case 'rest':
       if(UI.pick === 'repair'){ S.run.body = Math.min(S.run.bodyMax, S.run.body + 15); for(const p of SLOTS) S.run.parts[p.id].damaged = false; completeRoom(); }
@@ -1651,6 +1695,7 @@ stage.addEventListener('click', ev => {
   if(swallow){ swallow = false; return; }
   const t = ev.target, a = t.closest('[data-act]');
   if(a && !a.disabled){ act(a.dataset.act, a.dataset.arg, a); return; }
+  if(!$('#ov2').hidden){ if(t === $('#ov2')) hideOv2(); return; }
   const ov = $('#ov');
   if(!ov.hidden){ if(t === ov && ov.dataset.closable) hideOv(); return; }
   if(!inBattle() || busy || UI.view === 'self') return;

@@ -7,7 +7,7 @@ const ctx = {console}; ctx.window = ctx; ctx.globalThis = ctx; vm.createContext(
 const base = path.join(__dirname, '..');
 for(const f of ['data/parts.js','data/cards.js','data/enemies.js','data/map.js','data/lines.js','data/classes.js','js/engine.js']) vm.runInContext(fs.readFileSync(path.join(base, f), 'utf8'), ctx, {filename:f});
 const E = ctx.ENGINE, D = ctx.DATA;
-{ const C = D.classes[process.env.CLS || 'war']; E.RULE.econ = C.econ ? {...C.econ} : null;
+{ const C = D.classes[process.env.CLS || 'war']; E.RULE.econ = C.econ ? {...C.econ} : null; E.RULE.freeWait = !!C.wait;
   for(const [k, o] of Object.entries(C.cards)){ const c = D.cards[k]; if(o.dmg != null && c.dmg) c.dmg.n = o.dmg; if(o.block != null) c.block = o.block; if(o.timer != null && c.timer) c.timer.dmg.n = o.timer; } }
 
 function threat(st){ let s = 0; for(const e of st.b.foes) if(e.alive){ s += e.pat.reduce((a, x) => a + (x.d || 0), 0) / e.pat.reduce((a, x) => a + x.dl, 0); } return s; }

@@ -3,7 +3,7 @@
 (function(root){
 'use strict';
 const D = root.DATA;
-// freeWait: 手札があっても1サイクル待てる(0.7 から既定で待てる。メニューで切り替え)
+// freeWait: 手札があっても1サイクル待てる(0.7 から。0.11 からキャラごとに data/classes.js の wait で決まる)
 // blockDecay: ブロックの減り方(実験用。null なら使い切るまで残る)
 //   {type:'hit'} 敵の攻撃を受けると余りも消える(多段は撃ち終わりで) / {type:'lin', v} 毎サイクル v 減る
 //   {type:'mul', v} 毎サイクル v 倍(端数切り捨て) / {type:'life', v} 最後に得てから v サイクルで消える / {type:'cap', v} 持てる上限 v

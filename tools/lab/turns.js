@@ -144,10 +144,11 @@ function battle(enc, deck, agent, order, K){
   const b = st.b;
   return {loss:Math.min(83, LOSS(st, run0)), won:!!(o && o.won), T:b.T, intr, justs, breaks:b.breaks || 0, ...stats};
 }
-const ENCS = Object.keys(D.encounters);
+// 遭遇の一覧は測るたびに D.encounters から取る(実験側で差し替えられるように)
 function measure(deckName, agent, N, seed, order, K){
   R = E.rngFrom(seed); E.setRandom(R);
   const sum = {}, per = {};
+  const ENCS = Object.keys(D.encounters);
   for(const e of ENCS){ per[e] = 0; for(let i = 0; i < N; i++){ const r = battle(e, DECKS[deckName], agent, order, K || 3); per[e] += r.loss / N; for(const [k, v] of Object.entries(r)) sum[k] = (sum[k] || 0) + +v; } }
   const n = N * ENCS.length, out = {per};
   for(const [k, v] of Object.entries(sum)) out[k] = +(v / n).toFixed(3);

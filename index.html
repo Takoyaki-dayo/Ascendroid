@@ -585,7 +585,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 <script src="data/text.js"></script>
 <script src="js/engine.js"></script>
 <script>
-const APP_VERSION = '0.14.1';
+const APP_VERSION = '0.15.0';
 const $ = s => document.querySelector(s);
 const EN = ENGINE, RULE = EN.RULE;
 const VIEW = RULE.view, NOW = 180, PX = 25, xs = c => NOW + c * PX, ROWY = [52, 86, 120], STRIP_Y = 150, SWIFT_VIS = 3;
@@ -1591,6 +1591,7 @@ function dbgLoad(){
   DBG.deck = DBG.deck.filter(k => CARDS[k]);
   for(const p of SLOTS) if(!PARTDEF[DBG.parts[p.id]] || PARTDEF[DBG.parts[p.id]].slot !== p.id) DBG.parts[p.id] = DATA.startParts[p.id];
   DBG.custom = [0, 1, 2].map(i => DBG.custom[i] && FOES[DBG.custom[i]] ? DBG.custom[i] : null);
+  if(DBG.enc && DBG.enc !== 'dbg' && !ENC[DBG.enc]) DBG.enc = null; // 0.15.0 で消えた遭遇
   if(DBG.enc && DBG.enc !== 'dbg' && !ENC[DBG.enc]) DBG.enc = null;
 }
 function dbgSave(){ try{ localStorage.setItem('asc.dbg', JSON.stringify(DBG)); }catch(e){} }

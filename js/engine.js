@@ -158,7 +158,7 @@ function fireTimer(st, t){
 }
 // 敵の攻撃1回。extra は連携の上乗せ
 function strike(st, e, a, extra, noParry){
-  const b = st.b, raw = a.d + (extra || 0) + (b.mark || 0);
+  const b = st.b, raw = a.d + (extra || 0) + (b.crack || 0);
   if(b.parryNow && !noParry){ const ev = []; hurtFoe(b, e, raw, ev); return {kind:'parried', name:a.n, raw, ev}; }
   const ab = Math.min(b.block, raw); b.block -= ab; b.blockUsed = (b.blockUsed || 0) + ab;
   const rem = raw - ab, p = b.parts[a.p];
@@ -184,7 +184,8 @@ function enemyAct(st, e, extra){
   const b = st.b;
   if(a.armor){ e.armor = (e.armor || 0) + a.armor; res.armor = a.armor; }                // 装甲を重ねる(消えない)
   if(a.heal){ const h = Math.min(a.heal, e.maxHp - e.hp); e.hp += h; res.heal = h; }     // 修復
-  if(a.mark){ b.mark = (b.mark || 0) + a.mark; res.mark = a.mark; }                       // 照準: こちらが受ける攻撃すべて+mark
+  const ac = a.crack || a.mark; // こちらにクラック(受ける攻撃すべて+)。mark は 0.14 までの名前(実験の古い敵のデータ用)
+  if(ac){ b.crack = (b.crack || 0) + ac; res.crack = ac; }
   if(a.noise){ for(let i = 0; i < a.noise; i++){ const at = Math.floor(rand() * (b.draw.length + 1)); b.draw.splice(at, 0, {k:'noise', id:b.uid++}); } res.noise = a.noise; } // ノイズ注入
   if(a.summon && b.foes.filter(f => f.alive).length < 3){ const nf = makeFoe(a.summon, b.foes.length); b.foes.push(nf); res.summon = nf.i; } // 増援
   advance(e);

@@ -14,7 +14,7 @@
 //     wt               分岐のときの重み
 //   ai:'rand'  行動を重み wt で選ぶ(同じ行動は3回続けない)。次の行動は決まるまで見えない
 //   phase:{at, pat}  耐久が at 割を切ると、行動の並びが pat に変わる
-//   (放置の代償。0.10.0 から全キャラ共通の敵に入っている)armor 装甲を重ねる(消えずに積もり、ダメージを先に受ける) / heal 修復 / mark 照準(こちらが受ける攻撃すべて+mark)
+//   (放置の代償。0.10.0 から全キャラ共通の敵に入っている)armor 装甲を重ねる(消えずに積もり、ダメージを先に受ける) / heal 修復 / crack こちらにクラック(受ける攻撃すべて+crack)
 //     noise ノイズを山札に混ぜる / summon 仲間を呼ぶ(敵の種類のキー)
 //   react: 反応する。コスト min 以上のカードを使い始めると、1サイクル後に撃つ {min, d, p}
 //   sync: 連携する。連携を持つ敵が同じサイクルに攻撃すると、それぞれダメージ+sync
@@ -23,9 +23,9 @@
 window.DATA = window.DATA || {};
 DATA.foes = {
   drone:    {kind:'drone', hp:33, start:4, ai:'rand',
-    pat:[{d:7, dl:6, p:'calc', wt:2}, {d:4, hits:2, dl:5, p:'out', wt:1}, {d:0, dl:5, mark:1, wt:1}], pool:['jab','rapid','guard','flick']},
+    pat:[{d:7, dl:6, p:'calc', wt:2}, {d:4, hits:2, dl:5, p:'out', wt:1}, {d:0, dl:5, crack:1, wt:1}], pool:['jab','rapid','guard','flick']},
   drone2:   {kind:'drone', hp:33, start:7, ai:'rand',
-    pat:[{d:7, dl:6, p:'out', wt:2}, {d:4, hits:2, dl:5, p:'mob', wt:1}, {d:0, dl:5, mark:1, wt:1}], pool:['jab','rapid','guard','flick']},
+    pat:[{d:7, dl:6, p:'out', wt:2}, {d:4, hits:2, dl:5, p:'mob', wt:1}, {d:0, dl:5, crack:1, wt:1}], pool:['jab','rapid','guard','flick']},
   linkA:    {kind:'link', hp:28, start:6, sync:4,
     pat:[{d:6, dl:6, p:'arm'}, {d:0, dl:4, armor:5}], pool:['rapid','scan','backflow','hack','capacitor','discharge']},
   linkB:    {kind:'link', hp:28, start:6, sync:4,

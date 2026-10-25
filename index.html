@@ -148,6 +148,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 .hpt{font-family:var(--f-num);font-size:10.5px;color:var(--fg2)}
 .hpt.pv{color:var(--foe2)}
 .sts{display:flex;gap:8px;min-height:12px}
+.cinfo.fi .sts{gap:5px}
 .st{display:inline-flex;gap:2px;align-items:center;font-family:var(--f-num);font-size:10.5px;font-weight:700}
 .st .ic svg{width:11px;height:11px}
 .st.crack{color:var(--foe2)} .st.blk{color:var(--fg)} .st.swf{color:var(--cy)} .st.chg{color:var(--cy)}
@@ -415,6 +416,14 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 .fhead b{font-size:18px;letter-spacing:.04em}
 .fhp{display:flex;align-items:center;gap:4px;font-family:var(--f-num)}
 .fhp b{font-size:24px;line-height:1} .fhp>span:not(.ei-bar){color:var(--dim);font-size:12px;margin:5px 10px 0 0}
+.fsts{display:flex;gap:6px;flex-wrap:wrap}
+.fsp{display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 9px;border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--fg2);font-size:11px;font-weight:700}
+.fsp b{font-family:var(--f-num);font-size:13px;color:var(--fg)}
+.fsp .ic svg{width:12px;height:12px}
+.fsp.bad{color:var(--foe2);border-color:rgba(255,77,106,.4)} .fsp.good{color:var(--cy);border-color:rgba(56,211,255,.35)} .fsp.arm{color:#cfe3ef;border-color:#3a5064}
+.fsp.on{box-shadow:0 0 0 2px var(--cy)}
+.fdet.stx{border-left-color:#3a5064} .fdet.stx.bad{border-left-color:var(--foe)} .fdet.stx.good{border-left-color:var(--cy)}
+.fm-v .ic.big svg{width:17px;height:17px}
 .fst{display:inline-flex;align-items:center;gap:3px;font-family:var(--f-num);font-weight:700;font-size:12px;color:var(--fg2);padding:1px 6px;border:1px solid var(--line);border-radius:4px;margin-right:4px}
 .fst.f{color:var(--foe2)} .fst .g{font-family:var(--f-body);font-size:10px} .fst .ic svg{width:11px;height:11px}
 #focus .ei-bar{display:block;width:180px;margin-right:10px}
@@ -576,7 +585,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 <script src="data/text.js"></script>
 <script src="js/engine.js"></script>
 <script>
-const APP_VERSION = '0.14.0';
+const APP_VERSION = '0.14.1';
 const $ = s => document.querySelector(s);
 const EN = ENGINE, RULE = EN.RULE;
 const VIEW = RULE.view, NOW = 180, PX = 25, xs = c => NOW + c * PX, ROWY = [52, 86, 120], STRIP_Y = 150, SWIFT_VIS = 3;
@@ -587,6 +596,9 @@ const T_TICK = 110, T_SWIFT = 70;
 const CARD = {W: 96, H: 136, gap: 8, x0: 84, low: 302, up: 248, right: 734};
 
 const IC = {
+  armor:'<svg viewBox="0 0 12 12"><path d="M6 1L10.5 3.5V8.5L6 11L1.5 8.5V3.5Z" stroke="currentColor" stroke-width="1.3" fill="none"/><path d="M6 4L8 5.2V7.6L6 8.8L4 7.6V5.2Z" fill="currentColor"/></svg>',
+  str:'<svg viewBox="0 0 12 12"><path d="M2 7L6 3L10 7M2 10.5L6 6.5L10 10.5" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>',
+  vuln:'<svg viewBox="0 0 12 12"><path d="M6 1V5M6 7V11M1 6H5M7 6H11" stroke="currentColor" stroke-width="1.4"/><circle cx="6" cy="6" r="1.2" fill="currentColor"/></svg>',
   charge:'<svg viewBox="0 0 12 12"><path d="M7 1L2.5 7H6L5 11L9.5 5H6Z" stroke="currentColor" stroke-width="1.2" fill="none" stroke-linejoin="round"/></svg>',
   next:'<svg viewBox="0 0 12 12"><path d="M1 6H10M7 3L10 6L7 9" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>',
   phys:'<svg viewBox="0 0 12 12"><path d="M2 10L10 2M7 2H10V5" stroke="currentColor" stroke-width="1.6" fill="none"/></svg>',
@@ -761,7 +773,7 @@ function renderMe(){
   if(S.b.block) st += `<span class="st blk" id="stBlk"><span class="ic">${IC.block}</span>${S.b.block}</span>`;
   if(S.b.swift) st += `<span class="st swf"><span class="ic">${IC.swift}</span>${S.b.swift}</span>`;
   if(S.b.charge) st += `<span class="st chg"><span class="ic">${IC.charge}</span>${S.b.charge}</span>`;
-  if(S.b.mark) st += `<span class="st mark">照+${S.b.mark}</span>`;
+  if(S.b.crack) st += `<span class="st crack"><span class="ic">${IC.crack}</span>${S.b.crack}</span>`;
   $('#meSts').innerHTML = st;
 }
 function incoming(){
@@ -814,8 +826,8 @@ function renderFoes(){
     if(e.crack) sts += `<span class="st crack"><span class="ic">${IC.crack}</span>${e.crack}</span>`;
     if(e.react) sts += `<span class="st trait${PV && PV.react.has(e.i) ? ' on' : ''}"><span class="ic">${IC.eye}</span>${e.react.min}</span>`;
     if(e.sync) sts += `<span class="st trait"><span class="ic">${IC.link}</span>${e.sync}</span>`;
-    if(e.str) sts += `<span class="st str">▲${e.str}</span>`;
-    if(e.armor) sts += `<span class="st arm">装${e.armor}</span>`;
+    if(e.str) sts += `<span class="st str"><span class="ic">${IC.str}</span>${e.str}</span>`;
+    if(e.armor) sts += `<span class="st arm"><span class="ic">${IC.armor}</span>${e.armor}</span>`;
     info.querySelector('.sts').innerHTML = sts;
   }
 }
@@ -874,7 +886,7 @@ function placeBand(key, x0, x1, y, cls, html){
   el.style.left = x0 + 'px'; el.style.width = Math.max(10, x1 - x0) + 'px'; el.style.top = y + 'px'; el.style.opacity = '';
 }
 const WIN = {wind:'構', guard:'防', counter:'返'};
-function moveIcon(a){ return a.buff ? `<b>▲${a.buff}</b>` : a.armor ? `<b>装</b>` : a.heal ? `<b>+${a.heal}</b>` : a.mark ? `<b>照</b>` : a.noise ? `<span class="ic">${IC.junk}</span>` : a.summon ? `<b>援</b>` : a.guard ? `<span class="ic">${IC.block}</span>` : '<b>·</b>'; }
+function moveIcon(a){ return a.buff ? `<b>▲${a.buff}</b>` : a.armor ? `<b>装</b>` : a.heal ? `<b>+${a.heal}</b>` : a.crack ? `<span class="ic">${IC.crack}</span>` : a.noise ? `<span class="ic">${IC.junk}</span>` : a.summon ? `<b>援</b>` : a.guard ? `<span class="ic">${IC.block}</span>` : '<b>·</b>'; }
 function renderMarks(){
   const b = S.b, seen = new Set(), seenB = new Set(), syn = syncTimes(), pv = PV && !busy ? PV : null;
   for(const e of b.foes){
@@ -1139,7 +1151,7 @@ async function foeFx(i, r){
     if(r.buff) floatAt(p.x, p.y - 70, '▲' + r.buff, 'foe');
     if(r.armor){ const el = fxEl('fshield', p.x, p.y - 10); setTimeout(() => el.remove(), 520); floatAt(p.x, p.y - 70, '装+' + r.armor, ''); }
     if(r.heal) floatAt(p.x, p.y - 70, '+' + r.heal, 'cy');
-    if(r.mark){ floatAt(DROID.x + 10, DROID.y - 92, '照準+' + r.mark, 'foe'); pulse($('#droid'), 'glitch', 320); }
+    if(r.crack){ floatAt(DROID.x + 10, DROID.y - 92, DATA.kwName.crack + '+' + r.crack, 'foe'); pulse($('#droid'), 'glitch', 320); }
     if(r.noise){ floatAt(41, 300, 'ノイズ+' + r.noise, 'foe'); pulse($('#pileDraw'), 'flash', 360); }
     if(r.summon != null){ buildFoes(); floatAt(foeCenter(r.summon).x, 150, '増援', 'foe'); }
     return;
@@ -1451,7 +1463,7 @@ function moveLines(e, a){
   if(a.ch) L.push(fillUi('mv.charge', {}));
   if(a.armor) L.push(fillUi('mv.armor', {armor: a.armor}));
   if(a.heal) L.push(fillUi('mv.heal', {heal: a.heal}));
-  if(a.mark) L.push(fillUi('mv.mark', {mark: a.mark}));
+  if(a.crack) L.push(fillUi('mv.crack', {crack: a.crack}));
   if(a.noise) L.push(fillUi('mv.noise', {noise: a.noise}));
   if(a.summon) L.push(fillUi('mv.summon', {name: FOES[a.summon].name}));
   if(a.buff) L.push(fillUi(a.all ? 'mv.buffAll' : 'mv.buff', {buff: a.buff}));
@@ -1465,7 +1477,9 @@ function moveLines(e, a){
 function moveGlyph(e, a){
   if(a.kind === 'delay') return `<span class="ic">${IC.delay}</span><b>${a.v}</b>`;
   if(a.d > 0) return `<b>${a.d + (e.str || 0)}</b>${a.hits > 1 ? `<i>×${a.hits}</i>` : ''}`;
-  const g = a.armor ? '装' : a.heal ? '修' : a.mark ? '照' : a.summon ? '援' : a.buff ? '▲' : a.noise ? '雑' : a.guard ? '防' : '·';
+  const ic = a.armor ? IC.armor : a.crack ? IC.crack : a.buff ? IC.str : a.noise ? IC.junk : a.guard ? IC.block : null;
+  if(ic) return `<span class="ic big">${ic}</span>`;
+  const g = a.heal ? '修' : a.summon ? '援' : '·';
   return `<b class="g">${g}</b>`;
 }
 function moveBtn(e, a, key, isCur, selKey){
@@ -1483,20 +1497,29 @@ function moveRow(e, pat, tag, start, curOn, rand, selKey){
   if(!rand) h += `<span class="fg loop"><b>${pat[start % n].dl}</b><span class="ic">${IC.loop}</span></span>`;
   return `<div class="frow-m">${h}</div>`;
 }
+function foeStates(e){
+  return [e.armor ? {k:'armor', n:e.armor, cls:'arm'} : null, e.str ? {k:'str', n:e.str, cls:'bad'} : null,
+    e.crack ? {k:'crack', n:e.crack, cls:'good'} : null, e.vuln > 1 ? {k:'vuln', n:e.vuln - 1, cls:'good'} : null].filter(Boolean);
+}
 function renderFocus(){
   const f = UI.focus, e = S.b.foes[f.i], rand = e.ai === 'rand';
   const pat = e.pat;
+  if(f.sel && f.sel.startsWith('s:') && !foeStates(e).some(x => 's:' + x.k === f.sel)) f.sel = null;
   if(!f.sel){ const ci = rand ? pat.indexOf(EN.cur(e)) : e.idx % pat.length; f.sel = 'p:' + Math.max(0, ci); }
-  const [tag, idx] = f.sel.split(':'), a = (tag === 'h' ? e.phase.pat : pat)[+idx] || EN.cur(e);
+  const [tag, idx] = f.sel.split(':'), a = tag === 's' ? null : (tag === 'h' ? e.phase.pat : pat)[+idx] || EN.cur(e);
   let rows = moveRow(e, pat, 'p', rand ? 0 : e.idx, true, rand, f.sel);
   if(rand) rows = `<div class="fnote">${fillUi('foe.rand', {})}</div>` + rows;
   if(e.phase && !e.phased) rows += `<div class="fnote">${fillUi('foe.phase', {at: Math.round(e.phase.at * 100)})}</div>` + moveRow(e, e.phase.pat, 'h', 0, false, false, f.sel);
-  const st = [e.armor ? `<span class="fst"><span class="g">装</span>${e.armor}</span>` : '', e.str ? `<span class="fst"><span class="g">▲</span>${e.str}</span>` : '', e.crack ? `<span class="fst f"><span class="ic">${IC.crack}</span>${e.crack}</span>` : ''].join('');
+  // 状態: アイコン・名前・値の札。押すと下に説明
+  const sts = foeStates(e);
+  const st = sts.length ? `<div class="fsts">${sts.map(x => `<button type="button" class="fsp ${x.cls}${f.sel === 's:' + x.k ? ' on' : ''}" data-act="foeMove" data-arg="s:${x.k}"><span class="ic">${IC[x.k]}</span>${DATA.ui['stname.' + x.k]}<b>${x.n}</b></button>`).join('')}</div>` : '';
+  const sx = tag === 's' ? sts.find(x => x.k === idx) : null;
   const tr = [e.react ? fillUi('foe.react', {min: e.react.min, part: SLOT_BY[e.react.p].fn, d: e.react.d}) : '', e.sync ? fillUi('foe.sync', {sync: e.sync}) : ''].filter(Boolean);
   $('#focus').innerHTML = `<div class="fhead"><span class="ftag">${e.tag}</span><b>${e.name}</b><button class="btn ghost fclose" type="button" data-act="foeClose">戻る</button></div>
-    <div class="fhp"><b>${e.hp}</b><span>/${e.maxHp}</span><span class="ei-bar"><i style="width:${e.hp / e.maxHp * 100}%"></i></span>${st}</div>
+    <div class="fhp"><b>${e.hp}</b><span>/${e.maxHp}</span><span class="ei-bar"><i style="width:${e.hp / e.maxHp * 100}%"></i></span></div>${st}
     <div class="fmoves">${rows}</div>
-    <div class="fdet${a.ch ? ' ch' : ''}"><div class="fdn">${a.n}</div>${moveLines(e, a).map(t => `<p>${t}</p>`).join('')}</div>
+    ${sx ? `<div class="fdet stx ${sx.cls}"><div class="fdn">${DATA.ui['stname.' + sx.k]} ${sx.n}</div><p>${fillUi('st.' + sx.k, {n: sx.n})}</p></div>`
+      : a ? `<div class="fdet${a.ch ? ' ch' : ''}"><div class="fdn">${a.n}</div>${moveLines(e, a).map(t => `<p>${t}</p>`).join('')}</div>` : ''}
     ${tr.length ? `<div class="ftr">${tr.map(t => `<p>${t}</p>`).join('')}</div>` : ''}`;
 }
 function infoFoe(i){

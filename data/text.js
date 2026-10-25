@@ -440,13 +440,22 @@ window.DATA = window.DATA || {};
   "ui.mv.buffAll": "行動の後、味方全員の攻撃力+{buff}。",
   "ui.mv.armor": "装甲{armor}を得る。装甲は消えず、ダメージを先に受ける。",
   "ui.mv.heal": "耐久を{heal}回復する。",
-  "ui.mv.mark": "照準{mark}を与える。こちらが受ける攻撃すべてのダメージ+{mark}。重なる。",
+  "ui.mv.crack": "こちらにクラック{crack}を与える。こちらが受ける攻撃すべてのダメージ+{crack}。重なる。",
   "ui.mv.noise": "山札にノイズ{noise}枚を混ぜる。",
   "ui.mv.summon": "{name}を呼ぶ。",
   "ui.mv.none": "攻撃はしない。",
   "ui.foe.react": "反応：コスト{min}以上のカードを使い始めると、1サイクル後に{part}に{d}ダメージを与える。",
   "ui.foe.sync": "連携：仲間と同じサイクルに攻撃すると、ダメージ+{sync}。",
   "ui.foe.rand": "行動は毎回この中から選ぶ。同じ行動は3回続かない。",
-  "ui.foe.phase": "耐久{at}%未満"
+  "ui.foe.phase": "耐久{at}%未満",
+  "ui.stname.armor": "装甲",
+  "ui.stname.str": "強化",
+  "ui.stname.crack": "クラック",
+  "ui.stname.vuln": "隙",
+  "ui.st.armor": "受けるダメージを先に装甲が受け、その分だけ減る。装甲は時間では消えない。",
+  "ui.st.str": "攻撃のダメージ+{n}。",
+  "ui.st.crack": "受けるダメージ+{n}。戦闘の終わりまで消えない。",
+  "ui.st.vuln": "あと{n}サイクル、受けるダメージが1.5倍。",
+  "ui.st.none": "状態の変化はない。"
  }
 });

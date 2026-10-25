@@ -150,7 +150,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 .sts{display:flex;gap:8px;min-height:12px}
 .st{display:inline-flex;gap:2px;align-items:center;font-family:var(--f-num);font-size:10.5px;font-weight:700}
 .st .ic svg{width:11px;height:11px}
-.st.crack{color:var(--foe2)} .st.blk{color:var(--fg)} .st.swf{color:var(--cy)}
+.st.crack{color:var(--foe2)} .st.blk{color:var(--fg)} .st.swf{color:var(--cy)} .st.chg{color:var(--cy)}
 .st.flash{animation:stflash .35s}
 @keyframes stflash{0%{filter:drop-shadow(0 0 6px #fff);color:#fff}100%{filter:none}}
 
@@ -308,6 +308,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 .sm.arr.over{border-color:#6a2a3a;border-style:dashed;background:transparent}
 .sm.tmr{top:142px;height:16px;padding:0 3px;margin-left:-12px;border:1.5px solid var(--cy);border-radius:4px;background:#0d2230;color:var(--cy);display:flex;align-items:center;gap:2px;font-family:var(--f-num);font-weight:700;font-size:10px}
 .sm.tmr .ic svg{width:10px;height:10px}
+.sm.tmr.pv{opacity:.6;border-style:dashed;background:transparent}
 #handCnt{position:absolute;left:8px;top:278px;width:66px;display:flex;align-items:center;justify-content:center;gap:5px;color:var(--fg2);font-family:var(--f-num);font-size:12px;font-weight:700;transition:opacity .25s}
 #handCnt .ic svg{width:14px;height:14px}
 #handCnt.full{color:var(--foe2)}
@@ -575,7 +576,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 <script src="data/text.js"></script>
 <script src="js/engine.js"></script>
 <script>
-const APP_VERSION = '0.13.0';
+const APP_VERSION = '0.14.0';
 const $ = s => document.querySelector(s);
 const EN = ENGINE, RULE = EN.RULE;
 const VIEW = RULE.view, NOW = 180, PX = 25, xs = c => NOW + c * PX, ROWY = [52, 86, 120], STRIP_Y = 150, SWIFT_VIS = 3;
@@ -586,6 +587,7 @@ const T_TICK = 110, T_SWIFT = 70;
 const CARD = {W: 96, H: 136, gap: 8, x0: 84, low: 302, up: 248, right: 734};
 
 const IC = {
+  charge:'<svg viewBox="0 0 12 12"><path d="M7 1L2.5 7H6L5 11L9.5 5H6Z" stroke="currentColor" stroke-width="1.2" fill="none" stroke-linejoin="round"/></svg>',
   next:'<svg viewBox="0 0 12 12"><path d="M1 6H10M7 3L10 6L7 9" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>',
   phys:'<svg viewBox="0 0 12 12"><path d="M2 10L10 2M7 2H10V5" stroke="currentColor" stroke-width="1.6" fill="none"/></svg>',
   opt:'<svg viewBox="0 0 12 12"><path d="M1 6H8" stroke="currentColor" stroke-width="1.6"/><circle cx="9.5" cy="6" r="2" fill="currentColor"/></svg>',
@@ -663,30 +665,42 @@ function computePreview(){
   const react = new Set();
   if(a.type === 'card' && cost > 0) for(const e of S.b.foes) if(e.alive && e.react && cost >= e.react.min && e.reactIn == null) react.add(e.i);
   return {k:a.k || null, cost, completeAt: P.out.completeAt ?? P.out.elapsed, free: a.type === 'wait' ? 0 : Math.min(S.b.swift, cost),
-    justSet: new Set(A.out.justs.map(j => j.i)), parts: A.c.b.parts, body: A.c.run.body, foeHp: A.c.b.foes.map(e => e.hp), react, fx};
+    justSet: new Set(A.out.justs.map(j => j.i)), parts: A.c.b.parts, body: A.c.run.body, foeHp: A.c.b.foes.map(e => e.hp), react, fx,
+    // 使う前に、新しく置かれる時限の発動位置を見せる
+    timers: A.c.b.timers.filter(t => !S.b.timers.some(o => o.id === t.id)).map(t => ({at: A.out.elapsed + t.left, e: t.e}))};
 }
 
 /* ---------- cards ---------- */
-function cardType(c){ return c.junk ? 'junk' : c.timer ? 'timer' : c.parry ? 'parry' : c.dmg ? c.dmg.t : c.block ? 'block' : c.delay ? 'delay' : c.swift ? 'swift' : c.draw ? 'draw' : 'crack'; }
+function cardType(c){ return c.junk ? 'junk' : c.timer ? 'timer' : c.parry ? 'parry' : c.dmg ? c.dmg.t : c.spend ? (c.spend.dmg ? c.spend.dmg.t : 'block') : c.block ? 'block' : c.gain ? 'charge' : c.delay ? 'delay' : c.swift ? 'swift' : c.draw ? 'draw' : 'crack'; }
 const stv = st => st && st.b ? st : {run: S ? S.run : null, b: null};
 function vDmg(st, c, d){ return st && st.run ? EN.dmgOf(stv(st), c, d) : (d || c.dmg).n; }
 function vBlock(st, c){ return st && st.run ? EN.blockOf(stv(st), c) : c.block; }
+// 充電を消費するカード: 戦闘中は今の充電での値、戦闘の外では 1あたりの値
+function spendVal(st, c){
+  const per = c.spend.dmg ? c.spend.dmg.n : c.spend.block;
+  if(!(st && st.b)) return '×' + per;
+  const n = st.b.charge || 0; if(!n) return 0;
+  return c.spend.dmg ? vDmg(st, c, {t:c.spend.dmg.t, n:per * n}) : per * n + EN.fx(stv(st), 'dur', 'block');
+}
 function cardVal(k, st){
   const c = CARDS[k];
   if(c.junk) return '';
   if(c.timer) return vDmg(st, c, c.timer.dmg);
+  if(c.spend) return spendVal(st, c);
   if(c.parry) return vBlock(st, c);
   if(c.dmg) return vDmg(st, c) + (c.dmg.x ? '×' + c.dmg.x : '');
   if(c.block) return vBlock(st, c);
   if(c.delay) return c.delay;
   if(c.swift) return c.swift;
+  if(c.gain) return c.gain;
   if(c.draw) return c.draw;
   return c.crack;
 }
 // カードの文は text/cards.csv の型に数値を差し込む。{dmg} などはパーツの補正込みの値。キーワードの名前は色を付ける
 function cardVals(c, st){
   return {dmg: c.dmg ? vDmg(st, c) : '', x: c.dmg && c.dmg.x || '', block: c.block != null ? vBlock(st, c) : '', delay: c.delay || '', swift: c.swift || '',
-    crack: c.crack || '', draw: c.draw || '', t: c.timer ? c.timer.t : '', tdmg: c.timer ? vDmg(st, c, c.timer.dmg) : ''};
+    crack: c.crack || '', draw: c.draw || '', t: c.timer ? c.timer.t : '', tdmg: c.timer ? vDmg(st, c, c.timer.dmg) : '',
+    gain: c.gain || '', per: c.spend ? (c.spend.dmg ? c.spend.dmg.n : c.spend.block) : ''};
 }
 const KW_CLS = {crack:'kw-f', atomic:'kwp', just:'kw-j'};
 const kwList = () => Object.entries(DATA.kwName).sort((a, b) => b[1].length - a[1].length);
@@ -698,7 +712,7 @@ function cardText(k, st){
 }
 function cardInner(k, st, count){
   const c = CARDS[k];
-  return `<span class="chd"><span class="cost${c.cost === 0 ? ' zero' : ''}">${c.cost}</span><span class="cname">${c.name}</span></span><span class="cart">${c.atomic ? '<i class="atom"></i>' : ''}<span class="cval"><span class="ic">${IC[cardType(c)]}</span><b>${cardVal(k, st)}</b></span></span><span class="ctx${(CARDS[k].text || '').replace(/\{\w+\}/g, '00').length > 27 ? ' long' : ''}">${cardText(k, st)}</span>${count > 1 ? `<span class="cnt">×${count}</span>` : ''}`;
+  return `<span class="chd"><span class="cost${c.cost === 0 ? ' zero' : ''}">${c.cost}</span><span class="cname">${c.name}</span></span><span class="cart">${c.atomic ? '<i class="atom"></i>' : ''}<span class="cval"><span class="ic">${IC[cardType(c)]}</span><b>${cardVal(k, st)}</b></span></span><span class="ctx${(CARDS[k].text || '').replace(/\{\w+\}/g, '00').length > 22 ? ' long' : ''}">${cardText(k, st)}</span>${count > 1 ? `<span class="cnt">×${count}</span>` : ''}`;
 }
 // 長押しで説明を出すキーワード: カードの文に出てくるもの
 function cardKw(k){
@@ -746,6 +760,7 @@ function renderMe(){
   let st = '';
   if(S.b.block) st += `<span class="st blk" id="stBlk"><span class="ic">${IC.block}</span>${S.b.block}</span>`;
   if(S.b.swift) st += `<span class="st swf"><span class="ic">${IC.swift}</span>${S.b.swift}</span>`;
+  if(S.b.charge) st += `<span class="st chg"><span class="ic">${IC.charge}</span>${S.b.charge}</span>`;
   if(S.b.mark) st += `<span class="st mark">照+${S.b.mark}</span>`;
   $('#meSts').innerHTML = st;
 }
@@ -936,6 +951,7 @@ function renderStrip(){
     for(let t = b.turnIn; t <= VIEW; t += ec.len) put('tb' + (b.T + t), xs(t), 'sm tb', '');
   }
   for(const t of b.timers){ if(t.left <= VIEW) put('t' + t.id, xs(t.left), 'sm tmr', `<span class="ic">${IC.timer}</span>${b.foes[t.e] && b.foes[t.e].alive ? b.foes[t.e].tag : ''}`); }
+  if(PV && PV.timers && !busy) PV.timers.forEach((t, n) => { if(t.at <= VIEW) put('pvt' + n, xs(t.at), 'sm tmr pv', `<span class="ic">${IC.timer}</span>${b.foes[t.e] ? b.foes[t.e].tag : ''}`); });
   for(const [key, el] of stripEls){ if(!seen.has(key)){ stripEls.delete(key); el.style.opacity = '0'; el.style.left = (parseFloat(el.style.left) - 10) + 'px'; setTimeout(() => el.remove(), 220); } }
 }
 function handLayout(n, i, ex){
@@ -1020,7 +1036,7 @@ function memChips(list){
 }
 function renderInner(){
   const b = S.b;
-  const st = (b.block ? `<span class="st blk"><span class="ic">${IC.block}</span>${b.block}</span>` : '') + (b.swift ? `<span class="st swf"><span class="ic">${IC.swift}</span>${b.swift}</span>` : '');
+  const st = (b.block ? `<span class="st blk"><span class="ic">${IC.block}</span>${b.block}</span>` : '') + (b.swift ? `<span class="st swf"><span class="ic">${IC.swift}</span>${b.swift}</span>` : '') + (b.charge ? `<span class="st chg"><span class="ic">${IC.charge}</span>${b.charge}</span>` : '');
   const rows = SLOTS.map(p => {
     const s2 = b.parts[p.id], worn = S.run.parts[p.id].damaged, d = partOf(p.id);
     return `<div class="drow${s2.cur <= 0 ? ' broken' : ''}"><span class="ic">${IC[p.id]}</span><span class="dn">${p.fn}</span><span class="dp">${d.name}</span><span class="pips">${pipsHTML(s2.max, s2.cur, s2.cur, worn ? Math.ceil(s2.max / 2) : s2.max, pipW(s2.max, 70))}</span><span class="pnum">${s2.cur}</span><span class="de">${d.text}</span></div>`;
@@ -1092,6 +1108,7 @@ function cardFx(x){
     case 'delay': floatAt(xs(2), ROWY[x.e] - 14, '+' + x.n, 'cy'); break;
     case 'block': floatAt(130, 262, '+' + x.n, ''); break;
     case 'swift': floatAt(150, 262, '+' + x.n, 'cy'); break;
+    case 'charge': floatAt(170, 252, '+' + x.n, 'cy'); break;
     case 'draw': if(x.n) floatAt(41, 290, '+' + x.n, 'cy'); break;
     case 'timerSet': floatAt(xs(x.t), STRIP_Y - 10, '◆', 'cy'); break;
     case 'guarded': { const p = foeCenter(x.e); const el = fxEl('fshield', p.x, p.y - 10); setTimeout(() => el.remove(), 520); floatAt(p.x + 26, p.y - 46, '防' + x.n, ''); break; }
@@ -1524,9 +1541,7 @@ function applyEcon(){
   if(RULE.econ && RULE.econ.type === 'reload' && DBG.reloadR) RULE.econ.r = DBG.reloadR;
   if(RULE.econ && RULE.econ.type === 'turn' && DBG.turnLen) RULE.econ.len = DBG.turnLen;
   for(const [k, c0] of Object.entries(CARDS0)){
-    const c = JSON.parse(JSON.stringify(c0)), o = C.cards[k];
-    if(o){ if(o.dmg != null && c.dmg) c.dmg.n = o.dmg; if(o.block != null) c.block = o.block; if(o.timer != null && c.timer) c.timer.dmg.n = o.timer; }
-    CARDS[k] = c;
+    CARDS[k] = DATA.classCard(JSON.parse(JSON.stringify(c0)), C.cards[k]);
   }
 }
 /* ---------- debug ---------- */
@@ -1536,10 +1551,11 @@ const DBG_PRESET = {
   light: () => ['jab','jab','jab','rapid','rapid','flick','flick','guard','guard','hack','reload','timebomb','scan'],
   heavy: () => ['slash','slash','slash','wall','wall','blow','emp','backflow','guard','scan','parry'],
   control: () => ['hack','hack','backflow','timebomb','timebomb','parry','crackshot','crackshot','jab','guard','scan','overclock'],
+  charge: () => ['capacitor','capacitor','coil','coil','arc','arc','discharge','discharge','storm','cell','jab','guard','slash'],
   all: () => Object.keys(CARDS).filter(k => !CARDS[k].junk),
   empty: () => [],
 };
-const DBG_PRESET_NAME = {start:'最初', light:'軽い', heavy:'重い', control:'制御', all:'全種1枚', empty:'空'};
+const DBG_PRESET_NAME = {start:'最初', light:'軽い', heavy:'重い', control:'制御', charge:'充電', all:'全種1枚', empty:'空'};
 let DBG = null;
 function dbgLoad(){
   const def = {deck: DATA.startDeck.slice(), parts: {...DATA.startParts}, body: DATA.bodyMax, dmg: 1, hp: 1, custom: ['drone', null, null], enc: null, cls: DATA.defaultClass, turnLen: 6, reloadR: 2, wait: null, v: 3};

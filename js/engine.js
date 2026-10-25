@@ -133,6 +133,13 @@ function applyCard(st, k, ti){
     const n = dmgOf(st, c);
     for(const e of targets) for(let h = 0; h < (c.dmg.x || 1); h++){ if(!e.alive) break; hitFoe(st, e, n + e.crack, ev); }
   }
+  // 充電: spend は貯めた充電をすべて消費し、1につき dmg / block。gain は充電を得る(消費の後)
+  if(c.spend){
+    const n = b.charge || 0; b.charge = 0; ev.push({kind:'spend', n});
+    if(n > 0 && c.spend.dmg){ const d = dmgOf(st, c, {t:c.spend.dmg.t, n:c.spend.dmg.n * n}); for(const e of targets) if(e.alive) hitFoe(st, e, d + e.crack, ev); }
+    if(n > 0 && c.spend.block){ const m = c.spend.block * n + fx(st, 'dur', 'block'); gainBlock(b, m); ev.push({kind:'block', n:m}); }
+  }
+  if(c.gain){ b.charge = (b.charge || 0) + c.gain; ev.push({kind:'charge', n:c.gain}); }
   if(c.crack) for(const e of targets) if(e.alive){ e.crack += c.crack; ev.push({kind:'crack', e:e.i, n:c.crack}); }
   if(c.delay) for(const e of targets) if(e.alive){ e.r += c.delay; ev.push({kind:'delay', e:e.i, n:c.delay}); }
   if(c.block){ const n = blockOf(st, c); gainBlock(b, n); ev.push({kind:'block', n}); }
@@ -314,7 +321,7 @@ function newBattle(run, encKey){
   const foes = E.foes.map((key, i) => makeFoe(key, i));
   let uid = 1;
   const cards = shuffle(battleDeck(run).map(k => ({k, id:uid++})));
-  const b = {enc:encKey, T:0, block:0, swift:0, foes, parts, draw:cards, disc:[], hand:[], cast:null, broken:{}, over:false, timers:[], drawIn:RULE.draw, handMax:RULE.handMax, uid:1000, parryNow:false};
+  const b = {enc:encKey, T:0, block:0, swift:0, foes, parts, draw:cards, disc:[], hand:[], cast:null, broken:{}, over:false, timers:[], drawIn:RULE.draw, handMax:RULE.handMax, uid:1000, parryNow:false, charge:0};
   st.b = b;
   b.handMax += fx(st, 'calc', 'handMax');
   const sb = fx(st, 'dur', 'startBlock'); if(sb) gainBlock(b, sb);

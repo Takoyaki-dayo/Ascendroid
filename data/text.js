@@ -95,6 +95,30 @@ window.DATA = window.DATA || {};
    "name": "過負荷打撃",
    "text": "{dmg}ダメージを与える。"
   },
+  "capacitor": {
+   "name": "蓄電",
+   "text": "充電{gain}を得る。"
+  },
+  "arc": {
+   "name": "帯電打撃",
+   "text": "{dmg}ダメージを与える。充電{gain}を得る。"
+  },
+  "coil": {
+   "name": "補助電源",
+   "text": "充電{gain}を得る。カードを{draw}枚引く。"
+  },
+  "discharge": {
+   "name": "放電",
+   "text": "充電をすべて消費し、1につき{per}ダメージを与える。"
+  },
+  "storm": {
+   "name": "放電網",
+   "text": "充電をすべて消費し、敵全体に1につき{per}ダメージを与える。"
+  },
+  "cell": {
+   "name": "電磁障壁",
+   "text": "充電をすべて消費し、1につき{per}ブロックを得る。"
+  },
   "noise": {
    "name": "ノイズ",
    "text": "効果なし。使うか捨てると消える。"
@@ -135,6 +159,11 @@ window.DATA = window.DATA || {};
    "key": "just",
    "name": "JUST",
    "desc": "カードを使い終えたサイクルに、敵の行動が重なること。溜め技に重なると、その技を潰す。"
+  },
+  {
+   "key": "charge",
+   "name": "充電",
+   "desc": "自分に貯まる。消費する効果で使う。戦闘の終わりまで残る。"
   }
  ],
  "parts": {

@@ -7,6 +7,7 @@
 // timer: {t:何サイクル後, dmg:{...}} 時限。使った後、t サイクルたつと対象に効果
 // parry: JUST(使い終えたサイクルに敵の行動が重なる)なら、その攻撃を無効にして同じダメージを返す
 // atomic: アトミック(中断されない)
+// gain: 充電を得る / spend: 充電をすべて消費し、1につき {dmg:{t, n}} のダメージ、または block のブロック(アーキタイプ「充電」)
 window.DATA = window.DATA || {};
 DATA.cards = {
   flick:    {cost:0, tgt:true, dmg:{t:'phys', n:2}},
@@ -27,6 +28,13 @@ DATA.cards = {
   charge:   {cost:4, tgt:true, atomic:true, dmg:{t:'opt', n:10}},
   emp:      {cost:4, all:true, dmg:{t:'opt', n:5}},
   blow:     {cost:6, tgt:true, dmg:{t:'phys', n:20}},
+  // 充電(貯めて消費する)
+  capacitor:{cost:1, gain:4},
+  arc:      {cost:2, tgt:true, dmg:{t:'phys', n:4}, gain:2},
+  coil:     {cost:0, gain:2, draw:1},
+  discharge:{cost:3, tgt:true, spend:{dmg:{t:'opt', n:6}}},
+  storm:    {cost:4, all:true, spend:{dmg:{t:'opt', n:3}}},
+  cell:     {cost:1, spend:{block:4}},
   // 敵のノイズ注入で山札に混ざる。何もせず、使うと消える(ショップや学習には出ない)
   noise:    {cost:1, junk:true},
 };

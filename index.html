@@ -482,6 +482,64 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 #mvpop p{margin:0;color:var(--fg2);line-height:1.5}
 #mvpop p b{color:var(--fg)}
 #shaker.focus #mvpop,#shaker.selfview #mvpop{display:none}
+/* 手ごたえ(0.18.4): 押したときの沈み、開くときの動き。prefers-reduced-motion なら全部止まる */
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes fadeOut{from{opacity:1}to{opacity:0}}
+@keyframes popIn{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes riseIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes slideIn{from{opacity:0;transform:translateX(-18px)}to{opacity:1;transform:none}}
+@keyframes dealIn{from{opacity:0;transform:translateY(22px) rotate(-3deg)}to{opacity:1;transform:none}}
+@keyframes nodeIn{from{opacity:0;scale:.6}to{opacity:1;scale:1}}
+@keyframes nodeGo{0%{box-shadow:0 0 0 0 rgba(56,211,255,.7)}100%{box-shadow:0 0 0 14px rgba(56,211,255,0)}}
+@keyframes battleIn{from{opacity:0;transform:scale(1.03)}to{opacity:1;transform:none}}
+.btn,.mbtn,.seg button,.dcard button{transition:scale .1s,filter .12s,opacity .15s}
+.btn:active:not(:disabled),.mbtn:active,.seg button:active,.dcard button:active,.opt:active,.fm:active,.fu:active,.fsp:active,.pile:active,#menuBtn:active,.ref:active{scale:.95}
+.opt:active,.fm:active,.fu:active,.fsp:active{filter:brightness(1.15)}
+#redraw:active:not(:disabled),#waitBtn:active:not(:disabled){scale:.96}
+.cards .card{transition:border-color .15s,box-shadow .2s,transform .2s,translate .15s}
+.cards .card:active{scale:.97}
+.opt.picked{translate:0 -2px}
+@media (hover:hover){
+  .opt:hover:not(.picked):not(.sel){border-color:var(--cy-dim)}
+  .btn:hover:not(:disabled){filter:brightness(1.1)}
+  .mn.reach:hover{scale:1.08}
+  .cards .card:hover{border-color:var(--cy-dim)}
+}
+.mn{transition:border-color .15s,box-shadow .15s,transform .15s,opacity .15s,scale .12s}
+.mn:active{scale:.92}
+.mn.go{animation:nodeGo .3s ease-out}
+#ov.enter{animation:fadeIn .18s ease-out}
+#ov.enter .box,#ov2.enter .box,#ref.enter .box{animation:popIn .26s cubic-bezier(.2,.8,.2,1)}
+#ov2.enter,#ref.enter{animation:fadeIn .15s ease-out}
+#ov.enter .cards .card,#ov.enter .shop .card{animation:dealIn .34s cubic-bezier(.2,.8,.2,1) backwards}
+#ov.enter .cards .card:nth-child(2),#ov.enter .sitem:nth-child(2) .card{animation-delay:.05s}
+#ov.enter .cards .card:nth-child(3),#ov.enter .sitem:nth-child(3) .card{animation-delay:.1s}
+#ov.enter .cards .card:nth-child(4),#ov.enter .sitem:nth-child(4) .card{animation-delay:.15s}
+#ov.enter .cards .card:nth-child(n+5){animation-delay:.2s}
+#ov.enter .opts .opt,#ov.enter .mlist .opt,#ov.enter .ptile{animation:riseIn .28s cubic-bezier(.2,.8,.2,1) backwards}
+#ov.enter .opt:nth-child(2),#ov.enter .ptile:nth-child(2){animation-delay:.05s}
+#ov.enter .opt:nth-child(3),#ov.enter .ptile:nth-child(3){animation-delay:.1s}
+#ov.enter .opt:nth-child(n+4),#ov.enter .ptile:nth-child(n+4){animation-delay:.15s}
+#mapScr.enter .mh-bar,#mapScr.enter .minfo{animation:fadeIn .25s ease-out backwards}
+#mapScr.enter .medges{animation:fadeIn .5s .12s ease-out backwards}
+#mapScr.enter .mn,#mapScr.enter .lane{animation:nodeIn .32s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:var(--d,0ms)}
+#mapScr.leave{pointer-events:none}
+#mapScr.leave>*{animation:fadeOut .23s ease-in forwards}
+.minfo.has{animation:riseIn .2s cubic-bezier(.2,.8,.2,1)}
+#roomScr.enter .mh-bar{animation:fadeIn .22s ease-out backwards}
+#roomScr.enter .rs-still{animation:slideIn .4s cubic-bezier(.2,.8,.2,1)}
+#roomScr.enter .rs-main>*{animation:riseIn .32s cubic-bezier(.2,.8,.2,1) backwards}
+#roomScr.enter .rs-main>*:nth-child(2){animation-delay:.05s}
+#roomScr.enter .rs-main>*:nth-child(3){animation-delay:.1s}
+#roomScr.enter .rs-main>*:nth-child(n+4){animation-delay:.15s}
+#roomScr.enter .rs-opts .opt{animation:riseIn .3s cubic-bezier(.2,.8,.2,1) backwards}
+#roomScr.enter .rs-opts .opt:nth-child(2){animation-delay:.12s} #roomScr.enter .rs-opts .opt:nth-child(n+3){animation-delay:.18s}
+#roomScr.enter .shop .sitem{animation:dealIn .34s cubic-bezier(.2,.8,.2,1) backwards}
+#roomScr.enter .shop .sitem:nth-child(2){animation-delay:.05s} #roomScr.enter .shop .sitem:nth-child(3){animation-delay:.1s} #roomScr.enter .shop .sitem:nth-child(n+4){animation-delay:.15s}
+#shaker.enter #world{animation:battleIn .4s cubic-bezier(.2,.8,.2,1)}
+#shaker.enter #parts .part{animation:slideIn .35s cubic-bezier(.2,.8,.2,1) backwards}
+#mvpop:not([hidden]){animation:popIn .16s cubic-bezier(.2,.8,.2,1)}
+.fdet,.ftr{animation:riseIn .18s ease-out}
 /* 参照の重ね(0.18.0) */
 #ref{position:absolute;inset:0;background:rgba(5,9,14,.55);display:flex;align-items:center;justify-content:center;z-index:70;padding:12px}
 #refbox{max-width:520px;width:auto;min-width:300px;border-color:var(--cy-dim);box-shadow:0 12px 40px rgba(0,0,0,.55)}
@@ -691,7 +749,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 <script src="data/text.js"></script>
 <script src="js/engine.js"></script>
 <script>
-const APP_VERSION = '0.18.3';
+const APP_VERSION = '0.18.4';
 const $ = s => document.querySelector(s);
 const EN = ENGINE, RULE = EN.RULE;
 const VIEW = RULE.view, NOW = 180, PX = 25, xs = c => NOW + c * PX, STRIP_Y = 150, SWIFT_VIS = 3;
@@ -1553,7 +1611,7 @@ function showMap(){
   const btn = n => {
     const k = nodeKey(n), p = nodePos(n), E = n.enc ? ENC[n.enc] : null;
     const cls = ['mn', n.type, reach.has(k) ? 'reach' : '', visited.has(k) ? 'done' : '', UI.mapSel === k ? 'sel' : '', atKey === k ? 'here' : ''].filter(Boolean).join(' ');
-    return `<button class="${cls}" type="button" data-act="node" data-arg="${k}" style="left:${p.x}px;top:${p.y}px" aria-label="${DATA.rooms[n.type].name}"><span class="ic">${IC[n.type]}</span></button>`;
+    return `<button class="${cls}" type="button" data-act="node" data-arg="${k}" style="left:${p.x}px;top:${p.y}px;--d:${(n.type === 'boss' ? 6 : n.idx + 1) * 45}ms" aria-label="${DATA.rooms[n.type].name}"><span class="ic">${IC[n.type]}</span></button>`;
   };
   const labels = m.lanes.map((k, l) => `<span class="lane" style="top:${MAPY[l] - 40}px;left:${MAPX[1]}px">${DATA.lanes[k].name}の道</span>`).join('');
   const s = UI.mapSel ? all.find(n => nodeKey(n) === UI.mapSel) : null;
@@ -1562,11 +1620,13 @@ function showMap(){
     const E = s.enc ? ENC[s.enc] : null;
     info = `<span class="ic">${IC[s.type]}</span><b>${DATA.rooms[s.type].name}</b>${s.type !== 'boss' ? `<span class="mi-l">${DATA.lanes[m.lanes[s.lane]].name}の道</span>` : ''}`;
   }
+  const fresh = $('#mapScr').hidden;
   $('#mapScr').innerHTML = `${topBar(DATA.area.name)}
     <svg class="medges" width="844" height="390" viewBox="0 0 844 390" aria-hidden="true">${lines}</svg>
     <span class="mn start${atKey === 'start' ? ' here' : ''}" style="left:${st.x}px;top:${st.y}px"><span class="ic">${IC.start}</span></span>${labels}${all.map(btn).join('')}
-    <div class="minfo">${info || '<span class="mi-h">次の部屋を選択</span>'}<span class="sp"></span><button class="btn" type="button" data-act="go" ${s && reach.has(UI.mapSel) ? '' : 'disabled'}>決定</button></div>`;
-  $('#mapScr').hidden = false;
+    <div class="minfo${s ? ' has' : ''}">${info || '<span class="mi-h">次の部屋を選択</span>'}<span class="sp"></span><button class="btn" type="button" data-act="go" ${s && reach.has(UI.mapSel) ? '' : 'disabled'}>決定</button></div>`;
+  $('#mapScr').hidden = false; $('#mapScr').classList.remove('leave');
+  if(fresh) enter($('#mapScr'));
 }
 // 地図と部屋の画面の上の帯(本体・部位・スクラップ・デッキ・メニュー)
 function topBar(title){
@@ -1575,9 +1635,11 @@ function topBar(title){
 }
 // 整備・ショップ・イベントは画面ごと切り替える(左はいずれスチルを置く枠)。still なしは全幅
 function showRoom(kind, body, still){
+  const fresh = $('#roomScr').hidden || $('#roomScr')._kind !== kind; $('#roomScr')._kind = kind;
   UI.screen = 'room'; hideOv(); hideOv2();
   $('#roomScr').innerHTML = `${topBar(DATA.area.name)}${still ? `<div class="rs-still ${kind}"><span class="ic">${IC[kind]}</span></div>` : ''}<div class="rs-main${still ? '' : ' full'}">${body}</div>`;
   $('#roomScr').hidden = false; $('#mapScr').hidden = true;
+  if(fresh) enter($('#roomScr'));
 }
 function findNode(k){ const m = S.run.map; if(k === 'boss') return m.boss; const [l, i] = k.split('-').map(Number); return m.nodes[l][i]; }
 function enterRoom(n){
@@ -1603,7 +1665,7 @@ function startBattle(n){
   sel = null; PV = null; busy = false; lastTarget = 0; UI.view = 'normal'; UI.screen = 'battle'; closeFocus();
   $('#mapScr').hidden = true;
   clearCards(); clearMarks(); buildFoes();
-  renderAll();
+  renderAll(); enter($('#shaker'));
   toast(`${DATA.rooms[n.type].name} · ${ENC[n.enc].fam}`);
 }
 function partTiles(){
@@ -1741,7 +1803,7 @@ function renderRef(){
   if(kind === 'kw'){ const name = DATA.kwName[key]; h = `<h2>${name}</h2><p class="rdesc">${refText(KW[name] || '', name)}</p>`; }
   else if(kind === 'card') h = `<div style="display:flex;gap:16px;align-items:flex-start"><div class="cards" style="margin:0"><div class="card static">${cardInner(key, S && S.b ? S : null)}</div></div><div class="ckw">${kwBlock(key)}</div></div>`;
   h += `<div class="row">${r.length > 1 ? '<button class="btn ghost" type="button" data-act="refBack">戻る</button>' : ''}<button class="btn" type="button" data-act="refClose">閉じる</button></div>`;
-  $('#refbox').innerHTML = h; el.hidden = false;
+  const fresh = el.hidden || el._n !== r.length; el._n = r.length; $('#refbox').innerHTML = h; el.hidden = false; if(fresh) enter(el);
 }
 /* ---------- 敵の詳細(カメラが敵に寄り、右に敵、左に情報) ---------- */
 // 行動を押すと、その行動が何をするかを文で出す(文は text/terms.csv の ui.mv.* / ui.foe.* / ui.pas.* / ui.unit.*)
@@ -2037,9 +2099,12 @@ async function goFull(){
   hideOv();
   try{ await document.documentElement.requestFullscreen(); try{ await screen.orientation.lock('landscape'); }catch(e){} }catch(e){}
 }
-function showOv(html, closable, wide){ const ov = $('#ov'); $('#ovbox').innerHTML = html; $('#ovbox').classList.toggle('wide', !!wide); ov.dataset.closable = closable ? '1' : ''; ov.hidden = false; }
+// 画面の出入りの動き(0.18.4): 開いたとき・別の段に移ったときだけ enter を付けて動かす(選び直しで描き直すたびには動かさない)
+function enter(el){ if(!el) return; el.classList.remove('enter'); void el.offsetWidth; el.classList.add('enter'); clearTimeout(el._et); el._et = setTimeout(() => el.classList.remove('enter'), 700); }
+const ovHead = html => (html.match(/<h2>([\s\S]*?)<\/h2>/) || [])[1] || html.slice(0, 40);
+function showOv(html, closable, wide){ const ov = $('#ov'), head = ovHead(html), fresh = ov.hidden || ov._head !== head; ov._head = head; $('#ovbox').innerHTML = html; $('#ovbox').classList.toggle('wide', !!wide); ov.dataset.closable = closable ? '1' : ''; ov.hidden = false; if(fresh) enter(ov); }
 function hideOv(){ $('#ov').hidden = true; }
-function showOv2(html){ $('#ovbox2').innerHTML = html; $('#ov2').hidden = false; }
+function showOv2(html){ const fresh = $('#ov2').hidden; $('#ovbox2').innerHTML = html; $('#ov2').hidden = false; if(fresh) enter($('#ov2')); }
 function hideOv2(){ $('#ov2').hidden = true; }
 function act(a, arg, el){
   switch(a){
@@ -2069,7 +2134,10 @@ function act(a, arg, el){
     case 'restart': UI.pick = null; UI.learnOpts = []; newRun(); break;
     case 'retry': S = {run: JSON.parse(snapshot), b: null}; hideOv(); startBattle(UI.node); break;
     case 'node': UI.mapSel = UI.mapSel === arg ? null : arg; showMap(); break;
-    case 'go': { const n = findNode(UI.mapSel); if(EN.nextNodes(S.run).some(x => nodeKey(x) === UI.mapSel)) enterRoom(n); break; }
+    case 'go': { const n = findNode(UI.mapSel); if(UI.going || !EN.nextNodes(S.run).some(x => nodeKey(x) === UI.mapSel)) break;
+      // 選んだ部屋が光ってから、地図が引いて部屋へ
+      UI.going = true; const el = document.querySelector(`.mn[data-arg="${UI.mapSel}"]`); if(el) el.classList.add('go'); $('#mapScr').classList.add('leave');
+      setTimeout(() => { UI.going = false; enterRoom(n); }, RM ? 0 : 230); break; }
     case 'afterWin': UI.pick = null; hideOv(); afterWin(); break;
     case 'pick': {
       UI.pick = UI.pick === arg ? null : arg;

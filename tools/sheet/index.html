@@ -277,10 +277,10 @@ function renderSide(){
   }
   const orig = S.draft.isNew ? {} : it.obj, o = S.draft.obj;
   let body = '';
-  if(K.preview && o && typeof o === 'object') body += `<div class="preview">${K.preview(o)}</div>`;
+  if(K.preview) body += `<div class="preview" id="pv"></div>`;
   if(S.draft.isNew) body += `<div class="newkey"><label for="newkey">キー</label><input id="newkey" type="text" value="${esc(S.draft.key)}" placeholder="英字のキー(例 overdrive)"></div>`;
   body += `<div class="mode"><button type="button" data-mode="form" class="${S.json ? '' : 'on'}">欄で編集</button><button type="button" data-mode="json" class="${S.json ? 'on' : ''}">JSON で編集</button></div>`;
-  if(S.json) body += `<textarea class="json" id="jsonbox" spellcheck="false">${esc(S.jsonText)}</textarea>${S.jsonErr ? `<div class="err">${esc(S.jsonErr)}</div>` : '<div class="note">欄にない項目を足すときや、行動を増やすときはこちら。</div>'}`;
+  if(S.json) body += `<textarea class="json" id="jsonbox" spellcheck="false">${esc(S.jsonText)}</textarea><div id="jsonmsg"></div>`;
   else {
     const f = flat(o), groups = {};
     for(const p of Object.keys(f)){ const parent = p.includes('.') ? p.slice(0, p.lastIndexOf('.')) : ''; (groups[parent] = groups[parent] || []).push(p); }
@@ -290,18 +290,30 @@ function renderSide(){
     const rs = REQ.filter(r => r.kind === S.kind && r.key === it.key).sort((a, b) => (b.at || '').localeCompare(a.at || ''));
     if(rs.length) body += `<div class="grp"><h3>この項目の依頼</h3><div class="reqs">${rs.map(r => reqHTML(r, false)).join('')}</div></div>`;
   }
-  const ch = S.draft.isNew ? [] : diff(orig, o);
-  const canSend = DB && !S.jsonErr && (S.draft.isNew ? S.draft.key.trim() : (ch.length || S.comment.trim()));
   const title = S.draft.isNew ? `${K.label}を追加` : esc(it.name || it.key);
   side.innerHTML = `<div class="side-h"><div><h2>${title}</h2>${S.draft.isNew ? '' : `<span class="k">${esc(S.kind)} · ${esc(it.key)}</span>`}</div><button class="btn quiet x" type="button" id="closeSide">閉じる</button></div>
     <div class="side-b" id="sideb">${body}</div>
     <div class="send">
-      ${ch.length ? `<div class="diff">${ch.map(c => `<div class="dl"><span class="p" title="${esc(c.path)}">${esc(c.path)}</span><span class="v"><s>${esc(c.from)}</s> → <b>${esc(c.to)}</b></span></div>`).join('')}</div>` : ''}
-      <textarea id="comment" placeholder="${ch.length ? 'コメント(なぜ変えたいか、迷っている点など)' : '相談やメモ(数値を変えずに送ると相談になります)'}">${esc(S.comment)}</textarea>
-      <div class="row"><span class="sp">${dbState === 'off' ? 'この表示では送れません(サインインして開いてください)' : ch.length ? `変更 ${ch.length} か所` : S.draft.isNew ? '新しい項目' : ''}</span>
-        ${ch.length ? '<button class="btn quiet" type="button" id="resetDraft">元に戻す</button>' : ''}
-        <button class="btn" type="button" id="sendBtn"${canSend ? '' : ' disabled'}>送る</button></div>
+      <div class="diff" id="diffbox"></div>
+      <textarea id="comment" placeholder="コメント(なぜ変えたいか、迷っている点など。数値を変えずに送ると相談になります)">${esc(S.comment)}</textarea>
+      <div class="row"><span class="sp" id="sendinfo"></span>
+        <button class="btn quiet" type="button" id="resetDraft" hidden>元に戻す</button>
+        <button class="btn" type="button" id="sendBtn" disabled>送る</button></div>
     </div>`;
+  refreshDyn();
+}
+// 入力のたびに、描き直さずに変わるところだけ更新する(描き直すとスマホのキーボードが閉じる)
+function refreshDyn(){
+  if(!S.draft || S.kind === 'requests') return;
+  const K = KBY[S.kind], it = curItem(), orig = S.draft.isNew ? {} : (it ? it.obj : {}), o = S.draft.obj;
+  const pv = $('#pv'); if(pv) pv.innerHTML = o && typeof o === 'object' ? K.preview(o) : '';
+  const jm = $('#jsonmsg'); if(jm) jm.innerHTML = S.jsonErr ? `<div class="err">${esc(S.jsonErr)}</div>` : '<div class="note">欄にない項目を足すときや、行動を増やすときはこちら。</div>';
+  const ch = S.draft.isNew ? [] : diff(orig, o);
+  const db = $('#diffbox'); if(db){ db.innerHTML = ch.map(c => `<div class="dl"><span class="p" title="${esc(c.path)}">${esc(c.path)}</span><span class="v"><s>${esc(c.from)}</s> → <b>${esc(c.to)}</b></span></div>`).join(''); db.hidden = !ch.length; }
+  const si = $('#sendinfo'); if(si) si.textContent = dbState === 'off' ? 'この表示では送れません(サインインして開いてください)' : ch.length ? `変更 ${ch.length} か所` : S.draft.isNew ? '新しい項目' : '';
+  const rs = $('#resetDraft'); if(rs) rs.hidden = !ch.length;
+  const sb = $('#sendBtn'); if(sb) sb.disabled = !(DB && !S.jsonErr && (S.draft.isNew ? S.draft.key.trim() : (ch.length || S.comment.trim())));
+  if(!S.json) document.querySelectorAll('#sideb .fld').forEach(f => { const inp = f.querySelector('[data-path]'); if(!inp) return; const p = inp.dataset.path; f.classList.toggle('chg', JSON.stringify(getPath(o, p)) !== JSON.stringify(getPath(orig, p))); });
 }
 const STATUS = {open:'未対応', discuss:'相談中', done:'反映済み', dropped:'見送り'};
 const fmt = iso => { if(!iso) return ''; const d = new Date(iso); if(isNaN(d)) return ''; const z = n => String(n).padStart(2, '0'); return `${z(d.getMonth() + 1)}/${z(d.getDate())} ${z(d.getHours())}:${z(d.getMinutes())}`; };
@@ -389,13 +401,12 @@ function setMode(json){
   else if(S.jsonErr) return;
   S.json = json; renderSide();
 }
-// 欄・JSON・コメントの入力は、描き直さずに状態だけ更新する(差分の表示は少し待ってから)
-let rt = null;
-const later = () => { clearTimeout(rt); rt = setTimeout(() => { const a = document.activeElement, id = a && a.id, pos = a && a.selectionStart; const sb = $('#sideb'), top = sb ? sb.scrollTop : 0; renderSide(); const n = id && document.getElementById(id); if(n){ n.focus(); try{ if(pos != null) n.setSelectionRange(pos, pos); }catch(_){} } const sb2 = $('#sideb'); if(sb2) sb2.scrollTop = top; }, 350); };
+// 欄・JSON・コメントの入力は、描き直さずに状態と差分の表示だけ更新する
+const later = () => refreshDyn();
 document.addEventListener('input', e => {
   const t = e.target;
   if(t.id === 'q'){ S.q = t.value; renderList(); return; }
-  if(t.id === 'comment'){ S.comment = t.value; const b = $('#sendBtn'); if(b) b.disabled = !DB || !!S.jsonErr || !(S.draft.isNew ? S.draft.key.trim() : (diff(curItem().obj, S.draft.obj).length || S.comment.trim())); return; }
+  if(t.id === 'comment'){ S.comment = t.value; refreshDyn(); return; }
   if(t.id === 'newkey'){ S.draft.key = t.value; later(); return; }
   if(t.id === 'jsonbox'){ S.jsonText = t.value; try{ S.draft.obj = JSON.parse(t.value); S.jsonErr = ''; }catch(err){ S.jsonErr = 'JSON の書き方が崩れています: ' + err.message; } later(); return; }
   if(t.dataset.path){
@@ -408,8 +419,11 @@ document.addEventListener('input', e => {
     setPath(S.draft.obj, p, v); later();
   }
 });
-addEventListener('resize', () => renderSide());
+// 画面の大きさが変わっても描き直さない(スマホではキーボードが開くと大きさが変わる)
+addEventListener('resize', () => { const side = $('#side'); if(S.kind === 'requests') side.hidden = innerWidth <= 820; else side.hidden = innerWidth <= 820 && !S.mobileOpen; });
 
+const typing = () => { const a = document.activeElement; return !!a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) && a.id !== 'q'; };
+document.addEventListener('focusout', () => setTimeout(() => { if(S.pending && !typing()){ S.pending = false; renderAll(); } }, 400));
 /* ---------- 共有データベース(依頼) ---------- */
 $('#ver').textContent = META.version ? `ゲーム ${META.version}${META.commit ? ' · ' + META.commit : ''}` : '';
 renderAll();
@@ -417,7 +431,8 @@ renderAll();
   const use = window.claude && window.claude.use;
   DB = use ? await window.claude.use('db') : null;
   if(!DB){ dbState = 'off'; renderAll(); return; }
-  DB.collection('requests').onSnapshot(s => { REQ = s.docs.map(d => Object.assign({id:d.id}, d.data())); dbState = 'on'; renderTabs(); if(S.kind === 'requests') renderList(); else { renderList(); if(!document.activeElement || !document.activeElement.closest || !document.activeElement.closest('#side')) renderSide(); } },
+  // 入力中(キーボードが開いている間)は描き直さず、入力を離れてから描き直す
+  DB.collection('requests').onSnapshot(s => { REQ = s.docs.map(d => Object.assign({id:d.id}, d.data())); dbState = 'on'; if(typing()){ S.pending = true; renderTabs(); refreshDyn(); } else renderAll(); },
     () => { dbState = 'off'; DB = null; renderAll(); });
 })();
 </script>

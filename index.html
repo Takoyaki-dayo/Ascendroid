@@ -522,6 +522,10 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 #tl.solo .sm.arr{top:149px} #tl.solo .sm.tmr{top:148px} #tl.solo .sm.zone{top:146px}
 .fm .mby{position:absolute;left:-6px;top:-6px;width:15px;height:15px;border-radius:50%;background:#0c141d;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--foe2)} .fm .mby svg{width:9px;height:9px}
 .fm.gone{opacity:.3}
+/* ユニットの詳細を見ているときは、そのユニットの行動を目立たせる(0.18.1) */
+.fm.hl{border-color:var(--foe2);box-shadow:0 0 0 2px rgba(255,77,106,.3)}
+.fm.ch.hl{border-color:var(--just2);box-shadow:0 0 0 2px rgba(177,140,255,.35)}
+.fm.lo{opacity:.28}
 .fdn .fby{display:inline-flex;align-items:center;gap:4px;margin-left:10px;font-size:11px;font-weight:400;color:var(--fg2)} .fdn .fby .ic svg{width:11px;height:11px}
 /* 敵の部位と危険域 */
 .fnote.trk{display:flex;align-items:center;gap:5px;color:var(--fg2);margin-top:4px} .fnote.trk .ic svg{width:11px;height:11px} .fnote.trk span:last-child:not(.ic){color:var(--dim);margin-left:6px}
@@ -657,7 +661,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 <script src="data/text.js"></script>
 <script src="js/engine.js"></script>
 <script>
-const APP_VERSION = '0.18.0';
+const APP_VERSION = '0.18.1';
 const $ = s => document.querySelector(s);
 const EN = ENGINE, RULE = EN.RULE;
 const VIEW = RULE.view, NOW = 180, PX = 25, xs = c => NOW + c * PX, STRIP_Y = 150, SWIFT_VIS = 3;
@@ -1712,20 +1716,22 @@ function moveGlyph(e, a){
   const g = a.heal ? '修' : a.summon ? '援' : '·';
   return `<b class="g">${g}</b>`;
 }
-function moveBtn(e, a, key, isCur, selKey){
+// hlUnit: ユニットの詳細を見ているとき、そのユニットの行動を目立たせる(ほかは薄く)
+function moveBtn(e, a, key, isCur, selKey, hlUnit){
   const cls = a.kind === 'delay' ? 'dl' : a.ch ? 'ch' : a.d > 0 ? 'atk' : 'mv';
+  const hl = hlUnit ? (EN.actorUid(e, a) === hlUnit ? ' hl' : ' lo') : '';
   const under = a.kind === 'delay' ? '自機' : a.d > 0 ? `<span class="ic">${IC[a.p]}</span>` : '';
   const bp = e.uids.length > 1 && a.by && e.units[a.by] ? e.units[a.by] : null;
-  return `<button type="button" class="fm ${cls}${selKey === key ? ' on' : ''}${bp && bp.broken ? ' gone' : ''}" data-act="foeMove" data-arg="${key}">${bp ? `<i class="mby">${pIcon(bp)}</i>` : ''}${isCur ? `<span class="fm-now"><span class="ic">${IC.clock}</span>${e.r}</span>` : ''}<span class="fm-v">${moveGlyph(e, a)}</span><span class="fm-p">${under}</span></button>`;
+  return `<button type="button" class="fm ${cls}${hl}${selKey === key ? ' on' : ''}${bp && bp.broken ? ' gone' : ''}" data-act="foeMove" data-arg="${key}">${bp ? `<i class="mby">${pIcon(bp)}</i>` : ''}${isCur ? `<span class="fm-now"><span class="ic">${IC.clock}</span>${e.r}</span>` : ''}<span class="fm-v">${moveGlyph(e, a)}</span><span class="fm-p">${under}</span></button>`;
 }
 // 行動の間のコスト。統率・加速で縮んでいれば、縮んだ値を赤で
 function costTag(e, dl){ const g = EN.gap(e, dl); return `<b class="${g < dl ? 'mod' : ''}">${g}</b>`; }
-function moveRow(e, pat, tag, start, curOn, rand, selKey){
+function moveRow(e, pat, tag, start, curOn, rand, selKey, hlUnit){
   const n = pat.length; let h = '';
   for(let j = 0; j < n; j++){
     const idx = rand ? j : (start + j) % n;
     if(j > 0) h += rand ? '<span class="fg r"></span>' : `<span class="fg">${costTag(e, pat[idx].dl)}<i></i></span>`;
-    h += moveBtn(e, pat[idx], tag + ':' + idx, curOn && (rand ? idx === e.pat.indexOf(EN.cur(e)) : j === 0), selKey);
+    h += moveBtn(e, pat[idx], tag + ':' + idx, curOn && (rand ? idx === e.pat.indexOf(EN.cur(e)) : j === 0), selKey, hlUnit);
   }
   if(!rand) h += `<span class="fg loop">${costTag(e, pat[start % n].dl)}<span class="ic">${IC.loop}</span></span>`;
   return `<div class="frow-m">${h}</div>`;
@@ -1759,9 +1765,10 @@ function renderFocus(){
   if(!f.sel){ const ci = rand ? pat.indexOf(EN.cur(e)) : e.idx % pat.length; f.sel = 'p:' + Math.max(0, ci); }
   const [tag, idx] = f.sel.split(':');
   const a = 'ph'.includes(tag) ? (tag === 'h' ? e.phase.pat : pat)[+idx] || EN.cur(e) : null;
-  let rows = moveRow(e, pat, 'p', rand ? 0 : e.idx, true, rand, f.sel);
+  const hlU = tag === 'u' && e.units[idx] ? idx : null;
+  let rows = moveRow(e, pat, 'p', rand ? 0 : e.idx, true, rand, f.sel, hlU);
   if(rand) rows = `<div class="fnote">${fillUi('foe.rand', {})}</div>` + rows;
-  if(e.phase && !e.phased) rows += `<div class="fnote">${fillUi('foe.phase', {at: Math.round(e.phase.at * 100)})}</div>` + moveRow(e, e.phase.pat, 'h', 0, false, false, f.sel);
+  if(e.phase && !e.phased) rows += `<div class="fnote">${fillUi('foe.phase', {at: Math.round(e.phase.at * 100)})}</div>` + moveRow(e, e.phase.pat, 'h', 0, false, false, f.sel, hlU);
   // ユニット(複数あるとき): アイコン・名前・耐久。押すと下に説明と状態
   const next = EN.actorUid(e, EN.cur(e));
   const units = multi ? `<div class="funits">${e.uids.map(k => { const p = e.units[k]; return `<button type="button" class="fu${f.sel === 'u:' + k ? ' on' : ''}${p.broken ? ' broken' : ''}${k === next && !p.broken ? ' act' : ''}" data-act="foeMove" data-arg="u:${k}"><span class="ic">${pIcon(p)}</span>${p.name}<b>${p.broken ? '' : p.hp}</b>${(p.broken ? [] : unitStates(p, k)).map(x => `<span class="ic s-${x.cls}">${IC[x.k]}</span>`).join('')}</button>`; }).join('')}</div>` : '';

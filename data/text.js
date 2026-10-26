@@ -547,7 +547,7 @@ window.DATA = window.DATA || {};
   "ui.mv.none": "攻撃はしない。",
   "ui.foe.react": "反応：コスト{min}以上のカードを使い始めると、1サイクル後に{part}に{d}ダメージを与える。",
   "ui.foe.sync": "連携：仲間と同じサイクルに攻撃すると、ダメージ+{sync}。",
-  "ui.foe.rand": "行動は毎回この中から選ぶ。同じ行動は3回続かない。",
+  "ui.foe.rand": "これから先の行動は上のとおり。行動は下の中から選ばれ、同じ行動は3回続かない。",
   "ui.foe.phase": "耐久{at}%未満",
   "ui.stname.armor": "装甲",
   "ui.stname.str": "強化",

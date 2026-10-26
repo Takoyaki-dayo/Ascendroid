@@ -34,20 +34,30 @@ function pick(a, r){ return a[Math.floor((r || rand)() * a.length)]; }
 const clone = o => JSON.parse(JSON.stringify(o));
 const cur = e => e.pat[e.idx];
 // 次の行動へ。ai:'rand' なら重み wt で選ぶ(同じ行動は3回続けない)。phase なら耐久が at 割を切った後に行動の並びが変わる
-function pickMove(e){
-  const h = e.hist || [], n = h.length, ok = e.pat.map((m, i) => moveOk(e, m) && !(n >= 2 && h[n - 1] === i && h[n - 2] === i));
+// ランダムに選ぶ敵も、先の行動まで決めておく(0.18.3)。e.queue に今の行動(e.idx)の後の並びを QN 個持ち、予定にもそのまま出す
+const QN = 8;
+function pickMove(e, seq){
+  const h = seq || e.hist || [], n = h.length, ok = e.pat.map((m, i) => moveOk(e, m) && !(n >= 2 && h[n - 1] === i && h[n - 2] === i));
   let tot = 0; e.pat.forEach((m, i) => { if(ok[i]) tot += m.wt || 1; });
   let x = rand() * tot;
   for(let i = 0; i < e.pat.length; i++){ if(!ok[i]) continue; x -= e.pat[i].wt || 1; if(x <= 0) return i; }
   return e.pat.length - 1;
 }
+// 先の行動の並びを QN 個まで足す(同じ行動が3回続かないよう、これまでの行動と並びを続けて見る)
+function fillQueue(e){
+  if(e.ai !== 'rand') return;
+  e.queue = (e.queue || []).filter(i => moveOk(e, e.pat[i]));
+  while(e.queue.length < QN) e.queue.push(pickMove(e, [...(e.hist || []), e.idx, ...e.queue]));
+}
+// 並びを決め直す(行動の並びそのものが変わったとき)
+function resetQueue(e){ if(e.ai !== 'rand') return; e.queue = []; e.idx = pickMove(e, e.hist || []); fillQueue(e); }
 function advance(e){
   if(e.hist){ e.hist.push(e.idx); if(e.hist.length > 4) e.hist.shift(); }
-  if(e.phase && !e.phased && e.hp < e.maxHp * e.phase.at){ e.phased = true; e.pat = e.phase.pat; e.idx = 0; e.hist = []; }
-  else if(e.ai === 'rand') e.idx = pickMove(e);
+  if(e.phase && !e.phased && e.hp < e.maxHp * e.phase.at){ e.phased = true; e.pat = e.phase.pat; e.idx = 0; e.hist = []; resetQueue(e); }
+  else if(e.ai === 'rand'){ fillQueue(e); e.idx = e.queue.shift(); fillQueue(e); }
   else e.idx = (e.idx + 1) % e.pat.length;
   // 破壊されたユニットの行動は飛ばす
-  for(let k = 0; k < e.pat.length && !moveOk(e, e.pat[e.idx]); k++) e.idx = e.ai === 'rand' ? pickMove(e) : (e.idx + 1) % e.pat.length;
+  for(let k = 0; k < e.pat.length && !moveOk(e, e.pat[e.idx]); k++){ if(e.ai === 'rand'){ fillQueue(e); e.idx = e.queue.shift(); fillQueue(e); } else e.idx = (e.idx + 1) % e.pat.length; }
   const a = e.pat[e.idx];
   e.r = gap(e, a.dl); e.seq++; e.chain = 0; e.sh = a.guard ? a.guard.s : 0;
 }
@@ -113,9 +123,12 @@ function upcoming(e, view){
     out.push({t, a, k, left:rest});
     for(let j = 1; j <= rest && t + j <= V; j++) out.push({t:t + j, a, k, hit:j, left:rest - j});
     t += rest;
-    if(e.ai === 'rand') break; // 分岐する敵は、次の行動が決まるまで見えない
-    idx = (idx + 1) % e.pat.length;
-    for(let j = 0; j < e.pat.length && !moveOk(e, e.pat[idx]); j++) idx = (idx + 1) % e.pat.length;
+    if(e.ai === 'rand'){ // ランダムに選ぶ敵は、決めておいた並びのとおり
+      const q = (e.queue || []).filter(i => moveOk(e, e.pat[i])); if(k >= q.length) break; idx = q[k];
+    } else {
+      idx = (idx + 1) % e.pat.length;
+      for(let j = 0; j < e.pat.length && !moveOk(e, e.pat[idx]); j++) idx = (idx + 1) % e.pat.length;
+    }
     t += gap(e, e.pat[idx].dl); k++;
   }
   return out;
@@ -137,7 +150,8 @@ function hurtFoe(b, e, d, ev, uid){
     for(const ps of e.pas || []) if(ps.k === 'frenzy' && e.alive){ e.str = (e.str || 0) + ps.n; ev.push({kind:'frenzy', e:e.i, n:ps.n}); }
     // broke: このユニットが破壊されると行動の並びが変わる
     const nb = (D.foes[e.key].broke || {})[uid];
-    if(nb && e.alive){ e.pat = nb; e.idx = 0; e.hist = []; e.sh = 0; e.chain = 0; ev.push({kind:'shift', e:e.i, unit:uid}); }
+    if(nb && e.alive){ e.pat = nb; e.idx = 0; e.hist = []; e.sh = 0; e.chain = 0; resetQueue(e); ev.push({kind:'shift', e:e.i, unit:uid}); }
+    else fillQueue(e); // 破壊されたユニットの行動を並びから除いて足す
     // 予定に入っていたこのユニットの行動は消える
     if(e.alive && !moveOk(e, cur(e)) && e.uids.some(k => !e.units[k].broken && e.units[k].vital)){ const nm = cur(e).n; advance(e); ev.push({kind:'cancel', e:e.i, name:nm}); }
   }
@@ -369,7 +383,7 @@ function makeFoe(key, i){
   e.uids = Object.keys(defs); e.units = {};
   for(const k of e.uids){ const d = defs[k]; e.units[k] = {name:d.name || '', hp:d.hp, max:d.hp, vital:!!d.vital, core:!!d.core, icon:d.icon || k, crack:0, vuln:0, armor:d.armor || 0, broken:false}; }
   syncHp(e);
-  if(e.ai === 'rand') e.idx = pickMove(e);
+  if(e.ai === 'rand') resetQueue(e);
   const a = cur(e); e.sh = a.guard ? a.guard.s : 0;
   return e;
 }

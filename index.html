@@ -691,7 +691,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 <script src="data/text.js"></script>
 <script src="js/engine.js"></script>
 <script>
-const APP_VERSION = '0.18.2';
+const APP_VERSION = '0.18.3';
 const $ = s => document.querySelector(s);
 const EN = ENGINE, RULE = EN.RULE;
 const VIEW = RULE.view, NOW = 180, PX = 25, xs = c => NOW + c * PX, STRIP_Y = 150, SWIFT_VIS = 3;
@@ -1158,11 +1158,6 @@ function renderMarks(){
     // 今の隙
     const vk = e.uids.find(k => e.units[k].vuln > 1);
     if(vk){ const vv = e.units[vk].vuln, bk = 'v' + e.i; seenB.add(bk); placeBand(bk, NOW + 6, xs(Math.min(vv - 1, VIEW)) + 6, by, 'wb vuln' + (pv && pv.fx.has('vulnHit:' + e.i) ? ' on' : ''), `<span class="ic">${multi ? pIcon(e.units[vk]) : IC.vuln}</span>`); }
-    // 分岐する敵: 次の行動は決まるまで見えない
-    if(e.ai === 'rand' && list.length){
-      const t = lastT + Math.min(...e.pat.map(x => x.dl));
-      if(t <= VIEW){ const key = 'u' + e.i + '-' + e.seq; seen.add(key); placeMark(key, xs(t) - (so ? 16 : 13), y, 'mk unk', '<b>?</b>', {e:e.i, kind:'unk', t}); }
-    }
     // 反応: 予定ではなく、重いカードへの返し
     const rt = e.reactIn != null ? e.reactIn : (pv && pv.react.has(e.i) ? 1 : null);
     if(rt != null && rt > 0){
@@ -1800,6 +1795,12 @@ function moveRow(e, pat, tag, start, curOn, rand, selKey, hlUnit){
   if(!rand) h += `<span class="fg loop">${costTag(e, pat[start % n].dl)}<span class="ic">${IC.loop}</span></span>`;
   return `<div class="frow-m">${h}</div>`;
 }
+// ランダムに選ぶ敵の、決まっている先の行動の並び(今の行動から)
+function seqRow(e, selKey, hlUnit){
+  const list = [e.idx, ...(e.queue || [])].slice(0, 6); let h = '';
+  list.forEach((idx, j) => { if(j > 0) h += `<span class="fg">${costTag(e, e.pat[idx].dl)}<i></i></span>`; h += moveBtn(e, e.pat[idx], 'q:' + j, j === 0, selKey, hlUnit); });
+  return `<div class="frow-m">${h}<span class="fg loop"><span class="ic">${IC.next}</span></span></div>`;
+}
 // 状態の札。ユニットが1つの敵はそのユニットの状態も、複数ある敵は敵全体の状態(強化・加速)だけ(ユニットの状態はユニットの札から)
 function unitStates(p, k){
   const out = [];
@@ -1826,12 +1827,13 @@ function renderFocus(){
   const f = UI.focus, e = S.b.foes[f.i], rand = e.ai === 'rand', pat = e.pat, multi = e.uids.length > 1, pas = passives(e);
   const sts = foeStates(e);
   if(f.sel && f.sel.startsWith('s:') && !sts.some(x => 's:' + x.id === f.sel)) f.sel = null;
-  if(!f.sel){ const ci = rand ? pat.indexOf(EN.cur(e)) : e.idx % pat.length; f.sel = 'p:' + Math.max(0, ci); }
+  if(!f.sel) f.sel = rand ? 'q:0' : 'p:' + (e.idx % pat.length);
   const [tag, idx] = f.sel.split(':');
-  const a = 'ph'.includes(tag) ? (tag === 'h' ? e.phase.pat : pat)[+idx] || EN.cur(e) : null;
+  const a = tag === 'q' ? pat[[e.idx, ...(e.queue || [])][+idx]] || EN.cur(e) : 'ph'.includes(tag) ? (tag === 'h' ? e.phase.pat : pat)[+idx] || EN.cur(e) : null;
   const hlU = tag === 'u' && e.units[idx] ? idx : null;
-  let rows = moveRow(e, pat, 'p', rand ? 0 : e.idx, true, rand, f.sel, hlU);
-  if(rand) rows = `<div class="fnote">${fillUi('foe.rand', {})}</div>` + rows;
+  let rows = moveRow(e, pat, 'p', rand ? 0 : e.idx, !rand, rand, f.sel, hlU);
+  // ランダムに選ぶ敵: 上にこれから先の行動(決まっている並び)、下に選ばれる候補
+  if(rand) rows = seqRow(e, f.sel, hlU) + `<div class="fnote">${fillUi('foe.rand', {})}</div>` + rows;
   if(e.phase && !e.phased) rows += `<div class="fnote">${fillUi('foe.phase', {at: Math.round(e.phase.at * 100)})}</div>` + moveRow(e, e.phase.pat, 'h', 0, false, false, f.sel, hlU);
   // ユニット(複数あるとき): アイコン・名前・耐久。押すと下に説明と状態
   const next = EN.actorUid(e, EN.cur(e));
@@ -2022,7 +2024,7 @@ function showRules(first){
     <li>奥の画面に敵ごとの攻撃予定が流れてくる。数字はダメージ、横の字は狙う部位。紫の丸は溜め技、砂時計は自分へのディレイ。</li>
     <li>完了前に被弾すると中断。ブロックで全部防ぐか、菱形のあるカードなら中断されない。完了と溜め技が同じサイクルならJUSTで潰せる。</li>
     <li>目の印の敵は、重いカードを使い始めると撃ってくる。鎖の印の敵は、仲間と同時に攻撃すると強くなる。</li>
-    <li>予定の下の帯は、その間にカードが完了したときに効く。<b>構</b>は数字以上の一撃で行動を潰せる。<b>防</b>は数字までダメージを防がれる。<b>返</b>は殴るたびに撃ち返される。<b>隙</b>はダメージ1.5倍。<b>?</b>は次の行動がまだ決まっていない。</li>
+    <li>予定の下の帯は、その間にカードが完了したときに効く。<b>構</b>は数字以上の一撃で行動を潰せる。<b>防</b>は数字までダメージを防がれる。<b>返</b>は殴るたびに撃ち返される。<b>隙</b>はダメージ1.5倍。</li>
     ${!RULE.econ ? `<li>右下は手札の入れ替え(枚数ぶんのサイクル)${RULE.freeWait ? 'と、1サイクルの待機' : '。手札がないときは1サイクルの待機'}。</li>` : RULE.freeWait || RULE.econ.type === 'turn' ? '<li>右下の下段は1サイクルの待機。</li>' : ''}
     <li>上スワイプで手札を広げ、下スワイプで自分の内側を見る。長押しでカードと敵の詳細。タイムラインを押すとキャラが透ける。</li>
   </ul><div class="row">${first ? '<button class="btn ghost" type="button" data-act="debug">デバッグ</button>' : ''}<button class="btn" type="button" data-act="close">${first ? 'はじめる' : '閉じる'}</button></div>`, !first);

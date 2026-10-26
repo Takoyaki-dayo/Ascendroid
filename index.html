@@ -124,8 +124,8 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 @keyframes stagger{30%{transform:rotate(-10deg) translateX(-6px)}100%{transform:none}}
 #droid.glitch{animation:glitch .3s steps(4)}
 @keyframes glitch{25%{transform:translateX(3px)}50%{transform:translateX(-3px);filter:hue-rotate(60deg)}75%{transform:translateX(2px)}100%{transform:none}}
-.foe{position:absolute;top:170px;width:90px;height:100px;transition:opacity .4s,transform .4s}
-.foe svg{display:block}
+.foe{position:absolute;top:170px;width:90px;height:100px;transition:opacity .4s,transform .4s,filter .3s}
+.foe svg{display:block;width:100%;height:100%}
 .foe.atk{animation:fatk .26s ease-out}
 @keyframes fatk{40%{transform:translateX(-26px)}100%{transform:none}}
 .foe.ehit{animation:fhit .26s ease-out}
@@ -133,7 +133,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 .foe.ejust{animation:fjust .45s ease-out}
 @keyframes fjust{0%{filter:brightness(2) drop-shadow(0 0 10px #b18cff)}30%{transform:translateX(16px) rotate(6deg)}100%{transform:none;filter:none}}
 .foe.dead{opacity:0;transform:translateY(14px) scaleY(.85)}
-.reticle{position:absolute;left:4px;top:6px;width:82px;height:90px;border:2px solid var(--cy);border-radius:4px;opacity:0;transition:opacity .15s;
+.reticle{position:absolute;inset:5% 5% 4% 5%;border:2px solid var(--cy);border-radius:4px;opacity:0;transition:opacity .15s;
   -webkit-mask:linear-gradient(#000 0 0) top left/14px 14px no-repeat,linear-gradient(#000 0 0) top right/14px 14px no-repeat,linear-gradient(#000 0 0) bottom left/14px 14px no-repeat,linear-gradient(#000 0 0) bottom right/14px 14px no-repeat;
   mask:linear-gradient(#000 0 0) top left/14px 14px no-repeat,linear-gradient(#000 0 0) top right/14px 14px no-repeat,linear-gradient(#000 0 0) bottom left/14px 14px no-repeat,linear-gradient(#000 0 0) bottom right/14px 14px no-repeat}
 .foe.tgt .reticle{opacity:1}
@@ -406,7 +406,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 /* 敵の詳細: カメラが敵に寄る */
 #shaker.focus #world{transition:transform .45s cubic-bezier(.2,.8,.2,1),filter .32s}
 #shaker.focus #tl,#shaker.focus #droid,#shaker.focus #meInfo,#shaker.focus .cinfo{opacity:0;transition:opacity .25s}
-#shaker.focus .foe:not(.fo){opacity:.08}
+#shaker.focus .foe:not(.fo),#shaker.focus .eu:not(.fo){opacity:.08}
 #shaker.focus #parts,#shaker.focus #hand,#shaker.focus .pile,#shaker.focus #redraw,#shaker.focus #waitBtn,#shaker.focus #handCnt,#shaker.focus #menuBtn,#shaker.focus #handShade{opacity:0;pointer-events:none;transition:opacity .2s}
 #focus{position:absolute;inset:0;z-index:30;padding:16px 0 12px 24px;width:470px;display:flex;flex-direction:column;gap:6px;opacity:0;pointer-events:none;transform:translateX(-16px);transition:opacity .3s .1s,transform .3s .1s;
   background:linear-gradient(90deg,var(--bg) 0,rgba(10,15,21,.96) 74%,transparent)}
@@ -453,6 +453,27 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 .ftr{max-width:400px;padding-top:4px;border-top:1px solid var(--line)}
 .ftr p{font-size:10.5px}
 .fclose{margin-left:auto;padding:4px 14px}
+/* 参照の重ね(0.18.0) */
+#ref{position:absolute;inset:0;background:rgba(5,9,14,.55);display:flex;align-items:center;justify-content:center;z-index:70;padding:12px}
+#refbox{max-width:520px;width:auto;min-width:300px;border-color:var(--cy-dim);box-shadow:0 12px 40px rgba(0,0,0,.55)}
+#refbox h2{font-size:14px;margin:0 0 6px}
+.rdesc{margin:0 0 12px;font-size:12px;line-height:1.6;color:var(--fg2)}
+.ref{display:inline;padding:0;margin:0;border:0;background:none;color:var(--fg);font:inherit;font-weight:700;text-decoration:underline dotted;text-underline-offset:3px;cursor:pointer}
+.ref.u{color:var(--foe2)}
+.ckw .ref{font-weight:700}
+/* 敵の詳細: ユニットとパッシブ */
+.funits{display:flex;gap:5px;flex-wrap:wrap}
+.fu{display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 8px;border:1px solid var(--line);border-radius:5px;background:var(--panel);color:var(--fg);font-size:11px;font-weight:700}
+.fu b{font-family:var(--f-num);font-size:12px;color:var(--fg2)}
+.fu .ic{color:var(--fg2)} .fu .ic svg{width:11px;height:11px}
+.fu .ic.s-good{color:var(--cy)} .fu .ic.s-arm{color:#cfe3ef} .fu .ic.s-bad{color:var(--foe2)}
+.fu.act>.ic:first-child{color:var(--foe2)}
+.fu.on{box-shadow:0 0 0 2px var(--cy)}
+.fu.broken{opacity:.4;text-decoration:line-through}
+.fsp.pas{color:var(--foe2);border-color:rgba(255,77,106,.35);border-style:dashed}
+.fsp.pas.off{opacity:.45}
+.fdet.pas{border-left-color:var(--foe)}
+.fg b.mod{color:var(--foe2)}
 /* 交換の確認(2枚目の重ね) */
 #ov2{position:absolute;inset:0;background:rgba(5,9,14,.6);display:flex;align-items:center;justify-content:center;z-index:55;padding:12px}
 #ovbox2{max-width:520px;border-color:var(--cy-dim);box-shadow:0 12px 40px rgba(0,0,0,.5)}
@@ -472,25 +493,33 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 #tl.solo .mk.ch{border-radius:15px}
 #tl.solo .mk.multi b{font-size:13px}
 #tl.solo .rowtag{display:none}
-#tl.solo .rowline{top:58px!important;background:rgba(169,188,203,.14)}
-#tl.solo .rowhit{top:36px!important;height:56px}
+#tl.solo .rowline{background:rgba(169,188,203,.14)}
 #tl.solo .wb{height:14px;font-size:10px;gap:2px;padding:0 4px;font-family:var(--f-num)}
 #tl.solo .wb .ic svg{width:10px;height:10px}
 .wb .ic{display:inline-flex}
 .wb .ic svg{width:8px;height:8px}
-#tl.solo #selfBar{top:122px;height:10px}
-#tl.solo #stripLine{top:146px}
-/* 敵の部位の欄(右) */
-#eparts .epart{position:absolute;left:740px;width:94px;display:block;padding:3px 5px;border:1px solid transparent;border-radius:5px;text-align:left;color:var(--fg);transition:background .2s,border-color .15s}
-#eparts .ph{display:flex;align-items:center;gap:4px}
-#eparts .pico{color:var(--foe2)} #eparts .pico svg{width:12px;height:12px}
-#eparts .psts{display:flex;gap:6px;margin-top:3px;min-height:11px}
-#eparts .psts .st{font-size:10px} #eparts .psts .ic svg{width:9px;height:9px}
-#eparts .epart.tgt{border-color:var(--cy);background:rgba(56,211,255,.08)}
-#eparts .epart.act .pname{color:var(--foe2)} #eparts .epart.ch .pname{color:var(--just2)}
-#eparts .epart.broken{opacity:.4} #eparts .epart.broken .pico::after{content:"";position:absolute;left:-2px;top:5px;width:16px;height:2px;background:var(--foe);transform:rotate(-40deg)}
-#eparts .epart.flash{background:rgba(255,77,106,.22)}
-#shaker.selfview #eparts,#shaker.focus #eparts{opacity:0;pointer-events:none}
+/* 敵のユニット(0.18.0): 本体の絵と、ユニットごとの耐久バー。位置は敵のデータで決める */
+.eu{position:absolute;transform:translateX(-50%);display:flex;flex-direction:column;gap:3px;padding:3px 5px;border:1px solid transparent;border-radius:5px;white-space:nowrap;transition:opacity .3s,border-color .15s,background .2s}
+.eu .sts{gap:5px;min-height:11px}
+.eu.m .hpb{width:44px} .eu.m .sts .st{font-size:10px} .eu.m .sts .ic svg{width:9px;height:9px}
+.eu .uic{display:inline-flex;color:var(--fg2)} .eu .uic svg{width:11px;height:11px}
+.eu.act .uic{color:var(--foe2)} .eu.ch .uic{color:var(--just2)}
+.eu.tgt{border-color:var(--cy);background:rgba(56,211,255,.08)}
+.eu.broken{opacity:.28}
+.eu.flash{background:rgba(255,77,106,.24)}
+.ew{position:absolute;left:744px;top:40px;width:90px;display:flex;flex-wrap:wrap;gap:7px;justify-content:flex-end;transition:opacity .3s}
+.ew.dead{opacity:0}
+.st.trait.off{opacity:.3}
+#shaker.focus .ew{opacity:0}
+/* タイムラインを押すと、キャラが透けて予定が見やすくなる */
+#shaker.peek .foe,#shaker.peek .eu,#shaker.peek .ew,#shaker.peek #droid,#shaker.peek #meInfo{opacity:.1;pointer-events:none}
+#shaker.peek #screen{border-color:var(--cy-dim)}
+#screen{transition:border-color .2s}
+/* 敵の行動はタイムラインの縦の中央に(0.18.0) */
+#tl.solo .rowline{top:92px!important}
+#tl.solo #selfBar{top:132px;height:10px}
+#tl.solo #stripLine{top:156px}
+#tl.solo .sm.arr{top:149px} #tl.solo .sm.tmr{top:148px} #tl.solo .sm.zone{top:146px}
 .fm .mby{position:absolute;left:-6px;top:-6px;width:15px;height:15px;border-radius:50%;background:#0c141d;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--foe2)} .fm .mby svg{width:9px;height:9px}
 .fm.gone{opacity:.3}
 .fdn .fby{display:inline-flex;align-items:center;gap:4px;margin-left:10px;font-size:11px;font-weight:400;color:var(--fg2)} .fdn .fby .ic svg{width:11px;height:11px}
@@ -597,7 +626,6 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
       </div>
 
       <div id="parts"></div>
-      <div id="eparts"></div>
       <button id="menuBtn" type="button" data-act="menu" aria-label="メニュー"></button>
 
       <div id="handShade"></div>
@@ -617,6 +645,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
     <div id="roomScr" hidden></div>
     <div id="ov" hidden><div class="box" id="ovbox"></div></div>
     <div id="ov2" hidden><div class="box" id="ovbox2"></div></div>
+    <div id="ref" hidden><div class="box" id="refbox"></div></div>
   </div>
 </div>
 
@@ -628,7 +657,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 <script src="data/text.js"></script>
 <script src="js/engine.js"></script>
 <script>
-const APP_VERSION = '0.17.0';
+const APP_VERSION = '0.18.0';
 const $ = s => document.querySelector(s);
 const EN = ENGINE, RULE = EN.RULE;
 const VIEW = RULE.view, NOW = 180, PX = 25, xs = c => NOW + c * PX, STRIP_Y = 150, SWIFT_VIS = 3;
@@ -659,9 +688,11 @@ const IC = {
   str:'<svg viewBox="0 0 12 12"><path d="M2 7L6 3L10 7M2 10.5L6 6.5L10 10.5" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>',
   vuln:'<svg viewBox="0 0 12 12"><path d="M6 1V5M6 7V11M1 6H5M7 6H11" stroke="currentColor" stroke-width="1.4"/><circle cx="6" cy="6" r="1.2" fill="currentColor"/></svg>',
   charge:'<svg viewBox="0 0 12 12"><path d="M7 1L2.5 7H6L5 11L9.5 5H6Z" stroke="currentColor" stroke-width="1.2" fill="none" stroke-linejoin="round"/></svg>',
+  frenzy:'<svg viewBox="0 0 12 12"><path d="M6 .8L7.2 4.8L11.2 6L7.2 7.2L6 11.2L4.8 7.2L.8 6L4.8 4.8Z" stroke="currentColor" stroke-width="1.1" fill="none" stroke-linejoin="round"/></svg>',
+  phase:'<svg viewBox="0 0 12 12"><path d="M1 10.5H4.5V7H8V3.5H11" stroke="currentColor" stroke-width="1.4" fill="none"/><path d="M9 1.5L11 3.5L9 5.5" stroke="currentColor" stroke-width="1.2" fill="none"/></svg>',
   next:'<svg viewBox="0 0 12 12"><path d="M1 6H10M7 3L10 6L7 9" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>',
-  phys:'<svg viewBox="0 0 12 12"><path d="M2 10L10 2M7 2H10V5" stroke="currentColor" stroke-width="1.6" fill="none"/></svg>',
-  opt:'<svg viewBox="0 0 12 12"><path d="M1 6H8" stroke="currentColor" stroke-width="1.6"/><circle cx="9.5" cy="6" r="2" fill="currentColor"/></svg>',
+  melee:'<svg viewBox="0 0 12 12"><path d="M2.5 9.5L9.5 2.5L10.5 1.5M2 7.5L4.5 10M1 11L3 9" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>',
+  ranged:'<svg viewBox="0 0 12 12"><path d="M1 6H8" stroke="currentColor" stroke-width="1.6"/><circle cx="9.5" cy="6" r="2" fill="currentColor"/></svg>',
   block:'<svg viewBox="0 0 12 12"><path d="M6 1L11 3V6C11 9 8.5 10.5 6 11C3.5 10.5 1 9 1 6V3Z" stroke="currentColor" stroke-width="1.4" fill="none"/></svg>',
   delay:'<svg viewBox="0 0 12 12"><path d="M2 1H10M2 11H10M3 1L9 11M9 1L3 11" stroke="currentColor" stroke-width="1.4" fill="none"/></svg>',
   swift:'<svg viewBox="0 0 12 12"><path d="M2 2L6 6L2 10M6 2L10 6L6 10" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>',
@@ -706,6 +737,10 @@ const SPR = {
   turret:'<svg width="90" height="100" viewBox="0 -4 60 66" aria-hidden="true"><path d="M14 58h32L40 44H20Z" fill="#152130" stroke="#4d6578" stroke-width="1.2"/><rect x="22" y="26" width="16" height="18" rx="3" fill="#152130" stroke="#4d6578" stroke-width="1.2"/><path d="M22 32H4" stroke="#4d6578" stroke-width="4" stroke-linecap="round"/><circle cx="30" cy="31" r="3" fill="#ff4d6a" opacity=".85"/></svg>',
   exec:'<svg width="90" height="100" viewBox="0 -4 60 66" aria-hidden="true"><rect x="16" y="6" width="18" height="12" rx="3" fill="#152130" stroke="#4d6578" stroke-width="1.2"/><rect x="10" y="20" width="32" height="28" rx="4" fill="#152130" stroke="#4d6578" stroke-width="1.2"/><rect x="2" y="22" width="10" height="26" rx="3" fill="#152130" stroke="#4d6578" stroke-width="1.2"/><path d="M20 48v10M34 48v10" stroke="#4d6578" stroke-width="4" stroke-linecap="round"/><rect x="20" y="10" width="10" height="3" fill="#ff4d6a" opacity=".8"/></svg>',
   hacker:'<svg width="90" height="100" viewBox="0 -4 60 66" aria-hidden="true"><circle cx="34" cy="12" r="7" fill="#152130" stroke="#4d6578" stroke-width="1.2"/><path d="M34 5l4-5" stroke="#4d6578" stroke-width="1.2"/><path d="M34 20v22M34 26l-10 8M34 26l8 10M34 42l-6 16M34 42l6 16" stroke="#4d6578" stroke-width="2.5" stroke-linecap="round"/><path d="M6 20h10M4 28h8M8 36h10" stroke="#b18cff" stroke-width="2" opacity=".6"/></svg>',
+  trooper:'<svg width="90" height="100" viewBox="0 -4 60 66" aria-hidden="true"><circle cx="34" cy="12" r="6" fill="#152130" stroke="#4d6578" stroke-width="1.2"/><rect x="29" y="10" width="9" height="3" fill="#ff4d6a" opacity=".8"/><rect x="26" y="20" width="16" height="20" rx="3" fill="#152130" stroke="#4d6578" stroke-width="1.2"/><path d="M30 40l-3 18M38 40l3 18" stroke="#4d6578" stroke-width="3" stroke-linecap="round"/><path d="M6 27H34" stroke="#4d6578" stroke-width="3.5" stroke-linecap="round"/><path d="M30 24l-6 4" stroke="#4d6578" stroke-width="2.5" stroke-linecap="round"/></svg>',
+  leader:'<svg width="90" height="100" viewBox="0 -4 60 66" aria-hidden="true"><path d="M35 7l5-7" stroke="#4d6578" stroke-width="1.2"/><circle cx="40" cy="0" r="2" fill="#ff4d6a" opacity=".85"/><circle cx="32" cy="12" r="6.5" fill="#152130" stroke="#4d6578" stroke-width="1.2"/><rect x="26" y="10" width="10" height="3" fill="#ff4d6a" opacity=".8"/><path d="M22 20H42L40 42H24Z" fill="#152130" stroke="#4d6578" stroke-width="1.2"/><path d="M27 42l-2 16M37 42l2 16" stroke="#4d6578" stroke-width="3" stroke-linecap="round"/><path d="M23 24l-9-10" stroke="#4d6578" stroke-width="2.5" stroke-linecap="round"/><path d="M41 24l3 12" stroke="#4d6578" stroke-width="2.5" stroke-linecap="round"/></svg>',
+  shieldman:'<svg width="90" height="100" viewBox="0 -4 60 66" aria-hidden="true"><circle cx="38" cy="12" r="6" fill="#152130" stroke="#4d6578" stroke-width="1.2"/><rect x="33" y="10" width="9" height="3" fill="#ff4d6a" opacity=".8"/><rect x="30" y="20" width="16" height="21" rx="3" fill="#152130" stroke="#4d6578" stroke-width="1.2"/><path d="M34 41l-2 17M42 41l2 17" stroke="#4d6578" stroke-width="3" stroke-linecap="round"/><path d="M6 16L24 11V53L6 48Z" fill="#152130" stroke="#6f8ea2" stroke-width="1.6" stroke-linejoin="round"/><path d="M11 28H19" stroke="#ff4d6a" stroke-width="2" opacity=".7"/></svg>',
+  tank:'<svg width="120" height="100" viewBox="-10 -4 79 66" aria-hidden="true"><path d="M8 38l-6 20M18 38l-2 20M44 38l2 20M54 38l6 20" stroke="#4d6578" stroke-width="3" stroke-linecap="round"/><rect x="2" y="22" width="58" height="17" rx="4" fill="#152130" stroke="#4d6578" stroke-width="1.2"/><rect x="16" y="11" width="26" height="12" rx="3" fill="#152130" stroke="#4d6578" stroke-width="1.2"/><path d="M17 16H-8" stroke="#4d6578" stroke-width="4" stroke-linecap="round"/><rect x="44" y="5" width="9" height="6" rx="1.5" fill="#152130" stroke="#4d6578" stroke-width="1.2"/><path d="M44 8H38" stroke="#4d6578" stroke-width="2"/><circle cx="24" cy="17" r="2.6" fill="#ff4d6a" opacity=".85"/><path d="M8 30H54" stroke="#253545" stroke-width="2"/></svg>',
   warden:'<svg width="90" height="100" viewBox="0 -4 60 66" aria-hidden="true"><rect x="19" y="0" width="22" height="58" rx="4" fill="#152130" stroke="#4d6578" stroke-width="1.2"/><rect x="6" y="14" width="10" height="30" rx="2" fill="#152130" stroke="#4d6578" stroke-width="1.2"/><rect x="44" y="14" width="10" height="30" rx="2" fill="#152130" stroke="#4d6578" stroke-width="1.2"/><circle cx="30" cy="16" r="5" fill="#ff4d6a" opacity=".85"/><path d="M24 30h12M24 36h12M24 42h12" stroke="#253545" stroke-width="2"/></svg>',
 };
 
@@ -713,9 +748,9 @@ const SLOTS = DATA.slots;
 const SLOT_BY = Object.fromEntries(SLOTS.map(s => [s.id, s]));
 const AB = {calc:'演', arm:'武', out:'出', dur:'耐', mob:'機'};
 const pIcon = p => IC['pt_' + p.icon] || IC.pt_core;
-// 対象の文字列 '番号.部位' と敵の番号の対応
+// 対象の文字列 '番号.ユニット' と敵の番号の対応
 const tFoe = t => t == null ? null : typeof t === 'string' && t.includes('.') ? +t.split('.')[0] : +t;
-const tPart = t => typeof t === 'string' && t.includes('.') ? t.split('.')[1] : null;
+const tUnit = t => typeof t === 'string' && t.includes('.') ? t.split('.')[1] : null;
 const CARDS = DATA.cards, KW = DATA.keywords, FOES = DATA.foes, ENC = DATA.encounters, PARTDEF = DATA.parts;
 
 let S = null, sel = null, PV = null, busy = false, lastTarget = 0, snapshot = null;
@@ -740,7 +775,7 @@ function computePreview(){
   const react = new Set();
   if(a.type === 'card' && cost > 0) for(const e of S.b.foes) if(e.alive && e.react && cost >= e.react.min && e.reactIn == null) react.add(e.i);
   return {k:a.k || null, cost, completeAt: P.out.completeAt ?? P.out.elapsed, free: a.type === 'wait' ? 0 : Math.min(S.b.swift, cost),
-    justSet: new Set(A.out.justs.map(j => j.i)), parts: A.c.b.parts, body: A.c.run.body, foeHp: A.c.b.foes.map(e => e.hp), foeParts: A.c.b.foes.map(e => Object.fromEntries(e.pids.map(k => [k, e.parts[k].hp]))), react, fx,
+    justSet: new Set(A.out.justs.map(j => j.i)), parts: A.c.b.parts, body: A.c.run.body, foeHp: A.c.b.foes.map(e => e.hp), foeUnits: A.c.b.foes.map(e => Object.fromEntries(e.uids.map(k => [k, e.units[k].hp]))), react, fx,
     // 使う前に、新しく置かれる時限の発動位置を見せる
     timers: A.c.b.timers.filter(t => !S.b.timers.some(o => o.id === t.id)).map(t => ({at: A.out.elapsed + t.left, e: t.e}))};
 }
@@ -805,24 +840,55 @@ function buildStatic(){
   $('#menuBtn').innerHTML = IC.menu; $('#icWait').innerHTML = IC.wait;
 }
 function foeX(n, i){ return (n === 1 ? [620] : n === 2 ? [560, 690] : [494, 600, 706])[i]; }
-// 部位(host のある敵)は絵と耐久を持たず、タイムラインの行だけ。行の札は部位の印
-const hosts = () => S.b.foes.filter(e => e.host == null);
-const hostI = i => { const e = S.b.foes[i]; return e && e.host != null ? e.host : i; };
-const hostX = i => { const h = hosts(); return foeX(h.length, h.findIndex(e => e.i === hostI(i))); };
+// 敵の置き場所(0.18.0): 敵は本体の絵(なくてもよい)と、ユニットごとの耐久バーでできている。ユニット自身の絵を持つこともある。
+//   位置は data/enemies.js の look・units の at(本体の絵の中心から)。敵が1体なら右の広いところに置く
+//   ユニットが1つの敵(と、複数の敵がいるとき)は、バーは1本(キー '*')
+const ANCHOR = {x: 665, y: 222};
+const GEOM = new Map();
+const sprSize = (kind, s) => ({w: (kind === 'tank' ? 120 : 90) * s, h: 100 * s});
+function foeGeom(e){
+  const f = FOES[e.key], so = solo(), U = f.units || {};
+  const A = so ? ANCHOR : {x: foeX(S.b.foes.length, e.i) + 45, y: 220};
+  const multi = so && e.uids.length > 1, look = (so && f.look) || {s: 1, at: [0, 0]};
+  const kind = f.kind || (!multi ? (Object.values(U).find(u => u.spr) || {}).spr || 'drone' : null);
+  const main = kind ? {kind, s: look.s, x: A.x + look.at[0], y: A.y + look.at[1]} : null;
+  const units = {};
+  if(!multi) units['*'] = {x: A.x, y: A.y + 52, cx: main ? main.x : A.x, cy: main ? main.y : A.y};
+  else e.uids.forEach((k, j) => {
+    const d = U[k] || {}, at = d.at || [130, -150 + j * 44], x = A.x + at[0], y = A.y + at[1];
+    if(d.spr){ const z = sprSize(d.spr, d.s || 1); units[k] = {x, y: y + z.h / 2 - 2, cx: x, cy: y, spr: d.spr, sx: x - z.w / 2, sy: y - z.h / 2, w: z.w, h: z.h}; }
+    else units[k] = {x, y, cx: d.core && main ? main.x : x, cy: d.core && main ? main.y : y - 6};
+  });
+  return {A, main, units, multi};
+}
 function buildFoes(){
-  const b = S.b;
-  ROWY = solo() ? [58] : [52, 86, 120];
-  $('#tl').classList.toggle('solo', solo());
-  // 敵の部位の欄(自機の部位の欄と左右対称)。部位が2つ以上ある敵だけ
-  const e0 = b.foes[0];
-  $('#eparts').innerHTML = solo() && e0.pids.length > 1 ? e0.pids.map((k, j) => `<button class="epart" type="button" data-ep="${k}" style="top:${40 + j * 46}px"><span class="ph"><span class="pico">${pIcon(e0.parts[k])}</span><span class="pname">${e0.parts[k].name}</span><span class="pnum"></span></span><span class="pips"></span><span class="psts"></span></button>`).join('') : '';
-  $('#rows').innerHTML = b.foes.map(e => `<div class="rowline${e.host != null ? ' trk' : ''}" data-r="${e.i}" style="top:${ROWY[e.i]}px"></div><div class="rowtag${e.host != null ? ' trk' : ''}" data-r="${e.i}" style="top:${ROWY[e.i] - 8}px">${e.host != null ? IC.track : e.tag}</div><div class="rowhit" data-f="${e.i}" style="top:${ROWY[e.i] - 17}px"></div>`).join('');
-  $('#foes').innerHTML = hosts().map(e => `<div class="foe" data-f="${e.i}" style="left:${hostX(e.i)}px">${SPR[e.kind]}<span class="reticle"></span></div><div class="cinfo fi" data-f="${e.i}" style="left:${hostX(e.i) + 2}px"><span class="frow"><span class="ftag">${e.tag}</span><span class="hpb"><i></i><s></s></span><span class="hpt"></span></span><span class="sts"></span></div>`).join('');
+  const b = S.b, so = solo();
+  ROWY = so ? [92] : [52, 86, 120];
+  $('#tl').classList.toggle('solo', so);
+  $('#rows').innerHTML = b.foes.map(e => `<div class="rowline" data-r="${e.i}" style="top:${ROWY[e.i]}px"></div><div class="rowtag" data-r="${e.i}" style="top:${ROWY[e.i] - 8}px">${e.tag}</div>${so ? '' : `<div class="rowhit" data-f="${e.i}" style="top:${ROWY[e.i] - 17}px"></div>`}`).join('');
+  let h = '';
+  GEOM.clear();
+  for(const e of b.foes){
+    const g = foeGeom(e); GEOM.set(e.i, g);
+    if(g.main){ const z = sprSize(g.main.kind, g.main.s); h += `<div class="foe" data-f="${e.i}" style="left:${g.main.x - z.w / 2}px;top:${g.main.y - z.h / 2}px;width:${z.w}px;height:${z.h}px">${SPR[g.main.kind]}<span class="reticle"></span></div>`; }
+    for(const [k, u] of Object.entries(g.units)){
+      if(u.spr) h += `<div class="foe us" data-f="${e.i}" data-u="${k}" style="left:${u.sx}px;top:${u.sy}px;width:${u.w}px;height:${u.h}px">${SPR[u.spr]}<span class="reticle"></span></div>`;
+      h += `<div class="eu${g.multi ? ' m' : ''}" data-f="${e.i}" data-u="${k}" style="left:${u.x}px;top:${u.y}px"><span class="frow">${g.multi ? `<span class="uic">${pIcon(e.units[k])}</span>` : so ? '' : `<span class="ftag">${e.tag}</span>`}<span class="hpb"><i></i><s></s></span><span class="hpt"></span></span><span class="sts"></span></div>`;
+    }
+    // ユニットが複数ある敵は、敵全体の状態とパッシブを右上に
+    if(g.multi) h += `<div class="ew" data-f="${e.i}"></div>`;
+  }
+  $('#foes').innerHTML = h;
 }
 function clearMarks(){ for(const m of [markEls, stripEls, bandEls]){ for(const el of m.values()) el.remove(); m.clear(); } }
 function clearCards(){ for(const el of cardEls.values()) el.remove(); cardEls.clear(); }
-const foeEl = i => document.querySelector(`.foe[data-f="${hostI(i)}"]`);
-const foeCenter = i => ({x: hostX(i) + 45, y: 220});
+// 敵の絵(本体。なければユニットの絵の1つ目)と、演出の中心
+const foeEl = i => document.querySelector(`.foe[data-f="${i}"]:not(.us)`) || document.querySelector(`.foe[data-f="${i}"]`);
+const foeCenter = i => { const g = GEOM.get(i); return g ? (g.main ? {x: g.main.x, y: g.main.y} : {x: g.A.x, y: g.A.y}) : {x: 665, y: 220}; };
+// ユニットの中心(演出用)。uid が無い・バーが1本なら敵の中心
+function unitCenter(i, uid){ const g = GEOM.get(i), u = g && uid && g.units[uid]; return u ? {x: u.cx, y: u.cy} : foeCenter(i); }
+const unitEl = (i, uid) => document.querySelector(`.eu[data-f="${i}"][data-u="${GEOM.get(i) && GEOM.get(i).multi ? uid : '*'}"]`);
+const unitSpr = (i, uid) => document.querySelector(`.foe.us[data-f="${i}"][data-u="${uid}"]`) || foeEl(i);
 function pipsHTML(max, cur, after, start, w){
   let s = '';
   for(let k = 0; k < max; k++){ const cls = k < after ? 'full' : k < cur ? 'loss' : k >= start ? 'worn' : ''; s += `<span class="pip ${cls}" style="width:${w}px"></span>`; }
@@ -834,7 +900,7 @@ const pipW = (max, room) => Math.max(2, Math.floor((room - (max - 1) * 2) / max)
 function renderAll(){
   if(!S.b) return;
   $('#shaker').classList.toggle('executing', busy);
-  renderMe(); renderParts(); renderEParts(); renderRows(); renderFoes(); renderPreview(); renderMarks(); renderStrip(); renderHand(); renderSide();
+  renderMe(); renderParts(); renderRows(); renderFoes(); renderPreview(); renderMarks(); renderStrip(); renderHand(); renderSide();
 }
 function renderMe(){
   const body = S.run.body, after = PV ? PV.body : body, max = S.run.bodyMax;
@@ -875,22 +941,6 @@ function renderParts(){
     el.querySelector('.pips').innerHTML = pipsHTML(st.max, st.cur, after, start, pipW(st.max, 70));
   });
 }
-// 敵の部位の欄: 耐久(プレビュー込み)、状態、狙っている部位、次に行動する部位
-function renderEParts(){
-  const b = S.b, e = b.foes[0], need = sel && sel.kind === 'card' && CARDS[sel.k].tgt;
-  if(!e || !e.pids || e.pids.length < 2) return;
-  const a = EN.cur(e), next = e.alive ? EN.actorPid(e, a) : null, tp = need ? (tPart(sel.target) || EN.defaultPid(e)) : null;
-  document.querySelectorAll('#eparts .epart').forEach(el => {
-    const k = el.dataset.ep, p = e.parts[k], after = PV && PV.foeParts ? PV.foeParts[0][k] : p.hp;
-    el.classList.toggle('broken', p.broken);
-    el.classList.toggle('tgt', !!need && tp === k && !p.broken);
-    el.classList.toggle('act', next === k && !p.broken);
-    el.classList.toggle('ch', next === k && !!a.ch && !p.broken);
-    const num = el.querySelector('.pnum'); num.textContent = after < p.hp ? `${p.hp}→${after}` : String(p.hp); num.classList.toggle('pv', after < p.hp);
-    el.querySelector('.pips').innerHTML = pipsHTML(Math.min(p.max, 14), Math.ceil(p.hp / p.max * Math.min(p.max, 14)), Math.ceil(after / p.max * Math.min(p.max, 14)), Math.min(p.max, 14), pipW(Math.min(p.max, 14), 70));
-    el.querySelector('.psts').innerHTML = (p.crack ? `<span class="st crack"><span class="ic">${IC.crack}</span>${p.crack}</span>` : '') + (p.armor ? `<span class="st arm"><span class="ic">${IC.armor}</span>${p.armor}</span>` : '') + (p.vuln > 1 ? `<span class="st swf"><span class="ic">${IC.vuln}</span>${p.vuln - 1}</span>` : '');
-  });
-}
 function renderRows(){
   const b = S.b, need = sel && sel.kind === 'card' && CARDS[sel.k].tgt;
   document.querySelectorAll('[data-r]').forEach(el => {
@@ -899,27 +949,59 @@ function renderRows(){
     el.classList.toggle('tgt', !!need && tFoe(sel.target) === e.i && e.alive);
   });
 }
+// 敵のパッシブ(画面に見せる一覧)。データの passives に、反応(react)・段階変化(phase)・破壊で行動が変わる(broke)を足す
+function passives(e){
+  const f = FOES[e.key], nm = f.pname || {}, out = [];
+  (f.passives || []).forEach((p, j) => out.push({id: 'a' + j, name: nm[j] || '', k: p.k, p, on: p.k === 'command' ? !!(e.units[p.unit] && !e.units[p.unit].broken) : true}));
+  if(e.react) out.push({id: 'react', name: nm.react || e.react.n || '', k: 'react', p: e.react, on: true});
+  if(e.phase) out.push({id: 'phase', name: nm.phase || '', k: 'phase', p: e.phase, on: !e.phased});
+  for(const k of Object.keys(f.broke || {})) out.push({id: 'broke-' + k, name: nm['broke.' + k] || '', k: 'broke', p: {unit: k}, on: !!e.units[k] && !e.units[k].broken});
+  return out;
+}
+const PAS_IC = {command: IC.pt_lead, frenzy: IC.frenzy, react: IC.eye, phase: IC.phase, broke: IC.phase};
+function pasText(e, x){
+  const un = k => e.units[k] ? e.units[k].name : k;
+  if(x.k === 'command') return fillUi('pas.command', {unit: un(x.p.unit), n: x.p.n});
+  if(x.k === 'frenzy') return fillUi('pas.frenzy', {n: x.p.n});
+  if(x.k === 'react') return fillUi('pas.react', {min: x.p.min, part: SLOT_BY[x.p.p].fn, d: x.p.d + (e.str || 0)});
+  if(x.k === 'phase') return fillUi('pas.phase', {at: Math.round(x.p.at * 100)});
+  if(x.k === 'broke') return fillUi('pas.broke', {unit: un(x.p.unit)});
+  return '';
+}
+// 画面の小さな札: ユニットの状態(クラック・装甲・隙)と、敵全体の状態(強化・加速・パッシブ)
+function unitSts(p){ return (p.crack ? `<span class="st crack"><span class="ic">${IC.crack}</span>${p.crack}</span>` : '') + (p.armor ? `<span class="st arm"><span class="ic">${IC.armor}</span>${p.armor}</span>` : '') + (p.vuln > 1 ? `<span class="st swf"><span class="ic">${IC.vuln}</span>${p.vuln - 1}</span>` : ''); }
+function foeSts(e){
+  let s = '';
+  for(const x of passives(e)){ if(x.k === 'phase' || x.k === 'broke') continue; s += `<span class="st trait${x.on ? '' : ' off'}${x.k === 'react' && PV && PV.react.has(e.i) ? ' on' : ''}"><span class="ic">${PAS_IC[x.k]}</span>${x.k === 'react' ? x.p.min : ''}</span>`; }
+  if(e.sync) s += `<span class="st trait"><span class="ic">${IC.link}</span>${e.sync}</span>`;
+  if(e.str) s += `<span class="st str"><span class="ic">${IC.str}</span>${e.str}</span>`;
+  if(e.haste) s += `<span class="st str"><span class="ic">${IC.haste}</span>${e.haste}</span>`;
+  return s;
+}
 function renderFoes(){
-  const b = S.b, need = sel && sel.kind === 'card' && CARDS[sel.k].tgt;
+  const b = S.b, cs = sel && sel.kind === 'card' ? CARDS[sel.k] : null, need = cs && cs.tgt, all = cs && cs.all;
   for(const e of b.foes){
-    if(e.host != null) continue;
-    const sp = foeEl(e.i), info = document.querySelector(`.fi[data-f="${e.i}"]`);
-    sp.classList.toggle('dead', !e.alive); info.classList.toggle('dead', !e.alive);
-    const tgt = !!need && tFoe(sel.target) === e.i && e.alive;
-    sp.classList.toggle('tgt', tgt); info.querySelector('.ftag').classList.toggle('tgt', tgt);
-    const after = Math.max(0, PV ? PV.foeHp[e.i] : e.hp);
-    info.querySelector('.hpb i').style.width = (after / e.maxHp * 100) + '%';
-    const s = info.querySelector('.hpb s'); s.style.left = (after / e.maxHp * 100) + '%'; s.style.width = ((e.hp - after) / e.maxHp * 100) + '%';
-    const t = info.querySelector('.hpt'); t.textContent = after < e.hp ? `${e.hp}→${after}` : String(e.hp); t.classList.toggle('pv', after < e.hp);
-    let sts = '';
-    const p1 = e.pids.length === 1 ? e.parts[e.pids[0]] : null;
-    if(p1 && p1.crack) sts += `<span class="st crack"><span class="ic">${IC.crack}</span>${p1.crack}</span>`;
-    if(e.react) sts += `<span class="st trait${PV && PV.react.has(e.i) ? ' on' : ''}"><span class="ic">${IC.eye}</span>${e.react.min}</span>`;
-    if(e.sync) sts += `<span class="st trait"><span class="ic">${IC.link}</span>${e.sync}</span>`;
-    if(e.str) sts += `<span class="st str"><span class="ic">${IC.str}</span>${e.str}</span>`;
-    if(p1 && p1.armor) sts += `<span class="st arm"><span class="ic">${IC.armor}</span>${p1.armor}</span>`;
-    if(e.haste) sts += `<span class="st str"><span class="ic">${IC.haste}</span>${e.haste}</span>`;
-    info.querySelector('.sts').innerHTML = sts;
+    const g = GEOM.get(e.i); if(!g) continue;
+    const tt = need && tFoe(sel.target) === e.i && e.alive ? (tUnit(sel.target) || EN.defaultUid(e)) : null;
+    const a = EN.cur(e), next = e.alive ? EN.actorUid(e, a) : null;
+    const ms = document.querySelector(`.foe[data-f="${e.i}"]:not(.us)`);
+    if(ms){ ms.classList.toggle('dead', !e.alive); ms.classList.toggle('tgt', e.alive && (!!(tt && (!g.multi || (e.units[tt].core && !g.units[tt].spr))) || !!all)); }
+    for(const [k, u] of Object.entries(g.units)){
+      const el = document.querySelector(`.eu[data-f="${e.i}"][data-u="${k}"]`); if(!el) continue;
+      const one = k === '*', p = one ? null : e.units[k];
+      const hp = one ? e.hp : p.hp, max = one ? e.maxHp : p.max;
+      const after = Math.max(0, PV ? (one ? PV.foeHp[e.i] : PV.foeUnits[e.i][k]) : hp);
+      const broken = !e.alive || (!one && p.broken);
+      const isT = !broken && (!!(tt && (one || tt === k)) || !!all);
+      el.classList.toggle('broken', broken); el.classList.toggle('tgt', isT);
+      el.classList.toggle('act', g.multi && next === k && !broken); el.classList.toggle('ch', g.multi && next === k && !!a.ch && !broken);
+      el.querySelector('.hpb i').style.width = (after / max * 100) + '%';
+      const sb = el.querySelector('.hpb s'); sb.style.left = (after / max * 100) + '%'; sb.style.width = ((hp - after) / max * 100) + '%';
+      const t = el.querySelector('.hpt'); t.textContent = after < hp ? `${hp}→${after}` : String(hp); t.classList.toggle('pv', after < hp);
+      el.querySelector('.sts').innerHTML = (one ? (e.uids.length === 1 ? unitSts(e.units[e.uids[0]]) : '') + foeSts(e) : unitSts(p));
+      if(u.spr){ const sp = document.querySelector(`.foe.us[data-f="${e.i}"][data-u="${k}"]`); if(sp){ sp.classList.toggle('dead', broken); sp.classList.toggle('tgt', isT); } }
+    }
+    const ew = document.querySelector(`.ew[data-f="${e.i}"]`); if(ew){ ew.innerHTML = foeSts(e); ew.classList.toggle('dead', !e.alive); }
   }
 }
 function renderPreview(){
@@ -984,7 +1066,7 @@ function renderMarks(){
   const b = S.b, seen = new Set(), seenB = new Set(), syn = syncTimes(), pv = PV && !busy ? PV : null;
   for(const e of b.foes){
     if(!e.alive) continue;
-    const so = solo(), y = ROWY[e.i] - (so ? 17 : 11), by = ROWY[e.i] + (so ? 22 : 12), list = EN.upcoming(e), multi = e.pids.length > 1;
+    const so = solo(), y = ROWY[e.i] - (so ? 17 : 11), by = ROWY[e.i] + (so ? 22 : 12), list = EN.upcoming(e), multi = e.uids.length > 1;
     let lastT = 0;
     for(const m of list){
       const key = e.i + '-' + (e.seq + m.k) + '-' + m.left; seen.add(key);
@@ -998,7 +1080,7 @@ function renderMarks(){
         if(m.t === pv.completeAt && a.ch && pv.justSet.has(e.i)) cls += ' just';
         if(m.k === 0 && a.wind && pv.fx.has('break:' + e.i)) cls += ' just';
       }
-      const by_ = multi && a.by && e.parts[a.by] ? `<i class="mby">${pIcon(e.parts[a.by])}</i>` : '';
+      const by_ = multi && a.by && e.units[a.by] ? `<i class="mby">${pIcon(e.units[a.by])}</i>` : '';
       const html = by_ + (a.kind === 'delay' ? `<span class="ic">${IC.delay}</span><b>${a.v}</b>` : atk ? `<b>${a.d + (e.str || 0) + (sy ? e.sync : 0)}</b><span class="ic tp">${IC[a.p]}</span>` : moveIcon(a));
       placeMark(key, xs(m.t) - (so ? 16 : 13), y, cls, html);
       lastT = Math.max(lastT, m.t);
@@ -1019,8 +1101,8 @@ function renderMarks(){
       }
     }
     // 今の隙
-    const vk = e.pids.find(k => e.parts[k].vuln > 1);
-    if(vk){ const vv = e.parts[vk].vuln, bk = 'v' + e.i; seenB.add(bk); placeBand(bk, NOW + 6, xs(Math.min(vv - 1, VIEW)) + 6, by, 'wb vuln' + (pv && pv.fx.has('vulnHit:' + e.i) ? ' on' : ''), `<span class="ic">${multi ? pIcon(e.parts[vk]) : IC.vuln}</span>`); }
+    const vk = e.uids.find(k => e.units[k].vuln > 1);
+    if(vk){ const vv = e.units[vk].vuln, bk = 'v' + e.i; seenB.add(bk); placeBand(bk, NOW + 6, xs(Math.min(vv - 1, VIEW)) + 6, by, 'wb vuln' + (pv && pv.fx.has('vulnHit:' + e.i) ? ' on' : ''), `<span class="ic">${multi ? pIcon(e.units[vk]) : IC.vuln}</span>`); }
     // 分岐する敵: 次の行動は決まるまで見えない
     if(e.ai === 'rand' && list.length){
       const t = lastT + Math.min(...e.pat.map(x => x.dl));
@@ -1129,7 +1211,7 @@ function monologue(){
   if(run.body < run.bodyMax * 0.4) hit.bodyLow = {};
   const br = SLOTS.find(p => b.parts[p.id].cur <= 0); if(br) hit.partBroken = {part: br.fn};
   for(const e of b.foes){ if(!e.alive || hit.chargeSoon) continue; for(const m of EN.upcoming(e)) if(m.a.ch && m.t <= 9){ hit.chargeSoon = {enemy: e.name, move: m.a.n, t: m.t}; break; } }
-  for(const e of b.foes){ if(!e.alive) continue; if(e.pids.some(k => e.parts[k].vuln > 1) && !hit.vulnNow) hit.vulnNow = {enemy: e.name}; const a = EN.cur(e); if(a.wind && e.r > 0 && e.r <= a.wind.w + 2 && !hit.windNow) hit.windNow = {enemy: e.name, move: a.n, poise: a.wind.poise}; }
+  for(const e of b.foes){ if(!e.alive) continue; if(e.uids.some(k => e.units[k].vuln > 1) && !hit.vulnNow) hit.vulnNow = {enemy: e.name}; const a = EN.cur(e); if(a.wind && e.r > 0 && e.r <= a.wind.w + 2 && !hit.windNow) hit.windNow = {enemy: e.name, move: a.n, poise: a.wind.poise}; }
   if(!b.hand.length) hit.handEmpty = {};
   const worn = SLOTS.find(p => run.parts[p.id].damaged); if(worn) hit.partWorn = {part: worn.fn};
   const sum = {}; for(const e of b.foes){ if(!e.alive) continue; for(const m of EN.upcoming(e)) if(m.a.kind !== 'delay') sum[m.a.p] = (sum[m.a.p] || 0) + m.a.d; }
@@ -1190,15 +1272,16 @@ function afterimage(){
 function shieldFx(){ const el = fxEl('shield', 92, 136); setTimeout(() => el.remove(), 560); }
 function cardMotion(k, ti){
   const c = CARDS[k], d = $('#droid'), t = cardType(c);
-  const targets = c.all ? S.b.foes.filter(e => e.alive).map(e => e.i) : (c.tgt && ti != null ? [ti] : []);
-  if(t === 'phys'){ pulse(d, 'lunge', 380); for(const i of targets){ const p = foeCenter(i); const el = fxEl('slash', p.x, p.y - 10); setTimeout(() => el.remove(), 260); } }
-  else if(t === 'opt'){ pulse(d, 'recoil', 320); for(const i of targets) beam(foeCenter(i)); }
+  // 当たる場所: 全体のカードは敵のすべてのユニット、単体は狙ったユニット
+  const pts = c.all ? S.b.foes.filter(e => e.alive).flatMap(e => (GEOM.get(e.i) && GEOM.get(e.i).multi ? EN.liveUids(e) : [null]).map(k2 => unitCenter(e.i, k2)))
+    : (c.tgt && ti != null ? [unitCenter(tFoe(ti), tUnit(ti) || EN.defaultUid(S.b.foes[tFoe(ti)]))] : []);
+  if(t === 'melee'){ pulse(d, 'lunge', 380); for(const p of pts){ const el = fxEl('slash', p.x, p.y - 10); setTimeout(() => el.remove(), 260); } }
+  else if(t === 'ranged'){ pulse(d, 'recoil', 320); for(const p of pts) beam(p); }
   else if(t === 'block' || t === 'parry') shieldFx();
-  else if(t === 'timer'){ pulse(d, 'recoil', 320); for(const i of targets){ const p = foeCenter(i); const el = fxEl('pin', p.x - 6, p.y - 70); setTimeout(() => el.remove(), 600); } }
+  else if(t === 'timer'){ pulse(d, 'recoil', 320); for(const p of pts){ const el = fxEl('pin', p.x - 6, p.y - 40); setTimeout(() => el.remove(), 600); } }
   else if(t === 'delay' || t === 'crack'){
     pulse(d, 'glitch', 320);
-    for(const i of targets){
-      const p = foeCenter(i);
+    for(const p of pts){
       for(let k2 = 0; k2 < 5; k2++){
         const el = fxEl('noise', DROID.sx + k2 * 4, DROID.sy + (k2 % 2) * 8); el.getBoundingClientRect();
         setTimeout(() => { el.style.left = (p.x + (k2 - 2) * 6) + 'px'; el.style.top = (p.y - 20 + k2 * 5) + 'px'; el.style.opacity = '0'; }, k2 * 30);
@@ -1209,18 +1292,17 @@ function cardMotion(k, ti){
   else if(t === 'swift'){ afterimage(); setTimeout(afterimage, 90); }
   else if(t === 'draw') pulse($('#pileDraw'), 'flash', 360);
 }
+// 耐久バーの上(ダメージの数字を出す場所)
+function unitTop(i, uid){ const g = GEOM.get(i); if(!g) return foeCenter(i); const u = g.units[g.multi ? uid : '*'] || g.units['*']; return u ? {x: u.x, y: u.y - 8} : foeCenter(i); }
 function cardFx(x){
   switch(x.kind){
-    case 'dmg': {
-      const el = x.part && document.querySelector(`#eparts .epart[data-ep="${x.part}"]`), p = foeCenter(x.e);
-      if(el){ floatAt(720, el.offsetTop + 10, '−' + x.n, 'foe'); pulse(el, 'flash', 260); } else floatAt(p.x, p.y - 62, '−' + x.n, 'foe');
-      pulse(foeEl(x.e), 'ehit', 280); break; }
+    case 'dmg': { const p = unitTop(x.e, x.unit); floatAt(p.x, p.y, '−' + x.n, 'foe'); pulse(unitEl(x.e, x.unit), 'flash', 260); pulse(unitSpr(x.e, x.unit), 'ehit', 280); break; }
     case 'kill': { const p = foeCenter(x.e); shards(p.x, p.y, '#d3e2ee'); break; }
-    case 'wake': floatAt(xs(1), ROWY[x.e] - 14, '!', 'foe'); break;
-    case 'partBreak': { const el = document.querySelector(`#eparts .epart[data-ep="${x.part}"]`); if(el){ pulse(el, 'flash', 420); const r = el.offsetTop; shards(780, r + 14, '#ff8a9c'); } else { const p = foeCenter(x.e); shards(p.x, p.y, '#ff8a9c'); } break; }
+    case 'unitBreak': { const p = unitCenter(x.e, x.unit); pulse(unitEl(x.e, x.unit), 'flash', 420); shards(p.x, p.y, '#ff8a9c'); break; }
+    case 'frenzy': { const p = foeCenter(x.e); floatAt(p.x, p.y - 70, '▲' + x.n, 'foe'); break; }
     case 'cancel': floatAt(xs(1), ROWY[x.e] - 20, '×', 'cy'); break;
     case 'shift': floatAt(xs(1), ROWY[x.e] - 20, '!!', 'foe'); break;
-    case 'crack': { const p = foeCenter(x.e); floatAt(p.x + 30, p.y - 40, '+' + x.n, 'foe'); break; }
+    case 'crack': { const p = unitCenter(x.e, x.unit); floatAt(p.x + 30, p.y - 30, '+' + x.n, 'foe'); break; }
     case 'delay': floatAt(xs(2), ROWY[x.e] - 14, '+' + x.n, 'cy'); break;
     case 'block': floatAt(130, 262, '+' + x.n, ''); break;
     case 'swift': floatAt(150, 262, '+' + x.n, 'cy'); break;
@@ -1228,8 +1310,8 @@ function cardFx(x){
     case 'draw': if(x.n) floatAt(41, 290, '+' + x.n, 'cy'); break;
     case 'timerSet': floatAt(xs(x.t), STRIP_Y - 10, '◆', 'cy'); break;
     case 'guarded': { const p = foeCenter(x.e); const el = fxEl('fshield', p.x, p.y - 10); setTimeout(() => el.remove(), 520); floatAt(p.x + 26, p.y - 46, '防' + x.n, ''); break; }
-    case 'armored': { const p = foeCenter(x.e); floatAt(p.x + 26, p.y - 46, '装' + x.n, ''); break; }
-    case 'vulnHit': { const p = foeCenter(x.e); floatAt(p.x - 26, p.y - 46, '×1.5', 'cy'); break; }
+    case 'armored': { const p = unitCenter(x.e, x.unit); floatAt(p.x + 26, p.y - 36, '装' + x.n, ''); break; }
+    case 'vulnHit': { const p = unitCenter(x.e, x.unit); floatAt(p.x - 26, p.y - 36, '×1.5', 'cy'); break; }
     case 'break': { justFx(x.e); const p = foeCenter(x.e); floatAt(p.x, p.y - 84, '崩し', 'cy'); break; }
     case 'counter': { const p = foeCenter(x.e); floatAt(p.x, p.y - 84, '返', 'foe'); beam({x: DROID.sx, y: DROID.sy}, {x: p.x, y: p.y - 10}); hitMeFx(x.res); break; }
   }
@@ -1246,14 +1328,14 @@ function hitMeFx(r){
 }
 async function foeFx(i, r){
   const e = S.b.foes[i];
-  pulse(foeEl(i), 'atk', 270);
+  pulse(unitSpr(i, r.by), 'atk', 270);
   const mk = r.react ? markEls.get('r' + i) : markEls.get(r.chainLeft > 0 ? `${i}-${e.seq}-${r.chainLeft}` : `${i}-${e.seq - 1}-0`);
   if(mk) mk.classList.add('fire');
   await sleep(110);
   if(r.kind === 'move'){
     const p = foeCenter(i);
     if(r.buff) floatAt(p.x, p.y - 70, '▲' + r.buff, 'foe');
-    if(r.armor){ const el = fxEl('fshield', p.x, p.y - 10); setTimeout(() => el.remove(), 520); floatAt(p.x, p.y - 70, '装+' + r.armor, ''); }
+    if(r.armor){ const q = unitCenter(i, r.by); const el = fxEl('fshield', q.x, q.y - 10); setTimeout(() => el.remove(), 520); floatAt(q.x, q.y - 50, '装+' + r.armor, ''); }
     if(r.heal) floatAt(p.x, p.y - 70, '+' + r.heal, 'cy');
     if(r.crack){ floatAt(DROID.x + 10, DROID.y - 92, DATA.kwName.crack + '+' + r.crack, 'foe'); pulse($('#droid'), 'glitch', 320); }
     if(r.noise){ floatAt(41, 300, 'ノイズ+' + r.noise, 'foe'); pulse($('#pileDraw'), 'flash', 360); }
@@ -1289,22 +1371,12 @@ function interruptFx(){
 }
 
 /* ---------- play ---------- */
-// 狙い: 前に狙った敵(と部位)が生きていればそれ、なければおまかせ。部位が2つ以上ある敵は '番号.部位'
+// 狙い: 前に狙った敵(とユニット)が生きていればそれ、なければおまかせ。ユニットが2つ以上ある敵は '番号.ユニット'
 function defaultTarget(){
-  const b = S.b, tf = tFoe(lastTarget), tp = tPart(lastTarget);
+  const b = S.b, tf = tFoe(lastTarget), tp = tUnit(lastTarget);
   const e = b.foes[tf] && b.foes[tf].alive ? b.foes[tf] : b.foes.find(f => f.alive); if(!e) return 0;
-  if(EN.livePids(e).length < 2) return e.i;
-  return e.i + '.' + (tp && e.parts[tp] && !e.parts[tp].broken ? tp : EN.defaultPid(e));
-}
-function onEPart(k){
-  const e = S.b.foes[0], p = e && e.parts[k]; if(!p) return;
-  if(sel && sel.kind === 'card' && CARDS[sel.k].tgt){
-    if(p.broken) return;
-    const t = '0.' + k;
-    if(sel.target === t){ execute(); return; }
-    sel.target = t; lastTarget = t; recalc(); return;
-  }
-  if(!sel) infoFoe(0);
+  if(EN.liveUids(e).length < 2) return e.i;
+  return e.i + '.' + (tp && e.units[tp] && !e.units[tp].broken ? tp : EN.defaultUid(e));
 }
 function recalc(){ PV = computePreview(); renderAll(); }
 function onCard(i){
@@ -1322,16 +1394,21 @@ function onRedraw(){
   if(sel && sel.kind === kind){ execute(); return; }
   sel = {kind}; recalc();
 }
-function onFoe(i){
-  i = hostI(i);
-  const e = S.b.foes[i]; if(!e.alive) return;
+// 敵(本体の絵か、ユニットのバー・絵)を押したとき。カードを選んでいれば狙いを変え、もう一度で使う。選んでいなければ詳細
+function onFoe(i, uid){
+  const e = S.b.foes[i]; if(!e || !e.alive) return;
+  const multi = EN.liveUids(e).length > 1;
+  if(uid && uid !== '*' && e.units[uid] && e.units[uid].broken) uid = null;
   if(sel && sel.kind === 'card' && CARDS[sel.k].tgt){
-    const t = EN.livePids(e).length > 1 ? defaultTarget() : i;
-    if(sel.target === t || tFoe(sel.target) === i && EN.livePids(e).length > 1){ execute(); return; }
+    const t = !multi ? i : i + '.' + (uid && uid !== '*' ? uid : (tFoe(sel.target) === i && tUnit(sel.target)) || EN.defaultUid(e));
+    if(sel.target === t){ execute(); return; }
     sel.target = t; lastTarget = t; recalc(); return;
   }
-  if(!sel) infoFoe(i);
+  if(!sel) infoFoe(i, uid && uid !== '*' ? uid : null);
 }
+// タイムラインを押すと、キャラを透かして予定を見やすくする(もう一度押すか、ほかを押すと戻る)
+function setPeek(on){ $('#shaker').classList.toggle('peek', !!on); }
+const peeking = () => $('#shaker').classList.contains('peek');
 function flyCard(el, x, y){
   if(!el) return;
   el.style.left = x + 'px'; el.style.top = y + 'px'; el.style.transform = 'scale(.25) rotate(12deg)'; el.style.opacity = '0';
@@ -1346,7 +1423,7 @@ async function showEvent(ev, k, ti){
     case 'react': { const p = foeCenter(ev.e); floatAt(p.x, p.y - 70, '!', 'foe'); pulse(foeEl(ev.e), 'ehit', 200); renderAll(); await sleep(180); break; }
     case 'just': justFx(ev.e); renderAll(); await sleep(420); break;
     case 'card': if(k) cardMotion(k, ti); for(const x of ev.ev) cardFx(x); renderAll(); await sleep(320); break;
-    case 'timer': { const p = foeCenter(ev.t.e); const el = fxEl('burst', p.x, p.y - 10); setTimeout(() => el.remove(), 520); for(const x of ev.ev) cardFx(x); renderAll(); await sleep(320); break; }
+    case 'timer': { const p = unitCenter(ev.t.e, ev.t.unit); const el = fxEl('burst', p.x, p.y - 10); setTimeout(() => el.remove(), 520); for(const x of ev.ev) cardFx(x); renderAll(); await sleep(320); break; }
     case 'turn': {
       const ids = new Set(S.b.hand.map(c => c.id));
       for(const [id, el] of cardEls) if(!ids.has(id)){ cardEls.delete(id); flyCard(el, 20, 340); }
@@ -1359,7 +1436,7 @@ async function showEvent(ev, k, ti){
   }
 }
 async function execute(){
-  const s = sel, b = S.b, a = selAction(); sel = null; PV = null; busy = true; UI.view = 'normal';
+  const s = sel, b = S.b, a = selAction(); sel = null; PV = null; busy = true; UI.view = 'normal'; setPeek(false);
   if(a.type === 'card'){
     if(a.t != null) lastTarget = a.t;
     const cd = b.hand[a.i], el = cardEls.get(cd.id); cardEls.delete(cd.id); flyCard(el, DROID.x - 48, DROID.y - 60);
@@ -1571,15 +1648,42 @@ function showClear(){
 
 /* ---------- info overlays ---------- */
 const closeRow = '<div class="row"><button class="btn" type="button" data-act="close">閉じる</button></div>';
+// キーワードの説明の一覧(カードの詳細と、参照の重ね)
+const kwBlock = k => cardKw(k).map(w => `<span><b>${w}</b> ${refText(KW[w], w)}</span>`).join('');
 function infoCard(k){
-  const kws = cardKw(k);
-  showOv(`<div style="display:flex;gap:16px;align-items:flex-start"><div class="cards" style="margin:0"><div class="card static">${cardInner(k, S)}</div></div><div class="ckw">${kws.map(w => `<span><b>${w}</b> ${KW[w]}</span>`).join('')}</div></div>${closeRow}`, true);
+  showOv(`<div style="display:flex;gap:16px;align-items:flex-start"><div class="cards" style="margin:0"><div class="card static">${cardInner(k, S)}</div></div><div class="ckw">${kwBlock(k)}</div></div>${closeRow}`, true);
 }
-// 行動の属性の小さな札(敵の詳細で使う)
+/* ---------- 参照(0.18.0) ----------
+   説明の文に出てくるカード(《》)・キーワード・ユニット(【】)を押すと、その説明を重ねて出す。重ねた説明の中からも参照できる */
+function refText(h, self){
+  const T = [], tok = x => { T.push(x); return `\u0001${T.length - 1}\u0001`; };
+  h = h.replace(/《([^《》]+)》/g, (m, n) => { const k = Object.keys(CARDS).find(c => CARDS[c].name === n); return k ? tok(`<button type="button" class="ref" data-act="ref" data-arg="card:${k}">《${n}》</button>`) : m; });
+  const fe = UI.focus && S && S.b ? S.b.foes[UI.focus.i] : null;
+  h = h.replace(/【(?:<b>)?([^【】<]+)(?:<\/b>)?】/g, (m, n) => { const k = fe && fe.uids.find(u => fe.units[u].name === n); return k ? tok(`<button type="button" class="ref u" data-act="foeMove" data-arg="u:${k}">【${n}】</button>`) : m; });
+  // キーワードは、文の中で最初に出たところだけ
+  for(const [key, name] of kwList()){
+    if(name === self) continue;
+    const at = h.indexOf(name); if(at < 0) continue;
+    h = h.slice(0, at) + tok(`<button type="button" class="ref" data-act="ref" data-arg="kw:${key}">${name}</button>`) + h.slice(at + name.length);
+  }
+  return h.replace(/\u0001(\d+)\u0001/g, (m, i) => T[+i]);
+}
+function pushRef(arg){ (UI.refs = UI.refs || []).push(arg); renderRef(); }
+function popRef(all){ if(!UI.refs) return; if(all) UI.refs = []; else UI.refs.pop(); renderRef(); }
+function renderRef(){
+  const r = UI.refs || [], el = $('#ref');
+  if(!r.length){ el.hidden = true; return; }
+  const [kind, key] = r[r.length - 1].split(':');
+  let h = '';
+  if(kind === 'kw'){ const name = DATA.kwName[key]; h = `<h2>${name}</h2><p class="rdesc">${refText(KW[name] || '', name)}</p>`; }
+  else if(kind === 'card') h = `<div style="display:flex;gap:16px;align-items:flex-start"><div class="cards" style="margin:0"><div class="card static">${cardInner(key, S && S.b ? S : null)}</div></div><div class="ckw">${kwBlock(key)}</div></div>`;
+  h += `<div class="row">${r.length > 1 ? '<button class="btn ghost" type="button" data-act="refBack">戻る</button>' : ''}<button class="btn" type="button" data-act="refClose">閉じる</button></div>`;
+  $('#refbox').innerHTML = h; el.hidden = false;
+}
 /* ---------- 敵の詳細(カメラが敵に寄り、右に敵、左に情報) ---------- */
-// 行動を押すと、その行動が何をするかを文で出す(文は text/terms.csv の ui.mv.* / ui.foe.*)
+// 行動を押すと、その行動が何をするかを文で出す(文は text/terms.csv の ui.mv.* / ui.foe.* / ui.pas.* / ui.unit.*)
 const fillUi = (k, v) => (DATA.ui[k] || '').replace(/\{(\w+)\}/g, (m, n) => n in v ? `<b>${v[n]}</b>` : m);
-const FOCUS = {scale: 2.5, x: 650, y: 212};
+const FOCUS = {scale: 2.5, x: 655, y: 205};
 function moveLines(e, a){
   const L = [], part = a.p ? SLOT_BY[a.p].fn : '', d = (a.d || 0) + (e.str || 0);
   if(a.kind === 'delay') L.push(fillUi('mv.delay', {v: a.v}));
@@ -1611,66 +1715,85 @@ function moveGlyph(e, a){
 function moveBtn(e, a, key, isCur, selKey){
   const cls = a.kind === 'delay' ? 'dl' : a.ch ? 'ch' : a.d > 0 ? 'atk' : 'mv';
   const under = a.kind === 'delay' ? '自機' : a.d > 0 ? `<span class="ic">${IC[a.p]}</span>` : '';
-  const bp = e.pids && e.pids.length > 1 && a.by && e.parts[a.by] ? e.parts[a.by] : null;
+  const bp = e.uids.length > 1 && a.by && e.units[a.by] ? e.units[a.by] : null;
   return `<button type="button" class="fm ${cls}${selKey === key ? ' on' : ''}${bp && bp.broken ? ' gone' : ''}" data-act="foeMove" data-arg="${key}">${bp ? `<i class="mby">${pIcon(bp)}</i>` : ''}${isCur ? `<span class="fm-now"><span class="ic">${IC.clock}</span>${e.r}</span>` : ''}<span class="fm-v">${moveGlyph(e, a)}</span><span class="fm-p">${under}</span></button>`;
 }
+// 行動の間のコスト。統率・加速で縮んでいれば、縮んだ値を赤で
+function costTag(e, dl){ const g = EN.gap(e, dl); return `<b class="${g < dl ? 'mod' : ''}">${g}</b>`; }
 function moveRow(e, pat, tag, start, curOn, rand, selKey){
   const n = pat.length; let h = '';
   for(let j = 0; j < n; j++){
     const idx = rand ? j : (start + j) % n;
-    if(j > 0) h += rand ? '<span class="fg r"></span>' : `<span class="fg"><b>${pat[idx].dl}</b><i></i></span>`;
+    if(j > 0) h += rand ? '<span class="fg r"></span>' : `<span class="fg">${costTag(e, pat[idx].dl)}<i></i></span>`;
     h += moveBtn(e, pat[idx], tag + ':' + idx, curOn && (rand ? idx === e.pat.indexOf(EN.cur(e)) : j === 0), selKey);
   }
-  if(!rand) h += `<span class="fg loop"><b>${pat[start % n].dl}</b><span class="ic">${IC.loop}</span></span>`;
+  if(!rand) h += `<span class="fg loop">${costTag(e, pat[start % n].dl)}<span class="ic">${IC.loop}</span></span>`;
   return `<div class="frow-m">${h}</div>`;
 }
+// 状態の札。ユニットが1つの敵はそのユニットの状態も、複数ある敵は敵全体の状態(強化・加速)だけ(ユニットの状態はユニットの札から)
+function unitStates(p, k){
+  const out = [];
+  if(p.armor) out.push({k:'armor', id:'armor-' + k, n:p.armor, cls:'arm'});
+  if(p.crack) out.push({k:'crack', id:'crack-' + k, n:p.crack, cls:'good'});
+  if(p.vuln > 1) out.push({k:'vuln', id:'vuln-' + k, n:p.vuln - 1, cls:'good'});
+  return out;
+}
 function foeStates(e){
-  // 部位ごとの状態(部位が2つ以上なら札に部位名を添える)。強化と加速は敵全体
-  const out = [], multi = e.pids.length > 1;
-  for(const k of e.pids){ const p = e.parts[k], pre = multi ? p.name + ' ' : '';
-    if(p.armor) out.push({k:'armor', id:'armor-' + k, n:p.armor, cls:'arm', pre});
-    if(p.crack) out.push({k:'crack', id:'crack-' + k, n:p.crack, cls:'good', pre});
-    if(p.vuln > 1) out.push({k:'vuln', id:'vuln-' + k, n:p.vuln - 1, cls:'good', pre}); }
-  return out.concat([e.str ? {k:'str', id:'str', n:e.str, cls:'bad', pre:''} : null,
-    e.haste ? {k:'haste', id:'haste', n:e.haste, cls:'bad', pre:''} : null].filter(Boolean));
+  const out = e.uids.length === 1 ? unitStates(e.units[e.uids[0]], e.uids[0]) : [];
+  if(e.str) out.push({k:'str', id:'str', n:e.str, cls:'bad'});
+  if(e.haste) out.push({k:'haste', id:'haste', n:e.haste, cls:'bad'});
+  return out;
+}
+function unitDetail(e, k){
+  const p = e.units[k], lines = [];
+  if(p.core) lines.push(fillUi('unit.core', {}));
+  if(p.vital) lines.push(fillUi('unit.vital', {}));
+  if(!p.vital && !p.core) lines.push(fillUi('unit.part', {}));
+  for(const x of unitStates(p, k)) lines.push(`<b>${DATA.ui['stname.' + x.k]} ${x.n}</b>　${fillUi('st.' + x.k, {n: x.n})}`);
+  return `<div class="fdet stx"><div class="fdn"><span class="ic">${pIcon(p)}</span> ${p.name}<span class="fby">${p.broken ? DATA.ui['unit.broken'] : `${p.hp}/${p.max}`}</span></div>${lines.map(t => `<p>${refText(t)}</p>`).join('')}</div>`;
 }
 function renderFocus(){
-  const f = UI.focus, e = S.b.foes[f.i], rand = e.ai === 'rand';
-  const pat = e.pat;
-  if(f.sel && f.sel.startsWith('s:') && !foeStates(e).some(x => 's:' + x.id === f.sel)) f.sel = null;
+  const f = UI.focus, e = S.b.foes[f.i], rand = e.ai === 'rand', pat = e.pat, multi = e.uids.length > 1, pas = passives(e);
+  const sts = foeStates(e);
+  if(f.sel && f.sel.startsWith('s:') && !sts.some(x => 's:' + x.id === f.sel)) f.sel = null;
   if(!f.sel){ const ci = rand ? pat.indexOf(EN.cur(e)) : e.idx % pat.length; f.sel = 'p:' + Math.max(0, ci); }
-  const [tag, idx] = f.sel.split(':'), owner = tag[0] === 't' ? S.b.foes[+tag.slice(1)] : e;
-  const a = tag === 's' ? null : (tag === 'h' ? e.phase.pat : owner.pat)[+idx] || EN.cur(e);
+  const [tag, idx] = f.sel.split(':');
+  const a = 'ph'.includes(tag) ? (tag === 'h' ? e.phase.pat : pat)[+idx] || EN.cur(e) : null;
   let rows = moveRow(e, pat, 'p', rand ? 0 : e.idx, true, rand, f.sel);
   if(rand) rows = `<div class="fnote">${fillUi('foe.rand', {})}</div>` + rows;
   if(e.phase && !e.phased) rows += `<div class="fnote">${fillUi('foe.phase', {at: Math.round(e.phase.at * 100)})}</div>` + moveRow(e, e.phase.pat, 'h', 0, false, false, f.sel);
-  // 部位: 本体と耐久を共有する別の行動の列
-  for(const t of S.b.foes.filter(x => x.host === e.i && x.alive)){
-    rows += `<div class="fnote trk"><span class="ic">${IC.track}</span>${t.name}${t.sleep ? `<span>${fillUi('foe.wake', {at: Math.round(t.wake * 100)})}</span>` : ''}</div>` + `<div class="${t.sleep ? 'fsleep' : ''}">${moveRow(t, t.pat, 't' + t.i, t.idx, !t.sleep, t.ai === 'rand', f.sel)}</div>`;
-  }
-  // 状態: アイコン・名前・値の札。押すと下に説明
-  const sts = foeStates(e);
-  const st = sts.length ? `<div class="fsts">${sts.map(x => `<button type="button" class="fsp ${x.cls}${f.sel === 's:' + x.id ? ' on' : ''}" data-act="foeMove" data-arg="s:${x.id}"><span class="ic">${IC[x.k]}</span>${x.pre}${DATA.ui['stname.' + x.k]}<b>${x.n}</b></button>`).join('')}</div>` : '';
-  const sx = tag === 's' ? sts.find(x => x.id === idx) : null;
-  const tr = [e.react ? fillUi('foe.react', {min: e.react.min, part: SLOT_BY[e.react.p].fn, d: e.react.d}) : '', e.sync ? fillUi('foe.sync', {sync: e.sync}) : ''].filter(Boolean);
-  $('#focus').classList.toggle('many', S.b.foes.some(x => x.host === e.i) || !!(e.phase && !e.phased) || e.ai === 'rand');
-  $('#focus').innerHTML = `<div class="fhead"><span class="ftag">${e.tag}</span><b>${e.name}</b><button class="btn ghost fclose" type="button" data-act="foeClose">戻る</button></div>
-    <div class="fhp"><b>${e.hp}</b><span>/${e.maxHp}</span><span class="ei-bar"><i style="width:${e.hp / e.maxHp * 100}%"></i></span></div>${st}
-    <div class="fmoves">${rows}</div>
-    ${sx ? `<div class="fdet stx ${sx.cls}"><div class="fdn">${sx.pre}${DATA.ui['stname.' + sx.k]} ${sx.n}</div><p>${fillUi('st.' + sx.k, {n: sx.n})}</p></div>`
-      : a ? `<div class="fdet${a.ch ? ' ch' : ''}"><div class="fdn">${a.n}${a.by && owner.parts && owner.parts[a.by] && owner.pids.length > 1 ? `<span class="fby"><span class="ic">${pIcon(owner.parts[a.by])}</span>${owner.parts[a.by].name}${owner.parts[a.by].broken ? '(破損)' : ''}</span>` : ''}</div>${moveLines(owner, a).map(t => `<p>${t}</p>`).join('')}</div>` : ''}
-    ${tr.length ? `<div class="ftr">${tr.map(t => `<p>${t}</p>`).join('')}</div>` : ''}`;
+  // ユニット(複数あるとき): アイコン・名前・耐久。押すと下に説明と状態
+  const next = EN.actorUid(e, EN.cur(e));
+  const units = multi ? `<div class="funits">${e.uids.map(k => { const p = e.units[k]; return `<button type="button" class="fu${f.sel === 'u:' + k ? ' on' : ''}${p.broken ? ' broken' : ''}${k === next && !p.broken ? ' act' : ''}" data-act="foeMove" data-arg="u:${k}"><span class="ic">${pIcon(p)}</span>${p.name}<b>${p.broken ? '' : p.hp}</b>${(p.broken ? [] : unitStates(p, k)).map(x => `<span class="ic s-${x.cls}">${IC[x.k]}</span>`).join('')}</button>`; }).join('')}</div>` : '';
+  // 状態とパッシブの札。押すと下に説明
+  const chips = sts.map(x => `<button type="button" class="fsp ${x.cls}${f.sel === 's:' + x.id ? ' on' : ''}" data-act="foeMove" data-arg="s:${x.id}"><span class="ic">${IC[x.k]}</span>${DATA.ui['stname.' + x.k]}<b>${x.n}</b></button>`)
+    .concat(pas.map(x => `<button type="button" class="fsp pas${x.on ? '' : ' off'}${f.sel === 'a:' + x.id ? ' on' : ''}" data-act="foeMove" data-arg="a:${x.id}"><span class="ic">${PAS_IC[x.k]}</span>${x.name}</button>`));
+  const sx = tag === 's' ? sts.find(x => x.id === idx) : null, px = tag === 'a' ? pas.find(x => x.id === idx) : null;
+  let det = '';
+  if(sx) det = `<div class="fdet stx ${sx.cls}"><div class="fdn">${DATA.ui['stname.' + sx.k]} ${sx.n}</div><p>${refText(fillUi('st.' + sx.k, {n: sx.n}), DATA.ui['stname.' + sx.k])}</p></div>`;
+  else if(px) det = `<div class="fdet pas"><div class="fdn">${px.name}</div><p>${refText(pasText(e, px))}</p></div>`;
+  else if(tag === 'u' && e.units[idx]) det = unitDetail(e, idx);
+  else if(a) det = `<div class="fdet${a.ch ? ' ch' : ''}"><div class="fdn">${a.n}${a.by && multi && e.units[a.by] ? `<span class="fby"><span class="ic">${pIcon(e.units[a.by])}</span>${e.units[a.by].name}${e.units[a.by].broken ? '(' + DATA.ui['unit.broken'] + ')' : ''}</span>` : ''}</div>${moveLines(e, a).map(t => `<p>${refText(t)}</p>`).join('')}</div>`;
+  $('#focus').classList.toggle('many', !!(e.phase && !e.phased) || rand || multi);
+  $('#focus').innerHTML = `<div class="fhead"><b>${e.name}</b><button class="btn ghost fclose" type="button" data-act="foeClose">戻る</button></div>
+    <div class="fhp"><b>${e.hp}</b><span>/${e.maxHp}</span><span class="ei-bar"><i style="width:${e.hp / e.maxHp * 100}%"></i></span></div>${units}
+    ${chips.length ? `<div class="fsts">${chips.join('')}</div>` : ''}
+    <div class="fmoves">${rows}</div>${det}`;
 }
-function infoFoe(i){
-  i = hostI(i);
+function infoFoe(i, uid){
   const e = S.b.foes[i]; if(!e || !e.alive) return;
-  sel = null; PV = null; renderAll();
-  UI.focus = {i, sel: null};
-  const c = foeCenter(i), z = FOCUS.scale;
-  $('#world').style.transform = `translate(${FOCUS.x - z * c.x}px, ${FOCUS.y - z * c.y}px) scale(${z})`;
+  sel = null; PV = null; setPeek(false); renderAll();
+  UI.focus = {i, sel: uid && e.units[uid] && e.uids.length > 1 ? 'u:' + uid : null};
+  // 敵の絵とユニットがすべて入るように寄る
+  const g = GEOM.get(i); let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+  const add = (a, b, c, d) => { x0 = Math.min(x0, a); y0 = Math.min(y0, b); x1 = Math.max(x1, c); y1 = Math.max(y1, d); };
+  if(g.main){ const z = sprSize(g.main.kind, g.main.s); add(g.main.x - z.w / 2, g.main.y - z.h / 2, g.main.x + z.w / 2, g.main.y + z.h / 2); }
+  for(const u of Object.values(g.units)){ if(u.spr) add(u.sx, u.sy, u.sx + u.w, u.sy + u.h); add(u.x - 36, u.y, u.x + 36, u.y + 26); }
+  const z = Math.min(FOCUS.scale, 340 / (x1 - x0), 330 / (y1 - y0)), cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+  $('#world').style.transform = `translate(${FOCUS.x - z * cx}px, ${FOCUS.y - z * cy}px) scale(${z})`;
   $('#world').style.transformOrigin = '0 0';
   $('#shaker').classList.add('focus');
-  document.querySelectorAll('.foe').forEach(el => el.classList.toggle('fo', +el.dataset.f === i));
+  document.querySelectorAll('#foes [data-f]').forEach(el => el.classList.toggle('fo', +el.dataset.f === i));
   renderFocus();
 }
 function closeFocus(){
@@ -1678,11 +1801,11 @@ function closeFocus(){
   UI.focus = null;
   $('#world').style.transform = ''; $('#world').style.transformOrigin = '';
   $('#shaker').classList.remove('focus');
-  document.querySelectorAll('.foe.fo').forEach(el => el.classList.remove('fo'));
+  document.querySelectorAll('#foes .fo').forEach(el => el.classList.remove('fo'));
 }
 function infoPart(id){
   const p = SLOT_BY[id], d = partOf(id), st = S.b.parts[id], worn = S.run.parts[id].damaged;
-  showOv(`<h2>${d.name}</h2><div class="pinfo"><span class="ic">${IC[id]}</span><div><b>${p.fn}${p.pt ? '(' + p.pt + ')' : ''} ${st.cur}/${st.max}</b><div class="pips" style="margin-top:6px">${pipsHTML(st.max, st.cur, st.cur, worn ? Math.ceil(st.max / 2) : st.max, pipW(st.max, 150))}</div></div></div><p style="margin:0 0 12px;font-size:12px">${d.text}</p>${closeRow}`, true);
+  showOv(`<h2>${d.name}</h2><div class="pinfo"><span class="ic">${IC[id]}</span><div><b>${p.fn}${p.pt ? '(' + p.pt + ')' : ''} ${st.cur}/${st.max}</b><div class="pips" style="margin-top:6px">${pipsHTML(st.max, st.cur, st.cur, worn ? Math.ceil(st.max / 2) : st.max, pipW(st.max, 150))}</div></div></div><p style="margin:0 0 12px;font-size:12px">${refText(d.text)}</p>${closeRow}`, true);
 }
 function infoDeck(){
   const own = groupDeck(S.run.deck), extra = groupDeck(EN.partCards(S.run));
@@ -1808,7 +1931,8 @@ function startDebugBattle(enc){
   const sc = x => Math.max(1, Math.round(x * DBG.dmg));
   const fixPat = pat => pat.map(a => { const o = JSON.parse(JSON.stringify(a)); if(o.d > 0) o.d = sc(o.d); if(o.counter) o.counter.d = sc(o.counter.d); return o; });
   for(const e of S.b.foes){
-    e.hp = e.maxHp = Math.max(1, Math.round(e.maxHp * DBG.hp));
+    for(const k of e.uids){ const u = e.units[k]; u.hp = u.max = Math.max(1, Math.round(u.max * DBG.hp)); }
+    e.hp = e.uids.reduce((x, k) => x + (e.units[k].vital ? e.units[k].hp : 0), 0); e.maxHp = e.hp;
     e.pat = fixPat(e.pat);
     if(e.phase) e.phase = {at: e.phase.at, pat: fixPat(e.phase.pat)};
     if(e.react) e.react = {...e.react, d: sc(e.react.d)};
@@ -1829,7 +1953,7 @@ function showRules(first){
     <li>目の印の敵は、重いカードを使い始めると撃ってくる。鎖の印の敵は、仲間と同時に攻撃すると強くなる。</li>
     <li>予定の下の帯は、その間にカードが完了したときに効く。<b>構</b>は数字以上の一撃で行動を潰せる。<b>防</b>は数字までダメージを防がれる。<b>返</b>は殴るたびに撃ち返される。<b>隙</b>はダメージ1.5倍。<b>?</b>は次の行動がまだ決まっていない。</li>
     ${!RULE.econ ? `<li>右下は手札の入れ替え(枚数ぶんのサイクル)${RULE.freeWait ? 'と、1サイクルの待機' : '。手札がないときは1サイクルの待機'}。</li>` : RULE.freeWait || RULE.econ.type === 'turn' ? '<li>右下の下段は1サイクルの待機。</li>' : ''}
-    <li>上スワイプで手札を広げ、下スワイプで自分の内側を見る。長押しでカードと敵の詳細。</li>
+    <li>上スワイプで手札を広げ、下スワイプで自分の内側を見る。長押しでカードと敵の詳細。タイムラインを押すとキャラが透ける。</li>
   </ul><div class="row">${first ? '<button class="btn ghost" type="button" data-act="debug">デバッグ</button>' : ''}<button class="btn" type="button" data-act="close">${first ? 'はじめる' : '閉じる'}</button></div>`, !first);
 }
 function showMenu(){
@@ -1848,6 +1972,9 @@ function act(a, arg, el){
   switch(a){
     case 'close': hideOv(); break;
     case 'foeMove': if(UI.focus){ UI.focus.sel = arg; renderFocus(); } break;
+    case 'ref': pushRef(arg); break;
+    case 'refBack': popRef(); break;
+    case 'refClose': popRef(true); break;
     case 'foeClose': closeFocus(); break;
     case 'menu': if(!busy) showMenu(); break;
     case 'rules': showRules(false); break;
@@ -1908,13 +2035,13 @@ let lpTimer = null, longFired = false, swipe = null, swallow = false;
 const inBattle = () => UI.screen === 'battle' && S && S.b;
 stage.addEventListener('pointerdown', ev => {
   swipe = {x: ev.clientX, y: ev.clientY};
-  if(!inBattle() || busy || !$('#ov').hidden || UI.view === 'self' || UI.focus) return;
-  const c = ev.target.closest('#hand .card[data-i]'), f = ev.target.closest('.foe[data-f],.fi[data-f]');
+  if(!inBattle() || busy || !$('#ov').hidden || !$('#ref').hidden || UI.view === 'self' || UI.focus) return;
+  const c = ev.target.closest('#hand .card[data-i]'), f = ev.target.closest('.foe[data-f],.eu[data-f],.ew[data-f]');
   if(!c && !f) return;
   clearTimeout(lpTimer);
   lpTimer = setTimeout(() => {
     longFired = true; setTimeout(() => { longFired = false; }, 700);
-    if(c) infoCard(S.b.hand[+c.dataset.i].k); else infoFoe(+f.dataset.f);
+    if(c) infoCard(S.b.hand[+c.dataset.i].k); else infoFoe(+f.dataset.f, f.dataset.u && f.dataset.u !== '*' ? f.dataset.u : null);
   }, 430);
 });
 stage.addEventListener('pointermove', ev => {
@@ -1925,7 +2052,7 @@ stage.addEventListener('pointerup', ev => {
   if(!swipe) return;
   const dy = ev.clientY - swipe.y, dx = ev.clientX - swipe.x, s = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--s')) || 1;
   swipe = null;
-  if(inBattle() && $('#ov').hidden && !busy && !UI.focus && Math.abs(dy) > 34 * s && Math.abs(dy) > Math.abs(dx) * 1.3){
+  if(inBattle() && $('#ov').hidden && $('#ref').hidden && !busy && !UI.focus && Math.abs(dy) > 34 * s && Math.abs(dy) > Math.abs(dx) * 1.3){
     let v = UI.view;
     if(dy < 0) v = v === 'self' ? 'normal' : v === 'normal' ? 'hand' : v;
     else v = v === 'hand' ? 'normal' : v === 'normal' ? 'self' : v;
@@ -1940,16 +2067,19 @@ stage.addEventListener('click', ev => {
   if(swallow){ swallow = false; return; }
   const t = ev.target, a = t.closest('[data-act]');
   if(a && !a.disabled){ act(a.dataset.act, a.dataset.arg, a); return; }
+  if(!$('#ref').hidden){ if(t === $('#ref')) popRef(); return; }
   if(!$('#ov2').hidden){ if(t === $('#ov2')) hideOv2(); return; }
   const ov = $('#ov');
   if(!ov.hidden){ if(t === ov && ov.dataset.closable) hideOv(); return; }
   if(UI.focus){ if(!t.closest('#focus')) closeFocus(); return; }
   if(!inBattle() || busy || UI.view === 'self') return;
+  // タイムラインを押すと透かす(何も選んでいないとき)。透かしている間は、ほかを押すと戻る
+  if(t.closest('#screen') && !sel){ setPeek(!peeking()); return; }
+  if(peeking()){ setPeek(false); if(!t.closest('#hand .card,#redraw,#waitBtn')) return; }
   const card = t.closest('#hand .card[data-i]'); if(card){ onCard(+card.dataset.i); return; }
   if(t.closest('#redraw')){ onRedraw(); return; }
   if(t.closest('#waitBtn')){ onWait(); return; }
-  const ep = t.closest('.epart'); if(ep){ onEPart(ep.dataset.ep); return; }
-  const f = t.closest('[data-f]'); if(f){ onFoe(+f.dataset.f); return; }
+  const f = t.closest('[data-f]'); if(f){ onFoe(+f.dataset.f, f.dataset.u); return; }
   const p = t.closest('#parts .part'); if(p){ infoPart(p.dataset.p); return; }
   if(t.closest('.pile')){ infoDeck(); return; }
   if(sel){ sel = null; PV = null; renderAll(); }

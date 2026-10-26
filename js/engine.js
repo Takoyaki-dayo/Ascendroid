@@ -13,10 +13,14 @@ const D = root.DATA;
 //   {type:'mag', r, cap}  弾倉: 3サイクルごとに1枚が弾倉にたまり、区切り(r サイクル)でまとめて手札へ
 //   blockReset: 区切りでブロックが消える('start' 区切りの始め / true・'end' 終わり) / eject: 区切りで捨てたカード1枚ごとのブロック
 const RULE = {draw:3, handStart:5, handMax:7, view:18, freeWait:true, blockDecay:null, econ:null};
-// 敵の部位(0.17.0): 自機と同じく、敵も部位(parts)を持つ。行動の列は1本で、耐久と状態(クラック・隙・装甲)は部位ごと。
-//   カードは部位を狙う。行動の by はその行動をする部位で、構え・ガード・反撃はその部位を叩いたときだけ効く。
-//   部位が壊れるとその部位の行動は飛ばされ(予定に入っている行動も消える)、あふれたダメージは核(core)へ。
-//   急所(vital)の部位がすべて壊れると撃破。parts を書かない敵は、耐久 hp の核1つだけを持つ
+// 敵のユニット(0.17.0 で部位として入れ、0.18.0 でユニットと呼ぶ): 敵は1つ以上のユニット(units)でできている。
+//   行動の列は1本で、耐久と状態(クラック・隙・装甲)はユニットごと。カードはユニットを狙う。
+//   行動の by はその行動をするユニットで、構え・ガード・反撃はそのユニットを叩いたときだけ効く。
+//   ユニットが破壊されるとそのユニットの行動は飛ばされ(予定に入っている行動も消える)、あふれたダメージは核(core)へ。
+//   急所(vital)のユニットがすべて破壊されると撃破。units を書かない敵は、耐久 hp の核1つだけを持つ
+// パッシブ(0.18.0): 敵ごとの常に働く性質。passives:[{k, ...}]
+//   command {unit, n}  統率: unit が破壊されていない間、行動の間隔(コスト)-n(最短2)
+//   frenzy {n}         ユニットが破壊されるたび、攻撃力+n
 
 /* ---------- 乱数と小道具 ---------- */
 function rngFrom(seed){
@@ -42,24 +46,25 @@ function advance(e){
   if(e.phase && !e.phased && e.hp < e.maxHp * e.phase.at){ e.phased = true; e.pat = e.phase.pat; e.idx = 0; e.hist = []; }
   else if(e.ai === 'rand') e.idx = pickMove(e);
   else e.idx = (e.idx + 1) % e.pat.length;
-  // 壊れた部位の行動は飛ばす
+  // 破壊されたユニットの行動は飛ばす
   for(let k = 0; k < e.pat.length && !moveOk(e, e.pat[e.idx]); k++) e.idx = e.ai === 'rand' ? pickMove(e) : (e.idx + 1) % e.pat.length;
   const a = e.pat[e.idx];
   e.r = gap(e, a.dl); e.seq++; e.chain = 0; e.sh = a.guard ? a.guard.s : 0;
 }
-// 加速した敵は、行動の間隔が縮む(最短2)
-const gap = (e, dl) => e.haste ? Math.max(2, dl - e.haste) : dl;
-// 部位の小道具
-const corePid = e => e.pids.find(k => e.parts[k].core) || null;
-const livePids = e => e.pids.filter(k => !e.parts[k].broken);
-// 狙いを決めていないとき: 核、なければ壊れていない急所、なければ壊れていない部位
-const defaultPid = e => { const c = corePid(e); if(c && !e.parts[c].broken) return c; return livePids(e).find(k => e.parts[k].vital) || livePids(e)[0] || e.pids[0]; };
-const moveOk = (e, a) => !a.by || !e.parts[a.by] || !e.parts[a.by].broken;
-// 行動している部位(行動の by、なければ核)
-const actorPid = (e, a) => a && a.by && e.parts[a.by] ? a.by : defaultPid(e);
-function syncHp(e){ let h = 0, m = 0; for(const k of e.pids){ const p = e.parts[k]; if(p.vital){ h += p.hp; m += p.max; } } e.hp = h; e.maxHp = m; }
-// 対象の指定: 数字なら敵の番号(部位はおまかせ)、'番号.部位' なら部位まで
-function parseT(t){ if(t == null) return {i:null, pid:null}; if(typeof t === 'string' && t.includes('.')){ const [i, pid] = t.split('.'); return {i:+i, pid}; } return {i:+t, pid:null}; }
+// 加速した敵と、統率が効いている敵は、行動の間隔が縮む(最短2)
+const cmdN = e => (e.pas || []).reduce((s, p) => s + (p.k === 'command' && e.units[p.unit] && !e.units[p.unit].broken ? p.n : 0), 0);
+const gap = (e, dl) => { const r = (e.haste || 0) + cmdN(e); return r ? Math.max(Math.min(dl, 2), dl - r) : dl; };
+// ユニットの小道具
+const coreUid = e => e.uids.find(k => e.units[k].core) || null;
+const liveUids = e => e.uids.filter(k => !e.units[k].broken);
+// 狙いを決めていないとき: 核、なければ破壊されていない急所、なければ破壊されていないユニット
+const defaultUid = e => { const c = coreUid(e); if(c && !e.units[c].broken) return c; return liveUids(e).find(k => e.units[k].vital) || liveUids(e)[0] || e.uids[0]; };
+const moveOk = (e, a) => !a.by || !e.units[a.by] || !e.units[a.by].broken;
+// 行動しているユニット(行動の by、なければ核)
+const actorUid = (e, a) => a && a.by && e.units[a.by] ? a.by : defaultUid(e);
+function syncHp(e){ let h = 0, m = 0; for(const k of e.uids){ const p = e.units[k]; if(p.vital){ h += p.hp; m += p.max; } } e.hp = h; e.maxHp = m; }
+// 対象の指定: 数字なら敵の番号(ユニットはおまかせ)、'番号.ユニット' ならユニットまで
+function parseT(t){ if(t == null) return {i:null, uid:null}; if(typeof t === 'string' && t.includes('.')){ const [i, uid] = t.split('.'); return {i:+i, uid}; } return {i:+t, uid:null}; }
 // 行動の前の窓(構え・ガード・反撃の構え)に入っているか
 const inWin = (e, w) => !!w && e.r > 0 && e.r <= w.w;
 
@@ -79,8 +84,9 @@ function partMax(run, slot){ return partOf(run, slot).max; }
 function dmgOf(st, c, d){
   const dd = d || c.dmg;
   let n = dd.n;
-  if(dd.t === 'phys'){ n += fx(st, 'out', 'phys'); if(c.cost <= 2) n += fx(st, 'out', 'quickPhys'); if(c.cost >= 4) n += fx(st, 'out', 'heavyPhys'); }
-  else n += fx(st, 'arm', 'opt');
+  // 攻撃の種類は近接(melee)と遠隔(ranged)。0.17.0 までの物理と光学
+  if(dd.t === 'melee'){ n += fx(st, 'out', 'melee'); if(c.cost <= 2) n += fx(st, 'out', 'quickMelee'); if(c.cost >= 4) n += fx(st, 'out', 'heavyMelee'); }
+  else n += fx(st, 'arm', 'ranged');
   return n;
 }
 function blockOf(st, c){ return c.block + fx(st, 'dur', 'block'); }
@@ -118,38 +124,40 @@ function upcoming(e, view){
 function arrivals(b, view){ const out = []; for(let t = b.drawIn; t <= (view || RULE.view); t += RULE.draw) out.push(t); return out; }
 
 /* ---------- 効果 ---------- */
-// 部位にダメージ。壊れたらその部位の行動を止め、あふれた分は核へ。急所がすべて壊れたら撃破
-function hurtFoe(b, e, d, ev, pid){
-  pid = pid && e.parts[pid] ? pid : defaultPid(e);
-  let p = e.parts[pid];
-  if(p.broken){ const c = corePid(e); if(c && c !== pid && !e.parts[c].broken){ pid = c; p = e.parts[c]; } else return; }
+// ユニットにダメージ。破壊されたらそのユニットの行動を止め、あふれた分は核へ。急所がすべて破壊されたら撃破
+function hurtFoe(b, e, d, ev, uid){
+  uid = uid && e.units[uid] ? uid : defaultUid(e);
+  let p = e.units[uid];
+  if(p.broken){ const c = coreUid(e); if(c && c !== uid && !e.units[c].broken){ uid = c; p = e.units[c]; } else return; }
   const take = Math.min(p.hp, d), over = d - take;
-  p.hp -= take; ev.push({kind:'dmg', e:e.i, part:pid, n:take});
+  p.hp -= take; ev.push({kind:'dmg', e:e.i, unit:uid, n:take});
   if(p.hp <= 0 && !p.broken){
-    p.broken = true; p.vuln = 0; ev.push({kind:'partBreak', e:e.i, part:pid});
-    // broke: この部位が壊れると行動の並びが変わる(例: 隊長が落ちると統制が崩れる)
-    const nb = (D.foes[e.key].broke || {})[pid];
-    if(nb && e.alive){ e.pat = nb; e.idx = 0; e.hist = []; e.sh = 0; e.chain = 0; ev.push({kind:'shift', e:e.i, part:pid}); }
-    // 予定に入っていたこの部位の行動は消える
-    if(e.alive && !moveOk(e, cur(e)) && e.pids.some(k => !e.parts[k].broken && e.parts[k].vital)){ const nm = cur(e).n; advance(e); ev.push({kind:'cancel', e:e.i, name:nm}); }
+    p.broken = true; p.vuln = 0; ev.push({kind:'unitBreak', e:e.i, unit:uid});
+    // パッシブ frenzy: ユニットが破壊されるたび攻撃力+
+    for(const ps of e.pas || []) if(ps.k === 'frenzy' && e.alive){ e.str = (e.str || 0) + ps.n; ev.push({kind:'frenzy', e:e.i, n:ps.n}); }
+    // broke: このユニットが破壊されると行動の並びが変わる
+    const nb = (D.foes[e.key].broke || {})[uid];
+    if(nb && e.alive){ e.pat = nb; e.idx = 0; e.hist = []; e.sh = 0; e.chain = 0; ev.push({kind:'shift', e:e.i, unit:uid}); }
+    // 予定に入っていたこのユニットの行動は消える
+    if(e.alive && !moveOk(e, cur(e)) && e.uids.some(k => !e.units[k].broken && e.units[k].vital)){ const nm = cur(e).n; advance(e); ev.push({kind:'cancel', e:e.i, name:nm}); }
   }
   syncHp(e);
-  if(e.pids.every(k => !e.parts[k].vital || e.parts[k].broken)){ e.alive = false; e.hp = 0; e.reactIn = null; ev.push({kind:'kill', e:e.i}); return; }
-  if(over > 0 && !p.core){ const c = corePid(e); if(c && !e.parts[c].broken) hurtFoe(b, e, over, ev, c); }
+  if(e.uids.every(k => !e.units[k].vital || e.units[k].broken)){ e.alive = false; e.hp = 0; e.reactIn = null; ev.push({kind:'kill', e:e.i}); return; }
+  if(over > 0 && !p.core){ const c = coreUid(e); if(c && !e.units[c].broken) hurtFoe(b, e, over, ev, c); }
 }
-// カードや時限の一撃。部位のクラックを足し、隙なら1.5倍、装甲が先に受ける。
-// 行動している部位を叩いたときだけ、ガード・反撃の構え・構え(poise 以上で行動が潰れる)が効く
-function hitFoe(st, e, n, ev, pid){
+// カードや時限の一撃。ユニットのクラックを足し、隙なら1.5倍、装甲が先に受ける。
+// 行動しているユニットを叩いたときだけ、ガード・反撃の構え・構え(poise 以上で行動が潰れる)が効く
+function hitFoe(st, e, n, ev, uid){
   const b = st.b, a = cur(e);
-  pid = pid && e.parts[pid] && !e.parts[pid].broken ? pid : defaultPid(e);
-  const p = e.parts[pid], onActor = !a.by || a.by === pid || !e.parts[a.by];
+  uid = uid && e.units[uid] && !e.units[uid].broken ? uid : defaultUid(e);
+  const p = e.units[uid], onActor = !a.by || a.by === uid || !e.units[a.by];
   n += p.crack || 0;
   let d = n;
-  if(p.vuln > 0){ d = Math.round(d * 1.5); b.vulnHits = (b.vulnHits || 0) + 1; ev.push({kind:'vulnHit', e:e.i, part:pid}); }
+  if(p.vuln > 0){ d = Math.round(d * 1.5); b.vulnHits = (b.vulnHits || 0) + 1; ev.push({kind:'vulnHit', e:e.i, unit:uid}); }
   if(onActor && inWin(e, a.guard) && e.sh > 0){ const ab = Math.min(e.sh, d); e.sh -= ab; d -= ab; b.guarded = (b.guarded || 0) + ab; ev.push({kind:'guarded', e:e.i, n:ab}); }
-  if(p.armor > 0 && d > 0){ const ab = Math.min(p.armor, d); p.armor -= ab; d -= ab; b.guarded = (b.guarded || 0) + ab; ev.push({kind:'armored', e:e.i, part:pid, n:ab}); }
+  if(p.armor > 0 && d > 0){ const ab = Math.min(p.armor, d); p.armor -= ab; d -= ab; b.guarded = (b.guarded || 0) + ab; ev.push({kind:'armored', e:e.i, unit:uid, n:ab}); }
   if(onActor && inWin(e, a.counter)){ const res = strike(st, e, {n:a.n, d:a.counter.d, p:a.p || 'dur'}, 0, true); afterHit(b); b.countered = (b.countered || 0) + 1; ev.push({kind:'counter', e:e.i, res}); }
-  if(d > 0) hurtFoe(b, e, d, ev, pid);
+  if(d > 0) hurtFoe(b, e, d, ev, uid);
   if(e.alive && onActor && cur(e) === a && inWin(e, a.wind) && n >= a.wind.poise){ const nm = a.n; advance(e); b.breaks = (b.breaks || 0) + 1; ev.push({kind:'break', e:e.i, name:nm}); }
 }
 function gainBlock(b, n){
@@ -170,26 +178,25 @@ function decayBlock(b){
 function applyCard(st, k, ti){
   const c = D.cards[k], b = st.b, ev = [];
   const T = parseT(ti);
-  // 全体のカードは敵ごとに狙いをおまかせ。単体は指定の部位(なければおまかせ)
+  // 全体のカードは敵のすべてのユニット。単体は指定のユニット(なければおまかせ)
   const targets = c.all ? b.foes.filter(e => e.alive) : (c.tgt ? [b.foes[T.i]].filter(e => e && e.alive) : []);
-  const pidOf = e => !c.all && T.pid && e.parts[T.pid] && !e.parts[T.pid].broken ? T.pid : defaultPid(e);
+  const uidOf = e => !c.all && T.uid && e.units[T.uid] && !e.units[T.uid].broken ? T.uid : defaultUid(e);
   if(c.dmg){
     const n = dmgOf(st, c);
-    // 全体のカードは、敵のすべての部位に当たる
-    for(const e of targets) for(const k of (c.all ? livePids(e) : [pidOf(e)])) for(let h = 0; h < (c.dmg.x || 1); h++){ if(!e.alive || e.parts[k].broken) break; hitFoe(st, e, n, ev, k); }
+    for(const e of targets) for(const k of (c.all ? liveUids(e) : [uidOf(e)])) for(let h = 0; h < (c.dmg.x || 1); h++){ if(!e.alive || e.units[k].broken) break; hitFoe(st, e, n, ev, k); }
   }
   // 充電: spend は貯めた充電をすべて消費し、1につき dmg / block。gain は充電を得る(消費の後)
   if(c.spend){
     const n = b.charge || 0; b.charge = 0; ev.push({kind:'spend', n});
-    if(n > 0 && c.spend.dmg){ const d = dmgOf(st, c, {t:c.spend.dmg.t, n:c.spend.dmg.n * n}); for(const e of targets) for(const k of (c.all ? livePids(e) : [pidOf(e)])) if(e.alive && !e.parts[k].broken) hitFoe(st, e, d, ev, k); }
+    if(n > 0 && c.spend.dmg){ const d = dmgOf(st, c, {t:c.spend.dmg.t, n:c.spend.dmg.n * n}); for(const e of targets) for(const k of (c.all ? liveUids(e) : [uidOf(e)])) if(e.alive && !e.units[k].broken) hitFoe(st, e, d, ev, k); }
     if(n > 0 && c.spend.block){ const m = c.spend.block * n + fx(st, 'dur', 'block'); gainBlock(b, m); ev.push({kind:'block', n:m}); }
   }
   if(c.gain){ b.charge = (b.charge || 0) + c.gain; ev.push({kind:'charge', n:c.gain}); }
-  if(c.crack) for(const e of targets) if(e.alive){ const k = pidOf(e); e.parts[k].crack += c.crack; ev.push({kind:'crack', e:e.i, part:k, n:c.crack}); }
+  if(c.crack) for(const e of targets) if(e.alive){ const k = uidOf(e); e.units[k].crack += c.crack; ev.push({kind:'crack', e:e.i, unit:k, n:c.crack}); }
   if(c.delay) for(const e of targets) if(e.alive){ e.r += c.delay; ev.push({kind:'delay', e:e.i, n:c.delay}); }
   if(c.block){ const n = blockOf(st, c); gainBlock(b, n); ev.push({kind:'block', n}); }
   if(c.swift){ b.swift += c.swift; ev.push({kind:'swift', n:c.swift}); }
-  if(c.timer && targets[0]){ b.timers.push({id:b.uid++, left:c.timer.t, k, e:targets[0].i, part:pidOf(targets[0])}); ev.push({kind:'timerSet', e:targets[0].i, t:c.timer.t}); }
+  if(c.timer && targets[0]){ b.timers.push({id:b.uid++, left:c.timer.t, k, e:targets[0].i, unit:uidOf(targets[0])}); ev.push({kind:'timerSet', e:targets[0].i, t:c.timer.t}); }
   if(c.draw){ const n = drawN(b, c.draw); if(c.borrow) b.drawIn += c.draw * RULE.draw; ev.push({kind:'draw', n, borrow: !!c.borrow}); }
   // 0.17.0: スウィフトはディレイに統一(パーツの効果も敵へのディレイ)
   if(c.cost === 0){ const s = fx(st, 'mob', 'zeroDelay'); if(s) for(const e of b.foes) if(e.alive){ e.r += s; ev.push({kind:'delay', e:e.i, n:s}); } }
@@ -199,13 +206,13 @@ function fireTimer(st, t){
   const b = st.b, c = D.cards[t.k], ev = [];
   let e = b.foes[t.e];
   if(!e || !e.alive) e = b.foes.find(f => f.alive);
-  if(e) hitFoe(st, e, dmgOf(st, c, c.timer.dmg), ev, t.part);
+  if(e) hitFoe(st, e, dmgOf(st, c, c.timer.dmg), ev, t.unit);
   return ev;
 }
 // 敵の攻撃1回。extra は連携の上乗せ
 function strike(st, e, a, extra, noParry){
   const b = st.b, raw = a.d + (extra || 0) + (b.crack || 0);
-  if(b.parryNow && !noParry){ const ev = []; hurtFoe(b, e, raw, ev, actorPid(e, a.by ? a : cur(e))); return {kind:'parried', name:a.n, raw, ev}; }
+  if(b.parryNow && !noParry){ const ev = []; hurtFoe(b, e, raw, ev, actorUid(e, a.by ? a : cur(e))); return {kind:'parried', name:a.n, raw, ev}; }
   const ab = Math.min(b.block, raw); b.block -= ab; b.blockUsed = (b.blockUsed || 0) + ab;
   const rem = raw - ab, p = b.parts[a.p];
   let partLoss = 0, bodyLoss = 0, broke = false;
@@ -219,18 +226,19 @@ function strike(st, e, a, extra, noParry){
 function enemyAct(st, e, extra){
   const a = cur(e);
   const res = a.kind === 'delay' ? {kind:'delay', name:a.n, v:a.v} : a.d > 0 ? strike(st, e, a, (extra || 0) + (e.str || 0)) : {kind:'move', name:a.n};
+  res.by = actorUid(e, a);
   // 多段: 残りを1サイクルおきに撃つ
   if(a.hits > 1 && !e.chain){ e.chain = a.hits - 1; e.r = 1; e.sh = 0; res.chainLeft = e.chain; return res; }
   if(e.chain > 0){ e.chain--; if(e.chain > 0){ e.r = 1; res.chainLeft = e.chain; return res; } }
   res.chainLeft = 0;
   if(a.d > 0 && res.kind === 'hit') afterHit(st.b);
-  const ap = e.parts[actorPid(e, a)];
+  const ap = e.units[actorUid(e, a)];
   if(a.rec) ap.vuln = a.rec + 1;
   if(a.buff){ for(const f of (a.all ? st.b.foes.filter(f => f.alive) : [e])) f.str = (f.str || 0) + a.buff; res.buff = a.buff; }
   // 放置の代償になる行動
   const b = st.b;
-  if(a.armor){ ap.armor += a.armor; res.armor = a.armor; }                // 装甲を重ねる(行動した部位に。消えない)
-  if(a.heal){ const hp = !ap.broken ? ap : e.parts[defaultPid(e)]; const h = Math.min(a.heal, hp.max - hp.hp); hp.hp += h; syncHp(e); res.heal = h; } // 修復(壊れた部位は戻らない)
+  if(a.armor){ ap.armor += a.armor; res.armor = a.armor; }                // 装甲を重ねる(行動したユニットに。消えない)
+  if(a.heal){ const hp = !ap.broken ? ap : e.units[defaultUid(e)]; const h = Math.min(a.heal, hp.max - hp.hp); hp.hp += h; syncHp(e); res.heal = h; } // 修復(破壊されたユニットは戻らない)
   if(a.haste){ e.haste = (e.haste || 0) + a.haste; res.haste = a.haste; }                // 加速: 以後の間隔が縮む
   if(a.zone){ b.zones.push({id:b.uid++, from:a.zone.at, to:a.zone.at + a.zone.len - 1, d:a.zone.d + (e.str || 0), p:a.zone.p, e:e.i, n:a.n}); res.zone = a.zone; } // 危険域
   const ac = a.crack || a.mark; // こちらにクラック(受ける攻撃すべて+)。mark は 0.14 までの名前(実験の古い敵のデータ用)
@@ -267,7 +275,7 @@ function* spendGen(st, cost, k, ti, noInt){
     left--; b.cast.left = left;
     if(real){
       b.T++; out.elapsed++; b.drawIn--;
-      for(const e of b.foes) if(e.alive){ e.r--; if(e.reactIn != null) e.reactIn--; for(const k of e.pids) if(e.parts[k].vuln > 0) e.parts[k].vuln--; }
+      for(const e of b.foes) if(e.alive){ e.r--; if(e.reactIn != null) e.reactIn--; for(const k of e.uids) if(e.units[k].vuln > 0) e.units[k].vuln--; }
       for(const z of b.zones){ z.from--; z.to--; }
       b.zones = b.zones.filter(z => z.to >= 0);
       decayBlock(b);
@@ -299,8 +307,8 @@ function* spendGen(st, cost, k, ti, noInt){
       if(c){
         if(real) for(const e of b.foes){
           if(e.alive && e.r <= 0 && cur(e).ch && !e.chain){
-            const nm = cur(e).n, jp = actorPid(e, cur(e)); advance(e);
-            const cr = fx(st, 'calc', 'justCrack'); e.parts[jp].crack += cr;
+            const nm = cur(e).n, jp = actorUid(e, cur(e)); advance(e);
+            const cr = fx(st, 'calc', 'justCrack'); e.units[jp].crack += cr;
             const dl = fx(st, 'calc', 'justDelay'); if(dl) e.r += dl;
             out.justs.push({i:e.i, name:nm}); yield {type:'just', e:e.i, crack:cr, delay:dl};
           }
@@ -355,11 +363,11 @@ function runGen(g){ let r; while(!(r = g.next()).done){} return r.value; }
 function makeFoe(key, i){
   const f = D.foes[key];
   const e = {key, i, name:f.name, tag:'ABCDEF'[i], kind:f.kind, pat:f.pat, idx:0, r:f.start, seq:0, alive:true,
-    react:f.react || null, sync:f.sync || 0, reactIn:null, ai:f.ai || null, phase:f.phase || null, phased:false, hist:[], chain:0, sh:0, str:0, haste:0};
-  // 部位。書かなければ耐久 hp の核1つ
-  const defs = f.parts || {core:{hp:f.hp, vital:true, core:true}};
-  e.pids = Object.keys(defs); e.parts = {};
-  for(const k of e.pids){ const d = defs[k]; e.parts[k] = {name:d.name || '', hp:d.hp, max:d.hp, vital:!!d.vital, core:!!d.core, icon:d.icon || k, crack:0, vuln:0, armor:d.armor || 0, broken:false}; }
+    react:f.react || null, sync:f.sync || 0, reactIn:null, ai:f.ai || null, phase:f.phase || null, phased:false, hist:[], chain:0, sh:0, str:0, haste:0, pas:f.passives || []};
+  // ユニット。書かなければ耐久 hp の核1つ
+  const defs = f.units || {core:{hp:f.hp, vital:true, core:true}};
+  e.uids = Object.keys(defs); e.units = {};
+  for(const k of e.uids){ const d = defs[k]; e.units[k] = {name:d.name || '', hp:d.hp, max:d.hp, vital:!!d.vital, core:!!d.core, icon:d.icon || k, crack:0, vuln:0, armor:d.armor || 0, broken:false}; }
   syncHp(e);
   if(e.ai === 'rand') e.idx = pickMove(e);
   const a = cur(e); e.sh = a.guard ? a.guard.s : 0;
@@ -401,8 +409,8 @@ function actions(st){
   const b = st.b, out = [], seen = new Set();
   b.hand.forEach((cd, i) => {
     const c = D.cards[cd.k];
-    // 部位が2つ以上ある敵は、部位ごとに狙いを分ける
-    const ts = c.tgt ? b.foes.filter(e => e.alive).flatMap(e => livePids(e).length > 1 ? livePids(e).map(k => e.i + '.' + k) : [e.i]) : [null];
+    // ユニットが2つ以上ある敵は、ユニットごとに狙いを分ける
+    const ts = c.tgt ? b.foes.filter(e => e.alive).flatMap(e => liveUids(e).length > 1 ? liveUids(e).map(k => e.i + '.' + k) : [e.i]) : [null];
     for(const t of ts){ const key = cd.k + '|' + t; if(seen.has(key)) continue; seen.add(key); out.push({type:'card', i, k:cd.k, t}); }
   });
   const ec = econ();
@@ -509,7 +517,7 @@ function nextNodes(run){
   return [m.nodes[at.lane][at.idx + 1]];
 }
 
-const API = {RULE, makeFoe, defaultPid, livePids, actorPid, parseT, reloadCost, rngFrom, setRandom, shuffle, pick, clone, cur, advance, partOf, fx, partCards, battleDeck, partMax, dmgOf, blockOf,
+const API = {RULE, makeFoe, defaultUid, liveUids, actorUid, parseT, gap, reloadCost, rngFrom, setRandom, shuffle, pick, clone, cur, advance, partOf, fx, partCards, battleDeck, partMax, dmgOf, blockOf,
   drawOne, drawN, upcoming, arrivals, applyCard, enemyAct, spendGen, runGen, newBattle, actions, actionCost, beginAction, endAction, doAction,
   newRun, genMap, nextNodes, reachAfter};
 root.ENGINE = API;

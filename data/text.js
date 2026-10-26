@@ -18,8 +18,9 @@ window.DATA = window.DATA || {};
     else if(where === 'pat' && f.pat[+i]) f.pat[+i].n = n;
     else if(where === 'phase' && f.phase && f.phase.pat[+i]) f.phase.pat[+i].n = n;
     else if(where === 'react' && f.react) f.react.n = n;
-    else if(where === 'part' && f.parts && f.parts[i]) f.parts[i].name = n;
-    else if(where === 'broke' && f.broke){ const [pid, j] = i.split(':'); if(f.broke[pid] && f.broke[pid][+j]) f.broke[pid][+j].n = n; }
+    else if(where === 'unit' && f.units && f.units[i]) f.units[i].name = n;
+    else if(where === 'passive') (f.pname = f.pname || {})[i] = n; // 番号は passives の何番目か。phase は段階変化の名前
+    else if(where === 'broke' && f.broke){ const [uid, j] = i.split(':'); if(f.broke[uid] && f.broke[uid][+j]) f.broke[uid][+j].n = n; }
   }
   for(const e of D.events || []){ const t = T.events[e.id]; if(!t) continue; e.title = t.title; e.text = t.text; t.choices.forEach((c, i) => { if(e.choices[i]) Object.assign(e.choices[i], c); }); }
   D.lines = {speaker: tm.speaker || '', rules: T.lines.rules, room: T.lines.room};
@@ -58,7 +59,7 @@ window.DATA = window.DATA || {};
    "text": "時限{t}：{tdmg}ダメージを与える。"
   },
   "rapid": {
-   "name": "速射",
+   "name": "連撃",
    "text": "{dmg}ダメージを{x}回与える。"
   },
   "crackshot": {
@@ -83,7 +84,7 @@ window.DATA = window.DATA || {};
   },
   "scatter": {
    "name": "散弾",
-   "text": "敵のすべての部位に{dmg}ダメージを与える。"
+   "text": "敵のすべてのユニットに{dmg}ダメージを与える。"
   },
   "charge": {
    "name": "チャージショット",
@@ -91,7 +92,7 @@ window.DATA = window.DATA || {};
   },
   "emp": {
    "name": "EMPパルス",
-   "text": "敵のすべての部位に{dmg}ダメージを与える。"
+   "text": "敵のすべてのユニットに{dmg}ダメージを与える。"
   },
   "blow": {
    "name": "過負荷打撃",
@@ -115,7 +116,7 @@ window.DATA = window.DATA || {};
   },
   "storm": {
    "name": "放電網",
-   "text": "充電をすべて消費し、敵のすべての部位に1につき{per}ダメージを与える。"
+   "text": "充電をすべて消費し、敵のすべてのユニットに1につき{per}ダメージを与える。"
   },
   "cell": {
    "name": "電磁障壁",
@@ -161,6 +162,56 @@ window.DATA = window.DATA || {};
    "key": "charge",
    "name": "充電",
    "desc": "自分に貯まる。消費する効果で使う。戦闘の終わりまで残る。"
+  },
+  {
+   "key": "unit",
+   "name": "ユニット",
+   "desc": "敵を作る単位。耐久と状態はユニットごとに持つ。急所のユニットがすべて破壊されると撃破。"
+  },
+  {
+   "key": "chargeMove",
+   "name": "溜め技",
+   "desc": "敵の大きな行動。カードを使い終えたサイクルが重なると、JUSTで潰せる。"
+  },
+  {
+   "key": "armor",
+   "name": "装甲",
+   "desc": "受けるダメージを先に受け、その分だけ減る。時間では消えない。"
+  },
+  {
+   "key": "vuln",
+   "name": "隙",
+   "desc": "受けるダメージが1.5倍になる。"
+  },
+  {
+   "key": "wind",
+   "name": "構え",
+   "desc": "敵の行動の前のサイクル。その間に決まった値以上の一撃を与えると、その行動を潰せる。"
+  },
+  {
+   "key": "guard",
+   "name": "ガード",
+   "desc": "敵の行動の前のサイクル。その間は、決まった値までのダメージを防がれる。"
+  },
+  {
+   "key": "counter",
+   "name": "反撃",
+   "desc": "敵の行動の前のサイクル。その間に攻撃するたび、ダメージを返される。"
+  },
+  {
+   "key": "str",
+   "name": "強化",
+   "desc": "攻撃のダメージが、その値だけ増える。"
+  },
+  {
+   "key": "haste",
+   "name": "加速",
+   "desc": "行動のコストが、その値だけ縮む(最短2)。"
+  },
+  {
+   "key": "zone",
+   "name": "危険域",
+   "desc": "こちらのタイムラインに置かれる区間。その間にカードを使い終えると攻撃を受ける。"
   }
  ],
  "parts": {
@@ -178,27 +229,27 @@ window.DATA = window.DATA || {};
   },
   "arm_rail": {
    "name": "〘CXR34レールガン〙",
-   "text": "光学ダメージ+2。デッキに《チャージショット》2枚を加える。"
+   "text": "遠隔ダメージ+2。デッキに《チャージショット》2枚を加える。"
   },
   "arm_scat": {
    "name": "〘散弾ポッド〙",
-   "text": "光学ダメージ+1。デッキに《散弾》2枚を加える。"
+   "text": "遠隔ダメージ+1。デッキに《散弾》2枚を加える。"
   },
   "arm_time": {
    "name": "〘時限投射機〙",
-   "text": "光学ダメージ+1。デッキに《時限弾》2枚を加える。"
+   "text": "遠隔ダメージ+1。デッキに《時限弾》2枚を加える。"
   },
   "out_std": {
    "name": "〘汎用マニピュレータ〙",
-   "text": "物理ダメージ+2。"
+   "text": "近接ダメージ+2。"
   },
   "out_heavy": {
    "name": "〘重機アーム〙",
-   "text": "コスト4以上のカードの物理ダメージ+6。"
+   "text": "コスト4以上のカードの近接ダメージ+6。"
   },
   "out_quick": {
    "name": "〘高速アクチュエータ〙",
-   "text": "コスト2以下のカードの物理ダメージ+3。"
+   "text": "コスト2以下のカードの近接ダメージ+3。"
   },
   "dur_std": {
    "name": "〘標準フレーム〙",
@@ -244,6 +295,7 @@ window.DATA = window.DATA || {};
   "exec.pat.2": "粉砕砲",
   "exec.phase.0": "殴打",
   "exec.phase.1": "粉砕砲",
+  "exec.passive.phase": "処刑態勢",
   "hacker": "ハッカー",
   "hacker.pat.0": "割り込み",
   "hacker.pat.1": "射撃",
@@ -255,6 +307,7 @@ window.DATA = window.DATA || {};
   "heavyExec.phase.0": "過熱",
   "heavyExec.phase.1": "殴打",
   "heavyExec.phase.2": "粉砕砲",
+  "heavyExec.passive.phase": "暴走",
   "turretE": "迎撃タレット改",
   "turretE.pat.0": "砲撃",
   "turretE.pat.1": "装甲を重ねる",
@@ -278,62 +331,61 @@ window.DATA = window.DATA || {};
   "accel.pat.0": "突進",
   "accel.pat.1": "蹴撃",
   "twin": "双腕作業機",
-  "twin.part.core": "胴体",
-  "twin.part.armL": "左腕",
-  "twin.part.armR": "右腕",
+  "twin.unit.core": "胴体",
+  "twin.unit.armL": "左腕",
+  "twin.unit.armR": "右腕",
   "twin.pat.0": "振り下ろし",
   "twin.pat.1": "掴み打ち",
   "twin.pat.2": "腕で防ぐ",
   "twin.pat.3": "叩きつけ",
   "bomber": "自爆ユニット",
-  "bomber.part.core": "炉心",
-  "bomber.part.gun": "防衛砲",
+  "bomber.unit.core": "炉心",
+  "bomber.unit.gun": "防衛砲",
   "bomber.pat.0": "防衛射撃",
   "bomber.pat.1": "防衛射撃",
   "bomber.pat.2": "防衛射撃",
   "bomber.pat.3": "防衛射撃",
   "bomber.pat.4": "臨界",
   "squad": "第三警備小隊",
-  "squad.part.lead": "隊長",
-  "squad.part.gunner": "射手",
-  "squad.part.shield": "盾持ち",
+  "squad.unit.lead": "隊長",
+  "squad.unit.gunner": "射手",
+  "squad.unit.shield": "盾持ち",
   "squad.pat.0": "号令",
   "squad.pat.1": "制圧射撃",
   "squad.pat.2": "盾突撃",
   "squad.pat.3": "制圧射撃",
   "squad.pat.4": "制圧射撃",
-  "squad.broke.lead:0": "乱射",
-  "squad.broke.lead:1": "突進",
-  "squad.broke.lead:2": "乱射",
-  "squad.broke.lead:3": "立て直す",
+  "squad.passive.0": "統率",
   "swarm": "ドローン群",
-  "swarm.part.d1": "子機1",
-  "swarm.part.d2": "子機2",
-  "swarm.part.d3": "子機3",
-  "swarm.part.d4": "子機4",
+  "swarm.unit.d1": "子機1",
+  "swarm.unit.d2": "子機2",
+  "swarm.unit.d3": "子機3",
+  "swarm.unit.d4": "子機4",
   "swarm.pat.0": "突撃",
   "swarm.pat.1": "突撃",
   "swarm.pat.2": "突撃",
   "swarm.pat.3": "突撃",
   "swarm.pat.4": "群体照準",
+  "swarm.passive.0": "群体",
   "tank": "多脚戦車",
-  "tank.part.core": "車体",
-  "tank.part.gun": "主砲",
-  "tank.part.mg": "機銃",
-  "tank.part.legs": "脚部",
+  "tank.unit.core": "車体",
+  "tank.unit.gun": "主砲",
+  "tank.unit.mg": "機銃",
+  "tank.unit.legs": "脚部",
   "tank.pat.0": "掃射",
   "tank.pat.1": "踏みつけ",
   "tank.pat.2": "掃射",
   "tank.pat.3": "徹甲砲",
   "tank.pat.4": "装甲展開",
-  "warden.part.core": "中枢核",
-  "warden.part.eye": "監視砲",
+  "warden.unit.core": "中枢核",
+  "warden.unit.eye": "監視砲",
   "warden.phase.0": "照射",
   "warden.phase.1": "狙撃",
   "warden.phase.2": "防壁展開",
   "warden.phase.3": "照準域",
   "warden.phase.4": "報復態勢",
-  "warden.phase.5": "消去プロトコル"
+  "warden.phase.5": "消去プロトコル",
+  "warden.passive.phase": "非常態勢"
  },
  "events": {
   "terminal": {
@@ -490,7 +542,7 @@ window.DATA = window.DATA || {};
   "ui.mv.armor": "装甲{armor}を得る。装甲は消えず、ダメージを先に受ける。",
   "ui.mv.heal": "耐久を{heal}回復する。",
   "ui.mv.crack": "こちらにクラック{crack}を与える。こちらが受ける攻撃すべてのダメージ+{crack}。重なる。",
-  "ui.mv.noise": "山札にノイズ{noise}枚を混ぜる。",
+  "ui.mv.noise": "山札に《ノイズ》{noise}枚を混ぜる。",
   "ui.mv.summon": "{name}を呼ぶ。",
   "ui.mv.none": "攻撃はしない。",
   "ui.foe.react": "反応：コスト{min}以上のカードを使い始めると、1サイクル後に{part}に{d}ダメージを与える。",
@@ -507,9 +559,17 @@ window.DATA = window.DATA || {};
   "ui.st.vuln": "あと{n}サイクル、受けるダメージが1.5倍。",
   "ui.st.none": "状態の変化はない。",
   "ui.mv.zone": "{at}サイクル後から{len}サイクルの間、こちらのタイムラインに危険域を置く。その間にカードを使い終えると{part}に{d}ダメージを受ける。",
-  "ui.mv.haste": "加速{n}：これ以後、行動の間隔が{n}サイクル縮む(最短2)。",
-  "ui.foe.wake": "耐久{at}%未満で動き出す",
+  "ui.mv.haste": "加速{n}：これ以後、行動のコストが{n}縮む(最短2)。",
   "ui.stname.haste": "加速",
-  "ui.st.haste": "行動の間隔が{n}サイクル縮んでいる(最短2)。"
+  "ui.st.haste": "行動のコストが{n}縮んでいる(最短2)。",
+  "ui.pas.command": "【{unit}】ユニットが破壊されていない間、すべての行動のコスト-{n}(最短2)。",
+  "ui.pas.frenzy": "ユニットが破壊されるたび、攻撃力+{n}。",
+  "ui.pas.react": "コスト{min}以上のカードを使い始めると、1サイクル後に{part}に{d}ダメージを与える。",
+  "ui.pas.phase": "耐久が{at}%を切ると、行動が変わる。",
+  "ui.pas.broke": "【{unit}】ユニットが破壊されると、行動が変わる。",
+  "ui.unit.core": "核。ほかのユニットからあふれたダメージを受ける。",
+  "ui.unit.vital": "急所。急所のユニットがすべて破壊されると撃破。",
+  "ui.unit.part": "破壊されると、このユニットの行動は飛ばされる。",
+  "ui.unit.broken": "破壊"
  }
 });

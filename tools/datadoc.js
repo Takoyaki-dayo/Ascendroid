@@ -12,30 +12,37 @@ const withCls = (c, o) => o ? D.classCard(JSON.parse(JSON.stringify(c)), o) : c;
 const fxCards = Object.values(D.parts).filter(p => p.fx.cards);
 out.parts = `## 部位とパーツ\n\n本体耐久は${D.bodyMax}。部位が壊れるとそのパーツの効果が止まり、あふれたダメージは本体に通ります。★が最初に付いているパーツで、ほかはエリートや一部のイベントで付け替えられます。\n\n| 部位 | 場所 | パーツ | 耐久 | 効果 |\n| --- | --- | --- | --- | --- |\n` +
   D.slots.flatMap(s => Object.entries(D.parts).filter(([, p]) => p.slot === s.id).map(([id, p]) => `| ${s.fn} | ${s.pt || '—'} | ${D.startParts[s.id] === id ? '★' : ''}${p.name} | ${p.max} | ${p.text} |`)).join('\n');
-const tname = t => t === 'phys' ? '物理' : '光学';
+const tname = t => t === 'melee' ? '近接' : '遠隔';
 // カードの文(text/cards.csv の型)に、パーツの補正の前の数値を入れる
 const eff = c => { const v = {dmg: c.dmg ? c.dmg.n : '', x: c.dmg && c.dmg.x || '', block: c.block ?? '', delay: c.delay || '', swift: c.swift || '', crack: c.crack || '', draw: c.draw || '', t: c.timer ? c.timer.t : '', tdmg: c.timer ? c.timer.dmg.n : '', gain: c.gain || '', per: c.spend ? (c.spend.dmg ? c.spend.dmg.n : c.spend.block) : ''}; return (c.text || '').replace(/\{(\w+)\}/g, (m, n) => n in v ? v[n] : m); };
 const zone = c => c === 0 ? '即時' : c < 3 ? '速い' : c === 3 ? '標準' : '重い';
 const learn = k => [...new Set(Object.values(D.foes).filter(f => (f.pool || []).includes(k)).map(f => f.name))].join('、');
 const cnt = k => D.startDeck.filter(x => x === k).length;
 const fromPart = k => fxCards.filter(p => p.fx.cards.includes(k)).map(p => p.name).join('、');
-out.cards = `## カード\n\n全部${Object.values(D.cards).filter(c => !c.junk).length}種。最初のデッキは${D.startDeck.length}枚と、武装パーツが加える《チャージショット》2枚。数値はパーツの補正(標準パーツなら物理+2、光学+2、ブロック+2)を足す前の値です。「効果」は${K.name}での数値、「基準」は data/cards.js の値(常時供給のキャラはこのまま)。\n\n| カード | コスト | 区分 | 種類 | 効果 | 基準 | 備考 | 最初のデッキ | 手に入る場所 |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- |\n` +
+out.cards = `## カード\n\n全部${Object.values(D.cards).filter(c => !c.junk).length}種。最初のデッキは${D.startDeck.length}枚と、武装パーツが加える《チャージショット》2枚。種類は近接か遠隔(0.17.0 までの物理と光学)。数値はパーツの補正(標準パーツなら近接+2、遠隔+2、ブロック+2)を足す前の値です。「効果」は${K.name}での数値、「基準」は data/cards.js の値(常時供給のキャラはこのまま)。\n\n| カード | コスト | 区分 | 種類 | 効果 | 基準 | 備考 | 最初のデッキ | 手に入る場所 |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- |\n` +
   Object.entries(D.cards).filter(([, c]) => !c.junk).sort((a, b) => a[1].cost - b[1].cost).map(([k, c]) => `| ${c.name} | ${c.cost} | ${zone(c.cost)} | ${c.dmg ? tname(c.dmg.t) : c.timer ? tname(c.timer.dmg.t) : c.spend && c.spend.dmg ? tname(c.spend.dmg.t) : '—'} | ${eff(withCls(c, K.cards[k]))} | ${eff(withCls(c, K.cards[k])) !== eff(c) ? eff(c) : '同じ'} | ${[fromPart(k) ? fromPart(k) + 'が加える' : ''].filter(Boolean).join('、') || '—'} | ${cnt(k) ? cnt(k) + '枚' : '—'} | ${[fromPart(k) ? '' : '学習' + (learn(k) ? '(' + learn(k) + 'でわずかに出やすい)' : ''), D.rareCards.includes(k) ? 'イベント' : '', fromPart(k) ? '' : 'ショップ'].filter(Boolean).join('、')} |`).join('\n');
-out.kw = `## キーワード\n\nカードを長押ししたときに出る説明と同じ文です。\n\n| キーワード | 意味 |\n| --- | --- |\n` + Object.entries(D.keywords).map(([k, v]) => `| ${k} | ${v} |`).join('\n');
+out.kw = `## キーワード\n\nカードを長押ししたときや、説明の文の中のキーワードを押したときに出る文です。カードの文に出てくるものは色が付きます。\n\n| キーワード | 意味 |\n| --- | --- |\n` + Object.entries(D.keywords).map(([k, v]) => `| ${k} | ${v} |`).join('\n');
 const attrs = a => [a.hits > 1 ? `${a.hits}回` : '', a.wind ? `構え${a.wind.w}・${a.wind.poise}以上で潰れる` : '', a.guard ? `ガード${a.guard.w}・${a.guard.s}` : '', a.counter ? `反撃の構え${a.counter.w}・${a.counter.d}` : '', a.rec ? `隙${a.rec}` : '', a.buff ? `強化+${a.buff}${a.all ? '(全員)' : ''}` : '', a.armor ? `装甲+${a.armor}` : '', a.heal ? `修復${a.heal}` : '', a.crack ? `こちらにクラック+${a.crack}` : '', a.noise ? `ノイズ${a.noise}枚` : '', a.haste ? `加速${a.haste}` : '', a.zone ? `危険域(${a.zone.at}後から${a.zone.len}サイクル、${a.zone.d}→${SL[a.zone.p].fn})` : '', a.summon ? `増援(${D.foes[a.summon].name})` : ''].filter(Boolean).join('、');
-// 部位を持つ敵: 耐久は部位ごと(急所・核)
-const hpText = f => f.parts ? Object.values(f.parts).map(p => `${p.name} ${p.hp}${p.core ? '(核)' : p.vital ? '(急所)' : ''}${p.armor ? `・装甲${p.armor}` : ''}`).join('、') : f.hp;
+// ユニットが複数ある敵: 耐久はユニットごと(急所・核)
+const hpText = f => f.units ? Object.values(f.units).map(p => `${p.name} ${p.hp}${p.core ? '(核)' : p.vital ? '(急所)' : ''}${p.armor ? `・装甲${p.armor}` : ''}`).join('、') : f.hp;
 let CURF = null;
 const act = a => {
   const at = attrs(a), base = a.kind === 'delay' ? `${a.n}(自分にディレイ${a.v})` : a.d > 0 ? `${a.n} ${a.d}→${SL[a.p].fn}` : a.n;
-  const who = a.by && CURF && CURF.parts && CURF.parts[a.by] ? `[${CURF.parts[a.by].name}]` : '';
+  const who = a.by && CURF && CURF.units && CURF.units[a.by] ? `[${CURF.units[a.by].name}]` : '';
   return `${who}${a.ch ? '**' : ''}${base}${a.ch ? '(溜め)**' : ''}${at ? `〔${at}〕` : ''}`;
 };
 const pat = f => f.ai === 'rand' ? 'どれか: ' + f.pat.map(a => `${act(a)}(${a.dl}後、重み${a.wt || 1})`).join(' / ') : f.pat.map((a, i) => (i ? ` →${a.dl}→ ` : '') + act(a)).join('') + ` →${f.pat[0].dl}→ 最初へ`;
-const patAll = f => (CURF = f, '') + pat(f) + Object.entries(f.broke || {}).map(([k, pt]) => ` ／ ${f.parts[k].name}が壊れると: ${pat({pat:pt})}`).join('') + (f.phase ? ` ／ 耐久${Math.round(f.phase.at * 100)}%未満: ${pat({pat:f.phase.pat})}` : '') + (f.tracks || []).map(k => { const t = D.foes[k]; return ` ／ 部位「${t.name}」${t.wake ? `(耐久${Math.round(t.wake * 100)}%未満で動き出す)` : ''}(最初の行動まで${t.start}): ${pat(t)}`; }).join('');
-const trait = f => [f.react ? `反応: コスト${f.react.min}以上を使い始めると1サイクル後に${f.react.d}→${SL[f.react.p].fn}` : '', f.sync ? `連携: 同じサイクルに攻撃すると+${f.sync}` : ''].filter(Boolean).join('、') || '—';
-out.foes = `## 敵\n\n行動は左から順に繰り返します(「どれか」の敵は毎回重みで選びます。同じ行動は3回続けません)。「→6→」は次の行動までのサイクル、「射撃 6→演算」は演算部位への6ダメージ。溜め技はJUSTで潰せます。〔〕は行動の属性: 構え(行動の前のwサイクルに、数字以上の一撃で潰れる)、ガード(前のwサイクル、数字までダメージを防ぐ)、反撃の構え(前のwサイクル、殴られるたびに数字を返す)、隙(行動の後、数字のサイクルだけダメージ1.5倍)、強化(行動の後に攻撃力が上がる)、装甲(消えずに積もり、ダメージを先に受ける)、修復、こちらにクラック(こちらが受ける攻撃すべて+数字、重なる)、ノイズ(山札に何もしないカードを混ぜる)、加速(これ以後、行動の間隔が数字だけ縮む。最短2)、危険域(こちらのタイムラインに区間を置き、その間にカードを使い終えると被弾)。部位を持つ敵は、耐久と状態(クラック・隙・装甲)が部位ごとにあり、カードで部位を狙えます。[ ]はその行動をする部位で、構え・ガード・反撃はその部位を叩いたときだけ効きます。部位が壊れるとその部位の行動は飛ばされ、あふれたダメージは核へ。急所がすべて壊れると撃破です。敵の強さは全キャラ共通です。\n\n| 敵 | 耐久 | 最初の行動まで | 行動パターン | 特性 | 学習でわずかに出やすいカード |\n| --- | --- | --- | --- | --- | --- |\n` +
-  Object.entries(D.foes).filter(([, f]) => f.hp || f.parts).map(([k, f]) => `| ${f.name}${['drone2','linkB'].includes(k) ? '(別個体)' : ''} | ${hpText(f)} | ${f.start} | ${patAll(f)} | ${trait(f)} | ${f.pool.map(x => D.cards[x].name).join('、') || '—'} |`).join('\n');
+const patAll = f => (CURF = f, '') + pat(f) + Object.entries(f.broke || {}).map(([k, pt]) => ` ／ ${f.units[k].name}が破壊されると: ${pat({pat:pt})}`).join('') + (f.phase ? ` ／ 耐久${Math.round(f.phase.at * 100)}%未満: ${pat({pat:f.phase.pat})}` : '');
+// パッシブ: 名前(text/enemies.csv の 敵.passive.*)と、文(text/terms.csv の ui.pas.*)。画面と同じく反応・段階変化も含める
+const fillT = (k, v) => (D.ui['pas.' + k] || '').replace(/\{(\w+)\}/g, (m, n) => n in v ? v[n] : m);
+const trait = f => { const nm = f.pname || {}, out = [];
+  (f.passives || []).forEach((p, j) => out.push(`${nm[j] || ''}: ${p.k === 'command' ? fillT('command', {unit: f.units[p.unit].name, n: p.n}) : p.k === 'frenzy' ? fillT('frenzy', {n: p.n}) : ''}`));
+  if(f.react) out.push(`${nm.react || f.react.n}: ${fillT('react', {min: f.react.min, part: SL[f.react.p].fn, d: f.react.d})}`);
+  if(f.phase) out.push(`${nm.phase || ''}: ${fillT('phase', {at: Math.round(f.phase.at * 100)})}`);
+  if(f.sync) out.push(`連携: 同じサイクルに攻撃すると+${f.sync}`);
+  return out.join(' ／ ') || '—'; };
+out.foes = `## 敵\n\n行動は左から順に繰り返します(「どれか」の敵は毎回重みで選びます。同じ行動は3回続けません)。「→6→」は次の行動までのサイクル、「射撃 6→演算」は演算部位への6ダメージ。溜め技はJUSTで潰せます。〔〕は行動の属性: 構え(行動の前のwサイクルに、数字以上の一撃で潰れる)、ガード(前のwサイクル、数字までダメージを防ぐ)、反撃の構え(前のwサイクル、殴られるたびに数字を返す)、隙(行動の後、数字のサイクルだけダメージ1.5倍)、強化(行動の後に攻撃力が上がる)、装甲(消えずに積もり、ダメージを先に受ける)、修復、こちらにクラック(こちらが受ける攻撃すべて+数字、重なる)、ノイズ(山札に何もしないカードを混ぜる)、加速(これ以後、行動のコストが数字だけ縮む。最短2)、危険域(こちらのタイムラインに区間を置き、その間にカードを使い終えると被弾)。敵は1つ以上のユニットでできていて、耐久と状態(クラック・隙・装甲)はユニットごと。カードでユニットを狙えます。[ ]はその行動をするユニットで、構え・ガード・反撃はそのユニットを叩いたときだけ効きます。ユニットが破壊されるとそのユニットの行動は飛ばされ、あふれたダメージは核へ。急所のユニットがすべて破壊されると撃破です。パッシブは敵ごとの常に働く性質です。敵の強さは全キャラ共通です。\n\n| 敵 | 耐久 | 最初の行動まで | 行動パターン | パッシブ | 学習でわずかに出やすいカード |\n| --- | --- | --- | --- | --- | --- |\n` +
+  Object.entries(D.foes).filter(([, f]) => f.hp || f.units).map(([k, f]) => `| ${f.name}${['drone2','linkB'].includes(k) ? '(別個体)' : ''} | ${hpText(f)} | ${f.start} | ${patAll(f)} | ${trait(f)} | ${f.pool.map(x => D.cards[x].name).join('、') || '—'} |`).join('\n');
 const baseNum = (c, o) => o.dmg != null ? c.dmg.n : o.block != null ? c.block : o.timer != null ? c.timer.dmg.n : c.spend.dmg ? c.spend.dmg.n : c.spend.block;
 const sysText = c => !c.econ ? '3サイクルごとに手札が1枚届く' : c.econ.type === 'reload' ? `自動では引かない。好きなときに${c.econ.r}サイクル使って手札を全部捨て${c.econ.hand}枚引く(始めにブロックをすべて失う)` : `${c.econ.len}サイクルごとに手札を捨てて${c.econ.hand}枚引く(ブロックも消える)`;
 out.classes = `## キャラ\n\n敵・タイムライン・部位は全キャラ共通。キャラごとに手札の補給の型とカードの数値を変え、難しさはカードの数値で揃えます(敵は変えない)。数値は「標準デッキを決まった手順で使ったときの損傷が、常時供給のキャラと同じくらい」になるよう探した値(tools/lab/k7tune.js)。待機は手札があっても1サイクル待てるボタン。仮のキャラはデバッグメニューで選べます。\n\n| キャラ | 補給 | 補給の決まり | 待機 | カードの数値(基準から変えたもの) |\n| --- | --- | --- | --- | --- |\n` +

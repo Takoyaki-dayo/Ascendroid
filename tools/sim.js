@@ -13,7 +13,7 @@ const E = ctx.ENGINE, D = ctx.DATA;
 function threat(st){ let s = 0; for(const e of st.b.foes) if(e.alive){ s += e.pat.reduce((a, x) => a + (x.d || 0), 0) / e.pat.reduce((a, x) => a + x.dl, 0); } return s; }
 const zero = () => ({dmg:0, kills:0, justs:0, bodyLoss:0, partLoss:0, breaks:0, elapsed:0, won:false, dead:false});
 function measure(before, after, out){
-  const hpB = before.b.foes.reduce((a, e) => a + e.hp, 0), hpA = after.b.foes.reduce((a, e) => a + e.hp, 0);
+  const hpB = before.b.foes.reduce((a, e) => a + (e.hp || 0), 0), hpA = after.b.foes.reduce((a, e) => a + (e.hp || 0), 0); // 部位は耐久を持たない
   const partsB = Object.values(before.b.parts).reduce((a, p) => a + p.cur, 0), partsA = Object.values(after.b.parts).reduce((a, p) => a + p.cur, 0);
   return {dmg:hpB - hpA, kills:before.b.foes.filter(e => e.alive).length - after.b.foes.filter(e => e.alive).length, justs:out.justs.length,
     bodyLoss:before.run.body - after.run.body, partLoss:partsB - partsA, breaks:Object.keys(after.b.broken).length - Object.keys(before.b.broken).length,

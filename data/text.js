@@ -276,7 +276,34 @@ window.DATA = window.DATA || {};
   "warden.phase.1": "防壁展開",
   "warden.phase.2": "報復態勢",
   "warden.phase.3": "消去プロトコル",
-  "warden.react": "排除"
+  "warden.react": "排除",
+  "scanner": "走査ドローン",
+  "scanner.pat.0": "射撃",
+  "scanner.pat.1": "走査線",
+  "scanner.pat.2": "連射",
+  "accel": "暴走機",
+  "accel.pat.0": "突進",
+  "accel.pat.1": "蹴撃",
+  "twin": "双腕作業機",
+  "twin.pat.0": "振り下ろし",
+  "twin.pat.1": "腕で防ぐ",
+  "twinR": "右腕",
+  "twinR.pat.0": "掴み打ち",
+  "twinR.pat.1": "叩きつけ",
+  "bomber": "自爆ユニット",
+  "bomber.pat.0": "臨界",
+  "bomberGun": "防衛砲",
+  "bomberGun.pat.0": "防衛射撃",
+  "tank": "多脚戦車",
+  "tank.pat.0": "踏みつけ",
+  "tank.pat.1": "装甲展開",
+  "tankGun": "主砲",
+  "tankGun.pat.0": "徹甲砲",
+  "tankMg": "機銃",
+  "tankMg.pat.0": "掃射",
+  "wardenEye": "監視砲",
+  "wardenEye.pat.0": "狙撃",
+  "wardenEye.pat.1": "照準域"
  },
  "events": {
   "terminal": {
@@ -448,6 +475,11 @@ window.DATA = window.DATA || {};
   "ui.st.str": "攻撃のダメージ+{n}。",
   "ui.st.crack": "受けるダメージ+{n}。戦闘の終わりまで消えない。",
   "ui.st.vuln": "あと{n}サイクル、受けるダメージが1.5倍。",
-  "ui.st.none": "状態の変化はない。"
+  "ui.st.none": "状態の変化はない。",
+  "ui.mv.zone": "{at}サイクル後から{len}サイクルの間、こちらのタイムラインに危険域を置く。その間にカードを使い終えると{part}に{d}ダメージを受ける。",
+  "ui.mv.haste": "加速{n}：これ以後、行動の間隔が{n}サイクル縮む(最短2)。",
+  "ui.foe.wake": "耐久{at}%未満で動き出す",
+  "ui.stname.haste": "加速",
+  "ui.st.haste": "行動の間隔が{n}サイクル縮んでいる(最短2)。"
  }
 });

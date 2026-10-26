@@ -1,5 +1,5 @@
 // 敵を常に1体にしたとき(0.15.0)の耐久を探す。K-7・標準デッキ・固定手順の損傷が目安になるよう、敵ごとに耐久の倍率を二分探索
-// 使い方: node tools/lab/solo.js [回数]
+// 使い方: node tools/lab/solo.js [回数] [遭遇のキーをカンマ区切り(省略で全部)]
 'use strict';
 const fs = require('fs'), vm = require('vm'), path = require('path');
 const T = require('./turns.js'), E = T.E, D = T.D;
@@ -12,15 +12,18 @@ const FOES = JSON.parse(JSON.stringify(C.foes)), ENC = C.encounters;
 // 目安: 戦闘の長さ(サイクル)と損傷(本体 + 部位)。耐久で長さを、攻撃の倍率で損傷を合わせる
 //   序盤の通常戦 24サイクル・損傷7 / 後半の通常戦 28・10 / エリート 40・28 / ボス 60・45
 const goal = e => e.boss ? {T:60, loss:45} : e.elite ? {T:40, loss:28} : e.tier === 1 ? {T:24, loss:7} : {T:28, loss:10};
+// 攻撃の倍率は本体と部位(tracks)の全部にかける。危険域のダメージも
 function setFoe(key, hm, dm){
   D.foes = JSON.parse(JSON.stringify(FOES)); const f = D.foes[key], sc = x => Math.max(1, Math.round(x * dm));
   f.hp = Math.round(FOES[key].hp * hm);
-  const fix = pat => pat.forEach(a => { if(a.d > 0) a.d = sc(a.d); if(a.counter) a.counter.d = sc(a.counter.d); });
-  fix(f.pat); if(f.phase) fix(f.phase.pat); if(f.react) f.react.d = sc(f.react.d);
+  const fix = pat => pat.forEach(a => { if(a.d > 0) a.d = sc(a.d); if(a.counter) a.counter.d = sc(a.counter.d); if(a.zone) a.zone.d = sc(a.zone.d); });
+  for(const g of [f, ...(f.tracks || []).map(k => D.foes[k])]){ fix(g.pat); if(g.phase) fix(g.phase.pat); if(g.react) g.react.d = sc(g.react.d); }
 }
+const ONLY = process.argv[3] ? process.argv[3].split(',') : null;
 const order = T.bestOrder('std', 3, 20, 11);
 const out = {};
 for(const [ek, e] of Object.entries(ENC)){
+  if(ONLY && !ONLY.includes(ek)) continue;
   const key = e.foes[0], g = goal(e); D.encounters = {[ek]: e};
   let hm = 1, dm = 1;
   for(let round = 0; round < 2; round++){

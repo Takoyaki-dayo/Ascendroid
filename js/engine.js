@@ -13,6 +13,9 @@ const D = root.DATA;
 //   {type:'mag', r, cap}  弾倉: 3サイクルごとに1枚が弾倉にたまり、区切り(r サイクル)でまとめて手札へ
 //   blockReset: 区切りでブロックが消える('start' 区切りの始め / true・'end' 終わり) / eject: 区切りで捨てたカード1枚ごとのブロック
 const RULE = {draw:3, handStart:5, handMax:7, view:18, freeWait:true, blockDecay:null, econ:null};
+// 敵の部位(0.16.0): 敵の tracks に並べた部位は、本体と耐久を共有する別の行動の列(タイムラインの1行)。
+//   部位は狙えない(当たるのは本体)。本体に当たった一撃は、部位の構え・ガード・反撃・隙にも効く。ディレイは部位にも効く。
+//   部位の定義の wake があれば、本体の耐久がその割合を切るまで眠っている(行動しない)
 
 /* ---------- 乱数と小道具 ---------- */
 function rngFrom(seed){
@@ -39,8 +42,12 @@ function advance(e){
   else if(e.ai === 'rand') e.idx = pickMove(e);
   else e.idx = (e.idx + 1) % e.pat.length;
   const a = e.pat[e.idx];
-  e.r = a.dl; e.seq++; e.chain = 0; e.sh = a.guard ? a.guard.s : 0;
+  e.r = gap(e, a.dl); e.seq++; e.chain = 0; e.sh = a.guard ? a.guard.s : 0;
 }
+// 加速した敵は、行動の間隔が縮む(最短2)
+const gap = (e, dl) => e.haste ? Math.max(2, dl - e.haste) : dl;
+const hostOf = (b, e) => e.host != null ? b.foes[e.host] : e;
+const unitOf = (b, e) => [e].concat(b.foes.filter(f => f.host === e.i && f.alive && !f.sleep));
 // 行動の前の窓(構え・ガード・反撃の構え)に入っているか
 const inWin = (e, w) => !!w && e.r > 0 && e.r <= w.w;
 
@@ -80,6 +87,7 @@ function drawN(b, n){ let got = 0; for(let i = 0; i < n; i++){ const r = drawOne
 /* ---------- 予定 ---------- */
 function upcoming(e, view){
   const V = view || RULE.view, out = []; let t = e.r, idx = e.idx, k = 0;
+  if(e.sleep) return out;
   while(t <= V && k < 8){
     const a = e.pat[idx];
     // 多段: 残りの撃ちを1サイクルおきに。left はその撃ちの後に残る回数
@@ -88,7 +96,7 @@ function upcoming(e, view){
     for(let j = 1; j <= rest && t + j <= V; j++) out.push({t:t + j, a, k, hit:j, left:rest - j});
     t += rest;
     if(e.ai === 'rand') break; // 分岐する敵は、次の行動が決まるまで見えない
-    idx = (idx + 1) % e.pat.length; t += e.pat[idx].dl; k++;
+    idx = (idx + 1) % e.pat.length; t += gap(e, e.pat[idx].dl); k++;
   }
   return out;
 }
@@ -97,19 +105,27 @@ function arrivals(b, view){ const out = []; for(let t = b.drawIn; t <= (view || 
 
 /* ---------- 効果 ---------- */
 function hurtFoe(b, e, d, ev){
+  e = hostOf(b, e);
   e.hp -= d; ev.push({kind:'dmg', e:e.i, n:d});
-  if(e.hp <= 0){ e.hp = 0; e.alive = false; e.reactIn = null; ev.push({kind:'kill', e:e.i}); }
+  for(const f of b.foes) if(f.host === e.i && f.sleep && e.hp < e.maxHp * f.wake){ f.sleep = false; ev.push({kind:'wake', e:f.i}); }
+  if(e.hp <= 0){
+    e.hp = 0; e.alive = false; e.reactIn = null; ev.push({kind:'kill', e:e.i});
+    for(const f of b.foes) if(f.host === e.i) f.alive = false;
+  }
 }
 // カードや時限の一撃。隙なら1.5倍、ガード中は防がれ、反撃の構えなら撃ち返され、構え中に poise 以上なら行動が潰れる
+// 部位のある敵は、本体と部位すべての窓を見る
 function hitFoe(st, e, n, ev){
-  const b = st.b, a = cur(e);
+  const b = st.b; e = hostOf(b, e);
+  const unit = unitOf(b, e);
   let d = n;
-  if(e.vuln > 0){ d = Math.round(d * 1.5); b.vulnHits = (b.vulnHits || 0) + 1; ev.push({kind:'vulnHit', e:e.i}); }
-  if(inWin(e, a.guard) && e.sh > 0){ const ab = Math.min(e.sh, d); e.sh -= ab; d -= ab; b.guarded = (b.guarded || 0) + ab; ev.push({kind:'guarded', e:e.i, n:ab}); }
+  const vu = unit.find(u => u.vuln > 0);
+  if(vu){ d = Math.round(d * 1.5); b.vulnHits = (b.vulnHits || 0) + 1; ev.push({kind:'vulnHit', e:vu.i}); }
+  for(const u of unit){ const a = cur(u); if(d > 0 && inWin(u, a.guard) && u.sh > 0){ const ab = Math.min(u.sh, d); u.sh -= ab; d -= ab; b.guarded = (b.guarded || 0) + ab; ev.push({kind:'guarded', e:u.i, n:ab}); } }
   if(e.armor > 0 && d > 0){ const ab = Math.min(e.armor, d); e.armor -= ab; d -= ab; b.guarded = (b.guarded || 0) + ab; ev.push({kind:'armored', e:e.i, n:ab}); }
-  if(inWin(e, a.counter)){ const res = strike(st, e, {n:a.n, d:a.counter.d, p:a.p || 'dur'}, 0, true); afterHit(b); b.countered = (b.countered || 0) + 1; ev.push({kind:'counter', e:e.i, res}); }
+  for(const u of unit){ const a = cur(u); if(inWin(u, a.counter)){ const res = strike(st, u, {n:a.n, d:a.counter.d, p:a.p || 'dur'}, 0, true); afterHit(b); b.countered = (b.countered || 0) + 1; ev.push({kind:'counter', e:u.i, res}); } }
   if(d > 0) hurtFoe(b, e, d, ev);
-  if(e.alive && inWin(e, a.wind) && n >= a.wind.poise){ const nm = a.n; advance(e); b.breaks = (b.breaks || 0) + 1; ev.push({kind:'break', e:e.i, name:nm}); }
+  if(e.alive) for(const u of unit){ const a = cur(u); if(inWin(u, a.wind) && n >= a.wind.poise){ const nm = a.n; advance(u); b.breaks = (b.breaks || 0) + 1; ev.push({kind:'break', e:u.i, name:nm}); } }
 }
 function gainBlock(b, n){
   const bd = RULE.blockDecay;
@@ -128,7 +144,7 @@ function decayBlock(b){
 }
 function applyCard(st, k, ti){
   const c = D.cards[k], b = st.b, ev = [];
-  const targets = c.all ? b.foes.filter(e => e.alive) : (c.tgt ? [b.foes[ti]].filter(e => e && e.alive) : []);
+  const targets = c.all ? b.foes.filter(e => e.alive && e.host == null) : (c.tgt ? [b.foes[ti]].filter(e => e && e.alive).map(e => hostOf(b, e)) : []);
   if(c.dmg){
     const n = dmgOf(st, c);
     for(const e of targets) for(let h = 0; h < (c.dmg.x || 1); h++){ if(!e.alive) break; hitFoe(st, e, n + e.crack, ev); }
@@ -141,7 +157,7 @@ function applyCard(st, k, ti){
   }
   if(c.gain){ b.charge = (b.charge || 0) + c.gain; ev.push({kind:'charge', n:c.gain}); }
   if(c.crack) for(const e of targets) if(e.alive){ e.crack += c.crack; ev.push({kind:'crack', e:e.i, n:c.crack}); }
-  if(c.delay) for(const e of targets) if(e.alive){ e.r += c.delay; ev.push({kind:'delay', e:e.i, n:c.delay}); }
+  if(c.delay) for(const e of targets) if(e.alive) for(const u of unitOf(b, e)){ u.r += c.delay; ev.push({kind:'delay', e:u.i, n:c.delay}); }
   if(c.block){ const n = blockOf(st, c); gainBlock(b, n); ev.push({kind:'block', n}); }
   if(c.swift){ b.swift += c.swift; ev.push({kind:'swift', n:c.swift}); }
   if(c.timer && targets[0]){ b.timers.push({id:b.uid++, left:c.timer.t, k, e:targets[0].i}); ev.push({kind:'timerSet', e:targets[0].i, t:c.timer.t}); }
@@ -152,7 +168,7 @@ function applyCard(st, k, ti){
 function fireTimer(st, t){
   const b = st.b, c = D.cards[t.k], ev = [];
   let e = b.foes[t.e];
-  if(!e || !e.alive) e = b.foes.find(f => f.alive);
+  if(!e || !e.alive) e = b.foes.find(f => f.alive && f.host == null);
   if(e) hitFoe(st, e, dmgOf(st, c, c.timer.dmg) + e.crack, ev);
   return ev;
 }
@@ -179,11 +195,14 @@ function enemyAct(st, e, extra){
   res.chainLeft = 0;
   if(a.d > 0 && res.kind === 'hit') afterHit(st.b);
   if(a.rec) e.vuln = a.rec + 1;
-  if(a.buff){ for(const f of (a.all ? st.b.foes.filter(f => f.alive) : [e])) f.str = (f.str || 0) + a.buff; res.buff = a.buff; }
+  const H = hostOf(st.b, e);
+  if(a.buff){ for(const f of (a.all ? st.b.foes.filter(f => f.alive) : unitOf(st.b, H))) f.str = (f.str || 0) + a.buff; res.buff = a.buff; }
   // 放置の代償になる行動
   const b = st.b;
-  if(a.armor){ e.armor = (e.armor || 0) + a.armor; res.armor = a.armor; }                // 装甲を重ねる(消えない)
-  if(a.heal){ const h = Math.min(a.heal, e.maxHp - e.hp); e.hp += h; res.heal = h; }     // 修復
+  if(a.armor){ H.armor = (H.armor || 0) + a.armor; res.armor = a.armor; }                // 装甲を重ねる(消えない)
+  if(a.heal){ const h = Math.min(a.heal, H.maxHp - H.hp); H.hp += h; res.heal = h; }     // 修復
+  if(a.haste){ e.haste = (e.haste || 0) + a.haste; res.haste = a.haste; }                // 加速: 以後の間隔が縮む
+  if(a.zone){ b.zones.push({id:b.uid++, from:a.zone.at, to:a.zone.at + a.zone.len - 1, d:a.zone.d + (e.str || 0), p:a.zone.p, e:e.i, n:a.n}); res.zone = a.zone; } // 危険域
   const ac = a.crack || a.mark; // こちらにクラック(受ける攻撃すべて+)。mark は 0.14 までの名前(実験の古い敵のデータ用)
   if(ac){ b.crack = (b.crack || 0) + ac; res.crack = ac; }
   if(a.noise){ for(let i = 0; i < a.noise; i++){ const at = Math.floor(rand() * (b.draw.length + 1)); b.draw.splice(at, 0, {k:'noise', id:b.uid++}); } res.noise = a.noise; } // ノイズ注入
@@ -218,7 +237,9 @@ function* spendGen(st, cost, k, ti, noInt){
     left--; b.cast.left = left;
     if(real){
       b.T++; out.elapsed++; b.drawIn--;
-      for(const e of b.foes) if(e.alive){ e.r--; if(e.reactIn != null) e.reactIn--; if(e.vuln > 0) e.vuln--; }
+      for(const e of b.foes) if(e.alive && !e.sleep){ e.r--; if(e.reactIn != null) e.reactIn--; if(e.vuln > 0) e.vuln--; }
+      for(const z of b.zones){ z.from--; z.to--; }
+      b.zones = b.zones.filter(z => z.to >= 0);
       decayBlock(b);
       for(const t of b.timers) t.left--;
     }
@@ -249,7 +270,7 @@ function* spendGen(st, cost, k, ti, noInt){
         if(real) for(const e of b.foes){
           if(e.alive && e.r <= 0 && cur(e).ch && !e.chain){
             const nm = cur(e).n; advance(e);
-            const cr = fx(st, 'calc', 'justCrack'); e.crack += cr;
+            const cr = fx(st, 'calc', 'justCrack'); hostOf(b, e).crack += cr;
             const sw = fx(st, 'calc', 'justSwift'); b.swift += sw;
             out.justs.push({i:e.i, name:nm}); yield {type:'just', e:e.i, crack:cr, swift:sw};
           }
@@ -259,12 +280,19 @@ function* spendGen(st, cost, k, ti, noInt){
         b.cast = null;
         yield {type:'card', ev};
         if(st.run.body <= 0){ out.dead = true; b.parryNow = false; return out; }
+        // 危険域の中で使い終えると被弾
+        if(real) for(const z of b.zones.filter(z => z.from <= 0 && z.to >= 0)){
+          const zf = b.foes[z.e]; if(!zf || !zf.alive) continue;
+          const res = Object.assign(strike(st, zf, {n:z.n, d:z.d, p:z.p}, 0, true), {zone:true}); if(res.kind === 'hit') afterHit(b);
+          yield {type:'foe', e:z.e, res};
+          if(st.run.body <= 0){ out.dead = true; b.parryNow = false; return out; }
+        }
       }
       b.cast = null;
       if(!b.foes.some(e => e.alive)){ b.parryNow = false; out.won = true; return out; }
     }
     // 敵の行動
-    const acting = b.foes.filter(e => e.alive && (e.r <= 0 || e.reactIn === 0));
+    const acting = b.foes.filter(e => e.alive && !e.sleep && (e.r <= 0 || e.reactIn === 0));
     const syncN = acting.filter(e => e.r <= 0 && e.sync && cur(e).kind !== 'delay').length;
     for(const e of acting){
       const acts = [];
@@ -294,10 +322,12 @@ function* spendGen(st, cost, k, ti, noInt){
 function runGen(g){ let r; while(!(r = g.next()).done){} return r.value; }
 
 /* ---------- 戦闘の準備と、行動の候補 ---------- */
-function makeFoe(key, i){
+function makeFoe(key, i, host){
   const f = D.foes[key];
   const e = {key, i, name:f.name, tag:'ABCDEF'[i], kind:f.kind, hp:f.hp, maxHp:f.hp, pat:f.pat, idx:0, r:f.start, seq:0, alive:true, crack:0,
-    react:f.react || null, sync:f.sync || 0, reactIn:null, ai:f.ai || null, phase:f.phase || null, phased:false, hist:[], chain:0, sh:0, vuln:0, str:0, armor:f.armor || 0};
+    react:f.react || null, sync:f.sync || 0, reactIn:null, ai:f.ai || null, phase:f.phase || null, phased:false, hist:[], chain:0, sh:0, vuln:0, str:0, armor:f.armor || 0, haste:0};
+  // 部位: 耐久を持たない(本体と共有)。wake があれば本体の耐久がその割合を切るまで眠る
+  if(host){ e.host = host.i; e.tag = host.tag; delete e.hp; delete e.maxHp; e.wake = f.wake || null; e.sleep = !!f.wake; }
   if(e.ai === 'rand') e.idx = pickMove(e);
   const a = cur(e); e.sh = a.guard ? a.guard.s : 0;
   return e;
@@ -319,10 +349,11 @@ function newBattle(run, encKey){
   const st = {run, b:null};
   const parts = {};
   for(const s of D.slots){ const mx = partMax(run, s.id); parts[s.id] = {cur: run.parts[s.id].damaged ? Math.ceil(mx / 2) : mx, max:mx}; }
-  const foes = E.foes.map((key, i) => makeFoe(key, i));
+  const foes = [];
+  for(const key of E.foes){ const h = makeFoe(key, foes.length); foes.push(h); for(const tk of (D.foes[key].tracks || [])) foes.push(makeFoe(tk, foes.length, h)); }
   let uid = 1;
   const cards = shuffle(battleDeck(run).map(k => ({k, id:uid++})));
-  const b = {enc:encKey, T:0, block:0, swift:0, foes, parts, draw:cards, disc:[], hand:[], cast:null, broken:{}, over:false, timers:[], drawIn:RULE.draw, handMax:RULE.handMax, uid:1000, parryNow:false, charge:0};
+  const b = {enc:encKey, T:0, block:0, swift:0, foes, parts, draw:cards, disc:[], hand:[], cast:null, broken:{}, over:false, timers:[], zones:[], drawIn:RULE.draw, handMax:RULE.handMax, uid:1000, parryNow:false, charge:0};
   st.b = b;
   b.handMax += fx(st, 'calc', 'handMax');
   const sb = fx(st, 'dur', 'startBlock'); if(sb) gainBlock(b, sb);
@@ -337,7 +368,7 @@ function actions(st){
   const b = st.b, out = [], seen = new Set();
   b.hand.forEach((cd, i) => {
     const c = D.cards[cd.k];
-    const ts = c.tgt ? b.foes.filter(e => e.alive).map(e => e.i) : [null];
+    const ts = c.tgt ? b.foes.filter(e => e.alive && e.host == null).map(e => e.i) : [null];
     for(const t of ts){ const key = cd.k + '|' + t; if(seen.has(key)) continue; seen.add(key); out.push({type:'card', i, k:cd.k, t}); }
   });
   const ec = econ();

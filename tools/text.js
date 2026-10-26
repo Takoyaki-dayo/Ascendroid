@@ -61,6 +61,8 @@ function apply(D, T){
     else if(where === 'pat' && f.pat[+i]) f.pat[+i].n = n;
     else if(where === 'phase' && f.phase && f.phase.pat[+i]) f.phase.pat[+i].n = n;
     else if(where === 'react' && f.react) f.react.n = n;
+    else if(where === 'part' && f.parts && f.parts[i]) f.parts[i].name = n;
+    else if(where === 'broke' && f.broke){ const [pid, j] = i.split(':'); if(f.broke[pid] && f.broke[pid][+j]) f.broke[pid][+j].n = n; }
   }
   for(const e of D.events || []){ const t = T.events[e.id]; if(!t) continue; e.title = t.title; e.text = t.text; t.choices.forEach((c, i) => { if(e.choices[i]) Object.assign(e.choices[i], c); }); }
   D.lines = {speaker: tm.speaker || '', rules: T.lines.rules, room: T.lines.room};

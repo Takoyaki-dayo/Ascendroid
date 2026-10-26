@@ -462,6 +462,38 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 .sw-p b{font-size:13px} .sw-p>span{color:var(--dim);font-size:10.5px}
 .sw-p .sw-dmg{color:var(--foe2);font-weight:700}
 .sw-ar{align-self:center;color:var(--cy);display:flex} .sw-ar svg{width:18px;height:18px}
+/* 1対1のタイムライン(0.17.0): 敵の列1本を大きく、帯は文字なし、自機の行動の帯は下の自機の列に */
+.mk .ic.tp svg{width:9px;height:9px;opacity:.85}
+.mk .mby{position:absolute;left:-6px;top:-7px;width:13px;height:13px;border-radius:50%;background:#0c141d;border:1px solid currentColor;display:flex;align-items:center;justify-content:center;font-style:normal}
+.mk .mby svg{width:8px;height:8px}
+#tl.solo .mk{width:32px;height:30px;flex-direction:column;gap:0;border-radius:5px}
+#tl.solo .mk b{font-size:15px;line-height:1}
+#tl.solo .mk .ic.tp svg{width:10px;height:10px}
+#tl.solo .mk.ch{border-radius:15px}
+#tl.solo .mk.multi b{font-size:13px}
+#tl.solo .rowtag{display:none}
+#tl.solo .rowline{top:58px!important;background:rgba(169,188,203,.14)}
+#tl.solo .rowhit{top:36px!important;height:56px}
+#tl.solo .wb{height:14px;font-size:10px;gap:2px;padding:0 4px;font-family:var(--f-num)}
+#tl.solo .wb .ic svg{width:10px;height:10px}
+.wb .ic{display:inline-flex}
+.wb .ic svg{width:8px;height:8px}
+#tl.solo #selfBar{top:122px;height:10px}
+#tl.solo #stripLine{top:146px}
+/* 敵の部位の欄(右) */
+#eparts .epart{position:absolute;left:740px;width:94px;display:block;padding:3px 5px;border:1px solid transparent;border-radius:5px;text-align:left;color:var(--fg);transition:background .2s,border-color .15s}
+#eparts .ph{display:flex;align-items:center;gap:4px}
+#eparts .pico{color:var(--foe2)} #eparts .pico svg{width:12px;height:12px}
+#eparts .psts{display:flex;gap:6px;margin-top:3px;min-height:11px}
+#eparts .psts .st{font-size:10px} #eparts .psts .ic svg{width:9px;height:9px}
+#eparts .epart.tgt{border-color:var(--cy);background:rgba(56,211,255,.08)}
+#eparts .epart.act .pname{color:var(--foe2)} #eparts .epart.ch .pname{color:var(--just2)}
+#eparts .epart.broken{opacity:.4} #eparts .epart.broken .pico::after{content:"";position:absolute;left:-2px;top:5px;width:16px;height:2px;background:var(--foe);transform:rotate(-40deg)}
+#eparts .epart.flash{background:rgba(255,77,106,.22)}
+#shaker.selfview #eparts,#shaker.focus #eparts{opacity:0;pointer-events:none}
+.fm .mby{position:absolute;left:-6px;top:-6px;width:15px;height:15px;border-radius:50%;background:#0c141d;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--foe2)} .fm .mby svg{width:9px;height:9px}
+.fm.gone{opacity:.3}
+.fdn .fby{display:inline-flex;align-items:center;gap:4px;margin-left:10px;font-size:11px;font-weight:400;color:var(--fg2)} .fdn .fby .ic svg{width:11px;height:11px}
 /* 敵の部位と危険域 */
 .fnote.trk{display:flex;align-items:center;gap:5px;color:var(--fg2);margin-top:4px} .fnote.trk .ic svg{width:11px;height:11px} .fnote.trk span:last-child:not(.ic){color:var(--dim);margin-left:6px}
 .fsleep{opacity:.4}
@@ -565,6 +597,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
       </div>
 
       <div id="parts"></div>
+      <div id="eparts"></div>
       <button id="menuBtn" type="button" data-act="menu" aria-label="メニュー"></button>
 
       <div id="handShade"></div>
@@ -595,10 +628,13 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 <script src="data/text.js"></script>
 <script src="js/engine.js"></script>
 <script>
-const APP_VERSION = '0.16.0';
+const APP_VERSION = '0.17.0';
 const $ = s => document.querySelector(s);
 const EN = ENGINE, RULE = EN.RULE;
-const VIEW = RULE.view, NOW = 180, PX = 25, xs = c => NOW + c * PX, ROWY = [52, 86, 120], STRIP_Y = 150, SWIFT_VIS = 3;
+const VIEW = RULE.view, NOW = 180, PX = 25, xs = c => NOW + c * PX, STRIP_Y = 150, SWIFT_VIS = 3;
+// 敵の行の高さ。敵が1体なら大きな1本(0.17.0 から1対1が前提)
+let ROWY = [52, 86, 120];
+const solo = () => S && S.b && S.b.foes.length === 1;
 const DROID = {x: 133, y: 206, sx: 156, sy: 162};
 const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const sleep = ms => new Promise(r => setTimeout(r, RM ? Math.min(ms, 40) : ms));
@@ -606,6 +642,16 @@ const T_TICK = 110, T_SWIFT = 70;
 const CARD = {W: 96, H: 136, gap: 8, x0: 84, low: 302, up: 248, right: 734};
 
 const IC = {
+  poise:'<svg viewBox="0 0 12 12"><path d="M6 1L7.3 4.4L11 4.6L8.1 6.9L9.1 10.5L6 8.4L2.9 10.5L3.9 6.9L1 4.6L4.7 4.4Z" stroke="currentColor" stroke-width="1.1" fill="none" stroke-linejoin="round"/></svg>',
+  counterIc:'<svg viewBox="0 0 12 12"><path d="M10 3H4L6 1M4 3L6 5M2 9H8L6 7M8 9L6 11" stroke="currentColor" stroke-width="1.3" fill="none"/></svg>',
+  pt_core:'<svg viewBox="0 0 12 12"><circle cx="6" cy="6" r="4.3" stroke="currentColor" stroke-width="1.3" fill="none"/><circle cx="6" cy="6" r="1.7" fill="currentColor"/></svg>',
+  pt_arm:'<svg viewBox="0 0 12 12"><path d="M2 10L6 6L6 2M6 6L10 8" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>',
+  pt_gun:'<svg viewBox="0 0 12 12"><rect x="1.5" y="4.5" width="6" height="4" rx="1" stroke="currentColor" stroke-width="1.2" fill="none"/><path d="M7.5 6H11" stroke="currentColor" stroke-width="1.6"/></svg>',
+  pt_leg:'<svg viewBox="0 0 12 12"><path d="M3 2L4 6L2 10M9 2L8 6L10 10M4 6H8" stroke="currentColor" stroke-width="1.4" fill="none"/></svg>',
+  pt_eye:'<svg viewBox="0 0 12 12"><path d="M1 6C2.5 3.5 4 2.5 6 2.5S9.5 3.5 11 6C9.5 8.5 8 9.5 6 9.5S2.5 8.5 1 6Z" stroke="currentColor" stroke-width="1.2" fill="none"/><circle cx="6" cy="6" r="1.7" fill="currentColor"/></svg>',
+  pt_shield:'<svg viewBox="0 0 12 12"><path d="M6 1L10.5 2.8V6C10.5 8.6 8.4 10.3 6 11C3.6 10.3 1.5 8.6 1.5 6V2.8Z" stroke="currentColor" stroke-width="1.3" fill="none"/></svg>',
+  pt_lead:'<svg viewBox="0 0 12 12"><circle cx="6" cy="4" r="2.2" stroke="currentColor" stroke-width="1.3" fill="none"/><path d="M2 11C2 8.5 3.8 7.3 6 7.3S10 8.5 10 11M4 1.2L6 2L8 1.2" stroke="currentColor" stroke-width="1.2" fill="none"/></svg>',
+  pt_drone:'<svg viewBox="0 0 12 12"><circle cx="6" cy="7" r="2.6" stroke="currentColor" stroke-width="1.3" fill="none"/><path d="M1 3H11M6 3V4.4" stroke="currentColor" stroke-width="1.3"/></svg>',
   haste:'<svg viewBox="0 0 12 12"><path d="M2 2L6 6L2 10M6 2L10 6L6 10" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>',
   track:'<svg viewBox="0 0 12 12"><path d="M3 1V7H9M9 4.5V9.5" stroke="currentColor" stroke-width="1.4" fill="none"/></svg>',
   zone:'<svg viewBox="0 0 12 12"><rect x="1.5" y="2.5" width="9" height="7" rx="1" stroke="currentColor" stroke-width="1.3" fill="none"/><path d="M3 9L7 3M6 9L10 3" stroke="currentColor" stroke-width="1.1"/></svg>',
@@ -666,6 +712,10 @@ const SPR = {
 const SLOTS = DATA.slots;
 const SLOT_BY = Object.fromEntries(SLOTS.map(s => [s.id, s]));
 const AB = {calc:'演', arm:'武', out:'出', dur:'耐', mob:'機'};
+const pIcon = p => IC['pt_' + p.icon] || IC.pt_core;
+// 対象の文字列 '番号.部位' と敵の番号の対応
+const tFoe = t => t == null ? null : typeof t === 'string' && t.includes('.') ? +t.split('.')[0] : +t;
+const tPart = t => typeof t === 'string' && t.includes('.') ? t.split('.')[1] : null;
 const CARDS = DATA.cards, KW = DATA.keywords, FOES = DATA.foes, ENC = DATA.encounters, PARTDEF = DATA.parts;
 
 let S = null, sel = null, PV = null, busy = false, lastTarget = 0, snapshot = null;
@@ -690,7 +740,7 @@ function computePreview(){
   const react = new Set();
   if(a.type === 'card' && cost > 0) for(const e of S.b.foes) if(e.alive && e.react && cost >= e.react.min && e.reactIn == null) react.add(e.i);
   return {k:a.k || null, cost, completeAt: P.out.completeAt ?? P.out.elapsed, free: a.type === 'wait' ? 0 : Math.min(S.b.swift, cost),
-    justSet: new Set(A.out.justs.map(j => j.i)), parts: A.c.b.parts, body: A.c.run.body, foeHp: A.c.b.foes.map(e => e.hp), react, fx,
+    justSet: new Set(A.out.justs.map(j => j.i)), parts: A.c.b.parts, body: A.c.run.body, foeHp: A.c.b.foes.map(e => e.hp), foeParts: A.c.b.foes.map(e => Object.fromEntries(e.pids.map(k => [k, e.parts[k].hp]))), react, fx,
     // 使う前に、新しく置かれる時限の発動位置を見せる
     timers: A.c.b.timers.filter(t => !S.b.timers.some(o => o.id === t.id)).map(t => ({at: A.out.elapsed + t.left, e: t.e}))};
 }
@@ -761,6 +811,11 @@ const hostI = i => { const e = S.b.foes[i]; return e && e.host != null ? e.host 
 const hostX = i => { const h = hosts(); return foeX(h.length, h.findIndex(e => e.i === hostI(i))); };
 function buildFoes(){
   const b = S.b;
+  ROWY = solo() ? [58] : [52, 86, 120];
+  $('#tl').classList.toggle('solo', solo());
+  // 敵の部位の欄(自機の部位の欄と左右対称)。部位が2つ以上ある敵だけ
+  const e0 = b.foes[0];
+  $('#eparts').innerHTML = solo() && e0.pids.length > 1 ? e0.pids.map((k, j) => `<button class="epart" type="button" data-ep="${k}" style="top:${40 + j * 46}px"><span class="ph"><span class="pico">${pIcon(e0.parts[k])}</span><span class="pname">${e0.parts[k].name}</span><span class="pnum"></span></span><span class="pips"></span><span class="psts"></span></button>`).join('') : '';
   $('#rows').innerHTML = b.foes.map(e => `<div class="rowline${e.host != null ? ' trk' : ''}" data-r="${e.i}" style="top:${ROWY[e.i]}px"></div><div class="rowtag${e.host != null ? ' trk' : ''}" data-r="${e.i}" style="top:${ROWY[e.i] - 8}px">${e.host != null ? IC.track : e.tag}</div><div class="rowhit" data-f="${e.i}" style="top:${ROWY[e.i] - 17}px"></div>`).join('');
   $('#foes').innerHTML = hosts().map(e => `<div class="foe" data-f="${e.i}" style="left:${hostX(e.i)}px">${SPR[e.kind]}<span class="reticle"></span></div><div class="cinfo fi" data-f="${e.i}" style="left:${hostX(e.i) + 2}px"><span class="frow"><span class="ftag">${e.tag}</span><span class="hpb"><i></i><s></s></span><span class="hpt"></span></span><span class="sts"></span></div>`).join('');
 }
@@ -779,7 +834,7 @@ const pipW = (max, room) => Math.max(2, Math.floor((room - (max - 1) * 2) / max)
 function renderAll(){
   if(!S.b) return;
   $('#shaker').classList.toggle('executing', busy);
-  renderMe(); renderParts(); renderRows(); renderFoes(); renderPreview(); renderMarks(); renderStrip(); renderHand(); renderSide();
+  renderMe(); renderParts(); renderEParts(); renderRows(); renderFoes(); renderPreview(); renderMarks(); renderStrip(); renderHand(); renderSide();
 }
 function renderMe(){
   const body = S.run.body, after = PV ? PV.body : body, max = S.run.bodyMax;
@@ -820,12 +875,28 @@ function renderParts(){
     el.querySelector('.pips').innerHTML = pipsHTML(st.max, st.cur, after, start, pipW(st.max, 70));
   });
 }
+// 敵の部位の欄: 耐久(プレビュー込み)、状態、狙っている部位、次に行動する部位
+function renderEParts(){
+  const b = S.b, e = b.foes[0], need = sel && sel.kind === 'card' && CARDS[sel.k].tgt;
+  if(!e || !e.pids || e.pids.length < 2) return;
+  const a = EN.cur(e), next = e.alive ? EN.actorPid(e, a) : null, tp = need ? (tPart(sel.target) || EN.defaultPid(e)) : null;
+  document.querySelectorAll('#eparts .epart').forEach(el => {
+    const k = el.dataset.ep, p = e.parts[k], after = PV && PV.foeParts ? PV.foeParts[0][k] : p.hp;
+    el.classList.toggle('broken', p.broken);
+    el.classList.toggle('tgt', !!need && tp === k && !p.broken);
+    el.classList.toggle('act', next === k && !p.broken);
+    el.classList.toggle('ch', next === k && !!a.ch && !p.broken);
+    const num = el.querySelector('.pnum'); num.textContent = after < p.hp ? `${p.hp}→${after}` : String(p.hp); num.classList.toggle('pv', after < p.hp);
+    el.querySelector('.pips').innerHTML = pipsHTML(Math.min(p.max, 14), Math.ceil(p.hp / p.max * Math.min(p.max, 14)), Math.ceil(after / p.max * Math.min(p.max, 14)), Math.min(p.max, 14), pipW(Math.min(p.max, 14), 70));
+    el.querySelector('.psts').innerHTML = (p.crack ? `<span class="st crack"><span class="ic">${IC.crack}</span>${p.crack}</span>` : '') + (p.armor ? `<span class="st arm"><span class="ic">${IC.armor}</span>${p.armor}</span>` : '') + (p.vuln > 1 ? `<span class="st swf"><span class="ic">${IC.vuln}</span>${p.vuln - 1}</span>` : '');
+  });
+}
 function renderRows(){
   const b = S.b, need = sel && sel.kind === 'card' && CARDS[sel.k].tgt;
   document.querySelectorAll('[data-r]').forEach(el => {
     const e = b.foes[+el.dataset.r];
     el.classList.toggle('dead', !e.alive);
-    el.classList.toggle('tgt', !!need && sel.target === e.i && e.alive);
+    el.classList.toggle('tgt', !!need && tFoe(sel.target) === e.i && e.alive);
   });
 }
 function renderFoes(){
@@ -834,20 +905,20 @@ function renderFoes(){
     if(e.host != null) continue;
     const sp = foeEl(e.i), info = document.querySelector(`.fi[data-f="${e.i}"]`);
     sp.classList.toggle('dead', !e.alive); info.classList.toggle('dead', !e.alive);
-    const tgt = !!need && sel.target === e.i && e.alive;
+    const tgt = !!need && tFoe(sel.target) === e.i && e.alive;
     sp.classList.toggle('tgt', tgt); info.querySelector('.ftag').classList.toggle('tgt', tgt);
     const after = Math.max(0, PV ? PV.foeHp[e.i] : e.hp);
     info.querySelector('.hpb i').style.width = (after / e.maxHp * 100) + '%';
     const s = info.querySelector('.hpb s'); s.style.left = (after / e.maxHp * 100) + '%'; s.style.width = ((e.hp - after) / e.maxHp * 100) + '%';
     const t = info.querySelector('.hpt'); t.textContent = after < e.hp ? `${e.hp}→${after}` : String(e.hp); t.classList.toggle('pv', after < e.hp);
     let sts = '';
-    if(e.crack) sts += `<span class="st crack"><span class="ic">${IC.crack}</span>${e.crack}</span>`;
+    const p1 = e.pids.length === 1 ? e.parts[e.pids[0]] : null;
+    if(p1 && p1.crack) sts += `<span class="st crack"><span class="ic">${IC.crack}</span>${p1.crack}</span>`;
     if(e.react) sts += `<span class="st trait${PV && PV.react.has(e.i) ? ' on' : ''}"><span class="ic">${IC.eye}</span>${e.react.min}</span>`;
     if(e.sync) sts += `<span class="st trait"><span class="ic">${IC.link}</span>${e.sync}</span>`;
     if(e.str) sts += `<span class="st str"><span class="ic">${IC.str}</span>${e.str}</span>`;
-    if(e.armor) sts += `<span class="st arm"><span class="ic">${IC.armor}</span>${e.armor}</span>`;
-    const hs = Math.max(e.haste || 0, ...b.foes.filter(f => f.host === e.i).map(f => f.haste || 0));
-    if(hs) sts += `<span class="st str"><span class="ic">${IC.swift}</span>${hs}</span>`;
+    if(p1 && p1.armor) sts += `<span class="st arm"><span class="ic">${IC.armor}</span>${p1.armor}</span>`;
+    if(e.haste) sts += `<span class="st str"><span class="ic">${IC.haste}</span>${e.haste}</span>`;
     info.querySelector('.sts').innerHTML = sts;
   }
 }
@@ -906,12 +977,14 @@ function placeBand(key, x0, x1, y, cls, html){
   el.style.left = x0 + 'px'; el.style.width = Math.max(10, x1 - x0) + 'px'; el.style.top = y + 'px'; el.style.opacity = '';
 }
 const WIN = {wind:'構', guard:'防', counter:'返'};
-function moveIcon(a){ return a.buff ? `<b>▲${a.buff}</b>` : a.armor ? `<b>装</b>` : a.heal ? `<b>+${a.heal}</b>` : a.crack ? `<span class="ic">${IC.crack}</span>` : a.noise ? `<span class="ic">${IC.junk}</span>` : a.zone ? `<span class="ic">${IC.zone}</span>` : a.haste ? `<span class="ic">${IC.swift}</span>` : a.summon ? `<b>援</b>` : a.guard ? `<span class="ic">${IC.block}</span>` : '<b>·</b>'; }
+// 帯は文字を使わずアイコンと数字で: 構え(★ 崩すのに要る一撃)・ガード(盾)・反撃(返し矢印)・隙(照準)
+const WIC = {wind:IC.poise, guard:IC.block, counter:IC.counterIc};
+function moveIcon(a){ return a.buff ? `<span class="ic">${IC.str}</span><b>${a.buff}</b>` : a.armor ? `<span class="ic">${IC.armor}</span><b>${a.armor}</b>` : a.heal ? `<b>+${a.heal}</b>` : a.crack ? `<span class="ic">${IC.crack}</span>` : a.noise ? `<span class="ic">${IC.junk}</span>` : a.zone ? `<span class="ic">${IC.zone}</span>` : a.haste ? `<span class="ic">${IC.swift}</span>` : a.summon ? `<b>援</b>` : a.guard ? `<span class="ic">${IC.block}</span>` : '<b>·</b>'; }
 function renderMarks(){
   const b = S.b, seen = new Set(), seenB = new Set(), syn = syncTimes(), pv = PV && !busy ? PV : null;
   for(const e of b.foes){
     if(!e.alive) continue;
-    const y = ROWY[e.i] - 11, by = ROWY[e.i] + 12, list = EN.upcoming(e);
+    const so = solo(), y = ROWY[e.i] - (so ? 17 : 11), by = ROWY[e.i] + (so ? 22 : 12), list = EN.upcoming(e), multi = e.pids.length > 1;
     let lastT = 0;
     for(const m of list){
       const key = e.i + '-' + (e.seq + m.k) + '-' + m.left; seen.add(key);
@@ -925,8 +998,9 @@ function renderMarks(){
         if(m.t === pv.completeAt && a.ch && pv.justSet.has(e.i)) cls += ' just';
         if(m.k === 0 && a.wind && pv.fx.has('break:' + e.i)) cls += ' just';
       }
-      const html = a.kind === 'delay' ? `<span class="ic">${IC.delay}</span><b>${a.v}</b>` : atk ? `<b>${a.d + (e.str || 0) + (sy ? e.sync : 0)}</b><span>${AB[a.p]}</span>` : moveIcon(a);
-      placeMark(key, xs(m.t) - 13, y, cls, html);
+      const by_ = multi && a.by && e.parts[a.by] ? `<i class="mby">${pIcon(e.parts[a.by])}</i>` : '';
+      const html = by_ + (a.kind === 'delay' ? `<span class="ic">${IC.delay}</span><b>${a.v}</b>` : atk ? `<b>${a.d + (e.str || 0) + (sy ? e.sync : 0)}</b><span class="ic tp">${IC[a.p]}</span>` : moveIcon(a));
+      placeMark(key, xs(m.t) - (so ? 16 : 13), y, cls, html);
       lastT = Math.max(lastT, m.t);
       if(m.hit) continue;
       // 行動の前の窓: その間にカードが完了すると効く
@@ -936,26 +1010,27 @@ function renderMarks(){
         const bk = 'b' + key + w; seenB.add(bk);
         const val = w === 'wind' ? W.poise : w === 'guard' ? (m.k === 0 ? e.sh : W.s) : W.d;
         const on = pv && m.k === 0 && pv.fx.has((w === 'wind' ? 'break' : w === 'guard' ? 'guarded' : 'counter') + ':' + e.i);
-        placeBand(bk, s0 >= 1 ? xs(s0) : NOW + 6, xs(Math.min(s1, VIEW)) + 6, by, 'wb ' + w + (m.k > 0 ? ' later' : '') + (on ? ' on' : ''), WIN[w] + val);
+        placeBand(bk, s0 >= 1 ? xs(s0) : NOW + 6, xs(Math.min(s1, VIEW)) + 6, by, 'wb ' + w + (m.k > 0 ? ' later' : '') + (on ? ' on' : ''), `<span class="ic">${WIC[w]}</span>${val}`);
       }
       // 行動の後の隙
       if(a.rec){
         const t1 = m.t + m.left + 1, t2 = m.t + m.left + a.rec;
-        if(t1 <= VIEW){ const bk = 'b' + key + 'rec'; seenB.add(bk); placeBand(bk, xs(t1), xs(Math.min(t2, VIEW)) + 6, by, 'wb vuln' + (m.k > 0 ? ' later' : '') + (pv && pv.fx.has('vulnHit:' + e.i) ? ' on' : ''), '隙'); }
+        if(t1 <= VIEW){ const bk = 'b' + key + 'rec'; seenB.add(bk); placeBand(bk, xs(t1), xs(Math.min(t2, VIEW)) + 6, by, 'wb vuln' + (m.k > 0 ? ' later' : '') + (pv && pv.fx.has('vulnHit:' + e.i) ? ' on' : ''), `<span class="ic">${IC.vuln}</span>`); }
       }
     }
     // 今の隙
-    if(e.vuln > 1){ const bk = 'v' + e.i; seenB.add(bk); placeBand(bk, NOW + 6, xs(Math.min(e.vuln - 1, VIEW)) + 6, by, 'wb vuln' + (pv && pv.fx.has('vulnHit:' + e.i) ? ' on' : ''), '隙'); }
+    const vk = e.pids.find(k => e.parts[k].vuln > 1);
+    if(vk){ const vv = e.parts[vk].vuln, bk = 'v' + e.i; seenB.add(bk); placeBand(bk, NOW + 6, xs(Math.min(vv - 1, VIEW)) + 6, by, 'wb vuln' + (pv && pv.fx.has('vulnHit:' + e.i) ? ' on' : ''), `<span class="ic">${multi ? pIcon(e.parts[vk]) : IC.vuln}</span>`); }
     // 分岐する敵: 次の行動は決まるまで見えない
     if(e.ai === 'rand' && list.length){
       const t = lastT + Math.min(...e.pat.map(x => x.dl));
-      if(t <= VIEW){ const key = 'u' + e.i + '-' + e.seq; seen.add(key); placeMark(key, xs(t) - 13, y, 'mk unk', '<b>?</b>'); }
+      if(t <= VIEW){ const key = 'u' + e.i + '-' + e.seq; seen.add(key); placeMark(key, xs(t) - (so ? 16 : 13), y, 'mk unk', '<b>?</b>'); }
     }
     // 反応: 予定ではなく、重いカードへの返し
     const rt = e.reactIn != null ? e.reactIn : (pv && pv.react.has(e.i) ? 1 : null);
     if(rt != null && rt > 0){
       const key = 'r' + e.i; seen.add(key);
-      placeMark(key, xs(rt) - 13, y, 'mk react' + (e.reactIn == null ? ' ghost' : ' danger'), `<b>${e.react.d}</b><span>${AB[e.react.p]}</span>`);
+      placeMark(key, xs(rt) - (so ? 16 : 13), y, 'mk react' + (e.reactIn == null ? ' ghost' : ' danger'), `<b>${e.react.d}</b><span class="ic tp">${IC[e.react.p]}</span>`);
     }
   }
   for(const [key, el] of markEls){
@@ -1054,7 +1129,7 @@ function monologue(){
   if(run.body < run.bodyMax * 0.4) hit.bodyLow = {};
   const br = SLOTS.find(p => b.parts[p.id].cur <= 0); if(br) hit.partBroken = {part: br.fn};
   for(const e of b.foes){ if(!e.alive || hit.chargeSoon) continue; for(const m of EN.upcoming(e)) if(m.a.ch && m.t <= 9){ hit.chargeSoon = {enemy: e.name, move: m.a.n, t: m.t}; break; } }
-  for(const e of b.foes){ if(!e.alive) continue; if(e.vuln > 1 && !hit.vulnNow) hit.vulnNow = {enemy: e.name}; const a = EN.cur(e); if(a.wind && e.r > 0 && e.r <= a.wind.w + 2 && !hit.windNow) hit.windNow = {enemy: e.name, move: a.n, poise: a.wind.poise}; }
+  for(const e of b.foes){ if(!e.alive) continue; if(e.pids.some(k => e.parts[k].vuln > 1) && !hit.vulnNow) hit.vulnNow = {enemy: e.name}; const a = EN.cur(e); if(a.wind && e.r > 0 && e.r <= a.wind.w + 2 && !hit.windNow) hit.windNow = {enemy: e.name, move: a.n, poise: a.wind.poise}; }
   if(!b.hand.length) hit.handEmpty = {};
   const worn = SLOTS.find(p => run.parts[p.id].damaged); if(worn) hit.partWorn = {part: worn.fn};
   const sum = {}; for(const e of b.foes){ if(!e.alive) continue; for(const m of EN.upcoming(e)) if(m.a.kind !== 'delay') sum[m.a.p] = (sum[m.a.p] || 0) + m.a.d; }
@@ -1136,9 +1211,15 @@ function cardMotion(k, ti){
 }
 function cardFx(x){
   switch(x.kind){
-    case 'dmg': { const p = foeCenter(x.e); floatAt(p.x, p.y - 62, '−' + x.n, 'foe'); pulse(foeEl(x.e), 'ehit', 280); break; }
+    case 'dmg': {
+      const el = x.part && document.querySelector(`#eparts .epart[data-ep="${x.part}"]`), p = foeCenter(x.e);
+      if(el){ floatAt(720, el.offsetTop + 10, '−' + x.n, 'foe'); pulse(el, 'flash', 260); } else floatAt(p.x, p.y - 62, '−' + x.n, 'foe');
+      pulse(foeEl(x.e), 'ehit', 280); break; }
     case 'kill': { const p = foeCenter(x.e); shards(p.x, p.y, '#d3e2ee'); break; }
     case 'wake': floatAt(xs(1), ROWY[x.e] - 14, '!', 'foe'); break;
+    case 'partBreak': { const el = document.querySelector(`#eparts .epart[data-ep="${x.part}"]`); if(el){ pulse(el, 'flash', 420); const r = el.offsetTop; shards(780, r + 14, '#ff8a9c'); } else { const p = foeCenter(x.e); shards(p.x, p.y, '#ff8a9c'); } break; }
+    case 'cancel': floatAt(xs(1), ROWY[x.e] - 20, '×', 'cy'); break;
+    case 'shift': floatAt(xs(1), ROWY[x.e] - 20, '!!', 'foe'); break;
     case 'crack': { const p = foeCenter(x.e); floatAt(p.x + 30, p.y - 40, '+' + x.n, 'foe'); break; }
     case 'delay': floatAt(xs(2), ROWY[x.e] - 14, '+' + x.n, 'cy'); break;
     case 'block': floatAt(130, 262, '+' + x.n, ''); break;
@@ -1208,7 +1289,23 @@ function interruptFx(){
 }
 
 /* ---------- play ---------- */
-function defaultTarget(){ const b = S.b; if(b.foes[lastTarget] && b.foes[lastTarget].alive && b.foes[lastTarget].host == null) return lastTarget; const e = b.foes.find(f => f.alive && f.host == null); return e ? e.i : 0; }
+// 狙い: 前に狙った敵(と部位)が生きていればそれ、なければおまかせ。部位が2つ以上ある敵は '番号.部位'
+function defaultTarget(){
+  const b = S.b, tf = tFoe(lastTarget), tp = tPart(lastTarget);
+  const e = b.foes[tf] && b.foes[tf].alive ? b.foes[tf] : b.foes.find(f => f.alive); if(!e) return 0;
+  if(EN.livePids(e).length < 2) return e.i;
+  return e.i + '.' + (tp && e.parts[tp] && !e.parts[tp].broken ? tp : EN.defaultPid(e));
+}
+function onEPart(k){
+  const e = S.b.foes[0], p = e && e.parts[k]; if(!p) return;
+  if(sel && sel.kind === 'card' && CARDS[sel.k].tgt){
+    if(p.broken) return;
+    const t = '0.' + k;
+    if(sel.target === t){ execute(); return; }
+    sel.target = t; lastTarget = t; recalc(); return;
+  }
+  if(!sel) infoFoe(0);
+}
 function recalc(){ PV = computePreview(); renderAll(); }
 function onCard(i){
   const k = S.b.hand[i].k, c = CARDS[k];
@@ -1229,8 +1326,9 @@ function onFoe(i){
   i = hostI(i);
   const e = S.b.foes[i]; if(!e.alive) return;
   if(sel && sel.kind === 'card' && CARDS[sel.k].tgt){
-    if(sel.target === i){ execute(); return; }
-    sel.target = i; lastTarget = i; recalc(); return;
+    const t = EN.livePids(e).length > 1 ? defaultTarget() : i;
+    if(sel.target === t || tFoe(sel.target) === i && EN.livePids(e).length > 1){ execute(); return; }
+    sel.target = t; lastTarget = t; recalc(); return;
   }
   if(!sel) infoFoe(i);
 }
@@ -1513,7 +1611,8 @@ function moveGlyph(e, a){
 function moveBtn(e, a, key, isCur, selKey){
   const cls = a.kind === 'delay' ? 'dl' : a.ch ? 'ch' : a.d > 0 ? 'atk' : 'mv';
   const under = a.kind === 'delay' ? '自機' : a.d > 0 ? `<span class="ic">${IC[a.p]}</span>` : '';
-  return `<button type="button" class="fm ${cls}${selKey === key ? ' on' : ''}" data-act="foeMove" data-arg="${key}">${isCur ? `<span class="fm-now"><span class="ic">${IC.clock}</span>${e.r}</span>` : ''}<span class="fm-v">${moveGlyph(e, a)}</span><span class="fm-p">${under}</span></button>`;
+  const bp = e.pids && e.pids.length > 1 && a.by && e.parts[a.by] ? e.parts[a.by] : null;
+  return `<button type="button" class="fm ${cls}${selKey === key ? ' on' : ''}${bp && bp.broken ? ' gone' : ''}" data-act="foeMove" data-arg="${key}">${bp ? `<i class="mby">${pIcon(bp)}</i>` : ''}${isCur ? `<span class="fm-now"><span class="ic">${IC.clock}</span>${e.r}</span>` : ''}<span class="fm-v">${moveGlyph(e, a)}</span><span class="fm-p">${under}</span></button>`;
 }
 function moveRow(e, pat, tag, start, curOn, rand, selKey){
   const n = pat.length; let h = '';
@@ -1526,14 +1625,19 @@ function moveRow(e, pat, tag, start, curOn, rand, selKey){
   return `<div class="frow-m">${h}</div>`;
 }
 function foeStates(e){
-  return [e.armor ? {k:'armor', n:e.armor, cls:'arm'} : null, e.str ? {k:'str', n:e.str, cls:'bad'} : null,
-    e.crack ? {k:'crack', n:e.crack, cls:'good'} : null, e.vuln > 1 ? {k:'vuln', n:e.vuln - 1, cls:'good'} : null,
-    e.haste ? {k:'haste', n:e.haste, cls:'bad'} : null].filter(Boolean);
+  // 部位ごとの状態(部位が2つ以上なら札に部位名を添える)。強化と加速は敵全体
+  const out = [], multi = e.pids.length > 1;
+  for(const k of e.pids){ const p = e.parts[k], pre = multi ? p.name + ' ' : '';
+    if(p.armor) out.push({k:'armor', id:'armor-' + k, n:p.armor, cls:'arm', pre});
+    if(p.crack) out.push({k:'crack', id:'crack-' + k, n:p.crack, cls:'good', pre});
+    if(p.vuln > 1) out.push({k:'vuln', id:'vuln-' + k, n:p.vuln - 1, cls:'good', pre}); }
+  return out.concat([e.str ? {k:'str', id:'str', n:e.str, cls:'bad', pre:''} : null,
+    e.haste ? {k:'haste', id:'haste', n:e.haste, cls:'bad', pre:''} : null].filter(Boolean));
 }
 function renderFocus(){
   const f = UI.focus, e = S.b.foes[f.i], rand = e.ai === 'rand';
   const pat = e.pat;
-  if(f.sel && f.sel.startsWith('s:') && !foeStates(e).some(x => 's:' + x.k === f.sel)) f.sel = null;
+  if(f.sel && f.sel.startsWith('s:') && !foeStates(e).some(x => 's:' + x.id === f.sel)) f.sel = null;
   if(!f.sel){ const ci = rand ? pat.indexOf(EN.cur(e)) : e.idx % pat.length; f.sel = 'p:' + Math.max(0, ci); }
   const [tag, idx] = f.sel.split(':'), owner = tag[0] === 't' ? S.b.foes[+tag.slice(1)] : e;
   const a = tag === 's' ? null : (tag === 'h' ? e.phase.pat : owner.pat)[+idx] || EN.cur(e);
@@ -1546,15 +1650,15 @@ function renderFocus(){
   }
   // 状態: アイコン・名前・値の札。押すと下に説明
   const sts = foeStates(e);
-  const st = sts.length ? `<div class="fsts">${sts.map(x => `<button type="button" class="fsp ${x.cls}${f.sel === 's:' + x.k ? ' on' : ''}" data-act="foeMove" data-arg="s:${x.k}"><span class="ic">${IC[x.k]}</span>${DATA.ui['stname.' + x.k]}<b>${x.n}</b></button>`).join('')}</div>` : '';
-  const sx = tag === 's' ? sts.find(x => x.k === idx) : null;
+  const st = sts.length ? `<div class="fsts">${sts.map(x => `<button type="button" class="fsp ${x.cls}${f.sel === 's:' + x.id ? ' on' : ''}" data-act="foeMove" data-arg="s:${x.id}"><span class="ic">${IC[x.k]}</span>${x.pre}${DATA.ui['stname.' + x.k]}<b>${x.n}</b></button>`).join('')}</div>` : '';
+  const sx = tag === 's' ? sts.find(x => x.id === idx) : null;
   const tr = [e.react ? fillUi('foe.react', {min: e.react.min, part: SLOT_BY[e.react.p].fn, d: e.react.d}) : '', e.sync ? fillUi('foe.sync', {sync: e.sync}) : ''].filter(Boolean);
   $('#focus').classList.toggle('many', S.b.foes.some(x => x.host === e.i) || !!(e.phase && !e.phased) || e.ai === 'rand');
   $('#focus').innerHTML = `<div class="fhead"><span class="ftag">${e.tag}</span><b>${e.name}</b><button class="btn ghost fclose" type="button" data-act="foeClose">戻る</button></div>
     <div class="fhp"><b>${e.hp}</b><span>/${e.maxHp}</span><span class="ei-bar"><i style="width:${e.hp / e.maxHp * 100}%"></i></span></div>${st}
     <div class="fmoves">${rows}</div>
-    ${sx ? `<div class="fdet stx ${sx.cls}"><div class="fdn">${DATA.ui['stname.' + sx.k]} ${sx.n}</div><p>${fillUi('st.' + sx.k, {n: sx.n})}</p></div>`
-      : a ? `<div class="fdet${a.ch ? ' ch' : ''}"><div class="fdn">${a.n}</div>${moveLines(owner, a).map(t => `<p>${t}</p>`).join('')}</div>` : ''}
+    ${sx ? `<div class="fdet stx ${sx.cls}"><div class="fdn">${sx.pre}${DATA.ui['stname.' + sx.k]} ${sx.n}</div><p>${fillUi('st.' + sx.k, {n: sx.n})}</p></div>`
+      : a ? `<div class="fdet${a.ch ? ' ch' : ''}"><div class="fdn">${a.n}${a.by && owner.parts && owner.parts[a.by] && owner.pids.length > 1 ? `<span class="fby"><span class="ic">${pIcon(owner.parts[a.by])}</span>${owner.parts[a.by].name}${owner.parts[a.by].broken ? '(破損)' : ''}</span>` : ''}</div>${moveLines(owner, a).map(t => `<p>${t}</p>`).join('')}</div>` : ''}
     ${tr.length ? `<div class="ftr">${tr.map(t => `<p>${t}</p>`).join('')}</div>` : ''}`;
 }
 function infoFoe(i){
@@ -1844,6 +1948,7 @@ stage.addEventListener('click', ev => {
   const card = t.closest('#hand .card[data-i]'); if(card){ onCard(+card.dataset.i); return; }
   if(t.closest('#redraw')){ onRedraw(); return; }
   if(t.closest('#waitBtn')){ onWait(); return; }
+  const ep = t.closest('.epart'); if(ep){ onEPart(ep.dataset.ep); return; }
   const f = t.closest('[data-f]'); if(f){ onFoe(+f.dataset.f); return; }
   const p = t.closest('#parts .part'); if(p){ infoPart(p.dataset.p); return; }
   if(t.closest('.pile')){ infoDeck(); return; }

@@ -15,7 +15,7 @@ const goal = e => e.boss ? {T:60, loss:45} : e.elite ? {T:40, loss:28} : e.tier 
 // 攻撃の倍率は本体と部位(tracks)の全部にかける。危険域のダメージも
 function setFoe(key, hm, dm){
   D.foes = JSON.parse(JSON.stringify(FOES)); const f = D.foes[key], sc = x => Math.max(1, Math.round(x * dm));
-  f.hp = Math.round(FOES[key].hp * hm);
+  if(f.parts){ for(const k in f.parts) f.parts[k].hp = Math.max(1, Math.round(FOES[key].parts[k].hp * hm)); } else f.hp = Math.round(FOES[key].hp * hm);
   const fix = pat => pat.forEach(a => { if(a.d > 0) a.d = sc(a.d); if(a.counter) a.counter.d = sc(a.counter.d); if(a.zone) a.zone.d = sc(a.zone.d); });
   for(const g of [f, ...(f.tracks || []).map(k => D.foes[k])]){ fix(g.pat); if(g.phase) fix(g.phase.pat); if(g.react) g.react.d = sc(g.react.d); }
 }
@@ -34,7 +34,8 @@ for(const [ek, e] of Object.entries(ENC)){
     dm = (lo + hi) / 2;
   }
   setFoe(key, hm, dm); const r = T.measure('std', 'auto', N, 9, order, 3);
-  out[key] = {hp: Math.round(FOES[key].hp * hm), dmg: +dm.toFixed(2)};
-  console.log(`${ek} ${key}: 耐久 ${FOES[key].hp} → ${out[key].hp}、攻撃 ×${dm.toFixed(2)} / 長さ ${r.T.toFixed(0)}(目安 ${g.T}) 損傷 ${r.per[ek].toFixed(1)}(目安 ${g.loss})`);
+  const hp0 = FOES[key].parts ? Object.values(FOES[key].parts).reduce((x, p) => x + p.hp, 0) : FOES[key].hp;
+  out[key] = {hm: +hm.toFixed(2), hp: Math.round(hp0 * hm), dmg: +dm.toFixed(2)};
+  console.log(`${ek} ${key}: 耐久 ${hp0} → ${out[key].hp}(×${hm.toFixed(2)})、攻撃 ×${dm.toFixed(2)} / 長さ ${r.T.toFixed(0)}(目安 ${g.T}) 損傷 ${r.per[ek].toFixed(1)}(目安 ${g.loss})`);
 }
 console.log(JSON.stringify(out));

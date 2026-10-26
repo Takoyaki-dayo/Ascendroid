@@ -18,6 +18,8 @@ window.DATA = window.DATA || {};
     else if(where === 'pat' && f.pat[+i]) f.pat[+i].n = n;
     else if(where === 'phase' && f.phase && f.phase.pat[+i]) f.phase.pat[+i].n = n;
     else if(where === 'react' && f.react) f.react.n = n;
+    else if(where === 'part' && f.parts && f.parts[i]) f.parts[i].name = n;
+    else if(where === 'broke' && f.broke){ const [pid, j] = i.split(':'); if(f.broke[pid] && f.broke[pid][+j]) f.broke[pid][+j].n = n; }
   }
   for(const e of D.events || []){ const t = T.events[e.id]; if(!t) continue; e.title = t.title; e.text = t.text; t.choices.forEach((c, i) => { if(e.choices[i]) Object.assign(e.choices[i], c); }); }
   D.lines = {speaker: tm.speaker || '', rules: T.lines.rules, room: T.lines.room};
@@ -45,7 +47,7 @@ window.DATA = window.DATA || {};
   },
   "overclock": {
    "name": "オーバークロック",
-   "text": "スウィフト{swift}を得る。"
+   "text": "ディレイ{delay}を与える。カードを{draw}枚引く。"
   },
   "reload": {
    "name": "再装填",
@@ -77,11 +79,11 @@ window.DATA = window.DATA || {};
   },
   "backflow": {
    "name": "逆流",
-   "text": "敵全体にディレイ{delay}を与える。"
+   "text": "ディレイ{delay}を与える。"
   },
   "scatter": {
    "name": "散弾",
-   "text": "敵全体に{dmg}ダメージを与える。"
+   "text": "敵のすべての部位に{dmg}ダメージを与える。"
   },
   "charge": {
    "name": "チャージショット",
@@ -89,7 +91,7 @@ window.DATA = window.DATA || {};
   },
   "emp": {
    "name": "EMPパルス",
-   "text": "敵全体に{dmg}ダメージを与える。"
+   "text": "敵のすべての部位に{dmg}ダメージを与える。"
   },
   "blow": {
    "name": "過負荷打撃",
@@ -113,7 +115,7 @@ window.DATA = window.DATA || {};
   },
   "storm": {
    "name": "放電網",
-   "text": "充電をすべて消費し、敵全体に1につき{per}ダメージを与える。"
+   "text": "充電をすべて消費し、敵のすべての部位に1につき{per}ダメージを与える。"
   },
   "cell": {
    "name": "電磁障壁",
@@ -134,11 +136,6 @@ window.DATA = window.DATA || {};
    "key": "delay",
    "name": "ディレイ",
    "desc": "対象の次の行動を、その値のサイクルだけ遅らせる。"
-  },
-  {
-   "key": "swift",
-   "name": "スウィフト",
-   "desc": "その値のサイクルだけ、自分だけが動ける。その間、敵の行動は進まない。"
   },
   {
    "key": "crack",
@@ -177,7 +174,7 @@ window.DATA = window.DATA || {};
   },
   "calc_pre": {
    "name": "〘予測演算核〙",
-   "text": "JUSTで溜め技を潰したとき、スウィフト3を得る。"
+   "text": "JUSTで溜め技を潰したとき、その敵にディレイ3を与える。"
   },
   "arm_rail": {
    "name": "〘CXR34レールガン〙",
@@ -217,7 +214,7 @@ window.DATA = window.DATA || {};
   },
   "mob_std": {
    "name": "〘デトロイト噴射機構〙",
-   "text": "戦闘開始時、スウィフト3を得る。ディレイを受けたとき、スウィフト2を得る。"
+   "text": "戦闘開始時、敵にディレイ3を与える。ディレイを受けたとき、その敵にディレイ2を与える。"
   },
   "mob_feed": {
    "name": "〘給弾リンク〙",
@@ -225,7 +222,7 @@ window.DATA = window.DATA || {};
   },
   "mob_dash": {
    "name": "〘瞬発スラスタ〙",
-   "text": "コスト0のカードを使うたび、スウィフト1を得る。"
+   "text": "コスト0のカードを使うたび、敵にディレイ1を与える。"
   }
  },
  "foes": {
@@ -272,10 +269,6 @@ window.DATA = window.DATA || {};
   "warden.pat.1": "照射",
   "warden.pat.2": "修復",
   "warden.pat.3": "消去プロトコル",
-  "warden.phase.0": "照射",
-  "warden.phase.1": "防壁展開",
-  "warden.phase.2": "報復態勢",
-  "warden.phase.3": "消去プロトコル",
   "warden.react": "排除",
   "scanner": "走査ドローン",
   "scanner.pat.0": "射撃",
@@ -285,25 +278,62 @@ window.DATA = window.DATA || {};
   "accel.pat.0": "突進",
   "accel.pat.1": "蹴撃",
   "twin": "双腕作業機",
+  "twin.part.core": "胴体",
+  "twin.part.armL": "左腕",
+  "twin.part.armR": "右腕",
   "twin.pat.0": "振り下ろし",
-  "twin.pat.1": "腕で防ぐ",
-  "twinR": "右腕",
-  "twinR.pat.0": "掴み打ち",
-  "twinR.pat.1": "叩きつけ",
+  "twin.pat.1": "掴み打ち",
+  "twin.pat.2": "腕で防ぐ",
+  "twin.pat.3": "叩きつけ",
   "bomber": "自爆ユニット",
-  "bomber.pat.0": "臨界",
-  "bomberGun": "防衛砲",
-  "bomberGun.pat.0": "防衛射撃",
+  "bomber.part.core": "炉心",
+  "bomber.part.gun": "防衛砲",
+  "bomber.pat.0": "防衛射撃",
+  "bomber.pat.1": "防衛射撃",
+  "bomber.pat.2": "防衛射撃",
+  "bomber.pat.3": "防衛射撃",
+  "bomber.pat.4": "臨界",
+  "squad": "第三警備小隊",
+  "squad.part.lead": "隊長",
+  "squad.part.gunner": "射手",
+  "squad.part.shield": "盾持ち",
+  "squad.pat.0": "号令",
+  "squad.pat.1": "制圧射撃",
+  "squad.pat.2": "盾突撃",
+  "squad.pat.3": "制圧射撃",
+  "squad.pat.4": "制圧射撃",
+  "squad.broke.lead:0": "乱射",
+  "squad.broke.lead:1": "突進",
+  "squad.broke.lead:2": "乱射",
+  "squad.broke.lead:3": "立て直す",
+  "swarm": "ドローン群",
+  "swarm.part.d1": "子機1",
+  "swarm.part.d2": "子機2",
+  "swarm.part.d3": "子機3",
+  "swarm.part.d4": "子機4",
+  "swarm.pat.0": "突撃",
+  "swarm.pat.1": "突撃",
+  "swarm.pat.2": "突撃",
+  "swarm.pat.3": "突撃",
+  "swarm.pat.4": "群体照準",
   "tank": "多脚戦車",
-  "tank.pat.0": "踏みつけ",
-  "tank.pat.1": "装甲展開",
-  "tankGun": "主砲",
-  "tankGun.pat.0": "徹甲砲",
-  "tankMg": "機銃",
-  "tankMg.pat.0": "掃射",
-  "wardenEye": "監視砲",
-  "wardenEye.pat.0": "狙撃",
-  "wardenEye.pat.1": "照準域"
+  "tank.part.core": "車体",
+  "tank.part.gun": "主砲",
+  "tank.part.mg": "機銃",
+  "tank.part.legs": "脚部",
+  "tank.pat.0": "掃射",
+  "tank.pat.1": "踏みつけ",
+  "tank.pat.2": "掃射",
+  "tank.pat.3": "徹甲砲",
+  "tank.pat.4": "装甲展開",
+  "warden.part.core": "中枢核",
+  "warden.part.eye": "監視砲",
+  "warden.phase.0": "照射",
+  "warden.phase.1": "狙撃",
+  "warden.phase.2": "防壁展開",
+  "warden.phase.3": "照準域",
+  "warden.phase.4": "報復態勢",
+  "warden.phase.5": "消去プロトコル"
  },
  "events": {
   "terminal": {

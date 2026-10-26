@@ -19,6 +19,7 @@
 //   units: ユニット {キー: {hp, vital(急所。すべて破壊されると撃破), core(核。ほかのユニットからあふれたダメージを受ける), icon, armor, at, spr, s}}。
 //     書かなければ耐久 hp の核1つ。行動の by はその行動をするユニット(破壊されると飛ばされる。構え・ガード・反撃はそのユニットを叩いたときだけ効く)
 //     画面での置き場所(0.18.0): 位置は本体の絵の中心からの [x, y]。at は耐久バーの上端の中央。spr があればユニット自身の絵を at に置き、バーはその下(s は絵の大きさ)
+//     pt(0.18.2): 絵を持たないユニットの、本体の絵の中の在りか(絵の viewBox の座標)。印を置いてバーと線で結び、押すとそのユニットを狙う
 //   passives: パッシブ [{k, ...}](js/engine.js の先頭に一覧)。反応(react)と段階変化(phase)も画面ではパッシブとして見せる
 //   broke: {ユニット: pat} そのユニットが破壊されると行動の並びが変わる
 //   haste 加速(これ以後、行動の間隔が縮む。最短2) / zone:{at, len, d, p} 危険域(at サイクル後から len サイクル、こちらがカードを使い終えると p に d)
@@ -55,12 +56,12 @@ DATA.foes = {
     pat:[{d:4, dl:5, p:'calc'}, {d:0, dl:4, zone:{at:3, len:3, d:5, p:'out'}}, {d:3, hits:2, dl:5, p:'mob'}], pool:['scan','crackshot','timebomb','hack']},
   accel:    {kind:'scout', hp:86, start:6,
     pat:[{d:7, dl:7, p:'out', haste:1}, {d:6, dl:7, p:'mob', haste:1}], pool:['blow','slash','overclock','flick']},
-  twin:     {kind:'exec', start:4, look:{s:1.2, at:[0, -6]},
-    units:{core:{hp:78, vital:true, core:true, icon:'core', at:[0, 56]}, armL:{hp:43, icon:'arm', at:[-104, -14]}, armR:{hp:43, icon:'arm', at:[100, -14]}},
+  twin:     {kind:'twin', start:4, look:{s:1.2, at:[0, -6]},
+    units:{core:{hp:78, vital:true, core:true, icon:'core', at:[0, 56], pt:[30, 32]}, armL:{hp:43, icon:'arm', at:[-104, -14], pt:[8, 34]}, armR:{hp:43, icon:'arm', at:[104, -14], pt:[52, 34]}},
     pat:[{by:'armL', d:7, dl:5, p:'out', wind:{w:2, poise:8}}, {by:'armR', d:4, hits:2, dl:4, p:'arm'}, {by:'armL', d:0, dl:4, guard:{w:3, s:8}}, {by:'armR', d:6, dl:5, p:'dur', rec:2}],
     pool:['parry','slash','rapid','wall']},
   bomber:   {kind:'turret', start:4, look:{s:1.15, at:[0, -4]},
-    units:{core:{hp:81, vital:true, core:true, icon:'core', at:[0, 56]}, gun:{hp:29, icon:'gun', at:[-104, -22]}},
+    units:{core:{hp:81, vital:true, core:true, icon:'core', at:[0, 56], pt:[30, 37]}, gun:{hp:29, icon:'gun', at:[-104, -22], pt:[8, 32]}},
     pat:[{by:'gun', d:5, dl:4, p:'arm'}, {by:'gun', d:5, dl:4, p:'arm'}, {by:'gun', d:5, dl:4, p:'mob'}, {by:'gun', d:5, dl:4, p:'arm'}, {by:'core', d:51, dl:6, p:'dur', ch:true, wind:{w:6, poise:16}}],
     pool:['blow','timebomb','backflow','parry']},
   // 統率: 隊長が健在な間、行動の間隔-1。隊長を先に落とすと遅くなる
@@ -76,11 +77,11 @@ DATA.foes = {
     pat:[{by:'d1', d:3, dl:2, p:'calc'}, {by:'d2', d:3, dl:2, p:'out'}, {by:'d3', d:3, dl:2, p:'mob'}, {by:'d4', d:3, dl:2, p:'arm'}, {d:0, dl:5, crack:1}],
     pool:['scatter','emp','storm','flick']},
   tank:     {kind:'tank', start:4, look:{s:1.1, at:[0, -8]},
-    units:{core:{hp:96, vital:true, core:true, icon:'core', armor:10, at:[0, 56]}, gun:{hp:48, icon:'gun', at:[-124, -34]}, mg:{hp:29, icon:'gun', at:[104, -70]}, legs:{hp:48, icon:'leg', at:[-118, 24]}},
+    units:{core:{hp:96, vital:true, core:true, icon:'core', armor:10, at:[0, 56], pt:[31, 31]}, gun:{hp:48, icon:'gun', at:[-124, -34], pt:[-4, 16]}, mg:{hp:29, icon:'gun', at:[104, -70], pt:[49, 8]}, legs:{hp:48, icon:'leg', at:[-118, 24], pt:[9, 50]}},
     pat:[{by:'mg', d:3, hits:3, dl:4, p:'calc'}, {by:'legs', d:10, dl:5, p:'mob', guard:{w:3, s:10}}, {by:'mg', d:3, hits:3, dl:4, p:'out'}, {by:'gun', d:24, dl:6, p:'dur', ch:true, wind:{w:4, poise:14}, rec:3}, {by:'core', d:0, dl:4, armor:6}],
     pool:['blow','emp','storm','wall']},
   warden:   {kind:'warden', start:5, look:{s:1.25, at:[0, -8]},
-    units:{core:{hp:170, vital:true, core:true, icon:'core', at:[0, 60]}, eye:{hp:38, icon:'eye', at:[96, -52]}}, react:{min:6, d:10, p:'calc'},
+    units:{core:{hp:170, vital:true, core:true, icon:'core', at:[0, 60], pt:[30, 40]}, eye:{hp:38, icon:'eye', at:[96, -52], pt:[30, 16]}}, react:{min:6, d:10, p:'calc'},
     pat:[{d:10, dl:6, p:'calc'}, {d:10, dl:4, p:'arm'}, {d:0, dl:5, heal:15, wind:{w:4, poise:15}}, {d:34, dl:9, p:'dur', ch:true, wind:{w:4, poise:15}, rec:3}],
     phase:{at:0.5, pat:[{d:10, dl:5, p:'calc'}, {by:'eye', d:7, dl:3, p:'mob'}, {d:0, dl:4, armor:15, wind:{w:4, poise:15}}, {by:'eye', d:0, dl:3, zone:{at:2, len:3, d:8, p:'calc'}}, {d:11, dl:5, p:'arm', counter:{w:5, d:4}}, {d:34, dl:7, p:'dur', ch:true, wind:{w:4, poise:15}, rec:3}]},
     pool:[]},

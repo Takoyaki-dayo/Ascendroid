@@ -6,7 +6,7 @@ claude.ai のアーティファクトとして公開している: https://claude
 - 中身は data/*.js をそのまま読み込んで表示する(このフォルダの index.html と、公開時に一緒に載せる data/*.js・meta.js)
 - 依頼はページの共有データベースのコレクション `requests` に入る。1件の形:
   `{at, kind, key, label, type:'edit'|'new'|'note', changes:[{path, from, to}], obj?(追加のとき), comment, status, thread:[{who:'user'|'claude', text, at}], version?}`
-  - kind は cards / foes / parts / keywords / events / encounters / classes / general(項目によらない相談)
+  - kind は cards / foes / parts / keywords / events(中継も) / encounters / areas / classes / general(項目によらない相談)
   - path はページで見えるオブジェクトの中の位置。カードの `k7.*` は data/classes.js の K-7 の数値、名前や文(name・text・行動の n など)は text/*.csv
   - status: open 未対応 / discuss 相談中 / done 反映済み / dropped 見送り(ユーザーが取り下げ)
 

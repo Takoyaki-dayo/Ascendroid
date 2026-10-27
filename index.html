@@ -18,7 +18,7 @@
    Color is meaning only, on a blue-tinted night palette: cyan = you and what you operate (now, cost, selection), red = threat, violet = charge/JUST. */
 :root{
   --bg:#0a0f15; --panel:#0f1720; --raised:#121c27; --line:#1c2937; --grid:#1b2938;
-  --fg:#e6eef5; --fg2:#a9bccb; --dim:#6f8396; --dim2:#425466; --neutral:#d3e2ee;
+  --fg:#e6eef5; --fg2:#b4c6d4; --dim:#8a9fb2; --dim2:#566b7f; --neutral:#d3e2ee;
   --cy:#38d3ff; --cy-dim:#2d6f88; --foe:#ff4d6a; --foe2:#ff8a9c; --just:#b18cff; --just2:#cbb2ff;
   --f-body:"BIZ UDPGothic","Hiragino Sans","Noto Sans JP",system-ui,sans-serif;
   --f-num:"Chakra Petch","BIZ UDPGothic",system-ui,sans-serif;
@@ -772,7 +772,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 .mn.elite{--nc:var(--foe2);--nb:rgba(255,77,106,.16)} .mn.rest{--nc:var(--rest);--nb:rgba(111,227,168,.14)} .mn.shop{--nc:var(--shop);--nb:rgba(255,207,133,.14)}
 .mn.event{--nc:var(--just2);--nb:rgba(177,140,255,.16)} .mn.boss{--nc:var(--foe);--nb:rgba(255,77,106,.2)}
 .mn.elite,.mn.boss{border-color:#6a2a3a}
-.mn:not(.reach):not(.here):not(.done):not(.start):not(.sel){opacity:.42}
+.mn:not(.reach):not(.here):not(.done):not(.start):not(.sel){opacity:.6}
 .mn.reach{border-color:var(--nc);color:var(--nc);background:radial-gradient(circle at 50% 40%,var(--nb),#0d151d 75%);animation:reach2 1.6s ease-in-out infinite;filter:none}
 @keyframes reach2{0%,100%{box-shadow:0 0 0 0 var(--nb),0 0 10px var(--nb)}50%{box-shadow:0 0 0 6px var(--nb),0 0 16px var(--nb)}}
 .mn.reach::after{content:"";position:absolute;inset:-7px;border:1px dashed var(--nc);border-radius:50%;opacity:.5;animation:spin 8s linear infinite}
@@ -785,7 +785,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 .minfo{border:1px solid var(--hud);border-radius:4px;background:linear-gradient(var(--bk),var(--bk)) left top/12px 2px no-repeat,linear-gradient(var(--bk),var(--bk)) left top/2px 12px no-repeat,linear-gradient(180deg,#111c27,#0c141d);height:48px}
 .minfo.has{--bk:var(--cy)}
 .mi-ic{width:32px;height:32px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;border:1.5px solid var(--nc,#cfe3ef);color:var(--nc,#cfe3ef);--nc:#cfe3ef}
-.mi-ic.elite{--nc:var(--foe2)} .mi-ic.rest{--nc:var(--rest)} .mi-ic.shop{--nc:var(--shop)} .mi-ic.event{--nc:var(--just2)} .mi-ic.boss{--nc:var(--foe)}
+.mi-ic.k-elite{--nc:var(--foe2)} .mi-ic.k-rest{--nc:var(--rest)} .mi-ic.k-shop{--nc:var(--shop)} .mi-ic.k-event{--nc:var(--just2)} .mi-ic.k-boss{--nc:var(--foe)}
 .mi-ic svg{width:16px;height:16px}
 .mi-t{display:flex;flex-direction:column;gap:2px;min-width:0}
 .mi-t>span:first-child{display:flex;align-items:baseline;gap:10px}
@@ -794,8 +794,8 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 .mi-leg{display:flex;gap:14px;color:var(--dim);font-size:10px}
 .mi-leg>span{display:inline-flex;align-items:center;gap:4px}
 .mi-leg .ic svg{width:12px;height:12px}
-.mi-leg .battle{color:#cfe3ef} .mi-leg .elite{color:var(--foe2)} .mi-leg .rest{color:var(--rest)} .mi-leg .shop{color:var(--shop)} .mi-leg .event{color:var(--just2)} .mi-leg .boss{color:var(--foe)}
-.mi-leg>span{opacity:.85}
+.mi-leg .k-battle{color:#cfe3ef} .mi-leg .k-elite{color:var(--foe2)} .mi-leg .k-rest{color:var(--rest)} .mi-leg .k-shop{color:var(--shop)} .mi-leg .k-event{color:var(--just2)} .mi-leg .k-boss{color:var(--foe)}
+.mi-leg>span{line-height:1;font-size:10.5px} .mi-leg .ic{display:flex}
 /* 機体とデッキ */
 .u-head{display:flex;align-items:center;gap:12px;margin:0 0 10px}
 .u-head h2{margin:0}
@@ -979,7 +979,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 <script src="data/text.js"></script>
 <script src="js/engine.js"></script>
 <script>
-const APP_VERSION = '0.18.7';
+const APP_VERSION = '0.18.8';
 const $ = s => document.querySelector(s);
 const EN = ENGINE, RULE = EN.RULE;
 const VIEW = RULE.view, NOW = 170, PX = 34, xs = c => NOW + c * PX, STRIP_Y = 150, SWIFT_VIS = 3;
@@ -1909,13 +1909,13 @@ function showMap(){
   let info = '';
   if(s){
     const E = s.enc ? ENC[s.enc] : null;
-    info = `<span class="mi-ic ${s.type}">${IC[s.type]}</span><span class="mi-t"><span><b>${DATA.rooms[s.type].name}</b>${s.type !== 'boss' ? `<span class="mi-l">${DATA.lanes[m.lanes[s.lane]].name}の道</span>` : ''}</span><span class="mi-d">${DATA.ui['rd.' + s.type] || ''}</span></span>`;
+    info = `<span class="mi-ic k-${s.type}">${IC[s.type]}</span><span class="mi-t"><span><b>${DATA.rooms[s.type].name}</b>${s.type !== 'boss' ? `<span class="mi-l">${DATA.lanes[m.lanes[s.lane]].name}の道</span>` : ''}</span><span class="mi-d">${DATA.ui['rd.' + s.type] || ''}</span></span>`;
   }
   const fresh = $('#mapScr').hidden;
   $('#mapScr').innerHTML = `${topBar(DATA.area.name)}
     <svg class="medges" width="844" height="390" viewBox="0 0 844 390" aria-hidden="true">${lines}</svg>
     <span class="mn start${atKey === 'start' ? ' here' : ''}" style="left:${st.x}px;top:${st.y}px"><span class="ic">${IC.start}</span></span>${labels}${all.map(btn).join('')}
-    <div class="minfo${s ? ' has' : ''}">${info || `<span class="mi-leg">${['battle', 'elite', 'rest', 'shop', 'event', 'boss'].map(t => `<span class="${t}"><span class="ic">${IC[t]}</span>${DATA.rooms[t].name}</span>`).join('')}</span>`}<span class="sp"></span><button class="btn" type="button" data-act="go" ${s && reach.has(UI.mapSel) ? '' : 'disabled'}>決定</button></div>`;
+    <div class="minfo${s ? ' has' : ''}">${info || `<span class="mi-leg">${['battle', 'elite', 'rest', 'shop', 'event', 'boss'].map(t => `<span class="k-${t}"><span class="ic">${IC[t]}</span>${DATA.rooms[t].name}</span>`).join('')}</span>`}<span class="sp"></span><button class="btn" type="button" data-act="go" ${s && reach.has(UI.mapSel) ? '' : 'disabled'}>決定</button></div>`;
   $('#mapScr').hidden = false; $('#mapScr').classList.remove('leave');
   if(fresh) enter($('#mapScr'));
 }
@@ -2539,6 +2539,8 @@ stage.addEventListener('click', ev => {
   const ov = $('#ov');
   if(!ov.hidden){ if(t === ov && ov.dataset.closable) hideOv(); return; }
   if(UI.focus){ if(!t.closest('#focus')) closeFocus(); return; }
+  // 地図: 部屋を選んだあと、何もないところを押すと選ぶ前に戻る
+  if(!$('#mapScr').hidden && UI.mapSel && !t.closest('.minfo,.mh-bar')){ UI.mapSel = null; showMap(); return; }
   if(!inBattle() || busy || UI.view === 'self') return;
   // タイムラインを押すと透かす(何も選んでいないとき)。透かしている間は、ほかを押すと戻る
   const mk = t.closest('.mk[data-mk]'); if(mk){ if(UI.mvKey === mk.dataset.mk) hideMovePop(); else showMovePop(mk.dataset.mk, mk); return; }

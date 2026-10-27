@@ -75,23 +75,23 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 /* timeline */
 #tl{position:absolute;inset:0;transition:opacity .2s}
 #shaker.executing #tl{opacity:.62}
-#screen{position:absolute;left:96px;top:8px;width:620px;height:164px;border:1px solid #1a2836;border-radius:6px;
+#screen{position:absolute;left:92px;top:8px;width:706px;height:162px;border:1px solid #1a2836;border-radius:6px;
   background:repeating-linear-gradient(180deg,rgba(56,211,255,.018) 0 1px,transparent 1px 3px),linear-gradient(180deg,#0e1822,#0c141d)}
-.tl{position:absolute;top:40px;width:1px;height:126px;background:var(--grid)}
+.tl{position:absolute;top:26px;width:1px;height:140px;background:var(--grid)}
 .tn{position:absolute;top:10px;width:20px;text-align:center;font-family:var(--f-num);font-size:10px;color:var(--cy-dim)}
-#nowTri{position:absolute;left:174px;top:11px}
-#nowLine{position:absolute;left:179px;top:22px;width:2px;height:144px;background:var(--cy);box-shadow:0 0 6px rgba(56,211,255,.5)}
+#nowTri{position:absolute;left:164px;top:11px}
+#nowLine{position:absolute;left:169px;top:22px;width:2px;height:146px;background:var(--cy);box-shadow:0 0 6px rgba(56,211,255,.5)}
 #swiftBand{position:absolute;top:22px;height:144px;background:linear-gradient(90deg,rgba(56,211,255,0),rgba(56,211,255,.12));border-left:1px dashed rgba(56,211,255,.45);transition:left .15s,width .15s}
-.rowline{position:absolute;left:180px;height:1px;width:458px;background:rgba(169,188,203,.1)}
+.rowline{position:absolute;left:170px;height:1px;width:612px;background:rgba(169,188,203,.1)}
 .rowline.tgt{background:rgba(56,211,255,.5)}
 .rowline.dead{opacity:.3}
 .rowtag.trk{background:transparent;color:var(--dim)} .rowtag.trk svg{width:11px;height:11px}
-.rowtag{position:absolute;left:646px;width:15px;height:15px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-family:var(--f-num);font-size:10px;font-weight:700;background:#1e2c3a;color:var(--fg)}
+.rowtag{position:absolute;left:788px;width:15px;height:15px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-family:var(--f-num);font-size:10px;font-weight:700;background:#1e2c3a;color:var(--fg)}
 .rowtag.tgt{background:var(--cy);color:var(--bg)}
 .rowtag.dead{opacity:.3}
-.rowhit{position:absolute;left:180px;width:490px;height:34px}
-#pvRegion{position:absolute;left:181px;top:24px;height:142px;background:rgba(56,211,255,.07)}
-#pvLine{position:absolute;top:22px;width:2px;height:144px;background:var(--cy)}
+.rowhit{position:absolute;left:170px;width:620px;height:34px}
+#pvRegion{position:absolute;left:171px;top:24px;height:144px;background:rgba(56,211,255,.07)}
+#pvLine{position:absolute;top:22px;width:2px;height:146px;background:var(--cy)}
 #selfBar{position:absolute;top:25px;height:9px;border-radius:3px;transition:left .13s linear,width .13s linear}
 #selfBar.pre{background:rgba(56,211,255,.5)}
 #selfBar.cast{background:rgba(56,211,255,.8);box-shadow:0 0 8px rgba(56,211,255,.5)}
@@ -304,7 +304,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 .mk.react.ghost{opacity:.75}
 .mk.sync{box-shadow:0 0 0 2px #0c141d,0 0 0 3.5px var(--foe)}
 #strip{position:absolute;inset:0}
-#stripLine{position:absolute;left:180px;top:150px;width:458px;height:1px;background:rgba(56,211,255,.14)}
+#stripLine{position:absolute;left:170px;top:150px;width:612px;height:1px;background:rgba(56,211,255,.14)}
 .sm{position:absolute;top:143px;transition:left .13s linear,opacity .2s}
 .sm.arr{width:10px;height:14px;margin-left:-5px;border:1.5px solid var(--cy-dim);border-radius:2px;background:#0d1d29}
 .sm.arr.over{border-color:#6a2a3a;border-style:dashed;background:transparent}
@@ -335,13 +335,20 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 #shaker.fw #redraw.sel{top:298px}
 #shaker.selfview #waitBtn{opacity:0;pointer-events:none;transform:translateY(24px)}
 /* 敵の行動の窓(構え・ガード・反撃の構え)と隙 */
-.wb{position:absolute;height:9px;margin-left:-6px;border-radius:3px;display:flex;align-items:center;padding:0 3px;font-size:8px;font-weight:700;line-height:1;white-space:nowrap;overflow:hidden;pointer-events:none;transition:left .13s linear,width .13s linear,opacity .2s,box-shadow .15s}
-.wb.wind{background:rgba(255,184,77,.16);border:1px solid #c98a2e;color:#ffcf85}
-.wb.guard{background:rgba(143,176,196,.16);border:1px solid #6f8ea2;color:#cfe3ef}
-.wb.counter{background:rgba(255,77,106,.14);border:1px dashed var(--foe);color:var(--foe2)}
-.wb.vuln{background:rgba(56,211,255,.14);border:1px solid var(--cy-dim);color:var(--cy)}
+/* 帯(0.18.5): どのサイクルに使い終えると効くかが分かるよう、サイクルごとの升で描く。升はそのサイクルの目盛りの真上 */
+.wb{position:absolute;height:9px;font-size:8px;font-weight:700;line-height:1;white-space:nowrap;pointer-events:auto;cursor:pointer;transition:left .13s linear,width .13s linear,opacity .2s,filter .15s}
+.wb>i{position:absolute;top:0;bottom:0;border-radius:3px;border:1px solid currentColor;background:var(--wbg);opacity:.85}
+.wb>i.hit{opacity:1;background:currentColor;box-shadow:0 0 0 2px rgba(255,255,255,.35)}
+.wb .lb{position:absolute;left:3px;top:0;bottom:0;display:flex;align-items:center;gap:2px;font-family:var(--f-num);pointer-events:none;text-shadow:0 0 3px #0c141d,0 0 2px #0c141d}
+.wb>i.hit~.lb{color:#0c141d;text-shadow:none}
+.wb.pick{filter:drop-shadow(0 0 0 var(--cy)) brightness(1.25)}
+.wb.pick>i{border-width:1.5px}
+.wb.wind{--wbg:rgba(255,184,77,.16);color:#ffcf85}
+.wb.guard{--wbg:rgba(143,176,196,.16);color:#cfe3ef}
+.wb.counter{--wbg:rgba(255,77,106,.14);color:var(--foe2)} .wb.counter>i{border-style:dashed}
+.wb.vuln{--wbg:rgba(56,211,255,.14);color:var(--cy)}
 .wb.later{opacity:.5}
-.wb.on{box-shadow:0 0 0 2px rgba(255,255,255,.18),0 0 10px currentColor}
+.wb.on>i{box-shadow:0 0 8px currentColor}
 .wb.out{opacity:0!important}
 .mk.move{border:1px solid #3d5163;background:var(--raised);color:var(--fg2)}
 .mk.unk{border:1px dashed #3d5163;background:transparent;color:var(--dim);opacity:.7}
@@ -574,14 +581,16 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 .mk .ic.tp svg{width:9px;height:9px;opacity:.85}
 .mk .mby{position:absolute;left:-6px;top:-7px;width:13px;height:13px;border-radius:50%;background:#0c141d;border:1px solid currentColor;display:flex;align-items:center;justify-content:center;font-style:normal}
 .mk .mby svg{width:8px;height:8px}
-#tl.solo .mk{width:32px;height:30px;flex-direction:column;gap:0;border-radius:5px}
-#tl.solo .mk b{font-size:15px;line-height:1}
-#tl.solo .mk .ic.tp svg{width:10px;height:10px}
-#tl.solo .mk.ch{border-radius:15px}
-#tl.solo .mk.multi b{font-size:13px}
+#tl.solo .mk{width:40px;height:42px;flex-direction:column;gap:1px;border-radius:6px}
+#tl.solo .mk b{font-size:19px;line-height:1}
+#tl.solo .mk .ic svg{width:13px;height:13px}
+#tl.solo .mk .ic.tp svg{width:12px;height:12px}
+#tl.solo .mk.ch{border-radius:20px}
+#tl.solo .mk.multi b{font-size:16px}
+#tl.solo .mk .mby{width:15px;height:15px;left:-7px;top:-8px} #tl.solo .mk .mby svg{width:9px;height:9px}
 #tl.solo .rowtag{display:none}
 #tl.solo .rowline{background:rgba(169,188,203,.14)}
-#tl.solo .wb{height:14px;font-size:10px;gap:2px;padding:0 4px;font-family:var(--f-num)}
+#tl.solo .wb{height:16px;font-size:10.5px}
 #tl.solo .wb .ic svg{width:10px;height:10px}
 .wb .ic{display:inline-flex}
 .wb .ic svg{width:8px;height:8px}
@@ -594,7 +603,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 .eu.tgt{border-color:var(--cy);background:rgba(56,211,255,.08)}
 .eu.broken{opacity:.28}
 .eu.flash{background:rgba(255,77,106,.24)}
-.ew{position:absolute;left:744px;top:40px;width:90px;display:flex;flex-wrap:wrap;gap:7px;justify-content:flex-end;transition:opacity .3s}
+.ew{position:absolute;left:802px;top:40px;width:34px;display:flex;flex-direction:column;align-items:center;gap:8px;transition:opacity .3s}
 .ew.dead{opacity:0}
 .st.trait.off{opacity:.3}
 #shaker.focus .ew{opacity:0}
@@ -603,10 +612,10 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 #shaker.peek #screen{border-color:var(--cy-dim)}
 #screen{transition:border-color .2s}
 /* 敵の行動はタイムラインの縦の中央に(0.18.0) */
-#tl.solo .rowline{top:92px!important}
-#tl.solo #selfBar{top:132px;height:10px}
-#tl.solo #stripLine{top:156px}
-#tl.solo .sm.arr{top:149px} #tl.solo .sm.tmr{top:148px} #tl.solo .sm.zone{top:146px}
+#tl.solo .rowline{top:86px!important}
+#tl.solo #selfBar{top:135px;height:10px}
+#tl.solo #stripLine{top:159px}
+#tl.solo .sm.arr{top:152px} #tl.solo .sm.tmr{top:151px} #tl.solo .sm.zone{top:151px}
 .fm .mby{position:absolute;left:-6px;top:-6px;width:15px;height:15px;border-radius:50%;background:#0c141d;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--foe2)} .fm .mby svg{width:9px;height:9px}
 .fm.gone{opacity:.3}
 /* ユニットの詳細を見ているときは、そのユニットの行動を目立たせる(0.18.1) */
@@ -620,9 +629,12 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 #focus{overflow-y:auto}
 #focus.many{gap:4px} #focus.many .fhp b{font-size:20px} #focus.many .frow-m{padding-top:11px}
 #focus.many .fm{width:40px;height:40px} #focus.many .fm-v b{font-size:16px} #focus.many .fdet{margin-top:2px} #focus.many .fdet p{font-size:11px;line-height:1.45}
-.sm.zone{top:140px;height:20px;display:flex;align-items:center;pointer-events:none}
-.sm.zone i{display:block;height:16px;border:1.5px solid var(--foe);border-radius:3px;background:repeating-linear-gradient(135deg,rgba(255,77,106,.28) 0 4px,transparent 4px 8px)}
-.sm.zone span{position:absolute;left:3px;top:3px;font-family:var(--f-num);font-weight:700;font-size:10px;color:var(--foe2)}
+.sm.zone{top:142px;height:16px;pointer-events:auto;cursor:pointer;color:var(--foe2)}
+.sm.zone>i{position:absolute;top:0;bottom:0;border:1.5px solid var(--foe);border-radius:3px;background:repeating-linear-gradient(135deg,rgba(255,77,106,.3) 0 4px,transparent 4px 8px)}
+.sm.zone>i.hit{background:var(--foe);box-shadow:0 0 0 2px rgba(255,255,255,.35)}
+.sm.zone .lb{position:absolute;left:3px;top:0;bottom:0;display:flex;align-items:center;font-family:var(--f-num);font-weight:700;font-size:10.5px;pointer-events:none;text-shadow:0 0 3px #0c141d}
+.sm.zone>i.hit~.lb{color:#fff}
+.sm.zone.pick{filter:brightness(1.3)}
 /* 部屋(整備・ショップ・イベント) */
 #roomScr{position:absolute;inset:0;z-index:41;background:var(--bg)}
 .rs-still{position:absolute;left:12px;top:52px;width:330px;bottom:12px;border:1px solid var(--line);border-radius:10px;background:radial-gradient(ellipse 200px 160px at 50% 55%,rgba(56,211,255,.08),transparent 70%),linear-gradient(180deg,#0f1822,#0a1018);display:flex;align-items:center;justify-content:center;color:var(--cy-dim)}
@@ -749,10 +761,10 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 <script src="data/text.js"></script>
 <script src="js/engine.js"></script>
 <script>
-const APP_VERSION = '0.18.4';
+const APP_VERSION = '0.18.5';
 const $ = s => document.querySelector(s);
 const EN = ENGINE, RULE = EN.RULE;
-const VIEW = RULE.view, NOW = 180, PX = 25, xs = c => NOW + c * PX, STRIP_Y = 150, SWIFT_VIS = 3;
+const VIEW = RULE.view, NOW = 170, PX = 34, xs = c => NOW + c * PX, STRIP_Y = 150, SWIFT_VIS = 3;
 // 敵の行の高さ。敵が1体なら大きな1本(0.17.0 から1対1が前提)
 let ROWY = [52, 86, 120];
 const solo = () => S && S.b && S.b.foes.length === 1;
@@ -962,7 +974,7 @@ function foeGeom(e){
 }
 function buildFoes(){
   const b = S.b, so = solo();
-  ROWY = so ? [92] : [52, 86, 120];
+  ROWY = so ? [86] : [52, 86, 120];
   $('#tl').classList.toggle('solo', so);
   $('#rows').innerHTML = b.foes.map(e => `<div class="rowline" data-r="${e.i}" style="top:${ROWY[e.i]}px"></div><div class="rowtag" data-r="${e.i}" style="top:${ROWY[e.i] - 8}px">${e.tag}</div>${so ? '' : `<div class="rowhit" data-f="${e.i}" style="top:${ROWY[e.i] - 17}px"></div>`}`).join('');
   let h = '';
@@ -1160,6 +1172,19 @@ function placeMark(key, x, y, cls, html, info){
   el.style.left = x + 'px'; el.style.top = y + 'px'; el.style.opacity = '';
 }
 // 帯: 敵の行動の前の窓(構え・ガード・反撃の構え)と、行動の後の隙
+// 帯の升: t0〜t1 サイクル後の各サイクルに1つずつ。選んでいるカードの使い終わりのサイクルの升は塗る(hit)
+function cellsHTML(t0, t1, label){
+  const cw = PX - 6, hit = PV && !busy ? PV.completeAt : null; let h = '';
+  for(let t = t0; t <= t1; t++) h += `<i class="${t === hit ? 'hit' : ''}" style="left:${(t - t0) * PX}px;width:${cw}px"></i>`;
+  return h + `<span class="lb">${label}</span>`;
+}
+function placeCells(key, t0, t1, y, cls, label, info){
+  t0 = Math.max(1, t0); t1 = Math.min(VIEW, t1); if(t1 < t0) return;
+  const cw = PX - 6; MKINFO.set(key, Object.assign({t0, t1}, info));
+  if(UI.mvKey === key) cls += ' pick';
+  placeBand(key, xs(t0) - cw / 2, xs(t1) + cw / 2, y, cls, cellsHTML(t0, t1, label));
+  const el = bandEls.get(key); if(el) el.dataset.bk = key;
+}
 function placeBand(key, x0, x1, y, cls, html){
   let el = bandEls.get(key);
   if(!el){
@@ -1179,7 +1204,7 @@ function renderMarks(){
   const b = S.b, seen = new Set(), seenB = new Set(), syn = syncTimes(), pv = PV && !busy ? PV : null;
   for(const e of b.foes){
     if(!e.alive) continue;
-    const so = solo(), y = ROWY[e.i] - (so ? 17 : 11), by = ROWY[e.i] + (so ? 22 : 12), list = EN.upcoming(e), multi = e.uids.length > 1;
+    const so = solo(), y = ROWY[e.i] - (so ? 21 : 11), by = ROWY[e.i] + (so ? 27 : 12), list = EN.upcoming(e), multi = e.uids.length > 1;
     let lastT = 0;
     for(const m of list){
       const key = e.i + '-' + (e.seq + m.k) + '-' + m.left; seen.add(key);
@@ -1195,7 +1220,7 @@ function renderMarks(){
       }
       const by_ = multi && a.by && e.units[a.by] ? `<i class="mby">${pIcon(e.units[a.by])}</i>` : '';
       const html = by_ + (a.kind === 'delay' ? `<span class="ic">${IC.delay}</span><b>${a.v}</b>` : atk ? `<b>${a.d + (e.str || 0) + (sy ? e.sync : 0)}</b><span class="ic tp">${IC[a.p]}</span>` : moveIcon(a));
-      placeMark(key, xs(m.t) - (so ? 16 : 13), y, cls, html, {e:e.i, kind:'pat', a, t:m.t});
+      placeMark(key, xs(m.t) - (so ? 20 : 13), y, cls, html, {e:e.i, kind:'pat', a, t:m.t});
       lastT = Math.max(lastT, m.t);
       if(m.hit) continue;
       // 行動の前の窓: その間にカードが完了すると効く
@@ -1205,29 +1230,29 @@ function renderMarks(){
         const bk = 'b' + key + w; seenB.add(bk);
         const val = w === 'wind' ? W.poise : w === 'guard' ? (m.k === 0 ? e.sh : W.s) : W.d;
         const on = pv && m.k === 0 && pv.fx.has((w === 'wind' ? 'break' : w === 'guard' ? 'guarded' : 'counter') + ':' + e.i);
-        placeBand(bk, s0 >= 1 ? xs(s0) : NOW + 6, xs(Math.min(s1, VIEW)) + 6, by, 'wb ' + w + (m.k > 0 ? ' later' : '') + (on ? ' on' : ''), `<span class="ic">${WIC[w]}</span>${val}`);
+        placeCells(bk, s0, s1, by, 'wb ' + w + (m.k > 0 ? ' later' : '') + (on ? ' on' : ''), `<span class="ic">${WIC[w]}</span>${val}`, {e:e.i, kind:'win', w, a, t:m.t, val});
       }
       // 行動の後の隙
       if(a.rec){
         const t1 = m.t + m.left + 1, t2 = m.t + m.left + a.rec;
-        if(t1 <= VIEW){ const bk = 'b' + key + 'rec'; seenB.add(bk); placeBand(bk, xs(t1), xs(Math.min(t2, VIEW)) + 6, by, 'wb vuln' + (m.k > 0 ? ' later' : '') + (pv && pv.fx.has('vulnHit:' + e.i) ? ' on' : ''), `<span class="ic">${IC.vuln}</span>`); }
+        if(t1 <= VIEW){ const bk = 'b' + key + 'rec'; seenB.add(bk); placeCells(bk, t1, t2, by, 'wb vuln' + (m.k > 0 ? ' later' : '') + (pv && pv.fx.has('vulnHit:' + e.i) ? ' on' : ''), `<span class="ic">${IC.vuln}</span>`, {e:e.i, kind:'rec', a, t:m.t}); }
       }
     }
     // 今の隙
     const vk = e.uids.find(k => e.units[k].vuln > 1);
-    if(vk){ const vv = e.units[vk].vuln, bk = 'v' + e.i; seenB.add(bk); placeBand(bk, NOW + 6, xs(Math.min(vv - 1, VIEW)) + 6, by, 'wb vuln' + (pv && pv.fx.has('vulnHit:' + e.i) ? ' on' : ''), `<span class="ic">${multi ? pIcon(e.units[vk]) : IC.vuln}</span>`); }
+    if(vk){ const vv = e.units[vk].vuln, bk = 'v' + e.i; seenB.add(bk); placeCells(bk, 1, vv - 1, by, 'wb vuln' + (pv && pv.fx.has('vulnHit:' + e.i) ? ' on' : ''), `<span class="ic">${multi ? pIcon(e.units[vk]) : IC.vuln}</span>`, {e:e.i, kind:'vulnNow', uid:vk}); }
     // 反応: 予定ではなく、重いカードへの返し
     const rt = e.reactIn != null ? e.reactIn : (pv && pv.react.has(e.i) ? 1 : null);
     if(rt != null && rt > 0){
       const key = 'r' + e.i; seen.add(key);
-      placeMark(key, xs(rt) - (so ? 16 : 13), y, 'mk react' + (e.reactIn == null ? ' ghost' : ' danger'), `<b>${e.react.d}</b><span class="ic tp">${IC[e.react.p]}</span>`, {e:e.i, kind:'react', t:rt});
+      placeMark(key, xs(rt) - (so ? 20 : 13), y, 'mk react' + (e.reactIn == null ? ' ghost' : ' danger'), `<b>${e.react.d}</b><span class="ic tp">${IC[e.react.p]}</span>`, {e:e.i, kind:'react', t:rt});
     }
   }
   for(const [key, el] of markEls){
     if(!seen.has(key)){ markEls.delete(key); MKINFO.delete(key); el.classList.add('out'); setTimeout(() => el.remove(), 260); }
   }
   for(const [key, el] of bandEls){
-    if(!seenB.has(key)){ bandEls.delete(key); el.classList.add('out'); setTimeout(() => el.remove(), 220); }
+    if(!seenB.has(key)){ bandEls.delete(key); MKINFO.delete(key); el.classList.add('out'); setTimeout(() => el.remove(), 220); }
   }
 }
 function renderStrip(){
@@ -1248,7 +1273,8 @@ function renderStrip(){
     for(let t = b.turnIn; t <= VIEW; t += ec.len) put('tb' + (b.T + t), xs(t), 'sm tb', '');
   }
   // 危険域: この区間にカードを使い終えると被弾
-  for(const z of b.zones){ if(z.from > VIEW) continue; const f = Math.max(0, z.from), to = Math.min(VIEW, z.to); put('z' + z.id, xs(f) - PX / 2, 'sm zone', `<i style="width:${(to - f + 1) * PX}px"></i><span>${z.d + (S.b.crack || 0)}</span>`); }
+  // 危険域: 升のサイクルにカードを使い終えると被弾(0.18.5 から升で描く)
+  for(const z of b.zones){ const f = Math.max(1, z.from), to = Math.min(VIEW, z.to); if(f > to) continue; const key = 'z' + z.id; MKINFO.set(key, {kind:'zone', z, t0:f, t1:to}); put(key, xs(f) - (PX - 6) / 2, 'sm zone' + (UI.mvKey === key ? ' pick' : ''), cellsHTML(f, to, z.d + (S.b.crack || 0))); const ze = stripEls.get(key); ze.dataset.bk = key; ze.style.width = ((to - f) * PX + PX - 6) + 'px'; }
   for(const t of b.timers){ if(t.left <= VIEW) put('t' + t.id, xs(t.left), 'sm tmr', `<span class="ic">${IC.timer}</span>${b.foes[t.e] && b.foes[t.e].alive ? b.foes[t.e].tag : ''}`); }
   if(PV && PV.timers && !busy) PV.timers.forEach((t, n) => { if(t.at <= VIEW) put('pvt' + n, xs(t.at), 'sm tmr pv', `<span class="ic">${IC.timer}</span>${b.foes[t.e] ? b.foes[t.e].tag : ''}`); });
   for(const [key, el] of stripEls){ if(!seen.has(key)){ stripEls.delete(key); el.style.opacity = '0'; el.style.left = (parseFloat(el.style.left) - 10) + 'px'; setTimeout(() => el.remove(), 220); } }
@@ -1486,7 +1512,11 @@ function defaultTarget(){
   if(EN.liveUids(e).length < 2) return e.i;
   return e.i + '.' + (tp && e.units[tp] && !e.units[tp].broken ? tp : EN.defaultUid(e));
 }
-function recalc(){ PV = computePreview(); renderAll(); }
+function recalc(){
+  PV = computePreview(); renderAll();
+  // 印や帯の中身を出しているなら、選んだカードに合わせて出し直す(使い終わりが重なるか)
+  if(UI.mvKey){ const el = document.querySelector(`[data-mk="${UI.mvKey}"],[data-bk="${UI.mvKey}"]`); if(el) showMovePop(UI.mvKey, el); else hideMovePop(); }
+}
 function onCard(i){
   const k = S.b.hand[i].k, c = CARDS[k];
   if(sel && sel.kind === 'card' && sel.i === i){ execute(); return; }
@@ -1516,17 +1546,34 @@ function onFoe(i, uid){
 }
 // タイムラインの印の中身(行動の名前・するユニット・何サイクル後か・文)
 function showMovePop(key, el){
-  const info = MKINFO.get(key), e = info && S.b.foes[info.e]; if(!e) return;
+  const info = MKINFO.get(key); if(!info) return;
+  if(info.kind === 'zone') return showZonePop(key, el, info);
+  const e = S.b.foes[info.e]; if(!e) return;
   let title = '', by = '', lines = [];
   if(info.kind === 'pat'){ const a = info.a; title = a.n || ''; if(e.uids.length > 1){ const u = e.units[EN.actorUid(e, a)]; by = `<span class="mp-by"><span class="ic">${pIcon(u)}</span>${u.name}</span>`; } lines = moveLines(e, a); }
   else if(info.kind === 'react'){ title = e.react.n || ''; lines = [fillUi('pas.react', {min: e.react.min, part: SLOT_BY[e.react.p].fn, d: e.react.d + (e.str || 0)})]; }
+  else if(info.kind === 'win'){ const a = info.a, W = a[info.w]; title = `${DATA.kwName[info.w]} ${info.val}`; lines = [fillUi('mv.' + info.w, info.w === 'wind' ? {w: W.w, poise: W.poise} : info.w === 'guard' ? {w: W.w, s: info.val} : {w: W.w, cd: W.d}), fillUi('band.before', {name: a.n, t: info.t})]; }
+  else if(info.kind === 'rec'){ title = DATA.kwName.vuln; lines = [fillUi('mv.rec', {rec: info.a.rec}), fillUi('band.after', {name: info.a.n, t: info.t})]; }
+  else if(info.kind === 'vulnNow'){ title = DATA.kwName.vuln; lines = [fillUi('st.vuln', {n: info.t1})]; if(e.uids.length > 1){ const u = e.units[info.uid]; by = `<span class="mp-by"><span class="ic">${pIcon(u)}</span>${u.name}</span>`; } }
   else lines = [fillUi('foe.rand', {})];
+  // 帯と危険域: 何サイクル後から何サイクル後までか。カードを選んでいれば、使い終わりが重なるか
+  const range = info.t0 != null ? (info.t0 === info.t1 ? `${info.t0}` : `${info.t0}–${info.t1}`) : info.t;
+  if(info.t0 != null && PV && !busy){ const c = PV.completeAt; lines.push(fillUi(c >= info.t0 && c <= info.t1 ? 'band.hit' : 'band.miss', {c})); }
   const pop = $('#mvpop');
-  pop.innerHTML = `<div class="mp-h"><b>${title || '?'}</b>${by}<span class="mp-t"><span class="ic">${IC.clock}</span>${info.t}</span></div>${lines.map(l => `<p>${refText(l)}</p>`).join('')}`;
+  pop.innerHTML = `<div class="mp-h"><b>${title || '?'}</b>${by}<span class="mp-t"><span class="ic">${IC.clock}</span>${range}</span></div>${lines.map(l => `<p>${refText(l)}</p>`).join('')}`;
   pop.style.left = Math.max(96, Math.min(844 - 296, el.offsetLeft - 40)) + 'px'; pop.style.top = (el.offsetTop + el.offsetHeight + 8) + 'px';
   pop.hidden = false; UI.mvKey = key; renderMarks();
 }
-function hideMovePop(){ if($('#mvpop').hidden) return; $('#mvpop').hidden = true; UI.mvKey = null; if(S && S.b) renderMarks(); }
+function showZonePop(key, el, info){
+  const z = info.z, lines = [fillUi('zone.now', {part: SLOT_BY[z.p].fn, d: z.d + (S.b.crack || 0)}), fillUi('zone.src', {name: z.n})];
+  if(PV && !busy){ const c = PV.completeAt; lines.push(fillUi(c >= info.t0 && c <= info.t1 ? 'band.hit' : 'band.miss', {c})); }
+  const pop = $('#mvpop'), range = info.t0 === info.t1 ? `${info.t0}` : `${info.t0}–${info.t1}`;
+  pop.innerHTML = `<div class="mp-h"><b>${DATA.kwName.zone}</b><span class="mp-t"><span class="ic">${IC.clock}</span>${range}</span></div>${lines.map(l => `<p>${refText(l)}</p>`).join('')}`;
+  const r = el.getBoundingClientRect(), st = $('#stage').getBoundingClientRect(), sc = st.width / 844;
+  pop.style.left = Math.max(96, Math.min(844 - 296, (r.left - st.left) / sc - 40)) + 'px'; pop.style.top = ((r.bottom - st.top) / sc + 8) + 'px';
+  pop.hidden = false; UI.mvKey = key; renderMarks(); renderStrip();
+}
+function hideMovePop(){ if($('#mvpop').hidden) return; $('#mvpop').hidden = true; UI.mvKey = null; if(S && S.b){ renderMarks(); renderStrip(); } }
 // タイムラインを押すと、キャラを透かして予定を見やすくする(もう一度押すか、ほかを押すと戻る)
 function setPeek(on){ $('#shaker').classList.toggle('peek', !!on); }
 const peeking = () => $('#shaker').classList.contains('peek');
@@ -2216,8 +2263,9 @@ stage.addEventListener('click', ev => {
   if(!inBattle() || busy || UI.view === 'self') return;
   // タイムラインを押すと透かす(何も選んでいないとき)。透かしている間は、ほかを押すと戻る
   const mk = t.closest('.mk[data-mk]'); if(mk){ if(UI.mvKey === mk.dataset.mk) hideMovePop(); else showMovePop(mk.dataset.mk, mk); return; }
+  const bd = t.closest('[data-bk]'); if(bd){ if(UI.mvKey === bd.dataset.bk) hideMovePop(); else showMovePop(bd.dataset.bk, bd); return; }
   if(t.closest('#mvpop')) return;
-  if(!$('#mvpop').hidden){ hideMovePop(); if(t.closest('#screen')) return; }
+  if(!$('#mvpop').hidden && !t.closest('#hand .card,#redraw,#waitBtn')){ hideMovePop(); if(t.closest('#screen')) return; }
   if(t.closest('#screen') && !sel){ setPeek(!peeking()); return; }
   if(peeking()){ setPeek(false); if(!t.closest('#hand .card,#redraw,#waitBtn')) return; }
   const card = t.closest('#hand .card[data-i]'); if(card){ onCard(+card.dataset.i); return; }

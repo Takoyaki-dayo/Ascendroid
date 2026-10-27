@@ -570,6 +570,12 @@ window.DATA = window.DATA || {};
   "ui.unit.core": "核。ほかのユニットからあふれたダメージを受ける。",
   "ui.unit.vital": "急所。急所のユニットがすべて破壊されると撃破。",
   "ui.unit.part": "破壊されると、このユニットの行動は飛ばされる。",
-  "ui.unit.broken": "破壊"
+  "ui.unit.broken": "破壊",
+  "ui.band.before": "{name}({t}サイクル後)の前の窓。",
+  "ui.band.after": "{name}({t}サイクル後)の後の隙。",
+  "ui.band.hit": "選んでいるカードは{c}サイクル後に使い終わる。この帯に重なる。",
+  "ui.band.miss": "選んでいるカードは{c}サイクル後に使い終わる。この帯には重ならない。",
+  "ui.zone.now": "この升のサイクルにカードを使い終えると、{part}に{d}ダメージを受ける。",
+  "ui.zone.src": "{name}で置かれた。"
  }
 });

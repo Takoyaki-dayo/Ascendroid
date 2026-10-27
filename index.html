@@ -129,7 +129,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 .foe.atk{animation:fatk .26s ease-out}
 @keyframes fatk{40%{transform:translateX(-26px)}100%{transform:none}}
 .foe.ehit{animation:fhit .26s ease-out}
-@keyframes fhit{0%{filter:brightness(2.4)}30%{transform:translateX(10px)}100%{transform:none;filter:none}}
+@keyframes fhit{0%{filter:brightness(2.4) drop-shadow(-3px 0 #38d3ff) drop-shadow(3px 0 #ff4d6a)}20%{transform:translateX(10px) skewX(-6deg)}35%{transform:translateX(4px);filter:brightness(1.4) drop-shadow(2px 0 #38d3ff) drop-shadow(-2px 0 #ff4d6a)}100%{transform:none;filter:none}}
 .foe.ejust{animation:fjust .45s ease-out}
 @keyframes fjust{0%{filter:brightness(2) drop-shadow(0 0 10px #b18cff)}30%{transform:translateX(16px) rotate(6deg)}100%{transform:none;filter:none}}
 .foe.dead{opacity:0;transform:translateY(14px) scaleY(.85)}
@@ -212,9 +212,9 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 
 /* fx */
 #fx,#floats{position:absolute;inset:0;pointer-events:none}
-.float{position:absolute;transform:translate(-50%,-50%);font-family:var(--f-num);font-weight:700;font-size:17px;white-space:nowrap;text-shadow:0 0 6px #000,0 1px 0 #000;animation:rise .9s ease-out forwards;color:#fff}
+.float{position:absolute;transform:translate(-50%,-50%);font-family:var(--f-num);font-weight:700;font-size:17px;white-space:nowrap;text-shadow:-1.5px 0 rgba(56,211,255,.75),1.5px 0 rgba(255,77,106,.75),0 0 6px #000;animation:rise .9s ease-out forwards;color:#fff}
 .float.foe{color:var(--foe2)} .float.cy{color:var(--cy);font-size:14px}
-@keyframes rise{from{opacity:1;margin-top:0}to{opacity:0;margin-top:-26px}}
+@keyframes rise{0%{opacity:0;margin-top:4px;letter-spacing:.3em}8%{opacity:1;letter-spacing:0}12%{transform:translate(-46%,-50%)}16%{transform:translate(-50%,-50%)}100%{opacity:0;margin-top:-26px}}
 .burst{position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;border:2px solid var(--just);box-shadow:0 0 18px rgba(177,140,255,.9),inset 0 0 12px rgba(177,140,255,.6);animation:burst .5s ease-out forwards}
 @keyframes burst{0%{transform:scale(.4);opacity:1}70%{opacity:1}100%{transform:scale(1.8);opacity:0}}
 .shard{position:absolute;width:9px;height:3px;background:var(--just2);transition:transform .45s ease-out,opacity .45s}
@@ -230,7 +230,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 .after{position:absolute;opacity:.35;transition:opacity .3s,transform .3s;filter:drop-shadow(0 0 4px rgba(56,211,255,.8))}
 #toast{position:absolute;left:0;right:0;top:120px;text-align:center;font-size:18px;font-weight:700;letter-spacing:.14em;opacity:0;pointer-events:none;text-shadow:0 0 10px #000}
 #toast.show{animation:toast 1.6s ease-out}
-@keyframes toast{0%{opacity:0;transform:translateY(6px)}15%{opacity:1;transform:none}70%{opacity:1}100%{opacity:0}}
+@keyframes toast{0%{opacity:0;clip-path:inset(0 50% 0 50%);letter-spacing:.5em}12%{opacity:1;clip-path:inset(0 0 0 0);letter-spacing:.14em}16%{transform:translateX(3px);text-shadow:-2px 0 rgba(56,211,255,.8),2px 0 rgba(255,77,106,.8)}20%{transform:none;text-shadow:0 0 10px #000}70%{opacity:1}100%{opacity:0}}
 
 /* overlay */
 #ov{position:absolute;inset:0;background:rgba(5,9,14,.84);display:flex;align-items:center;justify-content:center;z-index:50;padding:12px}
@@ -547,6 +547,52 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 #shaker.enter #parts .part{animation:slideIn .35s cubic-bezier(.2,.8,.2,1) backwards}
 #mvpop:not([hidden]){animation:popIn .16s cubic-bezier(.2,.8,.2,1)}
 .fdet,.ftr{animation:riseIn .18s ease-out}
+/* サイバーパンクの演出(0.18.6) */
+/* 画面全体の走査線と、タイムラインをゆっくり走る光 */
+#stage::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:90;background:repeating-linear-gradient(0deg,rgba(180,230,255,.028) 0 1px,transparent 1px 3px)}
+#screen{overflow:hidden}
+#screen::after{content:"";position:absolute;top:0;bottom:0;left:-80px;width:80px;background:linear-gradient(90deg,transparent,rgba(56,211,255,.07),transparent);animation:idleScan 7s linear infinite}
+@keyframes idleScan{0%{transform:translateX(0)}100%{transform:translateX(860px)}}
+/* 再走査: 敵の行動の予定が変わったとき(JUST で潰した・構えを崩した・ユニットの破壊で行動が消えた・行動が変わった) */
+#rescan{position:absolute;left:170px;top:10px;width:3px;height:158px;opacity:0;background:#bff2ff;box-shadow:0 0 10px #38d3ff,0 0 24px rgba(56,211,255,.6)}
+#rescan::before{content:"";position:absolute;right:3px;top:0;bottom:0;width:120px;background:linear-gradient(90deg,transparent,rgba(56,211,255,.18))}
+#rescan.go{animation:rescan .6s cubic-bezier(.45,.1,.55,.9)}
+@keyframes rescan{0%{opacity:1;transform:translateX(0)}90%{opacity:1}100%{opacity:0;transform:translateX(620px)}}
+#rescanTag{position:absolute;left:98px;top:14px;width:70px;line-height:1.25;white-space:pre;font-family:var(--f-mono,ui-monospace),monospace;font-size:9px;font-weight:700;letter-spacing:.12em;color:var(--cy);opacity:0;text-shadow:0 0 6px rgba(56,211,255,.8)}
+#rescanTag.go{animation:rtag .9s steps(1,end)}
+@keyframes rtag{0%{opacity:1}10%{opacity:0}20%{opacity:1}30%{opacity:.4}40%,80%{opacity:1}100%{opacity:0}}
+#marks.rescan .mk{animation:mkScan .55s steps(4)}
+@keyframes mkScan{0%{opacity:.15;translate:-3px 0;filter:hue-rotate(80deg) brightness(1.8)}35%{opacity:1;translate:3px 0;filter:brightness(1.6)}60%{opacity:.5;translate:-1px 0}100%{opacity:1;translate:0 0;filter:none}}
+#screen.rescan{border-color:var(--cy);box-shadow:0 0 0 1px rgba(56,211,255,.4),0 0 18px rgba(56,211,255,.25)}
+/* 新しく出た予定は、走査線で描かれるように出る */
+.mk.spawn{animation:mkIn .32s steps(4)}
+@keyframes mkIn{0%{filter:brightness(2.4);translate:-3px 0}25%{filter:brightness(1.6) hue-rotate(60deg);translate:3px 0}50%{filter:brightness(1.8);translate:-1px 0}100%{filter:none;translate:0 0}}
+/* 画面の光(JUST・崩し・被弾) */
+#flashFx{position:absolute;inset:0;opacity:0;z-index:29}
+#flashFx.just{animation:flash .32s ease-out;background:radial-gradient(ellipse at 50% 30%,rgba(177,140,255,.35),transparent 70%)}
+#flashFx.brk{animation:flash .28s ease-out;background:radial-gradient(ellipse at 50% 30%,rgba(56,211,255,.28),transparent 70%)}
+#flashFx.hurt{animation:flash .26s ease-out;background:radial-gradient(ellipse at 20% 60%,rgba(255,77,106,.28),transparent 70%)}
+@keyframes flash{0%{opacity:1}100%{opacity:0}}
+/* 大きな文字(JUST・崩し) */
+.float.big{font-size:26px;letter-spacing:.06em}
+.float.just2{color:#efe6ff;text-shadow:-2px 0 rgba(56,211,255,.8),2px 0 rgba(255,77,106,.8),0 0 14px rgba(177,140,255,.9)}
+/* ユニットが壊れるときの破片(四角い画素) */
+.pix{position:absolute;width:5px;height:5px;transition:transform .5s cubic-bezier(.2,.8,.3,1),opacity .5s}
+/* 自機が撃たれたときの色ずれ */
+@keyframes dhit{0%{filter:brightness(2.2) drop-shadow(-3px 0 #38d3ff) drop-shadow(3px 0 #ff4d6a)}25%{transform:translateX(-5px) skewX(4deg)}50%{transform:translateX(4px)}75%{transform:translateX(-2px)}100%{transform:none;filter:none}}
+/* 光線と斬撃の色ずれ */
+.beam::after{content:"";position:absolute;left:0;right:0;top:3px;height:2px;background:linear-gradient(90deg,transparent,rgba(255,77,106,.7));filter:blur(.5px)}
+.slash::after{content:"";position:absolute;inset:0;transform:translate(2px,2px);background:rgba(56,211,255,.8);filter:blur(.6px)}
+/* カードを使ったとき、自機に吸い込まれる光の輪 */
+.cardghost{position:absolute;width:36px;height:50px;margin:-25px 0 0 -18px;border:1.5px solid var(--cy);border-radius:5px;box-shadow:0 0 12px rgba(56,211,255,.7);animation:cghost .4s ease-out forwards}
+@keyframes cghost{0%{opacity:1;transform:scale(.6)}100%{opacity:0;transform:scale(1.8)}}
+/* 重ねる画面は開くときに走査線が上から下へ */
+.box{position:relative;box-shadow:0 0 0 1px rgba(56,211,255,.06),0 0 30px rgba(56,211,255,.05)}
+#ov.enter .box::before,#ov2.enter .box::before,#ref.enter .box::before{content:"";position:absolute;left:0;right:0;top:0;height:40px;pointer-events:none;background:linear-gradient(180deg,transparent,rgba(56,211,255,.16),transparent);animation:boxScan .5s ease-out forwards}
+@keyframes boxScan{0%{transform:translateY(-40px);opacity:1}100%{transform:translateY(380px);opacity:0}}
+/* 敵の詳細を開いたときも走査 */
+#focus.scan::before{content:"";position:absolute;left:0;right:0;top:0;height:60px;pointer-events:none;background:linear-gradient(180deg,transparent,rgba(56,211,255,.14),transparent);animation:boxScan .55s ease-out forwards}
+.mn.reach{filter:drop-shadow(0 0 4px rgba(56,211,255,.45))}
 /* 参照の重ね(0.18.0) */
 #ref{position:absolute;inset:0;background:rgba(5,9,14,.55);display:flex;align-items:center;justify-content:center;z-index:70;padding:12px}
 #refbox{max-width:520px;width:auto;min-width:300px;border-color:var(--cy-dim);box-shadow:0 12px 40px rgba(0,0,0,.55)}
@@ -682,7 +728,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 .minfo b{font-size:12px}
 .mi-f{font-size:11px;color:var(--fg)} .mi-d{font-size:10.5px;color:var(--dim)} .mi-l{font-size:10.5px;color:var(--fg2)} .mi-h{color:var(--dim)}
 .minfo .sp{flex:1}
-@media (prefers-reduced-motion:reduce){#stage *{transition:none!important;animation:none!important}}
+@media (prefers-reduced-motion:reduce){#stage *,#stage *::before,#stage *::after{transition:none!important;animation:none!important}}
 </style>
 </head>
 <body>
@@ -703,6 +749,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
         <div id="selfBar" class="np" hidden></div>
         <div id="marks" class="np"></div>
         <div id="strip" class="np"><div id="stripLine"></div></div>
+        <div id="rescan" class="np"></div><div id="rescanTag" class="np"></div>
       </div>
       <div id="floor" class="np"></div>
       <div id="droid" class="np">
@@ -743,6 +790,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
       <div id="mvpop" hidden></div>
 
       <div id="floats"></div>
+      <div id="flashFx" class="np"></div>
       <div id="toast"></div>
     </div>
     <div id="mapScr" hidden></div>
@@ -761,7 +809,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 <script src="data/text.js"></script>
 <script src="js/engine.js"></script>
 <script>
-const APP_VERSION = '0.18.5';
+const APP_VERSION = '0.18.6';
 const $ = s => document.querySelector(s);
 const EN = ENGINE, RULE = EN.RULE;
 const VIEW = RULE.view, NOW = 170, PX = 34, xs = c => NOW + c * PX, STRIP_Y = 150, SWIFT_VIS = 3;
@@ -1164,9 +1212,10 @@ function placeMark(key, x, y, cls, html, info){
   if(!el){
     el = document.createElement('div'); el.className = 'mk'; el.dataset.mk = key;
     el.style.left = (xs(VIEW) + 30) + 'px'; el.style.top = y + 'px'; el.style.opacity = '0';
-    $('#marks').appendChild(el); markEls.set(key, el); el.getBoundingClientRect();
+    $('#marks').appendChild(el); markEls.set(key, el); el.getBoundingClientRect(); el._born = Date.now();
   }
   if(el.classList.contains('fire')) cls += ' fire';
+  if(Date.now() - el._born < 340){ cls += ' spawn'; clearTimeout(el._sp); el._sp = setTimeout(() => el.classList.remove('spawn'), 360 - (Date.now() - el._born)); }
   el.className = cls;
   if(el._h !== html){ el.innerHTML = html; el._h = html; }
   el.style.left = x + 'px'; el.style.top = y + 'px'; el.style.opacity = '';
@@ -1374,6 +1423,18 @@ function fxEl(cls, x, y, css){ const el = document.createElement('div'); el.clas
 function floatAt(x, y, text, cls){ const el = document.createElement('div'); el.className = 'float ' + (cls || ''); el.textContent = text; el.style.left = x + 'px'; el.style.top = y + 'px'; $('#floats').appendChild(el); setTimeout(() => el.remove(), 950); }
 function pulse(el, cls, ms){ if(!el) return; el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); setTimeout(() => el.classList.remove(cls), ms); }
 function shake(){ pulse($('#shaker'), 'shake', 300); }
+// 再走査: 敵の予定が変わったことを、タイムラインを光が走って描き直すように見せる
+function rescan(tag){ pulse($('#rescan'), 'go', 640); pulse($('#marks'), 'rescan', 600); pulse($('#screen'), 'rescan', 600); if(tag){ const t = $('#rescanTag'); t.textContent = 'RESCAN\n// ' + tag; pulse(t, 'go', 950); } }
+function flashFx(kind){ const el = $('#flashFx'); el.className = 'np'; void el.offsetWidth; el.className = 'np ' + kind; setTimeout(() => { el.className = 'np'; }, 340); }
+// 四角い画素の破片(ユニットが壊れたとき)
+function pixels(x, y){
+  for(let k = 0; k < 12; k++){
+    const el = fxEl('pix', x - 2, y - 2); el.style.background = ['#38d3ff', '#ff4d6a', '#e6eef5', '#b18cff'][k % 4];
+    const a = Math.random() * Math.PI * 2, r = 20 + Math.random() * 34; el.getBoundingClientRect();
+    el.style.transform = `translate(${Math.cos(a) * r}px,${Math.sin(a) * r}px)`; el.style.opacity = '0';
+    setTimeout(() => el.remove(), 540);
+  }
+}
 function toast(t){ const el = $('#toast'); el.textContent = t; el.classList.remove('show'); void el.offsetWidth; el.classList.add('show'); }
 const partY = id => 10 + SLOTS.findIndex(p => p.id === id) * 48;
 function beam(to, from){
@@ -1432,10 +1493,10 @@ function cardFx(x){
   switch(x.kind){
     case 'dmg': { const p = unitTop(x.e, x.unit); floatAt(p.x, p.y, '−' + x.n, 'foe'); pulse(unitEl(x.e, x.unit), 'flash', 260); pulse(unitSpr(x.e, x.unit), 'ehit', 280); break; }
     case 'kill': { const p = foeCenter(x.e); shards(p.x, p.y, '#d3e2ee'); break; }
-    case 'unitBreak': { const p = unitCenter(x.e, x.unit); pulse(unitEl(x.e, x.unit), 'flash', 420); shards(p.x, p.y, '#ff8a9c'); break; }
+    case 'unitBreak': { const p = unitCenter(x.e, x.unit); pulse(unitEl(x.e, x.unit), 'flash', 420); shards(p.x, p.y, '#ff8a9c'); pixels(p.x, p.y); flashFx('brk'); rescan('UNIT'); break; }
     case 'frenzy': { const p = foeCenter(x.e); floatAt(p.x, p.y - 70, '▲' + x.n, 'foe'); break; }
-    case 'cancel': floatAt(xs(1), ROWY[x.e] - 20, '×', 'cy'); break;
-    case 'shift': floatAt(xs(1), ROWY[x.e] - 20, '!!', 'foe'); break;
+    case 'cancel': floatAt(xs(1), ROWY[x.e] - 20, '×', 'cy'); rescan('VOID'); break;
+    case 'shift': floatAt(xs(1), ROWY[x.e] - 20, '!!', 'foe'); rescan('SHIFT'); break;
     case 'crack': { const p = unitCenter(x.e, x.unit); floatAt(p.x + 30, p.y - 30, '+' + x.n, 'foe'); break; }
     case 'delay': floatAt(xs(2), ROWY[x.e] - 14, '+' + x.n, 'cy'); break;
     case 'block': floatAt(130, 262, '+' + x.n, ''); break;
@@ -1446,7 +1507,7 @@ function cardFx(x){
     case 'guarded': { const p = foeCenter(x.e); const el = fxEl('fshield', p.x, p.y - 10); setTimeout(() => el.remove(), 520); floatAt(p.x + 26, p.y - 46, '防' + x.n, ''); break; }
     case 'armored': { const p = unitCenter(x.e, x.unit); floatAt(p.x + 26, p.y - 36, '装' + x.n, ''); break; }
     case 'vulnHit': { const p = unitCenter(x.e, x.unit); floatAt(p.x - 26, p.y - 36, '×1.5', 'cy'); break; }
-    case 'break': { justFx(x.e); const p = foeCenter(x.e); floatAt(p.x, p.y - 84, '崩し', 'cy'); break; }
+    case 'break': { justFx(x.e, 'BREAK'); const p = foeCenter(x.e); floatAt(p.x, p.y - 84, '崩し', 'cy big'); break; }
     case 'counter': { const p = foeCenter(x.e); floatAt(p.x, p.y - 84, '返', 'foe'); beam({x: DROID.sx, y: DROID.sy}, {x: p.x, y: p.y - 10}); hitMeFx(x.res); break; }
   }
 }
@@ -1457,7 +1518,7 @@ function hitMeFx(r){
   if(r.partLoss){ floatAt(70, y + 8, '−' + r.partLoss, 'foe'); pulse(document.querySelector(`.part[data-p="${r.part}"]`), 'flash', 320); }
   if(r.broke) sparks(DROID.x, DROID.y - 30);
   if(r.bodyLoss) floatAt(150, 268, '−' + r.bodyLoss, 'foe');
-  if(r.hurt){ pulse($('#droid'), 'hit', 320); if(r.raw >= 10) shake(); }
+  if(r.hurt){ pulse($('#droid'), 'hit', 320); flashFx('hurt'); if(r.raw >= 10) shake(); }
   else shieldFx();
 }
 async function foeFx(i, r){
@@ -1490,10 +1551,11 @@ async function foeFx(i, r){
   }
   hitMeFx(r);
 }
-function justFx(i){
+function justFx(i, tag){
   const el = fxEl('burst', NOW, ROWY[i]); setTimeout(() => el.remove(), 520);
   shards(NOW, ROWY[i], null);
   pulse(foeEl(i), 'ejust', 460);
+  flashFx(tag === 'BREAK' ? 'brk' : 'just'); rescan(tag || 'JUST');
 }
 function interruptFx(){
   const bar = $('#selfBar'); bar.hidden = false; bar.className = 'np broken';
@@ -1583,13 +1645,13 @@ function flyCard(el, x, y){
   setTimeout(() => el.remove(), 260);
 }
 // 耐久が減って行動が変わった敵を知らせる
-function phaseCheck(){ for(const e of S.b.foes){ if(e.phased && !e._phaseShown && e.alive){ e._phaseShown = true; const p = foeCenter(e.i); floatAt(p.x, p.y - 96, '!!', 'foe'); pulse(foeEl(e.i), 'ejust', 460); } } }
+function phaseCheck(){ for(const e of S.b.foes){ if(e.phased && !e._phaseShown && e.alive){ e._phaseShown = true; const p = foeCenter(e.i); floatAt(p.x, p.y - 96, '!!', 'foe big'); pulse(foeEl(e.i), 'ejust', 460); rescan('PHASE'); } } }
 async function showEvent(ev, k, ti){
   if(ev.type === 'card' || ev.type === 'timer' || ev.type === 'foe') setTimeout(phaseCheck, 0);
   switch(ev.type){
     case 'tick': if(!ev.real) afterimage(); renderAll(); await sleep(ev.real ? T_TICK : T_SWIFT); break;
     case 'react': { const p = foeCenter(ev.e); floatAt(p.x, p.y - 70, '!', 'foe'); pulse(foeEl(ev.e), 'ehit', 200); renderAll(); await sleep(180); break; }
-    case 'just': justFx(ev.e); renderAll(); await sleep(420); break;
+    case 'just': justFx(ev.e, 'JUST'); { const p = foeCenter(ev.e); floatAt(p.x, p.y - 86, DATA.kwName.just, 'just2 big'); } renderAll(); await sleep(420); break;
     case 'card': if(k) cardMotion(k, ti); for(const x of ev.ev) cardFx(x); renderAll(); await sleep(320); break;
     case 'timer': { const p = unitCenter(ev.t.e, ev.t.unit); const el = fxEl('burst', p.x, p.y - 10); setTimeout(() => el.remove(), 520); for(const x of ev.ev) cardFx(x); renderAll(); await sleep(320); break; }
     case 'turn': {
@@ -1608,6 +1670,7 @@ async function execute(){
   if(a.type === 'card'){
     if(a.t != null) lastTarget = a.t;
     const cd = b.hand[a.i], el = cardEls.get(cd.id); cardEls.delete(cd.id); flyCard(el, DROID.x - 48, DROID.y - 60);
+    setTimeout(() => { const g = fxEl('cardghost', DROID.x, DROID.y - 50); setTimeout(() => g.remove(), 420); }, 180);
   } else if(a.type === 'swap' || a.type === 'reload'){
     b.hand.forEach((cd, n) => { const el = cardEls.get(cd.id); cardEls.delete(cd.id); setTimeout(() => flyCard(el, 20, 340), n * 30); });
   }
@@ -1974,7 +2037,7 @@ function infoFoe(i, uid){
   const z = Math.min(FOCUS.scale, 340 / (x1 - x0), 330 / (y1 - y0)), cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
   $('#world').style.transform = `translate(${FOCUS.x - z * cx}px, ${FOCUS.y - z * cy}px) scale(${z})`;
   $('#world').style.transformOrigin = '0 0';
-  $('#shaker').classList.add('focus');
+  $('#shaker').classList.add('focus'); pulse($('#focus'), 'scan', 600);
   document.querySelectorAll('#foes [data-f]').forEach(el => el.classList.toggle('fo', +el.dataset.f === i));
   renderFocus();
 }

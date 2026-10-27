@@ -374,8 +374,25 @@ function* spendGen(st, cost, k, ti, noInt){
 function runGen(g){ let r; while(!(r = g.next()).done){} return r.value; }
 
 /* ---------- 戦闘の準備と、行動の候補 ---------- */
-function makeFoe(key, i){
-  const f = D.foes[key];
+// 強化(0.19.0): エリアの倍率で敵の数値を上げた定義を作る。hp(耐久・回復)と d(攻撃・ガード・装甲・構え)
+const scaledCache = {};
+function scaledFoe(key, sc){
+  if(!sc || (sc.hp === 1 && sc.d === 1)) return D.foes[key];
+  const id = key + '@' + sc.hp + '/' + sc.d; if(scaledCache[id]) return scaledCache[id];
+  // s はガードの量のときだけ(ユニットの絵の大きさの s は変えない)
+  const H = ['hp', 'heal'], DK = ['d', 'armor', 'poise'];
+  const walk = (o, pk) => { if(Array.isArray(o)) return o.map(x => walk(x, pk)); if(!o || typeof o !== 'object') return o; const r = {};
+    for(const [k, v] of Object.entries(o)){
+      if(typeof v === 'number' && v > 0 && H.includes(k)) r[k] = Math.round(v * sc.hp);
+      else if(typeof v === 'number' && v > 0 && (DK.includes(k) || (k === 's' && pk === 'guard'))) r[k] = Math.max(1, Math.round(v * sc.d));
+      else r[k] = walk(v, k);
+    } return r; };
+  // 行動の文(n)・パッシブ(k の n は数)は変えない
+  const f = walk(D.foes[key], ''); if(D.foes[key].passives) f.passives = D.foes[key].passives;
+  return scaledCache[id] = f;
+}
+function makeFoe(key, i, sc){
+  const f = scaledFoe(key, sc);
   const e = {key, i, name:f.name, tag:'ABCDEF'[i], kind:f.kind, pat:f.pat, idx:0, r:f.start, seq:0, alive:true,
     react:f.react || null, sync:f.sync || 0, reactIn:null, ai:f.ai || null, phase:f.phase || null, phased:false, hist:[], chain:0, sh:0, str:0, haste:0, pas:f.passives || []};
   // ユニット。書かなければ耐久 hp の核1つ
@@ -404,8 +421,9 @@ function newBattle(run, encKey){
   const st = {run, b:null};
   const parts = {};
   for(const s of D.slots){ const mx = partMax(run, s.id); parts[s.id] = {cur: run.parts[s.id].damaged ? Math.ceil(mx / 2) : mx, max:mx}; }
-  const foes = [];
-  for(const key of E.foes) foes.push(makeFoe(key, foes.length));
+  const foes = [], A = D.areas[run.area || 0], es = E.scale || {hp:1, d:1};
+  const sc = A ? {hp:+(A.scale.hp * es.hp).toFixed(3), d:+(A.scale.d * es.d).toFixed(3)} : null;
+  for(const key of E.foes) foes.push(makeFoe(key, foes.length, sc));
   let uid = 1;
   const cards = shuffle(battleDeck(run).map(k => ({k, id:uid++})));
   const b = {enc:encKey, T:0, block:0, swift:0, foes, parts, draw:cards, disc:[], hand:[], cast:null, broken:{}, over:false, timers:[], zones:[], drawIn:RULE.draw, handMax:RULE.handMax, uid:1000, parryNow:false, charge:0};
@@ -474,19 +492,26 @@ function doAction(st, a, noInt){
 function newRun(seed){
   const parts = {};
   for(const s of D.slots) parts[s.id] = {id:D.startParts[s.id], damaged:false};
-  const run = {seed, body:D.bodyMax, bodyMax:D.bodyMax, parts, deck:D.startDeck.slice(), scrap:D.rewards.scrapStart, at:null, visited:[], map:null};
-  run.map = genMap(seed);
+  const run = {seed, area:0, body:D.bodyMax, bodyMax:D.bodyMax, parts, deck:D.startDeck.slice(), scrap:D.rewards.scrapStart, at:null, visited:[], map:null};
+  run.map = genMap(seed, 0);
   return run;
+}
+// 次のエリアへ(0.19.0)。中継の回復はここで。戻り値は回復した量。最後のエリアなら null
+function nextArea(run){
+  if(run.area + 1 >= D.areas.length) return null;
+  const tr = D.transit[run.area] || {heal:0};
+  const before = run.body; run.body = Math.min(run.bodyMax, run.body + Math.round(run.bodyMax * (tr.heal || 0)));
+  run.area += 1; run.at = null; run.visited = []; run.map = genMap(run.seed + run.area * 7919, run.area);
+  return run.body - before;
 }
 
 /* ---------- 地図の生成 ---------- */
 const SPECIAL = ['elite', 'rest', 'shop'];
-function genLane(key, r){
+function genLane(key, r, A){
   const L = D.lanes[key], pool = [];
   for(const [t, n] of Object.entries(L.rooms)) for(let i = 0; i < n; i++) pool.push(t);
-  pool.splice(pool.indexOf('battle'), 1);
-  for(let tries = 0; tries < 60; tries++){
-    const rooms = ['battle', ...shuffle(pool.slice(), r)];
+  for(let tries = 0; tries < 80; tries++){
+    const rooms = ['battle', ...shuffle(pool.slice(), r), A.last];
     const eliteOk = rooms.every((t, i) => t !== 'elite' || i >= 2);
     const noRepeat = rooms.every((t, i) => i === 0 || !SPECIAL.includes(t) || rooms[i - 1] !== t);
     if(eliteOk && noRepeat) return rooms;
@@ -494,46 +519,47 @@ function genLane(key, r){
   return null;
 }
 function reachAfter(lane, n){ return [lane - 1, lane, lane + 1].filter(l => l >= 0 && l < n); }
-function genMap(seed){
-  const r = rngFrom(seed), keys = Object.keys(D.lanes), T = D.area.transferAfter;
+function genMap(seed, area){
+  const A = D.areas[area || 0], r = rngFrom(seed), keys = Object.keys(D.lanes), [T1, T2] = A.transfers;
   for(let tries = 0; tries < 300; tries++){
     const lanes = shuffle(keys.slice(), r).slice(0, 3);
-    const rooms = lanes.map(k => genLane(k, r));
+    const rooms = lanes.map(k => genLane(k, r, A));
     if(rooms.some(x => !x)) continue;
-    // どの道から乗り換えても、その後に整備かショップがある
-    const ok = lanes.every((_, l) => reachAfter(l, lanes.length).some(l2 => rooms[l2].slice(T).some(t => t === 'rest' || t === 'shop')));
+    // どの道から最初の乗り換えをしても、次の乗り換えまでに整備かショップがある
+    const ok = lanes.every((_, l) => reachAfter(l, lanes.length).some(l2 => rooms[l2].slice(T1, T2 || A.rooms).some(t => t === 'rest' || t === 'shop')));
     if(!ok) continue;
     const encs = Object.entries(D.encounters);
-    const norm1 = encs.filter(([, e]) => !e.elite && !e.boss && e.tier === 1).map(([k]) => k);
-    const norm2 = encs.filter(([, e]) => !e.elite && !e.boss).map(([k]) => k);
+    const normal = tiers => encs.filter(([, e]) => !e.elite && !e.boss && tiers.includes(e.tier)).map(([k]) => k);
+    const early = normal(A.tiers[0]), late = normal(A.tiers[1]);
     const elites = shuffle(encs.filter(([, e]) => e.elite).map(([k]) => k), r);
+    let ei = 0;
     const nodes = rooms.map((row, l) => {
       let prev = null;
       return row.map((t, i) => {
         const n = {lane:l, idx:i, type:t};
-        if(t === 'battle'){ const pool = (i < T ? norm1 : norm2).filter(k => k !== prev); n.enc = pick(pool, r); prev = n.enc; }
-        if(t === 'elite') n.enc = elites.pop();
+        if(t === 'battle'){ const pool = (i < T1 ? early : late).filter(k => k !== prev); n.enc = pick(pool, r); prev = n.enc; }
+        if(t === 'elite') n.enc = elites[ei++ % elites.length];
         if(t === 'event') n.ev = pick(D.events, r).id;
         return n;
       });
     });
-    return {seed, lanes, nodes, boss:{type:'boss', enc:Object.keys(D.encounters).find(k => D.encounters[k].boss)}};
+    return {seed, area:area || 0, lanes, nodes, boss:{type:'boss', enc:A.boss}};
   }
   throw new Error('map generation failed');
 }
 // 今いる場所から進める部屋
 function nextNodes(run){
-  const m = run.map, at = run.at, T = D.area.transferAfter, last = D.area.rooms - 1;
+  const m = run.map, at = run.at, A = D.areas[run.area || 0], last = A.rooms - 1;
   if(!at) return m.nodes.map(row => row[0]);
   if(at.boss) return [];
   if(at.idx === last) return [m.boss];
-  if(at.idx === T - 1) return reachAfter(at.lane, m.nodes.length).map(l => m.nodes[l][at.idx + 1]);
+  if(A.transfers.includes(at.idx + 1)) return reachAfter(at.lane, m.nodes.length).map(l => m.nodes[l][at.idx + 1]);
   return [m.nodes[at.lane][at.idx + 1]];
 }
 
 const API = {RULE, makeFoe, defaultUid, liveUids, actorUid, parseT, gap, reloadCost, rngFrom, setRandom, shuffle, pick, clone, cur, advance, partOf, fx, partCards, battleDeck, partMax, dmgOf, blockOf,
   drawOne, drawN, upcoming, arrivals, applyCard, enemyAct, spendGen, runGen, newBattle, actions, actionCost, beginAction, endAction, doAction,
-  newRun, genMap, nextNodes, reachAfter};
+  newRun, nextArea, genMap, nextNodes, reachAfter, scaledFoe};
 root.ENGINE = API;
 if(typeof module !== 'undefined') module.exports = API;
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -898,6 +898,54 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 .ptile{border-color:var(--hud);border-radius:4px;background:linear-gradient(180deg,#101a24,#0b131b)}
 .ptile.dmg{background:linear-gradient(180deg,rgba(255,77,106,.1),#0b131b)}
 .sw-p{border-color:var(--hud);border-radius:4px;background:#0b131b}
+/* ===== タイトル・エリア(0.19.0) ===== */
+#titleScr{position:absolute;inset:0;z-index:45;overflow:hidden;
+  background:radial-gradient(ellipse 380px 300px at 250px 230px,rgba(56,211,255,.12),transparent 70%),radial-gradient(ellipse 500px 200px at 700px 40px,rgba(177,140,255,.08),transparent 70%),
+  linear-gradient(rgba(56,211,255,.03) 1px,transparent 1px) 0 0/100% 32px,linear-gradient(180deg,#070b10,#0a1018 60%,#0c141d)}
+.tt-tower{position:absolute;left:150px;top:0;bottom:0;width:200px;pointer-events:none}
+.tt-tower i{position:absolute;bottom:0;left:calc(var(--i) * 24px);width:1px;height:calc(40% + var(--i) * 6% - (var(--i) - 4) * (var(--i) - 4) * 3%);background:linear-gradient(0deg,rgba(56,211,255,.35),rgba(56,211,255,0));}
+.tt-tower i::after{content:"";position:absolute;left:-1px;width:3px;height:22px;background:var(--cy);box-shadow:0 0 8px var(--cy);opacity:.7;animation:ttRise calc(3s + var(--i) * .37s) linear infinite;animation-delay:calc(var(--i) * -.6s)}
+@keyframes ttRise{0%{bottom:0;opacity:0}10%{opacity:.8}100%{bottom:100%;opacity:0}}
+.tt-art{position:absolute;left:180px;top:60px;width:130px;height:300px;display:flex;align-items:flex-end;justify-content:center;filter:drop-shadow(0 0 18px rgba(56,211,255,.25))}
+.tt-art .droidart{width:120px;height:290px}
+.tt-art::after{content:"";position:absolute;left:-30px;right:-30px;bottom:-6px;height:14px;border-radius:50%;background:radial-gradient(ellipse,rgba(56,211,255,.35),transparent 70%)}
+.tt-main{position:absolute;left:430px;right:40px;top:0;bottom:0;display:flex;flex-direction:column;justify-content:center;gap:26px}
+.tt-logo{position:relative;margin:0;font-family:var(--f-num);font-weight:700;font-size:44px;letter-spacing:.16em;color:#eaf7ff;text-shadow:0 0 18px rgba(56,211,255,.55)}
+.tt-logo::before,.tt-logo::after{content:attr(data-t);position:absolute;left:0;top:0;pointer-events:none}
+.tt-logo::before{color:rgba(255,77,106,.7);clip-path:inset(0 0 55% 0);transform:translateX(-2px);animation:ttG1 3.6s steps(1) infinite}
+.tt-logo::after{color:rgba(56,211,255,.8);clip-path:inset(60% 0 0 0);transform:translateX(2px);animation:ttG2 4.1s steps(1) infinite}
+@keyframes ttG1{0%,90%,100%{transform:translateX(0);opacity:0}91%{transform:translateX(-5px);opacity:1}94%{transform:translateX(3px);opacity:1}97%{opacity:0}}
+@keyframes ttG2{0%,86%,100%{transform:translateX(0);opacity:0}87%{transform:translateX(4px);opacity:1}90%{transform:translateX(-2px);opacity:1}93%{opacity:0}}
+.tt-logo{border-bottom:1px solid var(--hud);padding-bottom:10px}
+.tt-logo:after{}
+.tt-menu{display:flex;flex-direction:column;gap:9px;width:300px}
+.tt-b{display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:12px 16px;border:1px solid var(--hud);border-left:2px solid var(--hud2);border-radius:3px;background:linear-gradient(90deg,rgba(56,211,255,.05),transparent 70%),#0c141d;color:var(--fg);text-align:left;transition:border-color .15s,background .15s,scale .1s}
+.tt-b b{font-size:14px;letter-spacing:.08em}
+.tt-b>span{font-size:10.5px;color:var(--fg2);display:inline-flex;align-items:center;gap:4px} .tt-b .ic{display:inline-flex} .tt-b .ic svg{width:11px;height:11px}
+.tt-b.main{border-color:var(--cy);border-left-color:var(--cy);background:linear-gradient(90deg,rgba(56,211,255,.18),rgba(56,211,255,.03) 80%),#0c141d;box-shadow:0 0 18px rgba(56,211,255,.15)}
+.tt-b.warn{border-color:var(--foe);border-left-color:var(--foe);background:linear-gradient(90deg,rgba(255,77,106,.14),transparent 80%),#0c141d} .tt-b.warn>span{color:var(--foe2)}
+.tt-b:active{scale:.97}
+.tt-sub{display:flex;gap:8px;margin-top:4px}
+.tt-s{flex:1;padding:8px 0;text-align:center;border:1px solid var(--hud);border-radius:3px;background:#0c141d;color:var(--fg2);font-size:11px;letter-spacing:.06em}
+.tt-s:active{scale:.95}
+.tt-ver{position:absolute;right:14px;bottom:10px;font-family:var(--f-num);font-size:10px;color:var(--dim);letter-spacing:.1em}
+#titleScr.enter .tt-logo{animation:ttIn .6s cubic-bezier(.2,.8,.2,1) backwards}
+#titleScr.enter .tt-menu>*{animation:riseIn .4s cubic-bezier(.2,.8,.2,1) backwards}
+#titleScr.enter .tt-menu>*:nth-child(1){animation-delay:.2s} #titleScr.enter .tt-menu>*:nth-child(2){animation-delay:.27s} #titleScr.enter .tt-menu>*:nth-child(n+3){animation-delay:.34s}
+#titleScr.enter .tt-art{animation:fadeIn .9s ease-out backwards}
+@keyframes ttIn{0%{opacity:0;letter-spacing:.6em;filter:blur(4px)}100%{opacity:1;letter-spacing:.16em;filter:none}}
+/* 地図の上の帯: エリアの進み具合 */
+.apr{display:inline-flex;gap:3px;margin-left:-6px}
+.apr i{width:14px;height:4px;border-radius:1px;background:#1f3346}
+.apr i.done{background:var(--cy-dim)} .apr i.on{background:var(--cy);box-shadow:0 0 6px rgba(56,211,255,.7)}
+/* 新しいエリアの名前 */
+.abanner{position:absolute;left:0;right:0;top:150px;display:flex;flex-direction:column;align-items:center;gap:4px;pointer-events:none;z-index:5;padding:14px 0;
+  background:linear-gradient(90deg,transparent,rgba(5,9,14,.92) 25%,rgba(5,9,14,.92) 75%,transparent);animation:abanner 2.1s ease-in-out forwards}
+.abanner i{font-style:normal;font-family:var(--f-num);font-size:11px;letter-spacing:.3em;color:var(--cy)}
+.abanner b{font-size:24px;letter-spacing:.2em;color:#fff;text-shadow:0 0 14px rgba(56,211,255,.6)}
+@keyframes abanner{0%{opacity:0;clip-path:inset(50% 0 50% 0)}12%{opacity:1;clip-path:inset(0)}80%{opacity:1;clip-path:inset(0)}100%{opacity:0;clip-path:inset(0)}}
+/* 中継 */
+.rs-heal{display:flex;align-items:center;gap:6px;margin:-4px 0 12px;font-family:var(--f-num);font-weight:700;font-size:12px;color:var(--cy)} .rs-heal .ic svg{width:13px;height:13px}
 @media (prefers-reduced-motion:reduce){#stage *,#stage *::before,#stage *::after{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -963,6 +1011,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
       <div id="flashFx" class="np"></div>
       <div id="toast"></div>
     </div>
+    <div id="titleScr" hidden></div>
     <div id="mapScr" hidden></div>
     <div id="roomScr" hidden></div>
     <div id="ov" hidden><div class="box" id="ovbox"></div></div>
@@ -979,7 +1028,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 <script src="data/text.js"></script>
 <script src="js/engine.js"></script>
 <script>
-const APP_VERSION = '0.18.8';
+const APP_VERSION = '0.19.0';
 const $ = s => document.querySelector(s);
 const EN = ENGINE, RULE = EN.RULE;
 const VIEW = RULE.view, NOW = 170, PX = 34, xs = c => NOW + c * PX, STRIP_Y = 150, SWIFT_VIS = 3;
@@ -1868,43 +1917,85 @@ async function execute(){
 }
 
 /* ---------- run & map ---------- */
+const AREA = () => DATA.areas[(S && S.run && S.run.area) || 0];
+/* ---------- 保存(0.19.0): 部屋に入るたび・地図に戻るたびに自動で保存。戦闘の途中でやめると、つづきからはその戦闘のはじめから ---------- */
+const SAVE_KEY = 'asc.save';
+function saveRun(pending){
+  if(!S || !S.run || S.run.debug || (UI.node && UI.node.debug)) return;
+  try{ localStorage.setItem(SAVE_KEY, JSON.stringify({v:1, run:S.run, pending:pending || null, cls:clsKey(), at:Date.now()})); }catch(e){}
+}
+function loadSave(){ try{ const o = JSON.parse(localStorage.getItem(SAVE_KEY)); return o && o.v === 1 && o.run && o.run.map ? o : null; }catch(e){ return null; } }
+function clearSave(){ try{ localStorage.removeItem(SAVE_KEY); }catch(e){} }
+function resumeRun(){
+  const o = loadSave(); if(!o){ showTitle(); return; }
+  hideOv(); $('#titleScr').hidden = true;
+  S = {run: o.run, b: null}; UI.mapSel = null; UI.node = null; UI.pick = null;
+  if(o.pending === 'transit'){ UI.node = {type:'transit'}; UI.eventId = DATA.transit[S.run.area - 1].id; UI.healed = null; showEventRoom(); }
+  else if(o.pending){ const n = findNode(o.pending); if(n) enterRoom(n); else showMap(); }
+  else showMap();
+}
+/* ---------- タイトル(0.19.0) ---------- */
+function showTitle(){
+  hideOv(); hideOv2(); closeFocus(); $('#mapScr').hidden = true; $('#roomScr').hidden = true;
+  const o = loadSave(), conf = UI.titleConfirm === true;
+  let cont = '';
+  if(o){
+    const A = DATA.areas[o.run.area || 0], at = o.run.at, pd = o.pending, pos = pd === 'transit' ? '中継' : pd === 'boss' ? 'ボス' : pd ? `部屋${+pd.split('-')[1] + 1}` : !at ? '入口' : at.boss ? 'ボス' : `部屋${at.idx + 1}`;
+    cont = `<button class="tt-b main" type="button" data-act="continue"><b>つづきから</b><span>${A.name} · ${pos} · <span class="ic">${IC.core}</span>${o.run.body}/${o.run.bodyMax}</span></button>`;
+  }
+  const nw = `<button class="tt-b${o ? '' : ' main'}${conf ? ' warn' : ''}" type="button" data-act="newGame"><b>${conf ? '記録を消してはじめから' : 'はじめから'}</b>${conf ? '<span>もう一度押すと、つづきの記録は消える</span>' : ''}</button>`;
+  const ts = $('#titleScr'), fresh = ts.hidden;
+  ts.innerHTML = `<div class="tt-tower" aria-hidden="true">${Array.from({length: 9}, (_, i) => `<i style="--i:${i}"></i>`).join('')}</div>
+    <div class="tt-art" aria-hidden="true">${droidArt(new Set())}</div>
+    <div class="tt-main">
+      <h1 class="tt-logo" data-t="ASCENDROID">ASCENDROID</h1>
+      <div class="tt-menu">${cont}${nw}
+        <div class="tt-sub"><button class="tt-s" type="button" data-act="rules">遊び方</button><button class="tt-s" type="button" data-act="fs">全画面</button><button class="tt-s" type="button" data-act="debug">デバッグ</button></div>
+      </div>
+    </div>
+    <span class="tt-ver">${APP_VERSION}</span>`;
+  ts.hidden = false; if(fresh) enter(ts);
+  if(!conf) UI.titleConfirm = false;
+}
 function newRun(){
-  hideOv();
+  hideOv(); $('#titleScr').hidden = true;
   const seed = Math.floor(Math.random() * 1e9);
   S = {run: EN.newRun(seed), b: null};
-  UI.mapSel = null; UI.node = null;
+  UI.mapSel = null; UI.node = null; UI.areaShown = -1;
   showMap();
 }
 const nodeKey = n => n.type === 'boss' ? 'boss' : n.lane + '-' + n.idx;
-const MAPX = [52, 168, 276, 384, 492, 600, 736], MAPY = [112, 192, 272];
-function nodePos(n){ return n.type === 'boss' ? {x: MAPX[6], y: MAPY[1]} : {x: MAPX[n.idx + 1], y: MAPY[n.lane]}; }
+// 地図の列: 入口・部屋・ボス。部屋数から等間隔に
+const MAPY = [118, 196, 274];
+const mapX = i => { const cols = AREA().rooms + 2; return 44 + i * (800 - 44) / (cols - 1); };
+function nodePos(n){ return n.type === 'boss' ? {x: mapX(AREA().rooms + 1), y: MAPY[1]} : {x: mapX(n.idx + 1), y: MAPY[n.lane]}; }
 function encFoes(enc){ const c = {}; for(const f of ENC[enc].foes){ const nm = FOES[f].name; c[nm] = (c[nm] || 0) + 1; } return Object.entries(c).map(([n, k]) => k > 1 ? `${n}×${k}` : n).join('・'); }
 function showMap(){
-  UI.screen = 'map'; UI.view = 'normal'; sel = null; PV = null;
+  UI.screen = 'map'; UI.view = 'normal'; sel = null; PV = null; $('#titleScr').hidden = true;
   const run = S.run, m = run.map, reach = new Set(EN.nextNodes(run).map(nodeKey)), visited = new Set(run.visited);
   const atKey = run.at ? (run.at.boss ? 'boss' : run.at.lane + '-' + run.at.idx) : 'start';
   const all = [...m.nodes.flat(), m.boss];
-  const T = DATA.area.transferAfter;
+  const TR = AREA().transfers;
   let lines = '';
   const ln = (a, c, cls) => { lines += `<line x1="${a.x}" y1="${a.y}" x2="${c.x}" y2="${c.y}" class="${cls}"/>`; };
   // 今いる部屋から次に行ける部屋への線は光らせる
   const nx = (fromK, to) => fromK === atKey && reach.has(nodeKey(to)) ? ' nx' : '';
-  const st = {x: MAPX[0], y: MAPY[1]};
+  const st = {x: mapX(0), y: MAPY[1]};
   for(const row of m.nodes){
     const n0 = row[0]; ln(st, nodePos(n0), (visited.has(nodeKey(n0)) ? 'ed vis' : 'ed') + nx('start', n0));
     for(let i = 0; i < row.length - 1; i++){
       const a = row[i];
-      const nexts = i === T - 1 ? EN.reachAfter(a.lane, m.nodes.length).map(l => m.nodes[l][i + 1]) : [row[i + 1]];
-      for(const c of nexts) ln(nodePos(a), nodePos(c), (visited.has(nodeKey(a)) && visited.has(nodeKey(c)) ? 'ed vis' : 'ed') + (i === T - 1 ? ' tr' : '') + nx(nodeKey(a), c));
+      const tr = TR.includes(i + 1), nexts = tr ? EN.reachAfter(a.lane, m.nodes.length).map(l => m.nodes[l][i + 1]) : [row[i + 1]];
+      for(const c of nexts) ln(nodePos(a), nodePos(c), (visited.has(nodeKey(a)) && visited.has(nodeKey(c)) ? 'ed vis' : 'ed') + (tr ? ' tr' : '') + nx(nodeKey(a), c));
     }
     ln(nodePos(row[row.length - 1]), nodePos(m.boss), 'ed' + nx(nodeKey(row[row.length - 1]), m.boss));
   }
   const btn = n => {
     const k = nodeKey(n), p = nodePos(n), E = n.enc ? ENC[n.enc] : null;
     const cls = ['mn', n.type, reach.has(k) ? 'reach' : '', visited.has(k) ? 'done' : '', UI.mapSel === k ? 'sel' : '', atKey === k ? 'here' : ''].filter(Boolean).join(' ');
-    return `<button class="${cls}" type="button" data-act="node" data-arg="${k}" style="left:${p.x}px;top:${p.y}px;--d:${(n.type === 'boss' ? 6 : n.idx + 1) * 45}ms" aria-label="${DATA.rooms[n.type].name}"><span class="ic">${IC[n.type]}</span></button>`;
+    return `<button class="${cls}" type="button" data-act="node" data-arg="${k}" style="left:${p.x}px;top:${p.y}px;--d:${(n.type === 'boss' ? AREA().rooms + 1 : n.idx + 1) * 40}ms" aria-label="${DATA.rooms[n.type].name}"><span class="ic">${IC[n.type]}</span></button>`;
   };
-  const labels = m.lanes.map((k, l) => `<span class="lane" style="top:${MAPY[l] - 47}px;left:${MAPX[1]}px">${DATA.lanes[k].name}の道</span>`).join('');
+  const labels = m.lanes.map((k, l) => `<span class="lane" style="top:${MAPY[l] - 47}px;left:${mapX(1)}px">${DATA.lanes[k].name}の道</span>`).join('');
   const s = UI.mapSel ? all.find(n => nodeKey(n) === UI.mapSel) : null;
   let info = '';
   if(s){
@@ -1912,30 +2003,40 @@ function showMap(){
     info = `<span class="mi-ic k-${s.type}">${IC[s.type]}</span><span class="mi-t"><span><b>${DATA.rooms[s.type].name}</b>${s.type !== 'boss' ? `<span class="mi-l">${DATA.lanes[m.lanes[s.lane]].name}の道</span>` : ''}</span><span class="mi-d">${DATA.ui['rd.' + s.type] || ''}</span></span>`;
   }
   const fresh = $('#mapScr').hidden;
-  $('#mapScr').innerHTML = `${topBar(DATA.area.name)}
+  $('#mapScr').innerHTML = `${topBar(AREA().name)}
     <svg class="medges" width="844" height="390" viewBox="0 0 844 390" aria-hidden="true">${lines}</svg>
     <span class="mn start${atKey === 'start' ? ' here' : ''}" style="left:${st.x}px;top:${st.y}px"><span class="ic">${IC.start}</span></span>${labels}${all.map(btn).join('')}
     <div class="minfo${s ? ' has' : ''}">${info || `<span class="mi-leg">${['battle', 'elite', 'rest', 'shop', 'event', 'boss'].map(t => `<span class="k-${t}"><span class="ic">${IC[t]}</span>${DATA.rooms[t].name}</span>`).join('')}</span>`}<span class="sp"></span><button class="btn" type="button" data-act="go" ${s && reach.has(UI.mapSel) ? '' : 'disabled'}>決定</button></div>`;
   $('#mapScr').hidden = false; $('#mapScr').classList.remove('leave');
   if(fresh) enter($('#mapScr'));
+  saveRun(null);
+  // 新しいエリアに入ったら、エリアの名前を大きく出す
+  if(UI.areaShown !== S.run.area){ UI.areaShown = S.run.area; areaBanner(); }
+}
+function areaBanner(){
+  const el = document.createElement('div'); el.className = 'abanner';
+  el.innerHTML = `<i>AREA ${String(S.run.area + 1).padStart(2, '0')} / ${String(DATA.areas.length).padStart(2, '0')}</i><b>${AREA().name}</b>`;
+  $('#mapScr').appendChild(el); setTimeout(() => el.remove(), 2100);
 }
 // 地図と部屋の画面の上の帯(本体・部位・スクラップ・デッキ・メニュー)
 function topBar(title){
   const run = S.run, partsMini = SLOTS.map(p => `<span class="pm${run.parts[p.id].damaged ? ' dmg' : ''}" title="${p.fn}"><span class="ic">${IC[p.id]}</span></span>`).join('');
-  return `<div class="mh-bar"><b>${title}</b><span class="mb"><span class="ic">${IC.core}</span>${run.body}/${run.bodyMax}</span><button class="mbtn pms" type="button" data-act="unit" aria-label="機体">${partsMini}</button><span class="mb"><span class="ic">${IC.scrap}</span>${run.scrap}</span><span class="sp"></span><button class="mbtn" type="button" data-act="deck"><span class="ic">${IC.deck}</span>${EN.battleDeck(run).length}</button><button class="mbtn" type="button" data-act="menu" aria-label="メニュー">${IC.menu}</button></div>`;
+  const apr = `<span class="apr">${DATA.areas.map((A, i) => `<i class="${i < run.area ? 'done' : i === run.area ? 'on' : ''}"></i>`).join('')}</span>`;
+  return `<div class="mh-bar"><b>${title}</b>${apr}<span class="mb"><span class="ic">${IC.core}</span>${run.body}/${run.bodyMax}</span><button class="mbtn pms" type="button" data-act="unit" aria-label="機体">${partsMini}</button><span class="mb"><span class="ic">${IC.scrap}</span>${run.scrap}</span><span class="sp"></span><button class="mbtn" type="button" data-act="deck"><span class="ic">${IC.deck}</span>${EN.battleDeck(run).length}</button><button class="mbtn" type="button" data-act="menu" aria-label="メニュー">${IC.menu}</button></div>`;
 }
 // 整備・ショップ・イベントは画面ごと切り替える(左はいずれスチルを置く枠)。still なしは全幅
 function showRoom(kind, body, still){
   const fresh = $('#roomScr').hidden || $('#roomScr')._kind !== kind; $('#roomScr')._kind = kind;
-  UI.screen = 'room'; hideOv(); hideOv2();
+  UI.screen = 'room'; hideOv(); hideOv2(); $('#titleScr').hidden = true;
   const left = typeof still === 'string' ? `<div class="rs-still info ${kind}">${still}</div>` : still ? `<div class="rs-still ${kind}"><span class="rs-glyph">${IC[kind]}</span><span class="rs-noise"></span></div>` : '';
-  $('#roomScr').innerHTML = `${topBar(DATA.area.name)}${left}<div class="rs-main${still ? '' : ' full'}">${body}</div>`;
+  $('#roomScr').innerHTML = `${topBar(AREA().name)}${left}<div class="rs-main${still ? '' : ' full'}">${body}</div>`;
   $('#roomScr').hidden = false; $('#mapScr').hidden = true;
   if(fresh) enter($('#roomScr'));
 }
 function findNode(k){ const m = S.run.map; if(k === 'boss') return m.boss; const [l, i] = k.split('-').map(Number); return m.nodes[l][i]; }
 function enterRoom(n){
   UI.node = n; UI.mapSel = null;
+  saveRun(nodeKey(n));
   if(n.type === 'battle' || n.type === 'elite' || n.type === 'boss') startBattle(n);
   else if(n.type === 'rest'){ UI.pick = null; showRest(); }
   else if(n.type === 'shop'){ UI.pick = null; UI.offers = null; showShop(); }
@@ -1943,11 +2044,12 @@ function enterRoom(n){
 }
 function completeRoom(){
   const n = UI.node, run = S.run;
+  if(n && n.type === 'transit'){ UI.node = null; UI.pick = null; hideOv(); hideOv2(); $('#roomScr').hidden = true; showMap(); return; }
   run.at = n.type === 'boss' ? {boss:true} : {lane:n.lane, idx:n.idx};
   run.visited.push(nodeKey(n));
   UI.pick = null; UI.learnOpts = []; UI.partOpts = null; UI.after = null;
   hideOv(); hideOv2(); $('#roomScr').hidden = true;
-  if(n.type === 'boss'){ showClear(); return; }
+  if(n.type === 'boss'){ if(run.area + 1 < DATA.areas.length) startTransit(); else showClear(); return; }
   showMap();
 }
 function startBattle(n){
@@ -1955,7 +2057,7 @@ function startBattle(n){
   snapshot = JSON.stringify(S.run);
   S = EN.newBattle(S.run, n.enc);
   sel = null; PV = null; busy = false; lastTarget = 0; UI.view = 'normal'; UI.screen = 'battle'; closeFocus();
-  $('#mapScr').hidden = true;
+  $('#mapScr').hidden = true; $('#titleScr').hidden = true;
   clearCards(); clearMarks(); buildFoes();
   renderAll(); enter($('#shaker'));
   toast(`${DATA.rooms[n.type].name} · ${ENC[n.enc].fam}`);
@@ -1976,7 +2078,7 @@ function onWin(){
 }
 function onLose(){
   if(UI.node && UI.node.debug){ showDebugResult(false); return; }
-  showOv(`<h2>機能停止</h2><div class="row"><button class="btn ghost" type="button" data-act="restart">最初から</button><button class="btn" type="button" data-act="retry">この戦闘をやり直す</button></div>`);
+  showOv(`<h2>機能停止</h2><div class="row"><button class="btn ghost" type="button" data-act="title">タイトルへ</button><button class="btn" type="button" data-act="retry">この戦闘をやり直す</button></div>`);
 }
 // 学習: 候補は全カード(パーツ専用とノイズを除く)から。倒した敵の pool のカードだけ、ごくわずかに出やすい
 // (同じアーキタイプを作るために同じ敵とばかり戦う、を避けるため。地図にも敵は出さない)
@@ -2045,16 +2147,28 @@ function showDefrag(){
 const price = k => DATA.shop.price[CARDS[k].cost] ?? 30;
 function showShop(){
   const sh = DATA.shop, run = S.run;
+  const nk = UI.node ? nodeKey(UI.node) + '@' + run.area : '';
+  if(!UI.offers && run.shop && run.shop.at === nk) UI.offers = run.shop.offers;
   if(!UI.offers){ const pool = Object.keys(CARDS).filter(k => !['charge','scatter'].includes(k) && !CARDS[k].junk); UI.offers = EN.shuffle(pool).slice(0, sh.offers); }
+  run.shop = {at: nk, offers: UI.offers};
   const pk = UI.pick, can = c => run.scrap >= c;
   const offers = UI.offers.map((k, i) => k ? `<div class="sitem"><button class="card static${pk === 'c' + i ? ' picked' : ''}${can(price(k)) ? '' : ' off'}" type="button" data-act="pick" data-arg="c${i}" data-view="shop">${cardInner(k, null)}</button><span class="price${can(price(k)) ? '' : ' no'}"><span class="ic">${IC.scrap}</span>${price(k)}</span></div>` : '<div class="sitem sold"></div>').join('');
   const svc = (id, ic, name, sub, c) => `<button class="opt${pk === id ? ' picked' : ''}${can(c) ? '' : ' off'}" type="button" data-act="pick" data-arg="${id}" data-view="shop"><span class="ic">${IC[ic]}</span><b>${name}</b><span>${sub}</span><span class="price${can(c) ? '' : ' no'}"><span class="ic">${IC.scrap}</span>${c}</span></button>`;
   const cost = pk ? (pk[0] === 'c' ? price(UI.offers[+pk.slice(1)]) : pk === 'defrag' ? sh.defrag : sh.repairCost) : 0;
   showRoom('shop', `<h2>ショップ</h2><div class="shop"><div class="cards">${offers}</div><div class="svc">${svc('defrag', 'defrag', 'デフラグ', DATA.ui.defrag, sh.defrag)}${svc('repair', 'repair', '修理', DATA.ui.repair.replace('{n}', sh.repairBody), sh.repairCost)}</div></div><div class="row"><button class="btn ghost" type="button" data-act="leave">出る</button><button class="btn" type="button" data-act="buy" ${pk && can(cost) ? '' : 'disabled'}>購入</button></div>`, false);
 }
+const findEvent = id => DATA.events.find(e => e.id === id) || DATA.transit.find(e => e.id === id);
+// エリアの間の中継(0.19.0): 本体の回復と、そのエリア固有のイベント
+function startTransit(){
+  const healed = EN.nextArea(S.run);
+  UI.node = {type:'transit'}; UI.pick = null; UI.eventId = DATA.transit[S.run.area - 1].id; UI.healed = healed;
+  saveRun('transit');
+  showEventRoom();
+}
 function showEventRoom(){
-  const ev = DATA.events.find(e => e.id === UI.eventId), pk = UI.pick;
-  showRoom('event', `<h2>${ev.title}</h2><p class="rs-text">${ev.text}</p><div class="rs-opts">${ev.choices.map((c, i) => `<button class="opt${pk === String(i) ? ' picked' : ''}" type="button" data-act="pick" data-arg="${i}" data-view="event"><b>${c.label}</b><span>${c.sub}</span></button>`).join('')}</div><div class="row"><button class="btn" type="button" data-act="choose" ${pk != null ? '' : 'disabled'}>決定</button></div>`, true);
+  const ev = findEvent(UI.eventId), pk = UI.pick, tr = UI.node && UI.node.type === 'transit';
+  const heal = tr && UI.healed ? `<p class="rs-heal"><span class="ic">${IC.core}</span>${DATA.ui['transit.heal'].replace('{n}', UI.healed)}</p>` : '';
+  showRoom(tr ? 'transit' : 'event', `<h2>${ev.title}</h2><p class="rs-text">${ev.text}</p>${heal}<div class="rs-opts">${ev.choices.map((c, i) => `<button class="opt${pk === String(i) ? ' picked' : ''}" type="button" data-act="pick" data-arg="${i}" data-view="event"><b>${c.label}</b><span>${c.sub}</span></button>`).join('')}</div><div class="row"><button class="btn" type="button" data-act="choose" ${pk != null ? '' : 'disabled'}>決定</button></div>`, tr ? rsUnit() : true);
 }
 function applyEvent(fx){
   const run = S.run;
@@ -2067,7 +2181,8 @@ function applyEvent(fx){
   completeRoom();
 }
 function showClear(){
-  showOv(`<h2>${DATA.area.name} 踏破</h2>${bodyLine()}<div class="row"><button class="btn" type="button" data-act="restart">最初から</button></div>`);
+  clearSave();
+  showOv(`<h2>踏破</h2><p class="sub">${DATA.ui['clear.sub']}</p>${bodyLine()}${partTiles()}<div class="row"><button class="btn" type="button" data-act="title">タイトルへ</button></div>`);
 }
 
 /* ---------- info overlays ---------- */
@@ -2375,7 +2490,7 @@ function dbgRedraw(){ ({top:showDebug, deck:showDebugDeck, parts:showDebugParts,
 // 選んだ設定で1戦だけ始める
 function startDebugBattle(enc){
   const run = EN.newRun(Math.floor(Math.random() * 1e9));
-  run.deck = DBG.deck.slice();
+  run.deck = DBG.deck.slice(); run.debug = true;
   for(const p of SLOTS) run.parts[p.id] = {id: DBG.parts[p.id], damaged: false};
   run.body = run.bodyMax = DBG.body;
   S = {run, b: null};
@@ -2416,8 +2531,8 @@ function showRules(first){
   </ul><div class="row">${first ? '<button class="btn ghost" type="button" data-act="debug">デバッグ</button>' : ''}<button class="btn" type="button" data-act="close">${first ? 'はじめる' : '閉じる'}</button></div>`, !first);
 }
 function showMenu(){
-  const at = S.run.at, pos = !at ? '入口' : at.boss ? 'ボス' : `部屋${at.idx + 1}/${DATA.area.rooms + 1}`;
-  showOv(`<h2>${DATA.area.name} · ${UI.screen === 'battle' && UI.node ? DATA.rooms[UI.node.type].name : pos}</h2><p class="sub">Ascendroid ${APP_VERSION} · ${CLS[clsKey()].name}</p><div class="mlist"><button class="opt" type="button" data-act="rules"><b>遊び方</b></button><button class="opt" type="button" data-act="unit"><b>機体</b></button><button class="opt" type="button" data-act="deck"><b>デッキ</b></button><button class="opt" type="button" data-act="fs"><b>全画面</b></button><button class="opt" type="button" data-act="restart"><b>最初から</b></button><button class="opt" type="button" data-act="debug"><b>デバッグ</b></button></div>${closeRow}`, true);
+  const at = S.run.at, pos = !at ? '入口' : at.boss ? 'ボス' : `部屋${at.idx + 1}/${AREA().rooms + 1}`;
+  showOv(`<h2>${AREA().name} · ${UI.screen === 'battle' && UI.node ? DATA.rooms[UI.node.type].name : pos}</h2><p class="sub">Ascendroid ${APP_VERSION} · ${CLS[clsKey()].name}</p><div class="mlist"><button class="opt" type="button" data-act="rules"><b>遊び方</b></button><button class="opt" type="button" data-act="unit"><b>機体</b></button><button class="opt" type="button" data-act="deck"><b>デッキ</b></button><button class="opt" type="button" data-act="fs"><b>全画面</b></button><button class="opt" type="button" data-act="title"><b>タイトルへ</b></button><button class="opt" type="button" data-act="debug"><b>デバッグ</b></button></div>${closeRow}`, true);
 }
 async function goFull(){
   hideOv();
@@ -2458,6 +2573,9 @@ function act(a, arg, el){
     case 'dbgWait': DBG.wait = arg === 'c' ? null : arg === '1'; dbgSave(); applyEcon(); showDebugNums(); break;
     case 'dbgSlot': { const [i, k] = arg.split(':'); DBG.custom[+i] = k || null; dbgSave(); showDebugCustom(); break; }
     case 'restart': UI.pick = null; UI.learnOpts = []; newRun(); break;
+    case 'title': UI.pick = null; UI.learnOpts = []; showTitle(); break;
+    case 'continue': resumeRun(); break;
+    case 'newGame': if(loadSave() && UI.titleConfirm !== true){ UI.titleConfirm = true; showTitle(); break; } UI.titleConfirm = false; clearSave(); newRun(); break;
     case 'retry': S = {run: JSON.parse(snapshot), b: null}; hideOv(); startBattle(UI.node); break;
     case 'node': UI.mapSel = UI.mapSel === arg ? null : arg; showMap(); break;
     case 'go': { const n = findNode(UI.mapSel); if(UI.going || !EN.nextNodes(S.run).some(x => nodeKey(x) === UI.mapSel)) break;
@@ -2491,7 +2609,7 @@ function act(a, arg, el){
       break;
     }
     case 'leave': completeRoom(); break;
-    case 'choose': { if(UI.pick == null) break; const ev = DATA.events.find(e => e.id === UI.eventId); const fx = ev.choices[+UI.pick].fx; UI.pick = null; applyEvent(fx); break; }
+    case 'choose': { if(UI.pick == null) break; const ev = findEvent(UI.eventId); const fx = ev.choices[+UI.pick].fx; UI.pick = null; applyEvent(fx); break; }
     case 'done': completeRoom(); break;
   }
 }
@@ -2568,8 +2686,7 @@ for(const el of [$('#wrap'), stage]) el.addEventListener('scroll', () => { el.sc
 fit();
 buildStatic();
 dbgLoad(); applyEcon();
-newRun();
-showRules(true);
+showTitle();
 </script>
 <script>
 // オフライン用のサービスワーカー登録

@@ -33,7 +33,7 @@ for(const r of read('cards.csv')) T.cards[r['キー']] = {name:r['名前'], text
 for(const r of read('keywords.csv')) T.keywords.push({key:r['キー'], name:r['名前'], desc:r['説明']});
 for(const r of read('parts.csv')) T.parts[r['キー']] = {name:r['名前'], text:r['テキスト']};
 for(const r of read('enemies.csv')) T.foes[r['キー']] = r['名前'];
-for(const r of read('events.csv')) T.events[r['キー']] = {title:r['タイトル'], text:r['本文'], choices:[{label:r['選択肢1'], sub:r['選択肢1の説明']}, {label:r['選択肢2'], sub:r['選択肢2の説明']}]};
+for(const r of read('events.csv')) T.events[r['キー']] = {title:r['タイトル'], text:r['本文'], choices:[1, 2, 3].filter(i => r['選択肢' + i]).map(i => ({label:r['選択肢' + i], sub:r['選択肢' + i + 'の説明']}))};
 for(const r of read('lines.csv')){
   const w = r['条件'], t = r['セリフ'];
   if(w.startsWith('room:')){ const k = w.slice(5); (T.lines.room[k] = T.lines.room[k] || []).push(t); continue; }
@@ -46,7 +46,7 @@ for(const r of read('terms.csv')) T.terms[r['キー']] = r['名前'];
 // data/*.js に流し込む処理(生成するファイルにそのまま入る)
 function apply(D, T){
   const tm = T.terms;
-  if(tm.area) D.area.name = tm.area;
+  for(const A of D.areas || []) if(tm['area.' + A.id]) A.name = tm['area.' + A.id];
   for(const k in D.rooms) if(tm['room.' + k]) D.rooms[k].name = tm['room.' + k];
   for(const k in D.lanes) if(tm['lane.' + k]) D.lanes[k].name = tm['lane.' + k];
   for(const s of D.slots) if(tm['slot.' + s.id]) s.fn = tm['slot.' + s.id];
@@ -65,7 +65,7 @@ function apply(D, T){
     else if(where === 'passive') (f.pname = f.pname || {})[i] = n; // 番号は passives の何番目か。phase は段階変化の名前
     else if(where === 'broke' && f.broke){ const [uid, j] = i.split(':'); if(f.broke[uid] && f.broke[uid][+j]) f.broke[uid][+j].n = n; }
   }
-  for(const e of D.events || []){ const t = T.events[e.id]; if(!t) continue; e.title = t.title; e.text = t.text; t.choices.forEach((c, i) => { if(e.choices[i]) Object.assign(e.choices[i], c); }); }
+  for(const e of [...(D.events || []), ...(D.transit || [])]){ const t = T.events[e.id]; if(!t) continue; e.title = t.title; e.text = t.text; t.choices.forEach((c, i) => { if(e.choices[i]) Object.assign(e.choices[i], c); }); }
   D.lines = {speaker: tm.speaker || '', rules: T.lines.rules, room: T.lines.room};
 }
 

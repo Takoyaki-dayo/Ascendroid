@@ -3,7 +3,7 @@
 window.DATA = window.DATA || {};
 (function apply(D, T){
   const tm = T.terms;
-  if(tm.area) D.area.name = tm.area;
+  for(const A of D.areas || []) if(tm['area.' + A.id]) A.name = tm['area.' + A.id];
   for(const k in D.rooms) if(tm['room.' + k]) D.rooms[k].name = tm['room.' + k];
   for(const k in D.lanes) if(tm['lane.' + k]) D.lanes[k].name = tm['lane.' + k];
   for(const s of D.slots) if(tm['slot.' + s.id]) s.fn = tm['slot.' + s.id];
@@ -22,7 +22,7 @@ window.DATA = window.DATA || {};
     else if(where === 'passive') (f.pname = f.pname || {})[i] = n; // 番号は passives の何番目か。phase は段階変化の名前
     else if(where === 'broke' && f.broke){ const [uid, j] = i.split(':'); if(f.broke[uid] && f.broke[uid][+j]) f.broke[uid][+j].n = n; }
   }
-  for(const e of D.events || []){ const t = T.events[e.id]; if(!t) continue; e.title = t.title; e.text = t.text; t.choices.forEach((c, i) => { if(e.choices[i]) Object.assign(e.choices[i], c); }); }
+  for(const e of [...(D.events || []), ...(D.transit || [])]){ const t = T.events[e.id]; if(!t) continue; e.title = t.title; e.text = t.text; t.choices.forEach((c, i) => { if(e.choices[i]) Object.assign(e.choices[i], c); }); }
   D.lines = {speaker: tm.speaker || '', rules: T.lines.rules, room: T.lines.room};
 })(DATA, {
  "cards": {
@@ -443,6 +443,42 @@ window.DATA = window.DATA || {};
      "sub": "スクラップを10得る。"
     }
    ]
+  },
+  "lift": {
+   "title": "昇降機",
+   "text": "次の層へ向かう昇降機。整備用の端末が付いている。",
+   "choices": [
+    {
+     "label": "整備する",
+     "sub": "部位の損傷を直す。"
+    },
+    {
+     "label": "記録を読む",
+     "sub": "珍しいカードを1枚得る。"
+    },
+    {
+     "label": "部品を売る",
+     "sub": "スクラップを40得る。"
+    }
+   ]
+  },
+  "relay": {
+   "title": "中継区画",
+   "text": "上層への中継区画。物資と機材が残されている。",
+   "choices": [
+    {
+     "label": "換装する",
+     "sub": "パーツを1つ選んで付け替えられる。"
+    },
+    {
+     "label": "最適化する",
+     "sub": "デッキからカードを1枚取り除く。"
+    },
+    {
+     "label": "休止する",
+     "sub": "本体を10回復する。"
+    }
+   ]
   }
  },
  "lines": {
@@ -512,7 +548,9 @@ window.DATA = window.DATA || {};
  },
  "terms": {
   "speaker": "K-7",
-  "area": "エリア1",
+  "area.a1": "エリア1",
+  "area.a2": "エリア2",
+  "area.a3": "エリア3",
   "room.battle": "通常戦",
   "room.elite": "エリート",
   "room.rest": "整備",
@@ -583,6 +621,8 @@ window.DATA = window.DATA || {};
   "ui.rd.rest": "修理かデフラグのどちらかを行う。",
   "ui.rd.shop": "スクラップでカードや修理を買う。",
   "ui.rd.event": "何かが起こる。",
-  "ui.rd.boss": "このエリアの主。倒すと踏破。"
+  "ui.rd.boss": "このエリアの主。倒すと踏破。",
+  "ui.transit.heal": "本体を{n}回復した。",
+  "ui.clear.sub": "すべてのエリアを踏破した。"
  }
 });

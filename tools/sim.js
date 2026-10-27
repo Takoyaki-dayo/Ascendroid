@@ -58,7 +58,7 @@ function fight(run, enc, pol){
 module.exports = {E, D, POL, fight};
 if(require.main === module && process.argv[4] !== 'run'){
   const pol = process.argv[2] || 'greedy', N = +(process.argv[3] || 40);
-  const run = E.newRun(1);
+  const run = E.newRun(1); run.area = +(process.env.AREA || 0); // AREA=1 でエリア2の強さ
   for(const enc of Object.keys(D.encounters)){
     const R = []; for(let i = 0; i < N; i++) R.push(fight(run, enc, pol));
     const avg = k => (R.reduce((a, r) => a + (r[k] || 0), 0) / N).toFixed(1);
@@ -70,14 +70,14 @@ if(require.main === module && process.argv[4] !== 'run'){
 // ラン全体: 道はランダム、学習はランダムに1枚、整備は修理、イベントは最初の選択肢、パーツは取る
 function playRun(pol, seed){
   const run = E.newRun(seed), R = E.rngFrom(seed + 1), log = [];
-  for(let guard = 0; guard < 20; guard++){
+  for(let guard = 0; guard < 100; guard++){
     const nx = E.nextNodes(run); if(!nx.length) break;
     const n = nx[Math.floor(R() * nx.length)];
     if(n.enc){
       const st = E.newBattle(run, n.enc);
       let o = null;
       for(let k = 0; k < 400; k++){ o = E.doAction(st, POL[pol](st)); if(o.won || o.dead) break; }
-      if(!o || !o.won) return {clear:false, at:n.type, rooms:log.length, body:0, log};
+      if(!o || !o.won) return {clear:false, at:'a' + (run.area + 1) + ':' + n.type, rooms:log.length, body:0, log};
       for(const s of D.slots) run.parts[s.id].damaged = !!st.b.broken[s.id];
       run.scrap += n.type === 'elite' ? D.rewards.elite : n.type === 'battle' ? D.rewards.battle : 0;
       const pool = [...new Set(D.encounters[n.enc].foes.flatMap(f => D.foes[f].pool))];
@@ -86,7 +86,11 @@ function playRun(pol, seed){
     else if(n.type === 'event'){ const fx = D.events.find(e => e.id === n.ev).choices[0].fx; if(fx.body) run.body = Math.max(1, Math.min(run.bodyMax, run.body + fx.body)); if(fx.repair) for(const s of D.slots) run.parts[s.id].damaged = false; if(fx.card) run.deck.push(D.rareCards[0]); }
     log.push(n.type + ':' + run.body);
     run.at = n.type === 'boss' ? {boss:true} : {lane:n.lane, idx:n.idx};
-    if(n.type === 'boss') return {clear:true, body:run.body, log};
+    if(n.type === 'boss'){
+      const tr = D.transit[run.area]; if(E.nextArea(run) === null) return {clear:true, body:run.body, log};
+      // 中継: 最初の選択肢(損傷を直す・パーツ)
+      const fx = tr.choices[0].fx; if(fx.repair) for(const s of D.slots) run.parts[s.id].damaged = false;
+    }
   }
   return {clear:false, log};
 }

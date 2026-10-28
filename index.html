@@ -335,7 +335,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 #shaker.fw #redraw b{font-size:18px}
 #shaker.fw #redraw.sel{top:298px}
 #shaker.selfview #waitBtn{opacity:0;pointer-events:none;transform:translateY(24px)}
-/* 敵の行動の窓(構え・ガード・反撃の構え)と隙 */
+/* 敵の行動の窓(体勢・防壁・反撃)と隙 */
 /* 帯(0.18.7): 1本の帯。中の細い区切りがサイクルで、端は目盛りの半サイクル外。選んでいるカードの使い終わりが帯の中なら、そのサイクルを塗る */
 .wb{position:absolute;height:9px;font-size:8px;font-weight:700;line-height:1;white-space:nowrap;pointer-events:auto;cursor:pointer;transition:left .13s linear,width .13s linear,opacity .2s,filter .15s}
 .wb>i,.sm.zone>i{position:absolute;top:0;bottom:0}
@@ -1062,7 +1062,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 <script src="data/text.js"></script>
 <script src="js/engine.js"></script>
 <script>
-const APP_VERSION = '0.21.2';
+const APP_VERSION = '0.22.0';
 const $ = s => document.querySelector(s);
 const EN = ENGINE, RULE = EN.RULE;
 const VIEW = RULE.view, NOW = 170, PX = 34, xs = c => NOW + c * PX, STRIP_Y = 150, SWIFT_VIS = 3;
@@ -1180,7 +1180,7 @@ function computePreview(){
     return {c, out:r.value, evs};
   };
   const A = sim(false), P = sim(true);
-  // 崩し・ガード・反撃・隙に当たるか(帯を光らせる)
+  // ブレイク・防壁・反撃・隙に当たるか(帯を光らせる)
   const fx = new Set(A.evs.filter(x => ['break','guarded','counter','vulnHit'].includes(x.kind)).map(x => x.kind + ':' + x.e));
   const react = new Set();
   if(a.type === 'card' && cost > 0) for(const e of S.b.foes) if(e.alive && e.react && cost >= e.react.min && e.reactIn == null) react.add(e.i);
@@ -1388,7 +1388,7 @@ function pasText(e, x){
   if(x.k === 'broke') return fillUi('pas.broke', {unit: un(x.p.unit)});
   return '';
 }
-// 画面の小さな札: ユニットの状態(クラック・装甲・隙)と、敵全体の状態(強化・加速・パッシブ)
+// 画面の小さな札: ユニットの状態(クラック・装甲・隙)と、敵全体の状態(増幅・加速・パッシブ)
 function unitSts(p){ return (p.crack ? `<span class="st crack"><span class="ic">${IC.crack}</span>${p.crack}</span>` : '') + (p.armor ? `<span class="st arm"><span class="ic">${IC.armor}</span>${p.armor}</span>` : '') + (p.vuln > 1 ? `<span class="st swf"><span class="ic">${IC.vuln}</span>${p.vuln - 1}</span>` : ''); }
 function foeSts(e){
   let s = '';
@@ -1480,7 +1480,7 @@ function placeMark(key, x, y, cls, html, info){
   if(el._h !== html){ el.innerHTML = html; el._h = html; }
   el.style.left = x + 'px'; el.style.top = y + 'px'; el.style.opacity = '';
 }
-// 帯: 敵の行動の前の窓(構え・ガード・反撃の構え)と、行動の後の隙
+// 帯: 敵の行動の前の窓(体勢・防壁・反撃)と、行動の後の隙
 // 帯は1本(0.18.7 で升から戻した)。中の細い区切りがサイクル。選んでいるカードの使い終わりが帯の中なら、そのサイクルを塗る
 function cellsHTML(t0, t1, label){
   const cw = PX - 6, W = (t1 - t0) * PX + cw, hit = PV && !busy ? PV.completeAt : null;
@@ -1512,7 +1512,7 @@ function placeBand(key, x0, x1, y, cls, html){
   el.style.left = x0 + 'px'; el.style.width = Math.max(10, x1 - x0) + 'px'; el.style.top = y + 'px'; el.style.opacity = '';
 }
 const WIN = {wind:'構', guard:'防', counter:'返'};
-// 帯は文字を使わずアイコンと数字で: 構え(★ 崩すのに要る一撃)・ガード(盾)・反撃(返し矢印)・隙(照準)
+// 帯は文字を使わずアイコンと数字で: 体勢(★ ブレイクに要る一撃)・防壁(盾)・反撃(返し矢印)・隙(照準)
 const WIC = {wind:IC.poise, guard:IC.block, counter:IC.counterIc};
 function moveIcon(a){ return a.buff ? `<span class="ic">${IC.str}</span><b>${a.buff}</b>` : a.armor ? `<span class="ic">${IC.armor}</span><b>${a.armor}</b>` : a.heal ? `<b>+${a.heal}</b>` : a.crack ? `<span class="ic">${IC.crack}</span>` : a.noise ? `<span class="ic">${IC.junk}</span>` : a.zone ? `<span class="ic">${IC.zone}</span>` : a.haste ? `<span class="ic">${IC.swift}</span>` : a.summon ? `<b>援</b>` : a.guard ? `<span class="ic">${IC.block}</span>` : '<b>·</b>'; }
 function renderMarks(){
@@ -1773,7 +1773,7 @@ function cardFx(x){
     case 'guarded': { const p = foeCenter(x.e); const el = fxEl('fshield', p.x, p.y - 10); setTimeout(() => el.remove(), 520); floatAt(p.x + 26, p.y - 46, '防' + x.n, ''); break; }
     case 'armored': { const p = unitCenter(x.e, x.unit); floatAt(p.x + 26, p.y - 36, '装' + x.n, ''); break; }
     case 'vulnHit': { const p = unitCenter(x.e, x.unit); floatAt(p.x - 26, p.y - 36, '×1.5', 'cy'); break; }
-    case 'break': { justFx(x.e, 'BREAK'); const p = foeCenter(x.e); floatAt(p.x, p.y - 84, '崩し', 'cy big'); break; }
+    case 'break': { justFx(x.e, 'BREAK'); const p = foeCenter(x.e); floatAt(p.x, p.y - 84, DATA.kwName.break, 'cy big'); break; }
     case 'counter': { const p = foeCenter(x.e); floatAt(p.x, p.y - 84, '返', 'foe'); beam({x: DROID.sx, y: DROID.sy}, {x: p.x, y: p.y - 10}); hitMeFx(x.res); break; }
   }
 }
@@ -2602,10 +2602,10 @@ function showRules(first){
     ${!RULE.econ ? `<li>手札は3サイクルごとに1枚届く(最大${RULE.handMax}枚)。届く時刻はタイムラインの下の段。軽いカードを続けると手札が減り、重いカードの間に手札がたまる。</li>`
       : RULE.econ.type === 'turn' ? `<li>${RULE.econ.len}サイクルごとに区切り(点線)。区切りで手札を捨てて${RULE.econ.hand}枚引き、ブロックも消える。右下の上段は区切りまで待つ。</li>`
       : `<li>手札は自動では届かない。好きなときに右下のリフレッシュ(${RULE.econ.r}サイクル)で、手札を全部捨てて${RULE.econ.hand}枚引く。リフレッシュを始めるとブロックをすべて失う。</li>`}
-    <li>奥の画面に敵ごとの攻撃予定が流れてくる。数字はダメージ、横の字は狙う部位。紫の丸は溜め技、砂時計は自分へのディレイ。</li>
-    <li>完了前に被弾すると中断。ブロックで全部防ぐか、菱形のあるカードなら中断されない。完了と溜め技が同じサイクルならJUSTで潰せる。</li>
+    <li>奥の画面に敵の行動の予定が流れてくる。数字はダメージ、下の印は狙う部位。紫の丸は不安定な行動、砂時計は自分へのディレイ。</li>
+    <li>カードが発動する前に攻撃を受けると中断。ブロックで全部防ぐか、菱形のあるカード(アトミック)なら中断されない。不安定な行動と同じサイクルに発動すると、JUSTでブレイクする(行動が止まる)。</li>
     <li>目の印の敵は、重いカードを使い始めると撃ってくる。鎖の印の敵は、仲間と同時に攻撃すると強くなる。</li>
-    <li>予定の下の帯は、その間にカードが完了したときに効く。<b>構</b>は数字以上の一撃で行動を潰せる。<b>防</b>は数字までダメージを防がれる。<b>返</b>は殴るたびに撃ち返される。<b>隙</b>はダメージ1.5倍。</li>
+    <li>予定の下の帯は、その間にカードが発動したときに効く。<b>体勢</b>は一度に数字以上のダメージでブレイク。<b>防壁</b>は数字までダメージを防がれる。<b>反撃</b>は攻撃するたびに撃ち返される。<b>隙</b>はダメージ1.5倍。</li>
     ${!RULE.econ ? `<li>右下は手札の入れ替え(枚数ぶんのサイクル)${RULE.freeWait ? 'と、1サイクルの待機' : '。手札がないときは1サイクルの待機'}。</li>` : RULE.freeWait || RULE.econ.type === 'turn' ? '<li>右下の下段は1サイクルの待機。</li>' : ''}
     <li>上スワイプで手札を広げ、下スワイプで自分の内側を見る。長押しでカードと敵の詳細。タイムラインを押すとキャラが透ける。</li>
   </ul><div class="row">${first ? '<button class="btn ghost" type="button" data-act="debug">デバッグ</button>' : ''}<button class="btn" type="button" data-act="close">${first ? 'はじめる' : '閉じる'}</button></div>`, !first);

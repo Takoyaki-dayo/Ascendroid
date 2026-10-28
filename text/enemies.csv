@@ -103,7 +103,7 @@ warden.unit.core,中枢核,ユニットの名前
 warden.unit.eye,監視砲,ユニットの名前
 warden.phase.0,照射,耐久50%未満の行動1
 warden.phase.1,狙撃,耐久50%未満の行動2
-warden.phase.2,防壁展開,耐久50%未満の行動3
+warden.phase.2,装甲展開,耐久50%未満の行動3
 warden.phase.3,照準域,耐久50%未満の行動4
 warden.phase.4,報復態勢,耐久50%未満の行動5
 warden.phase.5,消去プロトコル,耐久50%未満の行動6

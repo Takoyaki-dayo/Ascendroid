@@ -6,7 +6,7 @@ guard,障壁展開,{block}ブロックを得る。,1
 hack,遅延ハック,ディレイ{delay}を与える。,1
 overclock,オーバークロック,ディレイ{delay}を与える。カードを{draw}枚引く。,1
 reload,再装填,カードを{draw}枚引く。,1
-timebomb,時限弾,時限{t}：{tdmg}ダメージを与える。,1
+timebomb,時限弾,{t}サイクル後、{tdmg}ダメージを与える。,1
 rapid,連撃,{dmg}ダメージを{x}回与える。,2
 crackshot,亀裂弾,{dmg}ダメージを与える。クラック{crack}を与える。,2
 parry,受け流し,{block}ブロックを得る。JUST：攻撃を無効にし、同じダメージを返す。,2

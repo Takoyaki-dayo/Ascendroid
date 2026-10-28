@@ -55,7 +55,7 @@ window.DATA = window.DATA || {};
   },
   "timebomb": {
    "name": "時限弾",
-   "text": "時限{t}：{tdmg}ダメージを与える。"
+   "text": "{t}サイクル後、{tdmg}ダメージを与える。"
   },
   "rapid": {
    "name": "連撃",
@@ -153,14 +153,9 @@ window.DATA = window.DATA || {};
    "desc": "使っている途中に攻撃を受けても中断されない。"
   },
   {
-   "key": "timer",
-   "name": "時限",
-   "desc": "使ってから、その値のサイクルが経つと効果が出る。"
-  },
-  {
    "key": "just",
    "name": "JUST",
-   "desc": "カードを使い終えたサイクルに、敵の行動が重なること。溜め技に重なると、その技を潰す。"
+   "desc": "カードが発動したサイクルに、敵の行動が重なること。不安定な行動ならブレイクする。"
   },
   {
    "key": "charge",
@@ -174,8 +169,8 @@ window.DATA = window.DATA || {};
   },
   {
    "key": "chargeMove",
-   "name": "溜め技",
-   "desc": "敵の大きな行動。カードを使い終えたサイクルが重なると、JUSTで潰せる。"
+   "name": "不安定",
+   "desc": "この行動にJUSTを重ねると、ブレイクする。"
   },
   {
    "key": "armor",
@@ -189,22 +184,27 @@ window.DATA = window.DATA || {};
   },
   {
    "key": "wind",
-   "name": "構え",
-   "desc": "敵の行動の前のサイクル。その間に決まった値以上の一撃を与えると、その行動を潰せる。"
+   "name": "体勢",
+   "desc": "敵の行動の前のサイクル。その間に一度に決まった値以上のダメージを受けると、ブレイクする。"
+  },
+  {
+   "key": "break",
+   "name": "ブレイク",
+   "desc": "敵の行動が止まること。止まった行動は飛ばされ、次の行動に進む。"
   },
   {
    "key": "guard",
-   "name": "ガード",
-   "desc": "敵の行動の前のサイクル。その間は、決まった値までのダメージを防がれる。"
+   "name": "防壁",
+   "desc": "敵の行動の前のサイクル。その間は、決まった値までのダメージを防ぐ。"
   },
   {
    "key": "counter",
    "name": "反撃",
-   "desc": "敵の行動の前のサイクル。その間に攻撃するたび、ダメージを返される。"
+   "desc": "敵の行動の前のサイクル。その間は、攻撃を受けるたびにダメージを返す。"
   },
   {
    "key": "str",
-   "name": "強化",
+   "name": "増幅",
    "desc": "攻撃のダメージが、その値だけ増える。"
   },
   {
@@ -215,13 +215,13 @@ window.DATA = window.DATA || {};
   {
    "key": "zone",
    "name": "危険域",
-   "desc": "こちらのタイムラインに置かれる区間。その間にカードを使い終えると攻撃を受ける。"
+   "desc": "こちらのタイムラインに置かれる区間。その間にカードが発動すると攻撃を受ける。"
   }
  ],
  "parts": {
   "calc_std": {
    "name": "〘標準演算核〙",
-   "text": "JUSTで溜め技を潰したとき、その敵にクラック1を与える。"
+   "text": "JUSTでブレイクしたとき、その敵にクラック1を与える。"
   },
   "calc_par": {
    "name": "〘並列演算核〙",
@@ -229,7 +229,7 @@ window.DATA = window.DATA || {};
   },
   "calc_pre": {
    "name": "〘予測演算核〙",
-   "text": "JUSTで溜め技を潰したとき、その敵にディレイ2を与える。"
+   "text": "JUSTでブレイクしたとき、その敵にディレイ2を与える。"
   },
   "arm_rail": {
    "name": "〘CXR34レールガン〙",
@@ -385,7 +385,7 @@ window.DATA = window.DATA || {};
   "warden.unit.eye": "監視砲",
   "warden.phase.0": "照射",
   "warden.phase.1": "狙撃",
-  "warden.phase.2": "防壁展開",
+  "warden.phase.2": "装甲展開",
   "warden.phase.3": "照準域",
   "warden.phase.4": "報復態勢",
   "warden.phase.5": "消去プロトコル",
@@ -508,7 +508,7 @@ window.DATA = window.DATA || {};
    {
     "when": "windNow",
     "text": [
-     "{enemy}が構えた。{poise}以上の一撃で崩せる。"
+     "{enemy}の体勢が浮いた。{poise}以上の一撃でブレイクできる。"
     ]
    },
    {
@@ -572,13 +572,13 @@ window.DATA = window.DATA || {};
   "ui.mv.atk": "{part}に{d}ダメージを与える。",
   "ui.mv.hits": "{part}に{d}ダメージを{hits}回与える。",
   "ui.mv.delay": "こちらにディレイ{v}を与える。",
-  "ui.mv.charge": "溜め技。JUSTで潰せる。",
-  "ui.mv.wind": "構え{poise}：行動の{w}サイクル前から、{poise}以上の一撃でこの行動を潰せる。",
-  "ui.mv.guard": "ガード{s}：行動の{w}サイクル前から、{s}までのダメージを防ぐ。",
-  "ui.mv.counter": "反撃{cd}：行動の{w}サイクル前から、攻撃するたびに{cd}ダメージを返してくる。",
+  "ui.mv.charge": "不安定。JUSTを重ねるとブレイクする。",
+  "ui.mv.wind": "体勢{w}/{poise}：{w}サイクル前から、一度に{poise}以上のダメージを受けるとブレイクする。",
+  "ui.mv.guard": "防壁{w}/{s}：{w}サイクル前から、{s}までのダメージを防ぐ。",
+  "ui.mv.counter": "反撃{w}/{cd}：{w}サイクル前から、攻撃を受けるたびに{cd}ダメージを返す。",
   "ui.mv.rec": "隙{rec}：行動の後{rec}サイクル、受けるダメージが1.5倍になる。",
-  "ui.mv.buff": "行動の後、攻撃力+{buff}。",
-  "ui.mv.buffAll": "行動の後、味方全員の攻撃力+{buff}。",
+  "ui.mv.buff": "行動の後、増幅{buff}を得る。",
+  "ui.mv.buffAll": "行動の後、味方全員が増幅{buff}を得る。",
   "ui.mv.armor": "装甲{armor}を得る。装甲は消えず、ダメージを先に受ける。",
   "ui.mv.heal": "耐久を{heal}回復する。",
   "ui.mv.crack": "こちらにクラック{crack}を与える。こちらが受ける攻撃すべてのダメージ+{crack}。重なる。",
@@ -590,7 +590,7 @@ window.DATA = window.DATA || {};
   "ui.foe.rand": "これから先の行動は上のとおり。行動は下の中から選ばれ、同じ行動は3回続かない。",
   "ui.foe.phase": "耐久{at}%未満",
   "ui.stname.armor": "装甲",
-  "ui.stname.str": "強化",
+  "ui.stname.str": "増幅",
   "ui.stname.crack": "クラック",
   "ui.stname.vuln": "隙",
   "ui.st.armor": "受けるダメージを先に装甲が受け、その分だけ減る。装甲は時間では消えない。",
@@ -598,12 +598,12 @@ window.DATA = window.DATA || {};
   "ui.st.crack": "受けるダメージ+{n}。戦闘の終わりまで消えない。",
   "ui.st.vuln": "あと{n}サイクル、受けるダメージが1.5倍。",
   "ui.st.none": "状態の変化はない。",
-  "ui.mv.zone": "{at}サイクル後から{len}サイクルの間、こちらのタイムラインに危険域を置く。その間にカードを使い終えると{part}に{d}ダメージを受ける。",
+  "ui.mv.zone": "{at}サイクル後から{len}サイクルの間、こちらのタイムラインに危険域を置く。その間にカードが発動すると{part}に{d}ダメージを受ける。",
   "ui.mv.haste": "加速{n}：これ以後、行動のコストが{n}縮む(最短2)。",
   "ui.stname.haste": "加速",
   "ui.st.haste": "行動のコストが{n}縮んでいる(最短2)。",
   "ui.pas.command": "【{unit}】ユニットが破壊されていない間、すべての行動のコスト-{n}(最短2)。",
-  "ui.pas.frenzy": "ユニットが破壊されるたび、攻撃力+{n}。",
+  "ui.pas.frenzy": "ユニットが破壊されるたび、増幅{n}を得る。",
   "ui.pas.react": "コスト{min}以上のカードを使い始めると、1サイクル後に{part}に{d}ダメージを与える。",
   "ui.pas.phase": "耐久が{at}%を切ると、行動が変わる。",
   "ui.pas.broke": "【{unit}】ユニットが破壊されると、行動が変わる。",
@@ -613,9 +613,9 @@ window.DATA = window.DATA || {};
   "ui.unit.broken": "破壊",
   "ui.band.before": "{name}({t}サイクル後)の前の窓。",
   "ui.band.after": "{name}({t}サイクル後)の後の隙。",
-  "ui.band.hit": "選んでいるカードは{c}サイクル後に使い終わる。この帯に重なる。",
-  "ui.band.miss": "選んでいるカードは{c}サイクル後に使い終わる。この帯には重ならない。",
-  "ui.zone.now": "この帯の中でカードを使い終えると、{part}に{d}ダメージを受ける。",
+  "ui.band.hit": "選んでいるカードは{c}サイクル後に発動する。この帯に重なる。",
+  "ui.band.miss": "選んでいるカードは{c}サイクル後に発動する。この帯には重ならない。",
+  "ui.zone.now": "この帯の中でカードが発動すると、{part}に{d}ダメージを受ける。",
   "ui.zone.src": "{name}で置かれた。",
   "ui.part.dmg": "損傷",
   "ui.rd.battle": "敵と戦う。勝つとスクラップを得て、カードを1枚学習できる。",

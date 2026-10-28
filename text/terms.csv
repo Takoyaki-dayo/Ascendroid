@@ -10,9 +10,6 @@ room.shop,ショップ,部屋の種類
 room.event,イベント,部屋の種類
 room.duct,保守通路,部屋の種類
 room.boss,ボス,部屋の種類
-lane.learn,学習,道の名前(「〜の道」と出る)
-lane.salvage,鹵獲,道の名前(「〜の道」と出る)
-lane.supply,補給,道の名前(「〜の道」と出る)
 slot.calc,演算,部位
 slot.arm,武装,部位
 slot.out,出力,部位

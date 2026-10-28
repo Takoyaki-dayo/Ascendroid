@@ -207,13 +207,13 @@ function applyCard(st, k, ti){
   }
   if(c.gain){ b.charge = (b.charge || 0) + c.gain; ev.push({kind:'charge', n:c.gain}); }
   if(c.crack) for(const e of targets) if(e.alive){ const k = uidOf(e); e.units[k].crack += c.crack; ev.push({kind:'crack', e:e.i, unit:k, n:c.crack}); }
-  if(c.delay) for(const e of targets) if(e.alive){ e.r += c.delay; ev.push({kind:'delay', e:e.i, n:c.delay}); }
+  if(c.delay) for(const e of targets) if(e.alive){ const v = delayFoe(e, c.delay); ev.push({kind:'delay', e:e.i, n:v}); }
   if(c.block){ const n = blockOf(st, c); gainBlock(b, n); ev.push({kind:'block', n}); }
   if(c.swift){ b.swift += c.swift; ev.push({kind:'swift', n:c.swift}); }
   if(c.timer && targets[0]){ b.timers.push({id:b.uid++, left:c.timer.t, k, e:targets[0].i, unit:uidOf(targets[0])}); ev.push({kind:'timerSet', e:targets[0].i, t:c.timer.t}); }
   if(c.draw){ const n = drawN(b, c.draw); if(c.borrow) b.drawIn += c.draw * RULE.draw; ev.push({kind:'draw', n, borrow: !!c.borrow}); }
   // 0.17.0: スウィフトはディレイに統一(パーツの効果も敵へのディレイ)
-  if(c.cost === 0){ const s = fx(st, 'mob', 'zeroDelay'); if(s) for(const e of b.foes) if(e.alive){ e.r += s; ev.push({kind:'delay', e:e.i, n:s}); } }
+  if(c.cost === 0){ const s = fx(st, 'mob', 'zeroDelay'); if(s) for(const e of b.foes) if(e.alive){ const v = delayFoe(e, s); ev.push({kind:'delay', e:e.i, n:v}); } }
   return ev;
 }
 function fireTimer(st, t){
@@ -237,7 +237,10 @@ function strike(st, e, a, extra, noParry){
   }
   return {kind:'hit', name:a.n, part:a.p, raw, extra:extra || 0, blocked:ab, partLoss, bodyLoss, broke, hurt:rem > 0};
 }
-function enemyAct(st, e, extra){
+// ディレイ(0.21.0): 敵は次の行動までにディレイを受けるたび抵抗が1増え、その分だけ次のディレイが減る。行動すると0に戻る(enemyAct)
+// 敵の列が1本になってディレイが強すぎたため。重ねがけを止める
+function delayFoe(e, v, free){ const a = Math.max(0, v - (e.resist || 0)); e.r += a; if(!free) e.resist = (e.resist || 0) + 1; return a; }
+function enemyAct(st, e, extra){ e.resist = 0;
   const a = cur(e);
   const res = a.kind === 'delay' ? {kind:'delay', name:a.n, v:a.v} : a.d > 0 ? strike(st, e, a, (extra || 0) + (e.str || 0)) : {kind:'move', name:a.n};
   res.by = actorUid(e, a);
@@ -323,7 +326,7 @@ function* spendGen(st, cost, k, ti, noInt){
           if(e.alive && e.r <= 0 && cur(e).ch && !e.chain){
             const nm = cur(e).n, jp = actorUid(e, cur(e)); advance(e);
             const cr = fx(st, 'calc', 'justCrack'); e.units[jp].crack += cr;
-            const dl = fx(st, 'calc', 'justDelay'); if(dl) e.r += dl;
+            const dl = fx(st, 'calc', 'justDelay'); if(dl) delayFoe(e, dl);
             out.justs.push({i:e.i, name:nm}); yield {type:'just', e:e.i, crack:cr, delay:dl};
           }
         }
@@ -357,7 +360,7 @@ function* spendGen(st, cost, k, ti, noInt){
         else res = enemyAct(st, e, e.sync && syncN >= 2 ? e.sync : 0);
         if(res.kind === 'delay' && b.cast){
           left += res.v; b.cast.left = left; res.applied = true;
-          const s = fx(st, 'mob', 'delayedDelay'); if(s){ e.r += s; res.counterDelay = s; }
+          const s = fx(st, 'mob', 'delayedDelay'); if(s){ res.counterDelay = delayFoe(e, s); }
         }
         yield {type:'foe', e:e.i, res};
         if(st.run.body <= 0){ out.dead = true; b.cast = null; b.parryNow = false; return out; }
@@ -433,7 +436,7 @@ function newBattle(run, encKey){
   st.b = b;
   b.handMax += fx(st, 'calc', 'handMax');
   const sb = fx(st, 'dur', 'startBlock'); if(sb) gainBlock(b, sb);
-  const sd = fx(st, 'mob', 'startDelay'); if(sd) for(const e of b.foes) e.r += sd;
+  const sd = fx(st, 'mob', 'startDelay'); if(sd) for(const e of b.foes) delayFoe(e, sd, true); // 戦闘開始時のディレイは抵抗を増やさない
   const ec = econ();
   b.turnIn = ec.type === 'turn' ? ec.len : 0; b.reloads = 0; b.mag = [];
   drawN(b, (ec.hand || RULE.handStart) + fx(st, 'mob', 'startHand'));
@@ -527,40 +530,32 @@ function nextArea(run){
 
 /* ---------- 地図の生成 ---------- */
 const SPECIAL = ['elite', 'rest', 'shop', 'duct'];
-function genLane(key, r, A){
-  const L = D.lanes[key], pool = [];
-  for(const [t, n] of Object.entries(L.rooms)) for(let i = 0; i < n; i++) pool.push(t);
-  for(let tries = 0; tries < 80; tries++){
-    const rooms = ['battle', ...shuffle(pool.slice(), r), A.last];
-    const eliteOk = rooms.every((t, i) => t !== 'elite' || i >= 2);
-    const noRepeat = rooms.every((t, i) => i === 0 || !SPECIAL.includes(t) || rooms[i - 1] !== t);
-    if(eliteOk && noRepeat) return rooms;
-  }
-  return null;
-}
 function reachAfter(lane, n){ return [lane - 1, lane, lane + 1].filter(l => l >= 0 && l < n); }
+// 地図(0.21.0): 3列×部屋数。列ごとの性格はなく、エリアの fill を部屋2〜(最後の1つ前)に散らす
 function genMap(seed, area){
-  const A = D.areas[area || 0], r = rngFrom(seed), keys = Object.keys(D.lanes), [T1, T2] = A.transfers;
-  for(let tries = 0; tries < 300; tries++){
-    const lanes = shuffle(keys.slice(), r).slice(0, 3);
-    const rooms = lanes.map(k => genLane(k, r, A));
-    if(rooms.some(x => !x)) continue;
-    // どの道から最初の乗り換えをしても、次の乗り換えまでに整備かショップがある
-    const ok = lanes.every((_, l) => reachAfter(l, lanes.length).some(l2 => rooms[l2].slice(T1, T2 || A.rooms).some(t => t === 'rest' || t === 'shop')));
+  const A = D.areas[area || 0], r = rngFrom(seed), L = 3, mid = A.rooms - 2;
+  const bag = []; for(const [t, n] of Object.entries(A.fill)) for(let i = 0; i < n; i++) bag.push(t);
+  while(bag.length < L * mid) bag.push('battle');
+  for(let tries = 0; tries < 2000; tries++){
+    const b = shuffle(bag.slice(0, L * mid), r);
+    const rows = Array.from({length: L}, (_, l) => ['battle', ...b.slice(l * mid, (l + 1) * mid), A.last]);
+    const ok = rows.every(row =>
+        row.every((t, i) => t !== 'elite' || i >= 2) &&
+        row.every((t, i) => i === 0 || ![...SPECIAL, 'event'].includes(t) || row[i - 1] !== t) &&
+        row.slice(1, -1).some(t => t === 'rest' || t === 'shop') &&
+        (n => n >= 2 && n <= 4)(row.slice(1, -1).filter(t => t === 'battle').length)) &&
+      Array.from({length: mid}, (_, i) => rows.map(row => row[i + 1])).every(col => SPECIAL.every(t => col.filter(x => x === t).length <= 2));
     if(!ok) continue;
-    // 通常戦の敵は入ったときに警戒度で決める(encFor)
-    const encs = Object.entries(D.encounters);
-    const elites = shuffle(encs.filter(([, e]) => e.elite).map(([k]) => k), r);
+    const elites = shuffle(Object.entries(D.encounters).filter(([, e]) => e.elite).map(([k]) => k), r);
     let ei = 0;
-    const nodes = rooms.map((row, l) => {
-      return row.map((t, i) => {
-        const n = {lane:l, idx:i, type:t};
-        if(t === 'elite') n.enc = elites[ei++ % elites.length];
-        if(t === 'event') n.ev = pick(D.events, r).id;
-        return n;
-      });
-    });
-    return {seed, area:area || 0, lanes, nodes, boss:{type:'boss', enc:A.boss}};
+    // 通常戦の敵は入ったときに警戒度で決める(encFor)
+    const nodes = rows.map((row, l) => row.map((t, i) => {
+      const n = {lane:l, idx:i, type:t};
+      if(t === 'elite') n.enc = elites[ei++ % elites.length];
+      if(t === 'event') n.ev = pick(D.events, r).id;
+      return n;
+    }));
+    return {seed, area:area || 0, nodes, boss:{type:'boss', enc:A.boss}};
   }
   throw new Error('map generation failed');
 }
@@ -576,7 +571,7 @@ function nextNodes(run){
 
 const API = {RULE, makeFoe, defaultUid, liveUids, actorUid, parseT, gap, reloadCost, rngFrom, setRandom, shuffle, pick, clone, cur, advance, partOf, fx, partCards, battleDeck, partMax, dmgOf, blockOf,
   drawOne, drawN, upcoming, arrivals, applyCard, enemyAct, spendGen, runGen, newBattle, actions, actionCost, beginAction, endAction, doAction,
-  newRun, nextArea, genMap, nextNodes, reachAfter, scaledFoe, alertLevel, addAlert, alertGain, encFor};
+  newRun, nextArea, delayFoe, genMap, nextNodes, reachAfter, scaledFoe, alertLevel, addAlert, alertGain, encFor};
 root.ENGINE = API;
 if(typeof module !== 'undefined') module.exports = API;
 })(typeof window !== 'undefined' ? window : globalThis);

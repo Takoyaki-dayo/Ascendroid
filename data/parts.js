@@ -25,7 +25,7 @@ DATA.slots = [
 DATA.parts = {
   calc_std:  {slot:'calc', max:5,  fx:{justCrack:1}},
   calc_par:  {slot:'calc', max:5,  fx:{handMax:1}},
-  calc_pre:  {slot:'calc', max:4,  fx:{justDelay:3}},
+  calc_pre:  {slot:'calc', max:4,  fx:{justDelay:2}},
   arm_rail:  {slot:'arm',  max:6,  fx:{ranged:2, cards:['charge','charge']}},
   arm_scat:  {slot:'arm',  max:6,  fx:{ranged:1, cards:['scatter','scatter']}},
   arm_time:  {slot:'arm',  max:5,  fx:{ranged:1, cards:['timebomb','timebomb']}},
@@ -35,7 +35,7 @@ DATA.parts = {
   dur_std:   {slot:'dur',  max:9,  fx:{block:2}},
   dur_armor: {slot:'dur',  max:14, fx:{}},
   dur_react: {slot:'dur',  max:9,  fx:{startBlock:8}},
-  mob_std:   {slot:'mob',  max:6,  fx:{startDelay:3, delayedDelay:2}},
+  mob_std:   {slot:'mob',  max:6,  fx:{startDelay:2, delayedDelay:1}},
   mob_feed:  {slot:'mob',  max:6,  fx:{startHand:2}},
   mob_dash:  {slot:'mob',  max:5,  fx:{zeroDelay:1}},
 };

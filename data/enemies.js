@@ -105,6 +105,6 @@ DATA.encounters = {
   e_tank: {fam:'戦車', elite:true, foes:['tank']},
   boss:   {fam:'中枢', boss:true, foes:['warden']},
   // エリア2・3 のボスは仮(エリアの倍率に boss の倍率を重ねる)
-  boss2:  {fam:'戦車', boss:true, foes:['tank'], scale:{hp:1.6, d:1.1}},
-  boss3:  {fam:'中枢', boss:true, foes:['warden'], scale:{hp:1.15, d:1.05}},
+  boss2:  {fam:'戦車', boss:true, foes:['tank'], scale:{hp:1.4, d:1.05}},
+  boss3:  {fam:'中枢', boss:true, foes:['warden'], scale:{hp:1.05, d:1}},
 };

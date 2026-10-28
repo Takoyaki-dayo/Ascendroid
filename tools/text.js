@@ -48,7 +48,6 @@ function apply(D, T){
   const tm = T.terms;
   for(const A of D.areas || []) if(tm['area.' + A.id]) A.name = tm['area.' + A.id];
   for(const k in D.rooms) if(tm['room.' + k]) D.rooms[k].name = tm['room.' + k];
-  for(const k in D.lanes) if(tm['lane.' + k]) D.lanes[k].name = tm['lane.' + k];
   for(const s of D.slots) if(tm['slot.' + s.id]) s.fn = tm['slot.' + s.id];
   D.ui = {}; for(const k in tm) if(k.startsWith('ui.')) D.ui[k.slice(3)] = tm[k];
   for(const k in T.cards) if(D.cards[k]) Object.assign(D.cards[k], T.cards[k]);

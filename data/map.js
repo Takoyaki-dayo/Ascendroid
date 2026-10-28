@@ -1,16 +1,17 @@
 // 地図と、戦闘以外の部屋(エリア・部屋・道の名前は text/terms.csv、イベントの文は text/events.csv)
 // areas(0.19.0): 1周は3エリア。エリアごとに
-//   rooms: 部屋数(ボスを除く) / transfers: 乗り換えの場所。[3, 6] は部屋3の後と部屋6の後に隣の道へ移れる
+//   rooms: 部屋数(ボスを除く) / transfers: 乗り換えの場所。[2, 4, 6] は部屋2・4・6の後に隣の列へ移れる
+//   fill: 部屋2〜(最後の1つ前)の中身の合計(3列ぶん)。列ごとの性格(道)は 0.21.0 でなくした
 //   last: 最後の部屋(ボスの手前)。全部の道で同じ
 //   scale: 敵の強さの倍率。hp は耐久と回復、d は攻撃・ガード・装甲・構えの値
 //   tiers: 通常戦に出る遭遇の段。[弱い組, 強い組]。警戒度が strong 以上なら強い組から選ぶ(0.20.0)
 //   boss: ボスの遭遇 / strong: 強い組に切り替わる警戒度
 //   エリア2・3 の敵は今は仮(エリア1 の敵の強化版)。名前も仮
-// lanes: 道の性格(警戒の上がり方も道で違う。学習は戦闘が多い、鹵獲はエリートが多く騒がしい、補給は保守通路があり静か)。rooms は部屋2〜(最後の1つ前)の中身(部屋1は必ず通常戦、最後は last)
+// 部屋1は必ず通常戦、最後は last。部屋の種類:
 //   battle 通常戦 / elite エリート / rest 整備 / shop ショップ / event イベント / duct 保守通路(何も起きないが警戒が下がる)
 // 生成の決まり(js/engine.js の genMap)
-//   エリートは部屋3以降 / エリート・整備・ショップは同じ道で続けて出ない
-//   どの道から最初の乗り換えをしても、次の乗り換えまでに整備かショップへ行ける
+//   エリートは部屋3以降 / エリート・整備・ショップ・保守通路は同じ列で続けて出ない
+//   どの列にも整備かショップが1つ以上 / 同じ縦の並びに同じ特別な部屋は2つまで / どの列も通常戦は2〜4
 // transit: エリアの間の中継。heal は本体の回復(最大の割合)。choices はそのエリア固有のイベント(今は仮)
 // alert(0.20.0): 警戒度。工場が侵入者に気付いていく度合い。1周を通して積み上がり、エリアをまたいでも下がらない
 //   ゲージ per 目盛りで1段上がる。段は I〜X(max)。1周でおよそ X、1エリアでおよそ3段の想定
@@ -25,15 +26,10 @@
 //   part 'random' でパーツの候補を出す / defrag カードを1枚消す / alert 警戒のゲージの増減
 window.DATA = window.DATA || {};
 DATA.areas = [
-  {id:'a1', rooms:8, transfers:[3, 6], last:'rest', scale:{hp:1, d:1},       tiers:[[1], [1, 2]], strong:3, boss:'boss'},
-  {id:'a2', rooms:8, transfers:[3, 6], last:'rest', scale:{hp:1, d:1},       tiers:[[1, 2], [2]], strong:6, boss:'boss2'},
-  {id:'a3', rooms:8, transfers:[3, 6], last:'rest', scale:{hp:1.05, d:1},    tiers:[[2], [2]],    strong:9, boss:'boss3'},
+  {id:'a1', rooms:8, transfers:[2, 4, 6], last:'rest', fill:{battle:8, elite:3, event:3, shop:2, rest:1, duct:1}, scale:{hp:1, d:1},       tiers:[[1], [1, 2]], strong:3, boss:'boss'},
+  {id:'a2', rooms:8, transfers:[2, 4, 6], last:'rest', fill:{battle:8, elite:3, event:3, shop:2, rest:1, duct:1}, scale:{hp:1, d:1},       tiers:[[1, 2], [2]], strong:6, boss:'boss2'},
+  {id:'a3', rooms:8, transfers:[2, 4, 6], last:'rest', fill:{battle:8, elite:3, event:3, shop:2, rest:1, duct:1}, scale:{hp:1.05, d:1},    tiers:[[2], [2]],    strong:9, boss:'boss3'},
 ];
-DATA.lanes = {
-  learn:   {rooms:{battle:4, event:1, shop:1}},
-  salvage: {rooms:{battle:2, elite:2, rest:1, event:1}},
-  supply:  {rooms:{battle:2, elite:1, rest:1, shop:1, duct:1}},
-};
 DATA.transit = [
   {id:'lift',  heal:0.5, choices:[{fx:{repair:true}}, {fx:{card:'rare'}}, {fx:{scrap:40}}]},
   {id:'relay', heal:0.5, choices:[{fx:{part:'random'}}, {fx:{defrag:true}}, {fx:{alert:-4}}]},
@@ -41,7 +37,7 @@ DATA.transit = [
 DATA.rooms = {
   battle:{}, elite:{}, rest:{}, shop:{}, event:{}, duct:{}, boss:{},
 };
-DATA.alert = {max:10, per:4, gain:{battle:2, elite:3, boss:3, duct:-3}, enemy:{hp:0.03, d:0.02}, scrap:0.1, learnAt:5, partAt:8};
+DATA.alert = {max:10, per:4, gain:{battle:2, elite:3, boss:3, duct:-3}, enemy:{hp:0.02, d:0.015}, scrap:0.1, learnAt:5, partAt:8};
 DATA.rewards = {scrapStart:20, battle:12, elite:25};
 DATA.shop = {price:{0:18, 1:18, 2:26, 3:30, 4:36, 6:44}, defrag:30, repairCost:25, repairBody:12, offers:3};
 DATA.events = [

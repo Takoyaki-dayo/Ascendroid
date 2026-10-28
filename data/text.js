@@ -5,7 +5,6 @@ window.DATA = window.DATA || {};
   const tm = T.terms;
   for(const A of D.areas || []) if(tm['area.' + A.id]) A.name = tm['area.' + A.id];
   for(const k in D.rooms) if(tm['room.' + k]) D.rooms[k].name = tm['room.' + k];
-  for(const k in D.lanes) if(tm['lane.' + k]) D.lanes[k].name = tm['lane.' + k];
   for(const s of D.slots) if(tm['slot.' + s.id]) s.fn = tm['slot.' + s.id];
   D.ui = {}; for(const k in tm) if(k.startsWith('ui.')) D.ui[k.slice(3)] = tm[k];
   for(const k in T.cards) if(D.cards[k]) Object.assign(D.cards[k], T.cards[k]);
@@ -136,7 +135,12 @@ window.DATA = window.DATA || {};
   {
    "key": "delay",
    "name": "ディレイ",
-   "desc": "対象の次の行動を、その値のサイクルだけ遅らせる。"
+   "desc": "対象の次の行動を、その値のサイクルだけ遅らせる。抵抗の分だけ減る。"
+  },
+  {
+   "key": "resist",
+   "name": "抵抗",
+   "desc": "ディレイを受けるたびに1増え、その値だけ受けるディレイが減る。行動すると0に戻る。"
   },
   {
    "key": "crack",
@@ -225,7 +229,7 @@ window.DATA = window.DATA || {};
   },
   "calc_pre": {
    "name": "〘予測演算核〙",
-   "text": "JUSTで溜め技を潰したとき、その敵にディレイ3を与える。"
+   "text": "JUSTで溜め技を潰したとき、その敵にディレイ2を与える。"
   },
   "arm_rail": {
    "name": "〘CXR34レールガン〙",
@@ -265,7 +269,7 @@ window.DATA = window.DATA || {};
   },
   "mob_std": {
    "name": "〘デトロイト噴射機構〙",
-   "text": "戦闘開始時、敵にディレイ3を与える。ディレイを受けたとき、その敵にディレイ2を与える。"
+   "text": "戦闘開始時、敵にディレイ2を与える。ディレイを受けたとき、その敵にディレイ1を与える。"
   },
   "mob_feed": {
    "name": "〘給弾リンク〙",
@@ -558,9 +562,6 @@ window.DATA = window.DATA || {};
   "room.event": "イベント",
   "room.duct": "保守通路",
   "room.boss": "ボス",
-  "lane.learn": "学習",
-  "lane.salvage": "鹵獲",
-  "lane.supply": "補給",
   "slot.calc": "演算",
   "slot.arm": "武装",
   "slot.out": "出力",

@@ -925,7 +925,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 .tt-b.main{border-color:var(--cy);border-left-color:var(--cy);background:linear-gradient(90deg,rgba(56,211,255,.18),rgba(56,211,255,.03) 80%),#0c141d;box-shadow:0 0 18px rgba(56,211,255,.15)}
 .tt-b.warn{border-color:var(--foe);border-left-color:var(--foe);background:linear-gradient(90deg,rgba(255,77,106,.14),transparent 80%),#0c141d} .tt-b.warn>span{color:var(--foe2)}
 .tt-b:active{scale:.97}
-.tt-sub{display:flex;gap:8px;margin-top:4px}
+.tt-sub{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:4px}
 .tt-s{flex:1;padding:8px 0;text-align:center;border:1px solid var(--hud);border-radius:3px;background:#0c141d;color:var(--fg2);font-size:11px;letter-spacing:.06em}
 .tt-s:active{scale:.95}
 .tt-ver{position:absolute;right:14px;bottom:10px;font-family:var(--f-num);font-size:10px;color:var(--dim);letter-spacing:.1em}
@@ -1062,7 +1062,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 <script src="data/text.js"></script>
 <script src="js/engine.js"></script>
 <script>
-const APP_VERSION = '0.21.1';
+const APP_VERSION = '0.21.2';
 const $ = s => document.querySelector(s);
 const EN = ENGINE, RULE = EN.RULE;
 const VIEW = RULE.view, NOW = 170, PX = 34, xs = c => NOW + c * PX, STRIP_Y = 150, SWIFT_VIS = 3;
@@ -1972,6 +1972,13 @@ function resumeRun(){
   else if(o.pending){ const n = findNode(o.pending); if(n) enterRoom(n); else showMap(); }
   else showMap();
 }
+/* ---------- 再読み込み(0.21.2): オフライン用の控えを消して読み直す(新しい版にする)。保存した1周は消えない ---------- */
+async function reloadApp(){
+  const el = document.querySelector('[data-act="reload"]'); if(el){ el.disabled = true; el.textContent = '読み込み中'; }
+  try{ if('serviceWorker' in navigator){ for(const r of await navigator.serviceWorker.getRegistrations()){ try{ await r.update(); }catch(e){} } } }catch(e){}
+  try{ if(window.caches) for(const k of await caches.keys()) await caches.delete(k); }catch(e){}
+  location.reload();
+}
 /* ---------- タイトル(0.19.0) ---------- */
 function showTitle(){
   hideOv(); hideOv2(); closeFocus(); $('#mapScr').hidden = true; $('#roomScr').hidden = true;
@@ -1988,7 +1995,7 @@ function showTitle(){
     <div class="tt-main">
       <h1 class="tt-logo" data-t="ASCENDROID">ASCENDROID</h1>
       <div class="tt-menu">${cont}${nw}
-        <div class="tt-sub"><button class="tt-s" type="button" data-act="rules">遊び方</button><button class="tt-s" type="button" data-act="fs">全画面</button><button class="tt-s" type="button" data-act="debug">デバッグ</button></div>
+        <div class="tt-sub"><button class="tt-s" type="button" data-act="rules">遊び方</button><button class="tt-s" type="button" data-act="fs">全画面</button><button class="tt-s" type="button" data-act="debug">デバッグ</button><button class="tt-s" type="button" data-act="reload">再読み込み</button></div>
       </div>
     </div>
     <span class="tt-ver">${APP_VERSION}</span>`;
@@ -2649,6 +2656,7 @@ function act(a, arg, el){
     case 'restart': UI.pick = null; UI.learnOpts = []; newRun(); break;
     case 'title': UI.pick = null; UI.learnOpts = []; showTitle(); break;
     case 'continue': resumeRun(); break;
+    case 'reload': reloadApp(); break;
     case 'newGame': if(loadSave() && UI.titleConfirm !== true){ UI.titleConfirm = true; showTitle(); break; } UI.titleConfirm = false; clearSave(); newRun(); break;
     case 'retry': S = {run: JSON.parse(snapshot), b: null}; hideOv(); startBattle(UI.node); break;
     case 'node': UI.mapSel = UI.mapSel === arg ? null : arg; showMap(); break;

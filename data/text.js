@@ -86,7 +86,7 @@ window.DATA = window.DATA || {};
    "text": "敵のすべてのユニットに{dmg}ダメージを与える。"
   },
   "charge": {
-   "name": "チャージショット",
+   "name": "電磁投射",
    "text": "アトミック。{dmg}ダメージを与える。"
   },
   "emp": {
@@ -233,7 +233,7 @@ window.DATA = window.DATA || {};
   },
   "arm_rail": {
    "name": "〘CXR34レールガン〙",
-   "text": "遠隔ダメージ+2。デッキに《チャージショット》2枚を加える。"
+   "text": "遠隔ダメージ+2。デッキに《電磁投射》2枚を加える。"
   },
   "arm_scat": {
    "name": "〘散弾ポッド〙",
@@ -285,7 +285,7 @@ window.DATA = window.DATA || {};
   "drone.pat.0": "射撃",
   "drone.pat.1": "連射",
   "drone.pat.2": "照準",
-  "scout": "斥候ユニット",
+  "scout": "斥候機 SC-02",
   "scout.pat.0": "刺突",
   "scout.pat.1": "乱れ突き",
   "scout.pat.2": "踏み込み",
@@ -293,7 +293,7 @@ window.DATA = window.DATA || {};
   "turret.pat.0": "砲撃",
   "turret.pat.1": "装甲を重ねる",
   "turret.react": "迎撃",
-  "exec": "処刑ユニット",
+  "exec": "処刑機 EX-07",
   "exec.pat.0": "殴打",
   "exec.pat.1": "充填",
   "exec.pat.2": "粉砕砲",
@@ -304,7 +304,7 @@ window.DATA = window.DATA || {};
   "hacker.pat.0": "割り込み",
   "hacker.pat.1": "射撃",
   "hacker.pat.2": "ノイズ注入",
-  "heavyExec": "重処刑ユニット",
+  "heavyExec": "重処刑機 EX-09",
   "heavyExec.pat.0": "殴打",
   "heavyExec.pat.1": "薙ぎ払い",
   "heavyExec.pat.2": "粉砕砲",
@@ -316,7 +316,7 @@ window.DATA = window.DATA || {};
   "turretE.pat.0": "砲撃",
   "turretE.pat.1": "装甲を重ねる",
   "turretE.react": "迎撃",
-  "hackerE": "電脳戦ユニット",
+  "hackerE": "電脳戦機 CY-04",
   "hackerE.pat.0": "強制割り込み",
   "hackerE.pat.1": "迎撃射撃",
   "hackerE.pat.2": "ノイズ散布",
@@ -342,7 +342,7 @@ window.DATA = window.DATA || {};
   "twin.pat.1": "掴み打ち",
   "twin.pat.2": "腕で防ぐ",
   "twin.pat.3": "叩きつけ",
-  "bomber": "自爆ユニット",
+  "bomber": "自爆機 BX-01",
   "bomber.unit.core": "炉心",
   "bomber.unit.gun": "防衛砲",
   "bomber.pat.0": "防衛射撃",

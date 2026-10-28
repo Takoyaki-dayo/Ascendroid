@@ -3,7 +3,7 @@ drone,警備ドローン,名前
 drone.pat.0,射撃,行動1
 drone.pat.1,連射,行動2
 drone.pat.2,照準,行動3
-scout,斥候ユニット,名前
+scout,斥候機 SC-02,名前
 scout.pat.0,刺突,行動1
 scout.pat.1,乱れ突き,行動2
 scout.pat.2,踏み込み,行動3
@@ -11,7 +11,7 @@ turret,迎撃タレット,名前
 turret.pat.0,砲撃,行動1
 turret.pat.1,装甲を重ねる,行動2
 turret.react,迎撃,反応(パッシブの名前と、撃つ行動の名前)
-exec,処刑ユニット,名前
+exec,処刑機 EX-07,名前
 exec.pat.0,殴打,行動1
 exec.pat.1,充填,行動2
 exec.pat.2,粉砕砲,行動3
@@ -22,7 +22,7 @@ hacker,ハッカー,名前
 hacker.pat.0,割り込み,行動1
 hacker.pat.1,射撃,行動2
 hacker.pat.2,ノイズ注入,行動3
-heavyExec,重処刑ユニット,名前
+heavyExec,重処刑機 EX-09,名前
 heavyExec.pat.0,殴打,行動1
 heavyExec.pat.1,薙ぎ払い,行動2
 heavyExec.pat.2,粉砕砲,行動3
@@ -34,7 +34,7 @@ turretE,迎撃タレット改,名前
 turretE.pat.0,砲撃,行動1
 turretE.pat.1,装甲を重ねる,行動2
 turretE.react,迎撃,反応(パッシブの名前と、撃つ行動の名前)
-hackerE,電脳戦ユニット,名前
+hackerE,電脳戦機 CY-04,名前
 hackerE.pat.0,強制割り込み,行動1
 hackerE.pat.1,迎撃射撃,行動2
 hackerE.pat.2,ノイズ散布,行動3
@@ -60,7 +60,7 @@ twin.pat.0,振り下ろし,行動1
 twin.pat.1,掴み打ち,行動2
 twin.pat.2,腕で防ぐ,行動3
 twin.pat.3,叩きつけ,行動4
-bomber,自爆ユニット,名前
+bomber,自爆機 BX-01,名前
 bomber.unit.core,炉心,ユニットの名前
 bomber.unit.gun,防衛砲,ユニットの名前
 bomber.pat.0,防衛射撃,行動1

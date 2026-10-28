@@ -39,8 +39,8 @@ DATA.cards = {
   noise:    {cost:1, junk:true},
 };
 
-// 最初のデッキ(パーツが加えるカードは別。武装の《チャージショット》2枚が足される)
-DATA.startDeck = ['jab','jab','rapid','slash','slash','guard','guard','wall','hack','reload','scan'];
+// 最初のデッキ(0.21.1 で基本カードだけ+遅延ハック1枚に。方向はカードの入手で決まる)。パーツが加えるカードは別(武装の《チャージショット》2枚が足される)
+DATA.startDeck = ['jab','jab','jab','jab','guard','guard','guard','guard','slash','hack'];
 
 // 珍しいカード(イベントの報酬)
 DATA.rareCards = ['blow','parry','timebomb','emp','overclock','scatter'];

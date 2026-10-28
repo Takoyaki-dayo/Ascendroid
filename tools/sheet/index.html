@@ -188,6 +188,8 @@ const KINDS = [
     head:['名前', '部屋', '敵の強さ(耐久・攻撃)', 'ボス'], cells:it => [nmCell(it), `<td class="num">${it.obj.rooms}</td>`, `<td class="num">×${it.obj.scale.hp} ・ ×${it.obj.scale.d}</td>`, `<td>${esc((D.encounters[it.obj.boss] || {foes:[]}).foes.map(f => D.foes[f] ? D.foes[f].name : f).join('、'))}</td>`]},
   {id:'encounters', label:'遭遇', items:() => Object.entries(D.encounters).map(([k, e]) => ({key:k, name:e.fam, obj:clone(e)})),
     head:['区分', '系統', '敵'], cells:it => [`<td>${ENCNAME(it.obj)}</td>`, nmCell(it), `<td>${esc(it.obj.foes.map(f => D.foes[f] ? D.foes[f].name : f).join('、'))}</td>`]},
+  {id:'alert', label:'警戒度', items:() => D.alert ? [{key:'alert', name:'警戒度', obj:clone(D.alert)}] : [],
+    head:['名前', '段', '1段の目盛り', '区画ごとの増減'], cells:it => [nmCell(it), `<td class="num">I〜${it.obj.max}</td>`, `<td class="num">${it.obj.per}</td>`, `<td>${esc(Object.entries(it.obj.gain).map(([k, v]) => `${D.rooms[k] ? D.rooms[k].name : k} ${v > 0 ? '+' : ''}${v}`).join('、'))}</td>`]},
   {id:'classes', label:'キャラ', items:() => Object.entries(D.classes).map(([k, c]) => ({key:k, name:c.name, obj:clone(c)})),
     head:['名前', '補給', '待機'], cells:it => [nmCell(it), `<td>${esc(it.obj.sys)}</td>`, `<td>${it.obj.wait ? 'あり' : 'なし'}</td>`]},
 ];
@@ -221,7 +223,7 @@ const LB = {cost:'コスト', name:'名前', text:'効果文', tgt:'単体を狙
   hp:'耐久', start:'最初の行動まで', kind:'見た目', ai:'行動の選び方', pat:'行動', phase:'耐久が減った後', at:'条件・位置', d:'ダメージ', dl:'コスト', p:'狙う部位', ch:'溜め技',
   wind:'構え', w:'窓', poise:'崩す一撃', guard:'ガード', s:'量・大きさ', counter:'反撃', rec:'隙', buff:'強化', hits:'回数', armor:'装甲', heal:'修復', noise:'ノイズ', haste:'加速', zone:'危険域',
   len:'長さ', wt:'重み', by:'行動するユニット', units:'ユニット', vital:'急所', core:'核', icon:'アイコン', spr:'絵', look:'本体の絵', react:'反応', min:'最小コスト', passives:'パッシブ', pool:'学習で出やすいカード',
-  pname:'パッシブの名前', broke:'破壊で変わる行動', sync:'連携', unit:'ユニット', slot:'部位', max:'耐久', fx:'効果の中身', cards:'カード', desc:'説明', title:'タイトル', choices:'選択肢', label:'選択肢の名前', rooms:'部屋数', transfers:'乗り換えの場所', last:'ボスの手前の部屋', scale:'敵の強さの倍率', tiers:'通常戦の段', boss:'ボス', heal:'回復(最大の割合)',
+  pname:'パッシブの名前', broke:'破壊で変わる行動', sync:'連携', unit:'ユニット', slot:'部位', max:'耐久', fx:'効果の中身', cards:'カード', desc:'説明', title:'タイトル', choices:'選択肢', label:'選択肢の名前', rooms:'部屋数', transfers:'乗り換えの場所', last:'ボスの手前の部屋', scale:'敵の強さの倍率', tiers:'通常戦の段', boss:'ボス', heal:'回復(最大の割合)', strong:'強い組になる警戒度', per:'1段の目盛り', gain:'区画ごとの増減', enemy:'1段ごとの敵の上乗せ', scrap:'1段ごとのスクラップの上乗せ', learnAt:'学習の候補が増える段', partAt:'鹵獲の候補が増える段', alert:'警戒の増減',
   sub:'選択肢の説明', fam:'系統', tier:'段階', elite:'エリート', boss:'ボス', foes:'敵', econ:'補給', r:'サイクル', hand:'枚数', blockReset:'ブロック消去', wait:'待機', sys:'補給の名前', id:'キー',
   melee:'近接+', ranged:'遠隔+', quickMelee:'コスト2以下の近接+', heavyMelee:'コスト4以上の近接+', justCrack:'JUSTでクラック', justDelay:'JUSTでディレイ', handMax:'手札の上限+',
   startBlock:'開始時ブロック', startHand:'開始時に引く', startDelay:'開始時ディレイ', delayedDelay:'ディレイされたらディレイ', zeroDelay:'コスト0でディレイ', v:'量', summon:'増援', type:'種類', keep:'手札を残す', heat:'回数ごとの追加', eject:'排莢', cap:'上限'};

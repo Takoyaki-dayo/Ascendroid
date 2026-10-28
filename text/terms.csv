@@ -8,6 +8,7 @@ room.elite,エリート,部屋の種類
 room.rest,整備,部屋の種類
 room.shop,ショップ,部屋の種類
 room.event,イベント,部屋の種類
+room.duct,保守通路,部屋の種類
 room.boss,ボス,部屋の種類
 lane.learn,学習,道の名前(「〜の道」と出る)
 lane.salvage,鹵獲,道の名前(「〜の道」と出る)
@@ -77,3 +78,15 @@ ui.rd.event,何かが起こる。,地図: 選んだ部屋の説明
 ui.rd.boss,このエリアの主。倒すと踏破。,地図: 選んだ部屋の説明
 ui.transit.heal,本体を{n}回復した。,中継: 回復の表示
 ui.clear.sub,すべてのエリアを踏破した。,踏破の画面
+ui.rd.duct,点検用の通路。何も起きないが、警戒が下がる。,地図: 選んだ部屋の説明
+ui.alert,警戒度,警戒度の名前
+ui.alert.desc,工場がこちらに気付いている度合い。区画を進むと上がり、上がるほど敵は強く、報酬は多くなる。,警戒度の説明(押したとき)
+ui.alert.enemy,敵の耐久+{hp}%・攻撃+{d}%,警戒度の効果
+ui.alert.scrap,戦闘のスクラップ+{n}%,警戒度の効果
+ui.alert.learn,学習の候補+1枚,警戒度の効果
+ui.alert.part,鹵獲の候補+1つ,警戒度の効果
+ui.alert.strong,{lv}から強い敵が出る,警戒度の効果(このエリアの強い組)
+ui.alert.next,次の段階まで{n},警戒度のゲージ
+ui.alert.up,警戒度が上がった,段階が上がったときの表示
+ui.duct.text,点検用の狭い通路。工場の目がここまでは届かない。,保守通路の画面の文
+ui.alert.gauge,警戒,警戒のゲージ(目盛りの増減の表示)

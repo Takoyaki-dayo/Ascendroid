@@ -946,6 +946,37 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 @keyframes abanner{0%{opacity:0;clip-path:inset(50% 0 50% 0)}12%{opacity:1;clip-path:inset(0)}80%{opacity:1;clip-path:inset(0)}100%{opacity:0;clip-path:inset(0)}}
 /* 中継 */
 .rs-heal{display:flex;align-items:center;gap:6px;margin:-4px 0 12px;font-family:var(--f-num);font-weight:700;font-size:12px;color:var(--cy)} .rs-heal .ic svg{width:13px;height:13px}
+/* ===== 警戒度(0.20.0) ===== */
+:root{--al1:var(--cy); --al2:#ffb84d; --al3:#ff7a59; --al4:var(--foe)}
+.aring{position:relative;display:inline-flex;align-items:center;justify-content:center;--ac:var(--al1)}
+.aring.t2{--ac:var(--al2)} .aring.t3{--ac:var(--al3)} .aring.t4{--ac:var(--al4)}
+.aring svg{display:block;overflow:visible}
+.aring .bg{fill:none;stroke:#1f3346}
+.aring .fg{fill:none;stroke:var(--ac);filter:drop-shadow(0 0 3px var(--ac));transition:stroke-dasharray .6s cubic-bezier(.2,.8,.2,1)}
+.aring .tk line{stroke:#0a0f15;stroke-width:1.5}
+.aring b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--f-num);font-weight:700;font-size:10px;letter-spacing:-.02em;color:var(--ac)}
+.aring b.long{font-size:8.5px;letter-spacing:-.06em} .aring.big b.long{font-size:20px}
+.aring.big b{font-size:22px;text-shadow:0 0 10px var(--ac)}
+.aring.t4:not(.big) b{animation:alPulse 1.2s ease-in-out infinite}
+@keyframes alPulse{50%{opacity:.55}}
+.mbtn.alb{padding:0 3px;height:32px;border-color:transparent;background:transparent;margin-left:-6px}
+.alv{display:flex;align-items:center;gap:16px;margin:0 0 10px}
+.adesc{margin:0 0 4px;font-size:11.5px;line-height:1.6;color:var(--fg2)} .anext{margin:0;font-family:var(--f-num);font-size:12px;font-weight:700;color:var(--fg)}
+.aeff{list-style:none;margin:0 0 10px;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:5px 14px}
+.aeff li{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--fg)} .aeff li::before{content:"";width:6px;height:6px;flex:none;background:var(--al2);transform:rotate(45deg)}
+.aeff li.off{color:var(--dim)} .aeff li.off::before{background:#2a465e}
+.aeff li i{font-style:normal;font-family:var(--f-num);font-size:10px;color:var(--dim);margin-left:auto}
+.again{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}
+.ag{display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border:1px solid var(--hud);border-radius:3px;font-size:10.5px;color:var(--fg2)} .ag .ic{display:flex} .ag .ic svg{width:11px;height:11px}
+.ag b{font-family:var(--f-num);color:var(--al2)} .ag b.dn{color:var(--cy)}
+.mi-al{display:inline-flex;align-items:center;gap:4px;margin-left:10px;padding:3px 8px;border:1px solid rgba(255,184,77,.5);border-radius:3px;font-family:var(--f-num);font-weight:700;font-size:12px;color:var(--al2);flex:none}
+.mi-al.dn{border-color:rgba(56,211,255,.5);color:var(--cy)} .mi-al .ic{display:flex} .mi-al .ic svg{width:12px;height:12px}
+.mn.duct{--nc:#8fc6d9;--nb:rgba(143,198,217,.14)} .mi-ic.k-duct{--nc:#8fc6d9} .mi-leg .k-duct{color:#8fc6d9}
+.rs-still.duct .rs-glyph{color:#8fc6d9}
+.rs-heal.al{color:var(--cy)}
+.abanner.al i{color:var(--al2)} .abanner.al.t3 i{color:var(--al3)} .abanner.al.t4 i{color:var(--al4)}
+.abanner.al b{text-shadow:0 0 14px rgba(255,184,77,.6)}
+.abanner.al{background:linear-gradient(90deg,transparent,rgba(30,12,8,.92) 25%,rgba(30,12,8,.92) 75%,transparent)}
 @media (prefers-reduced-motion:reduce){#stage *,#stage *::before,#stage *::after{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -1028,7 +1059,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 <script src="data/text.js"></script>
 <script src="js/engine.js"></script>
 <script>
-const APP_VERSION = '0.19.0';
+const APP_VERSION = '0.20.0';
 const $ = s => document.querySelector(s);
 const EN = ENGINE, RULE = EN.RULE;
 const VIEW = RULE.view, NOW = 170, PX = 34, xs = c => NOW + c * PX, STRIP_Y = 150, SWIFT_VIS = 3;
@@ -1092,6 +1123,8 @@ const IC = {
   battle:'<svg viewBox="0 0 16 16"><path d="M3 13L13 3M10 3H13V6M13 13L3 3M3 6V3H6" stroke="currentColor" stroke-width="1.6" fill="none"/></svg>',
   elite:'<svg viewBox="0 0 16 16"><path d="M2 12L4 4L8 8L12 4L14 12Z" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linejoin="round"/></svg>',
   rest:'<svg viewBox="0 0 16 16"><path d="M10.5 2A3.4 3.4 0 0 0 7.4 6.3L2 11.7L4.3 14L9.7 8.6A3.4 3.4 0 0 0 14 5.5L12 7.5L10 6L8.5 4Z" stroke="currentColor" stroke-width="1.4" fill="none" stroke-linejoin="round"/></svg>',
+  duct:'<svg viewBox="0 0 16 16"><rect x="2.5" y="3" width="11" height="10" rx="1.5" stroke="currentColor" stroke-width="1.4" fill="none"/><path d="M5 6.5H11M5 9.5H11" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>',
+  alert:'<svg viewBox="0 0 16 16"><path d="M8 2L14.5 13.5H1.5Z" stroke="currentColor" stroke-width="1.4" fill="none" stroke-linejoin="round"/><path d="M8 6.5V9.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="8" cy="11.6" r=".9" fill="currentColor"/></svg>',
   shop:'<svg viewBox="0 0 16 16"><path d="M3 5L8 2L13 5V11L8 14L3 11Z" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M6 7L10 9M10 7L6 9" stroke="currentColor" stroke-width="1.4"/></svg>',
   event:'<svg viewBox="0 0 16 16"><path d="M5.5 5.5A2.5 2.5 0 1 1 8.8 7.9C8.2 8.2 8 8.6 8 9.3V10" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/><circle cx="8" cy="12.8" r="1" fill="currentColor"/></svg>',
   boss:'<svg viewBox="0 0 16 16"><rect x="5" y="1.5" width="6" height="13" rx="1.5" stroke="currentColor" stroke-width="1.4" fill="none"/><circle cx="8" cy="5" r="1.6" fill="currentColor"/><path d="M2 5V11M14 5V11" stroke="currentColor" stroke-width="1.4"/></svg>',
@@ -1929,7 +1962,7 @@ function clearSave(){ try{ localStorage.removeItem(SAVE_KEY); }catch(e){} }
 function resumeRun(){
   const o = loadSave(); if(!o){ showTitle(); return; }
   hideOv(); $('#titleScr').hidden = true;
-  S = {run: o.run, b: null}; UI.mapSel = null; UI.node = null; UI.pick = null;
+  S = {run: o.run, b: null}; UI.mapSel = null; UI.node = null; UI.pick = null; if(S.run.alert == null) S.run.alert = 0;
   if(o.pending === 'transit'){ UI.node = {type:'transit'}; UI.eventId = DATA.transit[S.run.area - 1].id; UI.healed = null; showEventRoom(); }
   else if(o.pending){ const n = findNode(o.pending); if(n) enterRoom(n); else showMap(); }
   else showMap();
@@ -1941,7 +1974,7 @@ function showTitle(){
   let cont = '';
   if(o){
     const A = DATA.areas[o.run.area || 0], at = o.run.at, pd = o.pending, pos = pd === 'transit' ? '中継' : pd === 'boss' ? 'ボス' : pd ? `部屋${+pd.split('-')[1] + 1}` : !at ? '入口' : at.boss ? 'ボス' : `部屋${at.idx + 1}`;
-    cont = `<button class="tt-b main" type="button" data-act="continue"><b>つづきから</b><span>${A.name} · ${pos} · <span class="ic">${IC.core}</span>${o.run.body}/${o.run.bodyMax}</span></button>`;
+    cont = `<button class="tt-b main" type="button" data-act="continue"><b>つづきから</b><span>${A.name} · ${pos} · <span class="ic">${IC.core}</span>${o.run.body}/${o.run.bodyMax} · ${DATA.ui.alert} ${ROMAN[EN.alertLevel(o.run) - 1]}</span></button>`;
   }
   const nw = `<button class="tt-b${o ? '' : ' main'}${conf ? ' warn' : ''}" type="button" data-act="newGame"><b>${conf ? '記録を消してはじめから' : 'はじめから'}</b>${conf ? '<span>もう一度押すと、つづきの記録は消える</span>' : ''}</button>`;
   const ts = $('#titleScr'), fresh = ts.hidden;
@@ -2000,29 +2033,56 @@ function showMap(){
   let info = '';
   if(s){
     const E = s.enc ? ENC[s.enc] : null;
-    info = `<span class="mi-ic k-${s.type}">${IC[s.type]}</span><span class="mi-t"><span><b>${DATA.rooms[s.type].name}</b>${s.type !== 'boss' ? `<span class="mi-l">${DATA.lanes[m.lanes[s.lane]].name}の道</span>` : ''}</span><span class="mi-d">${DATA.ui['rd.' + s.type] || ''}</span></span>`;
+    info = `<span class="mi-ic k-${s.type}">${IC[s.type]}</span><span class="mi-t"><span><b>${DATA.rooms[s.type].name}</b>${s.type !== 'boss' ? `<span class="mi-l">${DATA.lanes[m.lanes[s.lane]].name}の道</span>` : ''}</span><span class="mi-d">${DATA.ui['rd.' + s.type] || ''}</span></span>${(() => { const g = EN.alertGain(s.type); return g ? `<span class="mi-al${g < 0 ? ' dn' : ''}"><span class="ic">${IC.alert}</span>${g > 0 ? '+' + g : '−' + -g}</span>` : ''; })()}`;
   }
   const fresh = $('#mapScr').hidden;
   $('#mapScr').innerHTML = `${topBar(AREA().name)}
     <svg class="medges" width="844" height="390" viewBox="0 0 844 390" aria-hidden="true">${lines}</svg>
     <span class="mn start${atKey === 'start' ? ' here' : ''}" style="left:${st.x}px;top:${st.y}px"><span class="ic">${IC.start}</span></span>${labels}${all.map(btn).join('')}
-    <div class="minfo${s ? ' has' : ''}">${info || `<span class="mi-leg">${['battle', 'elite', 'rest', 'shop', 'event', 'boss'].map(t => `<span class="k-${t}"><span class="ic">${IC[t]}</span>${DATA.rooms[t].name}</span>`).join('')}</span>`}<span class="sp"></span><button class="btn" type="button" data-act="go" ${s && reach.has(UI.mapSel) ? '' : 'disabled'}>決定</button></div>`;
+    <div class="minfo${s ? ' has' : ''}">${info || `<span class="mi-leg">${['battle', 'elite', 'rest', 'shop', 'event', 'duct', 'boss'].map(t => `<span class="k-${t}"><span class="ic">${IC[t]}</span>${DATA.rooms[t].name}</span>`).join('')}</span>`}<span class="sp"></span><button class="btn" type="button" data-act="go" ${s && reach.has(UI.mapSel) ? '' : 'disabled'}>決定</button></div>`;
   $('#mapScr').hidden = false; $('#mapScr').classList.remove('leave');
   if(fresh) enter($('#mapScr'));
   saveRun(null);
   // 新しいエリアに入ったら、エリアの名前を大きく出す
-  if(UI.areaShown !== S.run.area){ UI.areaShown = S.run.area; areaBanner(); }
+  if(UI.areaShown !== S.run.area){ UI.areaShown = S.run.area; UI.alertUp = false; areaBanner(); }
+  else if(UI.alertUp){ UI.alertUp = false; alertBanner(); }
+}
+function alertBanner(){
+  const el = document.createElement('div'); el.className = 'abanner al t' + alTier(alLv());
+  el.innerHTML = `<i>${DATA.ui['alert.up']}</i><b>${DATA.ui.alert} ${ROMAN[alLv() - 1]}</b>`;
+  $('#mapScr').appendChild(el); setTimeout(() => el.remove(), 2100);
 }
 function areaBanner(){
   const el = document.createElement('div'); el.className = 'abanner';
   el.innerHTML = `<i>AREA ${String(S.run.area + 1).padStart(2, '0')} / ${String(DATA.areas.length).padStart(2, '0')}</i><b>${AREA().name}</b>`;
   $('#mapScr').appendChild(el); setTimeout(() => el.remove(), 2100);
 }
+/* ---------- 警戒度(0.20.0) ---------- */
+const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
+const alLv = () => EN.alertLevel(S.run);
+const alTier = lv => lv >= 10 ? 4 : lv >= 7 ? 3 : lv >= 4 ? 2 : 1;
+// 輪のゲージ: 外の輪が次の段階までの進み、中がローマ数字
+function alertRing(big){
+  const A = DATA.alert, lv = alLv(), max = lv >= A.max, f = max ? 1 : ((S.run.alert || 0) % A.per) / A.per, r = big ? 30 : 14, c = 2 * Math.PI * r, w = big ? 5 : 2.6;
+  const ticks = Array.from({length: A.per}, (_, i) => { const a = i / A.per * 2 * Math.PI - Math.PI / 2; return `<line x1="${(r + w) * Math.cos(a)}" y1="${(r + w) * Math.sin(a)}" x2="${(r - w) * Math.cos(a)}" y2="${(r - w) * Math.sin(a)}"/>`; }).join('');
+  const sz = (r + w + 2) * 2;
+  return `<span class="aring t${alTier(lv)}${big ? ' big' : ''}"><svg viewBox="${-sz / 2} ${-sz / 2} ${sz} ${sz}" width="${sz}" height="${sz}"><circle r="${r}" class="bg" stroke-width="${w}"/><circle r="${r}" class="fg" stroke-width="${w}" stroke-dasharray="${(c * f).toFixed(2)} ${c.toFixed(2)}" transform="rotate(-90)"/><g class="tk">${ticks}</g></svg><b class="${ROMAN[lv - 1].length >= 3 ? 'long' : ''}">${ROMAN[lv - 1]}</b></span>`;
+}
+function infoAlert(){
+  const A = DATA.alert, lv = alLv(), ar = AREA(), u = DATA.ui, l1 = lv - 1;
+  const left = lv >= A.max ? 0 : A.per - (S.run.alert || 0) % A.per;
+  const row = (on, t) => `<li class="${on ? '' : 'off'}">${t}</li>`;
+  const pct = x => Math.round(x * 100);
+  const gains = Object.entries(A.gain).map(([k, v]) => `<span class="ag"><span class="ic">${IC[k]}</span>${DATA.rooms[k].name}<b class="${v < 0 ? 'dn' : ''}">${v > 0 ? '+' + v : '−' + -v}</b></span>`).join('');
+  showOv(`<h2>${u.alert} ${ROMAN[lv - 1]}</h2><div class="alv">${alertRing(true)}<div><p class="adesc">${u['alert.desc']}</p><p class="anext">${lv >= A.max ? '' : u['alert.next'].replace('{n}', left)}</p></div></div>
+    <ul class="aeff">${row(l1 > 0, u['alert.enemy'].replace('{hp}', pct(A.enemy.hp * l1)).replace('{d}', pct(A.enemy.d * l1)))}${row(l1 > 0, u['alert.scrap'].replace('{n}', pct(A.scrap * l1)))}${row(lv >= A.learnAt, `${u['alert.learn']}<i>${ROMAN[A.learnAt - 1]}〜</i>`)}${row(lv >= A.partAt, `${u['alert.part']}<i>${ROMAN[A.partAt - 1]}〜</i>`)}${row(lv >= ar.strong, u['alert.strong'].replace('{lv}', ROMAN[ar.strong - 1]))}</ul>
+    <div class="again">${gains}</div>${closeRow}`, true);
+}
 // 地図と部屋の画面の上の帯(本体・部位・スクラップ・デッキ・メニュー)
 function topBar(title){
   const run = S.run, partsMini = SLOTS.map(p => `<span class="pm${run.parts[p.id].damaged ? ' dmg' : ''}" title="${p.fn}"><span class="ic">${IC[p.id]}</span></span>`).join('');
   const apr = `<span class="apr">${DATA.areas.map((A, i) => `<i class="${i < run.area ? 'done' : i === run.area ? 'on' : ''}"></i>`).join('')}</span>`;
-  return `<div class="mh-bar"><b>${title}</b>${apr}<span class="mb"><span class="ic">${IC.core}</span>${run.body}/${run.bodyMax}</span><button class="mbtn pms" type="button" data-act="unit" aria-label="機体">${partsMini}</button><span class="mb"><span class="ic">${IC.scrap}</span>${run.scrap}</span><span class="sp"></span><button class="mbtn" type="button" data-act="deck"><span class="ic">${IC.deck}</span>${EN.battleDeck(run).length}</button><button class="mbtn" type="button" data-act="menu" aria-label="メニュー">${IC.menu}</button></div>`;
+  return `<div class="mh-bar"><b>${title}</b>${apr}<button class="mbtn alb" type="button" data-act="alert" aria-label="${DATA.ui.alert}">${alertRing(false)}</button><span class="mb"><span class="ic">${IC.core}</span>${run.body}/${run.bodyMax}</span><button class="mbtn pms" type="button" data-act="unit" aria-label="機体">${partsMini}</button><span class="mb"><span class="ic">${IC.scrap}</span>${run.scrap}</span><span class="sp"></span><button class="mbtn" type="button" data-act="deck"><span class="ic">${IC.deck}</span>${EN.battleDeck(run).length}</button><button class="mbtn" type="button" data-act="menu" aria-label="メニュー">${IC.menu}</button></div>`;
 }
 // 整備・ショップ・イベントは画面ごと切り替える(左はいずれスチルを置く枠)。still なしは全幅
 function showRoom(kind, body, still){
@@ -2036,16 +2096,19 @@ function showRoom(kind, body, still){
 function findNode(k){ const m = S.run.map; if(k === 'boss') return m.boss; const [l, i] = k.split('-').map(Number); return m.nodes[l][i]; }
 function enterRoom(n){
   UI.node = n; UI.mapSel = null;
+  if(n.type === 'battle') EN.encFor(S.run, n);
   saveRun(nodeKey(n));
   if(n.type === 'battle' || n.type === 'elite' || n.type === 'boss') startBattle(n);
   else if(n.type === 'rest'){ UI.pick = null; showRest(); }
   else if(n.type === 'shop'){ UI.pick = null; UI.offers = null; showShop(); }
   else if(n.type === 'event'){ UI.pick = null; UI.eventId = n.ev; showEventRoom(); }
+  else if(n.type === 'duct') showDuct();
 }
 function completeRoom(){
   const n = UI.node, run = S.run;
   if(n && n.type === 'transit'){ UI.node = null; UI.pick = null; hideOv(); hideOv2(); $('#roomScr').hidden = true; showMap(); return; }
   run.at = n.type === 'boss' ? {boss:true} : {lane:n.lane, idx:n.idx};
+  if(EN.addAlert(run, EN.alertGain(n.type)) > 0) UI.alertUp = true;
   run.visited.push(nodeKey(n));
   UI.pick = null; UI.learnOpts = []; UI.partOpts = null; UI.after = null;
   hideOv(); hideOv2(); $('#roomScr').hidden = true;
@@ -2072,7 +2135,7 @@ function bodyLine(){ return `<div class="bodyline"><span class="ic" style="color
 function onWin(){
   if(UI.node && UI.node.debug){ showDebugResult(true); return; }
   for(const p of SLOTS) S.run.parts[p.id].damaged = !!S.b.broken[p.id];
-  const n = UI.node, gain = n.type === 'elite' ? DATA.rewards.elite : n.type === 'battle' ? DATA.rewards.battle : 0;
+  const n = UI.node, gain = Math.round((n.type === 'elite' ? DATA.rewards.elite : n.type === 'battle' ? DATA.rewards.battle : 0) * (1 + DATA.alert.scrap * (alLv() - 1)));
   S.run.scrap += gain;
   showOv(`<h2>戦闘終了</h2>${bodyLine()}${partTiles()}${gain ? `<p class="gain"><span class="ic">${IC.scrap}</span>+${gain}</p>` : ''}<div class="row"><button class="btn" type="button" data-act="afterWin">次へ</button></div>`);
 }
@@ -2097,13 +2160,13 @@ function learnOptions(n){
 function afterWin(){
   const n = UI.node;
   if(n.type === 'boss'){ completeRoom(); return; }
-  UI.learnOpts = learnOptions(3); UI.pick = null;
+  UI.learnOpts = learnOptions(3 + (alLv() >= DATA.alert.learnAt ? 1 : 0)); UI.pick = null;
   UI.after = n.type === 'elite' ? 'part' : 'map';
   if(UI.learnOpts.length) showLearn(); else afterLearn();
 }
 function afterLearn(){
   UI.pick = null; UI.learnOpts = [];
-  if(UI.after === 'part'){ UI.partOpts = randomParts(2); UI.back = 'map'; showPartOffer(); }
+  if(UI.after === 'part'){ UI.partOpts = randomParts(2 + (alLv() >= DATA.alert.partAt ? 1 : 0)); UI.back = 'map'; showPartOffer(); }
   else completeRoom();
 }
 function showLearn(){
@@ -2134,6 +2197,11 @@ function rsUnit(){
   const rows = SLOTS.map(p => { const mx = EN.partMax(run, p.id), w = run.parts[p.id].damaged, cur = w ? Math.ceil(mx / 2) : mx; return `<div class="rsu${w ? ' dmg' : ''}"><span class="ic">${IC[p.id]}</span><b>${p.fn}</b><span class="pips">${pipsHTML(mx, cur, cur, cur, pipW(mx, 64))}</span></div>`; }).join('');
   const hp = run.body / run.bodyMax;
   return `${droidArt(dmg)}<div class="rsu-list"><div class="rsu body"><span class="ic">${IC.core}</span><b>${run.body}<i>/${run.bodyMax}</i></b><span class="hbar"><i style="width:${Math.round(hp * 100)}%"></i></span></div>${rows}</div>`;
+}
+// 保守通路(0.20.0): 何も起きないが、警戒が下がる
+function showDuct(){
+  const g = EN.alertGain('duct');
+  showRoom('duct', `<h2>${DATA.rooms.duct.name}</h2><p class="rs-text">${DATA.ui['duct.text']}</p><p class="rs-heal al"><span class="ic">${IC.alert}</span>${DATA.ui['alert.gauge']} ${g < 0 ? '−' + -g : '+' + g}</p><div class="row"><button class="btn" type="button" data-act="leave">進む</button></div>`, true);
 }
 function showRest(){
   const pk = UI.pick;
@@ -2174,6 +2242,7 @@ function applyEvent(fx){
   const run = S.run;
   if(fx.body) run.body = Math.max(1, Math.min(run.bodyMax, run.body + fx.body));
   if(fx.scrap) run.scrap += fx.scrap;
+  if(fx.alert && EN.addAlert(run, fx.alert) > 0) UI.alertUp = true;
   if(fx.repair) for(const p of SLOTS) run.parts[p.id].damaged = false;
   if(fx.card){ const k = EN.pick(DATA.rareCards); run.deck.push(k); UI.pick = null; showOv(`<h2>取り込んだ</h2><div class="cards"><div class="card static">${cardInner(k, null)}</div></div><div class="row"><button class="btn" type="button" data-act="done">次へ</button></div>`); return; }
   if(fx.part){ UI.partOpts = randomParts(2); UI.pick = null; UI.back = 'map'; showPartOffer(); return; }
@@ -2557,6 +2626,7 @@ function act(a, arg, el){
     case 'rules': showRules(false); break;
     case 'deck': infoDeck(); break;
     case 'unit': infoUnit('parts'); break;
+    case 'alert': infoAlert(); break;
     case 'unitTab': infoUnit(arg); break;
     case 'fs': goFull(); break;
     case 'debug': if(!DBG) dbgLoad(); UI.pick = DBG.enc; showDebug(); break;

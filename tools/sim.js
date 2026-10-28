@@ -73,20 +73,23 @@ function playRun(pol, seed){
   for(let guard = 0; guard < 100; guard++){
     const nx = E.nextNodes(run); if(!nx.length) break;
     const n = nx[Math.floor(R() * nx.length)];
+    if(n.type === 'battle') E.encFor(run, n);
     if(n.enc){
       const st = E.newBattle(run, n.enc);
       let o = null;
       for(let k = 0; k < 400; k++){ o = E.doAction(st, POL[pol](st)); if(o.won || o.dead) break; }
       if(!o || !o.won) return {clear:false, at:'a' + (run.area + 1) + ':' + n.type, rooms:log.length, body:0, log};
       for(const s of D.slots) run.parts[s.id].damaged = !!st.b.broken[s.id];
-      run.scrap += n.type === 'elite' ? D.rewards.elite : n.type === 'battle' ? D.rewards.battle : 0;
+      run.scrap += Math.round((n.type === 'elite' ? D.rewards.elite : n.type === 'battle' ? D.rewards.battle : 0) * (1 + D.alert.scrap * (E.alertLevel(run) - 1)));
       const pool = [...new Set(D.encounters[n.enc].foes.flatMap(f => D.foes[f].pool))];
       if(pool.length) run.deck.push(pool[Math.floor(R() * pool.length)]);
     } else if(n.type === 'rest'){ run.body = Math.min(run.bodyMax, run.body + 15); for(const s of D.slots) run.parts[s.id].damaged = false; }
-    else if(n.type === 'event'){ const fx = D.events.find(e => e.id === n.ev).choices[0].fx; if(fx.body) run.body = Math.max(1, Math.min(run.bodyMax, run.body + fx.body)); if(fx.repair) for(const s of D.slots) run.parts[s.id].damaged = false; if(fx.card) run.deck.push(D.rareCards[0]); }
-    log.push(n.type + ':' + run.body);
+    else if(n.type === 'event'){ const fx = D.events.find(e => e.id === n.ev).choices[0].fx; if(fx.alert) E.addAlert(run, fx.alert); if(fx.body) run.body = Math.max(1, Math.min(run.bodyMax, run.body + fx.body)); if(fx.repair) for(const s of D.slots) run.parts[s.id].damaged = false; if(fx.card) run.deck.push(D.rareCards[0]); }
+    E.addAlert(run, E.alertGain(n.type));
+    log.push(n.type + ':' + run.body + ':' + E.alertLevel(run));
     run.at = n.type === 'boss' ? {boss:true} : {lane:n.lane, idx:n.idx};
     if(n.type === 'boss'){
+      (playRun.alertAt = playRun.alertAt || []).push(E.alertLevel(run));
       const tr = D.transit[run.area]; if(E.nextArea(run) === null) return {clear:true, body:run.body, log};
       // 中継: 最初の選択肢(損傷を直す・パーツ)
       const fx = tr.choices[0].fx; if(fx.repair) for(const s of D.slots) run.parts[s.id].damaged = false;

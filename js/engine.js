@@ -422,7 +422,10 @@ function newBattle(run, encKey){
   const parts = {};
   for(const s of D.slots){ const mx = partMax(run, s.id); parts[s.id] = {cur: run.parts[s.id].damaged ? Math.ceil(mx / 2) : mx, max:mx}; }
   const foes = [], A = D.areas[run.area || 0], es = E.scale || {hp:1, d:1};
-  const sc = A ? {hp:+(A.scale.hp * es.hp).toFixed(3), d:+(A.scale.d * es.d).toFixed(3)} : null;
+  // 敵の強さ = エリアの倍率 × 遭遇の倍率 × 警戒度の上乗せ
+  const lv = alertLevel(run) - 1, ae = AL().enemy || {hp:0, d:0};
+  const sc = A ? {hp:+(A.scale.hp * es.hp * (1 + ae.hp * lv)).toFixed(3), d:+(A.scale.d * es.d * (1 + ae.d * lv)).toFixed(3)} : null;
+  if(!E.boss && !E.elite) run.lastEnc = encKey;
   for(const key of E.foes) foes.push(makeFoe(key, foes.length, sc));
   let uid = 1;
   const cards = shuffle(battleDeck(run).map(k => ({k, id:uid++})));
@@ -492,9 +495,26 @@ function doAction(st, a, noInt){
 function newRun(seed){
   const parts = {};
   for(const s of D.slots) parts[s.id] = {id:D.startParts[s.id], damaged:false};
-  const run = {seed, area:0, body:D.bodyMax, bodyMax:D.bodyMax, parts, deck:D.startDeck.slice(), scrap:D.rewards.scrapStart, at:null, visited:[], map:null};
+  const run = {seed, area:0, alert:0, lastEnc:null, body:D.bodyMax, bodyMax:D.bodyMax, parts, deck:D.startDeck.slice(), scrap:D.rewards.scrapStart, at:null, visited:[], map:null};
   run.map = genMap(seed, 0);
   return run;
+}
+/* ---------- 警戒度(0.20.0) ----------
+   run.alert はゲージ(0〜per×(max-1))。段は I〜X */
+const AL = () => D.alert || {max:10, per:4, gain:{}, enemy:{hp:0, d:0}, scrap:0};
+function alertLevel(run){ return Math.min(AL().max, 1 + Math.floor((run.alert || 0) / AL().per)); }
+function addAlert(run, n){ const cap = AL().per * (AL().max - 1); const before = alertLevel(run); run.alert = Math.max(0, Math.min(cap, (run.alert || 0) + n)); return alertLevel(run) - before; }
+// 区画を終えたときの警戒の増減(イベントは選択肢の fx.alert で別に)
+function alertGain(type){ return (AL().gain || {})[type] || 0; }
+// 通常戦の敵: 警戒度がエリアの strong 以上なら強い組から。直前と同じ遭遇は避ける。区画ごとに決まった乱数で選ぶ(つづきからでも同じ)
+function encFor(run, node){
+  if(node.enc) return node.enc;
+  const A = D.areas[run.area || 0], strong = alertLevel(run) >= (A.strong || 99);
+  const tiers = A.tiers[strong ? 1 : 0];
+  const pool = Object.entries(D.encounters).filter(([k, e]) => !e.elite && !e.boss && tiers.includes(e.tier) && k !== run.lastEnc).map(([k]) => k);
+  node.enc = pick(pool, rngFrom(run.seed + run.area * 131 + node.lane * 17 + node.idx * 7 + 3));
+  node.strong = strong;
+  return node.enc;
 }
 // 次のエリアへ(0.19.0)。中継の回復はここで。戻り値は回復した量。最後のエリアなら null
 function nextArea(run){
@@ -506,7 +526,7 @@ function nextArea(run){
 }
 
 /* ---------- 地図の生成 ---------- */
-const SPECIAL = ['elite', 'rest', 'shop'];
+const SPECIAL = ['elite', 'rest', 'shop', 'duct'];
 function genLane(key, r, A){
   const L = D.lanes[key], pool = [];
   for(const [t, n] of Object.entries(L.rooms)) for(let i = 0; i < n; i++) pool.push(t);
@@ -528,16 +548,13 @@ function genMap(seed, area){
     // どの道から最初の乗り換えをしても、次の乗り換えまでに整備かショップがある
     const ok = lanes.every((_, l) => reachAfter(l, lanes.length).some(l2 => rooms[l2].slice(T1, T2 || A.rooms).some(t => t === 'rest' || t === 'shop')));
     if(!ok) continue;
+    // 通常戦の敵は入ったときに警戒度で決める(encFor)
     const encs = Object.entries(D.encounters);
-    const normal = tiers => encs.filter(([, e]) => !e.elite && !e.boss && tiers.includes(e.tier)).map(([k]) => k);
-    const early = normal(A.tiers[0]), late = normal(A.tiers[1]);
     const elites = shuffle(encs.filter(([, e]) => e.elite).map(([k]) => k), r);
     let ei = 0;
     const nodes = rooms.map((row, l) => {
-      let prev = null;
       return row.map((t, i) => {
         const n = {lane:l, idx:i, type:t};
-        if(t === 'battle'){ const pool = (i < T1 ? early : late).filter(k => k !== prev); n.enc = pick(pool, r); prev = n.enc; }
         if(t === 'elite') n.enc = elites[ei++ % elites.length];
         if(t === 'event') n.ev = pick(D.events, r).id;
         return n;
@@ -559,7 +576,7 @@ function nextNodes(run){
 
 const API = {RULE, makeFoe, defaultUid, liveUids, actorUid, parseT, gap, reloadCost, rngFrom, setRandom, shuffle, pick, clone, cur, advance, partOf, fx, partCards, battleDeck, partMax, dmgOf, blockOf,
   drawOne, drawN, upcoming, arrivals, applyCard, enemyAct, spendGen, runGen, newBattle, actions, actionCost, beginAction, endAction, doAction,
-  newRun, nextArea, genMap, nextNodes, reachAfter, scaledFoe};
+  newRun, nextArea, genMap, nextNodes, reachAfter, scaledFoe, alertLevel, addAlert, alertGain, encFor};
 root.ENGINE = API;
 if(typeof module !== 'undefined') module.exports = API;
 })(typeof window !== 'undefined' ? window : globalThis);

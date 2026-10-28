@@ -394,7 +394,7 @@ window.DATA = window.DATA || {};
    "choices": [
     {
      "label": "接続する",
-     "sub": "本体を6失う。珍しいカードを1枚得る。"
+     "sub": "本体を6失う。珍しいカードを1枚得る。警戒が2上がる。"
     },
     {
      "label": "立ち去る",
@@ -436,7 +436,7 @@ window.DATA = window.DATA || {};
    "choices": [
     {
      "label": "こじ開ける",
-     "sub": "本体を4失う。スクラップを30得る。"
+     "sub": "スクラップを40得る。警戒が3上がる。"
     },
     {
      "label": "隙間から探る",
@@ -475,8 +475,8 @@ window.DATA = window.DATA || {};
      "sub": "デッキからカードを1枚取り除く。"
     },
     {
-     "label": "休止する",
-     "sub": "本体を10回復する。"
+     "label": "痕跡を消す",
+     "sub": "警戒が4下がる。"
     }
    ]
   }
@@ -556,6 +556,7 @@ window.DATA = window.DATA || {};
   "room.rest": "整備",
   "room.shop": "ショップ",
   "room.event": "イベント",
+  "room.duct": "保守通路",
   "room.boss": "ボス",
   "lane.learn": "学習",
   "lane.salvage": "鹵獲",
@@ -623,6 +624,18 @@ window.DATA = window.DATA || {};
   "ui.rd.event": "何かが起こる。",
   "ui.rd.boss": "このエリアの主。倒すと踏破。",
   "ui.transit.heal": "本体を{n}回復した。",
-  "ui.clear.sub": "すべてのエリアを踏破した。"
+  "ui.clear.sub": "すべてのエリアを踏破した。",
+  "ui.rd.duct": "点検用の通路。何も起きないが、警戒が下がる。",
+  "ui.alert": "警戒度",
+  "ui.alert.desc": "工場がこちらに気付いている度合い。区画を進むと上がり、上がるほど敵は強く、報酬は多くなる。",
+  "ui.alert.enemy": "敵の耐久+{hp}%・攻撃+{d}%",
+  "ui.alert.scrap": "戦闘のスクラップ+{n}%",
+  "ui.alert.learn": "学習の候補+1枚",
+  "ui.alert.part": "鹵獲の候補+1つ",
+  "ui.alert.strong": "{lv}から強い敵が出る",
+  "ui.alert.next": "次の段階まで{n}",
+  "ui.alert.up": "警戒度が上がった",
+  "ui.duct.text": "点検用の狭い通路。工場の目がここまでは届かない。",
+  "ui.alert.gauge": "警戒"
  }
 });

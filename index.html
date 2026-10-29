@@ -695,7 +695,8 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 .eu.tgt{border-color:var(--cy);background:rgba(56,211,255,.08)}
 .eu.broken{opacity:.28}
 .eu.flash{background:rgba(255,77,106,.24)}
-.ew{position:absolute;left:802px;top:40px;width:34px;display:flex;flex-direction:column;align-items:center;gap:8px;transition:opacity .3s}
+.ew{position:absolute;left:798px;top:48px;width:44px;display:flex;flex-direction:column;align-items:center;gap:5px;transition:opacity .3s}
+.ew .stsep{display:block;width:26px;height:1px;background:#2a3d50;margin:2px 0}
 .ew.dead{opacity:0}
 .st.trait.off{opacity:.3}
 #shaker.focus .ew{opacity:0}
@@ -988,6 +989,27 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 /* 抵抗(0.21.0) */
 .st.res{color:#8fc6d9}
 .float.dim{color:var(--fg2);font-size:13px}
+/* ===== 状態の札(0.23.2) ===== */
+.st{height:17px;padding:0 5px 0 4px;gap:3px;border:1px solid #33495c;border-radius:3px;background:rgba(6,10,15,.9);font-size:11.5px;line-height:1;color:var(--fg)}
+.st .ic{display:flex} .st .ic svg{width:11px;height:11px}
+.st.blk{color:var(--fg);border-color:#4a6276}
+.st.swf,.st.chg{color:var(--cy);border-color:rgba(56,211,255,.5)}
+.st.crack{color:var(--foe2);border-color:rgba(255,77,106,.6)}
+.st.arm{color:#dbe8f1;border-color:#5a7488}
+.st.ecrk{color:var(--cy);border-color:rgba(56,211,255,.6)}
+.st.vul{color:#06121a;background:var(--cy);border-color:var(--cy);box-shadow:0 0 8px rgba(56,211,255,.55);animation:vulGlow 1.1s ease-in-out infinite}
+@keyframes vulGlow{50%{box-shadow:0 0 2px rgba(56,211,255,.3)}}
+.st.str{color:var(--foe2);border-color:rgba(255,77,106,.6)}
+.st.res{color:#9fc3d4;border-color:#3d5a6e}
+.st.trait{color:var(--foe2);border:1px dashed rgba(255,77,106,.5);background:rgba(22,9,13,.75);opacity:1}
+.st.trait.off{opacity:.35}
+.st.trait.on{border-style:solid;border-color:var(--foe2);filter:none;box-shadow:0 0 8px rgba(255,77,106,.6)}
+.sts{gap:4px;flex-wrap:wrap}
+.eu .sts{gap:3px;min-height:0;justify-content:center}
+.eu.up .sts{position:absolute;left:50%;transform:translateX(-50%);bottom:100%;margin-bottom:2px;flex-wrap:nowrap}
+.eu.m .sts .st{font-size:10.5px;height:16px;padding:0 4px 0 3px} .eu.m .sts .ic svg{width:10px;height:10px}
+/* 自機の状態は耐久の数字の右(下に置くと手札にかかる) */
+#meSts{position:absolute;left:94px;top:-3px;flex-wrap:nowrap}
 /* ===== 警戒度(0.20.0) ===== */
 :root{--al1:var(--cy); --al2:#ffb84d; --al3:#ff7a59; --al4:var(--foe)}
 .aring{position:relative;display:inline-flex;align-items:center;justify-content:center;flex:none}
@@ -1113,7 +1135,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 <script src="data/text.js"></script>
 <script src="js/engine.js"></script>
 <script>
-const APP_VERSION = '0.23.1';
+const APP_VERSION = '0.23.2';
 const $ = s => document.querySelector(s);
 const EN = ENGINE, RULE = EN.RULE;
 const VIEW = RULE.view, NOW = 170, PX = 34, xs = c => NOW + c * PX, STRIP_Y = 150, SWIFT_VIS = 3;
@@ -1334,7 +1356,8 @@ function foeGeom(e){
     else if(d.pt && main){ const q = sprPoint(main, d.pt); units[k] = {x, y, cx: q.x, cy: q.y, pt: q}; }
     else units[k] = {x, y, cx: d.core && main ? main.x : x, cy: d.core && main ? main.y : y - 6};
   });
-  return {A, main, units, multi};
+  // side: 敵全体の状態とパッシブを右端の欄に出す(敵が1体のとき)
+  return {A, main, units, multi, side: so};
 }
 function buildFoes(){
   const b = S.b, so = solo();
@@ -1352,10 +1375,10 @@ function buildFoes(){
     for(const [k, u] of pts) h += `<div class="upt" data-f="${e.i}" data-u="${k}" style="left:${u.pt.x}px;top:${u.pt.y}px"><i></i><span class="ret"></span></div>`;
     for(const [k, u] of Object.entries(g.units)){
       if(u.spr) h += `<div class="foe us" data-f="${e.i}" data-u="${k}" style="left:${u.sx}px;top:${u.sy}px;width:${u.w}px;height:${u.h}px">${SPR[u.spr]}<span class="reticle"></span></div>`;
-      h += `<div class="eu${g.multi ? ' m' : ''}" data-f="${e.i}" data-u="${k}" style="left:${u.x}px;top:${u.y}px"><span class="frow">${g.multi ? `<span class="uic">${pIcon(e.units[k])}</span>` : so ? '' : `<span class="ftag">${e.tag}</span>`}<span class="hpb"><i></i><s></s></span><span class="hpt"></span></span><span class="sts"></span></div>`;
+      h += `<div class="eu${g.multi ? ' m' : ''}${u.y > 250 ? ' up' : ''}" data-f="${e.i}" data-u="${k}" style="left:${u.x}px;top:${u.y}px"><span class="frow">${g.multi ? `<span class="uic">${pIcon(e.units[k])}</span>` : so ? '' : `<span class="ftag">${e.tag}</span>`}<span class="hpb"><i></i><s></s></span><span class="hpt"></span></span><span class="sts"></span></div>`;
     }
     // ユニットが複数ある敵は、敵全体の状態とパッシブを右上に
-    if(g.multi) h += `<div class="ew" data-f="${e.i}"></div>`;
+    if(g.side) h += `<div class="ew" data-f="${e.i}"></div>`;
   }
   $('#foes').innerHTML = h;
 }
@@ -1449,15 +1472,17 @@ function pasText(e, x){
   return '';
 }
 // 画面の小さな札: ユニットの状態(クラック・装甲・隙)と、敵全体の状態(増幅・加速・パッシブ)
-function unitSts(p){ return (p.crack ? `<span class="st crack"><span class="ic">${IC.crack}</span>${p.crack}</span>` : '') + (p.armor ? `<span class="st arm"><span class="ic">${IC.armor}</span>${p.armor}</span>` : '') + (p.vuln > 1 ? `<span class="st swf"><span class="ic">${IC.vuln}</span>${p.vuln - 1}</span>` : ''); }
+// 0.23.2: 状態は札(枠と下地のある小さな四角)。色は「こちらに有利か」で分ける: 隙(塗りの水色)・クラック(水色の枠)はこちらの好機、装甲は鋼色、増幅・加速は赤
+// ユニットの状態(装甲・クラック・隙)は耐久バーに付け、敵全体の状態(増幅・加速・抵抗)とパッシブは右端の欄にまとめる(敵の詳細と同じ分け方)
+function unitSts(p){ return (p.armor ? `<span class="st arm"><span class="ic">${IC.armor}</span>${p.armor}</span>` : '') + (p.crack ? `<span class="st ecrk"><span class="ic">${IC.crack}</span>${p.crack}</span>` : '') + (p.vuln > 1 ? `<span class="st vul"><span class="ic">${IC.vuln}</span>${p.vuln - 1}</span>` : ''); }
 function foeSts(e){
-  let s = '';
-  for(const x of passives(e)){ if(x.k === 'phase' || x.k === 'broke') continue; const n = x.k === 'react' ? x.p.min : x.k === 'loot' ? (e.loot || '') : x.k === 'hoard' ? ((e.eaten || []).length || '') : ''; s += `<span class="st trait${x.on ? '' : ' off'}${x.k === 'react' && PV && PV.react.has(e.i) ? ' on' : ''}"><span class="ic">${PAS_IC[x.k]}</span>${n}</span>`; }
-  if(e.sync) s += `<span class="st trait"><span class="ic">${IC.link}</span>${e.sync}</span>`;
+  let s = '', ps = '';
   if(e.str) s += `<span class="st str"><span class="ic">${IC.str}</span>${e.str}</span>`;
   if(e.haste) s += `<span class="st str"><span class="ic">${IC.haste}</span>${e.haste}</span>`;
   if(e.resist && e.alive) s += `<span class="st res" title="${DATA.kwName.resist}"><span class="ic">${IC.resist}</span>${e.resist}</span>`;
-  return s;
+  for(const x of passives(e)){ if(x.k === 'phase' || x.k === 'broke') continue; const n = x.k === 'react' ? x.p.min : x.k === 'loot' ? (e.loot || '') : x.k === 'hoard' ? ((e.eaten || []).length || '') : ''; ps += `<span class="st trait${x.on ? '' : ' off'}${x.k === 'react' && PV && PV.react.has(e.i) ? ' on' : ''}"><span class="ic">${PAS_IC[x.k]}</span>${n}</span>`; }
+  if(e.sync) ps += `<span class="st trait"><span class="ic">${IC.link}</span>${e.sync}</span>`;
+  return s + (s && ps ? '<i class="stsep"></i>' : '') + ps;
 }
 function renderFoes(){
   const b = S.b, cs = sel && sel.kind === 'card' ? CARDS[sel.k] : null, need = cs && cs.tgt, all = cs && cs.all;
@@ -1480,7 +1505,7 @@ function renderFoes(){
       el.querySelector('.hpb i').style.width = (after / max * 100) + '%';
       const sb = el.querySelector('.hpb s'); sb.style.left = (after / max * 100) + '%'; sb.style.width = ((hp - after) / max * 100) + '%';
       const t = el.querySelector('.hpt'); t.textContent = after < hp ? `${hp}→${after}` : String(hp); t.classList.toggle('pv', after < hp);
-      el.querySelector('.sts').innerHTML = (one ? (e.uids.length === 1 ? unitSts(e.units[e.uids[0]]) : '') + foeSts(e) : unitSts(p));
+      el.querySelector('.sts').innerHTML = one ? (e.uids.length === 1 ? unitSts(e.units[e.uids[0]]) : '') + (g.side ? '' : foeSts(e)) : unitSts(p);
       if(u.spr){ const sp = document.querySelector(`.foe.us[data-f="${e.i}"][data-u="${k}"]`); if(sp){ sp.classList.toggle('dead', broken); sp.classList.toggle('tgt', isT); } }
       if(u.pt){
         const pe = document.querySelector(`.upt[data-f="${e.i}"][data-u="${k}"]`), ln = document.querySelector(`[data-ul="${e.i}.${k}"]`);
@@ -2246,7 +2271,7 @@ function startBattle(n){
   S = EN.newBattle(S.run, n.enc);
   sel = null; PV = null; busy = false; lastTarget = 0; UI.view = 'normal'; UI.screen = 'battle'; closeFocus();
   $('#mapScr').hidden = true; $('#titleScr').hidden = true;
-  clearCards(); clearMarks(); buildFoes();
+  clearCards(); clearMarks(); buildFoes(); for(const el of document.querySelectorAll('.say')) el.remove();
   renderAll(); enter($('#shaker'));
   toast(`${DATA.rooms[n.type].name} · ${ENC[n.enc].fam}`);
   const bs = S.b; setTimeout(() => { if(S.b === bs && !busy) bs.foes.forEach(e => foeSay(e.i, 'start')); }, 900);

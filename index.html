@@ -1021,15 +1021,29 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 .eu .sts{gap:3px;min-height:0;justify-content:center}
 .eu.up .sts{position:absolute;left:50%;transform:translateX(-50%);bottom:100%;margin-bottom:2px;flex-wrap:nowrap}
 .eu.m .sts .st{font-size:10.5px;height:16px;padding:0 4px 0 3px} .eu.m .sts .ic svg{width:10px;height:10px}
-/* 部位型の敵の部位(0.23.4、0.23.5 から縦のゲージ): 数字・縦のバー・アイコン・状態を上から。名前は出さない(敵の詳細で) */
-.eu.lst{transform:none;width:23px;flex-direction:column;align-items:center;gap:3px;padding:3px 0 4px;border-color:#18242f;background:rgba(9,15,22,.6)}
+/* 部位型の敵の部位(0.23.4、0.23.6 から縦の目盛り): 数字・10段の目盛り・アイコン・状態の印。名前は出さない(敵の詳細で)。枠は1つにまとめる */
+.lpanel{position:absolute;height:92px;border:1px solid #1a2836;background:linear-gradient(180deg,rgba(12,20,29,.78),rgba(9,15,22,.45));pointer-events:none;transition:opacity .3s;
+  clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100% - 8px))}
+.lpanel::before{content:"";position:absolute;left:0;top:0;width:10px;height:1px;background:var(--cy-dim);box-shadow:0 0 4px var(--cy-dim)}
+.lpanel::after{content:"";position:absolute;right:0;bottom:0;width:10px;height:1px;background:var(--cy-dim)}
+#shaker.focus .lpanel,#shaker.peek .lpanel{opacity:0}
+.eu.lst{transform:none;width:23px;flex-direction:column;align-items:center;gap:3px;padding:2px 0 3px;border-color:transparent;background:none;border-radius:3px;z-index:1}
 .eu.lst .hpt{font-size:10px;line-height:1;color:var(--fg2);min-width:0} .eu.lst .hpt.pv{color:var(--foe2)}
-.eu.lst .hpb.v{width:5px;height:50px;border-radius:2px}
-.eu.lst .hpb.v i{left:0;right:0;top:auto;bottom:0;width:auto;transition:height .25s}
-.eu.lst .hpb.v s{left:0;right:0;width:auto;background:repeating-linear-gradient(45deg,var(--foe) 0 2px,transparent 2px 4px)}
+.eu.lst .segs{display:flex;flex-direction:column-reverse;gap:2px}
+.eu.lst .segs i{display:block;width:9px;height:3px;border-radius:1px;background:#1c2937}
+.eu.lst .segs i.f{background:var(--neutral)}
+.eu.lst .segs i.l{background:repeating-linear-gradient(135deg,var(--foe) 0 2px,#3a1424 2px 4px)}
+.eu.lst.low .segs i.f{background:var(--foe2)}
 .eu.lst .uic svg{width:10px;height:10px}
-.eu.lst .sts{flex-direction:column;align-items:center;gap:2px} .eu.lst .sts .st{height:14px;font-size:9.5px;padding:0 2px;gap:1px} .eu.lst .sts .ic svg{width:8px;height:8px}
-.eu.lst.tgt{border-color:var(--cy);background:rgba(56,211,255,.1)}
+.eu.lst .dt{display:block;width:5px;height:5px;border-radius:50%;background:transparent}
+.eu.lst .dt.vul{background:var(--cy);box-shadow:0 0 6px var(--cy)} .eu.lst .dt.ecrk{background:#0d3644;border:1px solid var(--cy)} .eu.lst .dt.arm{background:#9cb9cd}
+.eu.lst .sts{display:none}
+.eu.lst.tgt{border-color:transparent;background:rgba(56,211,255,.1)} .eu.lst.tgt .segs i.f{background:var(--cy)} .eu.lst.tgt .hpt{color:var(--cy)} .eu.lst.tgt .uic{color:var(--cy)}
+/* 体の下のバー: 装甲は左の盾、状態は下に一列(部位の状態は頭にその部位のアイコン) */
+.armb{display:none;align-items:center;gap:2px;height:17px;padding:0 5px 0 3px;margin-right:1px;font-family:var(--f-num);font-weight:700;font-size:12px;color:#fff;background:#3b5267;border:1px solid #9cb9cd;border-radius:3px 8px 8px 3px}
+.armb.on{display:inline-flex} .armb .ic{display:flex} .armb .ic svg{width:11px;height:11px}
+.st .sp{display:flex;font-style:normal;opacity:.8;margin-right:1px;padding-right:3px;border-right:1px solid currentColor} .st .sp svg{width:9px;height:9px}
+.st.more{color:var(--fg2);border-style:dashed;background:rgba(6,10,15,.9);font-size:10.5px}
 #shaker.focus .eu.lst{opacity:0;pointer-events:none}
 .upt.lic i{width:15px;height:15px;display:flex;align-items:center;justify-content:center;color:var(--fg2);border-width:1px;background:rgba(9,15,22,.9)} .upt.lic i svg{width:9px;height:9px}
 .upt.lic.act i{color:var(--foe2);border-color:var(--foe2)} .upt.lic.ch i{color:var(--just2);border-color:var(--just2)}
@@ -1161,7 +1175,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 <script src="data/text.js"></script>
 <script src="js/engine.js"></script>
 <script>
-const APP_VERSION = '0.23.5';
+const APP_VERSION = '0.23.6';
 const $ = s => document.querySelector(s);
 const EN = ENGINE, RULE = EN.RULE;
 const VIEW = RULE.view, NOW = 170, PX = 34, xs = c => NOW + c * PX, STRIP_Y = 150, SWIFT_VIS = 3;
@@ -1407,9 +1421,12 @@ function buildFoes(){
     for(const [k, u] of pts) h += `<div class="upt${g.list ? ' lic' : ''}" data-f="${e.i}" data-u="${k}" style="left:${u.pt.x}px;top:${u.pt.y}px"><i>${g.list ? pIcon(e.units[k]) : ''}</i><span class="ret"></span></div>`;
     for(const [k, u] of Object.entries(g.units)){
       if(u.spr) h += `<div class="foe us" data-f="${e.i}" data-u="${k}" style="left:${u.sx}px;top:${u.sy}px;width:${u.w}px;height:${u.h}px">${SPR[u.spr]}<span class="reticle"></span></div>`;
-      if(u.lst){ h += `<div class="eu m lst" data-f="${e.i}" data-u="${k}" style="left:${u.x}px;top:${u.y}px"><span class="hpt"></span><span class="hpb v"><i></i><s></s></span><span class="uic">${pIcon(e.units[k])}</span><span class="sts"></span></div>`; continue; }
-      h += `<div class="eu${g.multi ? ' m' : ''}${u.y > 250 ? ' up' : ''}" data-f="${e.i}" data-u="${k}" style="left:${u.x}px;top:${u.y}px"><span class="frow">${g.multi ? `<span class="uic">${pIcon(e.units[k])}</span>` : so ? '' : `<span class="ftag">${e.tag}</span>`}<span class="hpb"><i></i><s></s></span><span class="hpt"></span></span><span class="sts"></span></div>`;
+      if(u.lst){ h += `<div class="eu m lst" data-f="${e.i}" data-u="${k}" style="left:${u.x}px;top:${u.y}px"><span class="hpt"></span><span class="segs"></span><span class="uic">${pIcon(e.units[k])}</span><i class="dt"></i><span class="sts"></span></div>`; continue; }
+      const plate = (g.list && u.core) || k === '*';
+      h += `<div class="eu${g.multi ? ' m' : ''}${u.y > 250 ? ' up' : ''}" data-f="${e.i}" data-u="${k}" style="left:${u.x}px;top:${u.y}px"><span class="frow">${g.multi ? `<span class="uic">${pIcon(e.units[k])}</span>` : so ? '' : `<span class="ftag">${e.tag}</span>`}${plate && so ? '<span class="armb"></span>' : ''}<span class="hpb"><i></i><s></s></span><span class="hpt"></span></span><span class="sts"></span></div>`;
     }
+    // 部位型の敵: 部位のゲージをまとめる枠
+    if(g.list){ const n = Object.values(g.units).filter(u => u.lst).length; h += `<div class="lpanel" data-f="${e.i}" style="left:${LIST.x - 7}px;top:${LIST.y - 7}px;width:${n * LIST.w + 9}px"></div>`; }
     // ユニットが複数ある敵は、敵全体の状態とパッシブを右上に
     // 0.23.3: 敵全体の状態とパッシブは、タイムラインの敵の列の頭(今より左)に出す(laneHead)
   }
@@ -1507,6 +1524,20 @@ function pasText(e, x){
 // 画面の小さな札: ユニットの状態(クラック・装甲・隙)と、敵全体の状態(増幅・加速・パッシブ)
 // 0.23.2: 状態は札(枠と下地のある小さな四角)。色は「こちらに有利か」で分ける: 隙(塗りの水色)・クラック(水色の枠)はこちらの好機、装甲は鋼色、増幅・加速は赤
 // ユニットの状態(装甲・クラック・隙)は耐久バーに付け、敵全体の状態(増幅・加速・抵抗)とパッシブは右端の欄にまとめる(敵の詳細と同じ分け方)
+// 状態の札の並び(0.23.6): 有利な順(隙→クラック→装甲)。pre はユニットのアイコンを札の頭に付けるとき
+const ST_MAX = 5, ST_MAX_BODY = 3;
+function unitStArr(p, pre, noArmor){
+  const out = [], hd = pre ? `<i class="sp">${pIcon(p)}</i>` : '';
+  if(p.broken) return out;
+  if(p.vuln > 1) out.push({pri: 0, h: `<span class="st vul">${hd}<span class="ic">${IC.vuln}</span>${p.vuln - 1}</span>`});
+  if(p.crack) out.push({pri: 1, h: `<span class="st ecrk">${hd}<span class="ic">${IC.crack}</span>${p.crack}</span>`});
+  if(p.armor && !noArmor) out.push({pri: 2, h: `<span class="st arm">${hd}<span class="ic">${IC.armor}</span>${p.armor}</span>`});
+  return out;
+}
+// 決まった数を超えたら「+N」にまとめる(全部は敵の詳細で)
+function capSts(arr, n){ arr.sort((a, b) => a.pri - b.pri); return arr.length <= n ? arr.map(x => x.h).join('') : arr.slice(0, n - 1).map(x => x.h).join('') + `<span class="st more">+${arr.length - n + 1}</span>`; }
+// 部位のゲージの小さな印: いちばん有利な状態の色
+function stDot(p){ return p.broken ? '' : p.vuln > 1 ? 'vul' : p.crack ? 'ecrk' : p.armor ? 'arm' : ''; }
 function unitSts(p){ return (p.armor ? `<span class="st arm"><span class="ic">${IC.armor}</span>${p.armor}</span>` : '') + (p.crack ? `<span class="st ecrk"><span class="ic">${IC.crack}</span>${p.crack}</span>` : '') + (p.vuln > 1 ? `<span class="st vul"><span class="ic">${IC.vuln}</span>${p.vuln - 1}</span>` : ''); }
 // タイムラインの敵の列の頭(0.23.3): 敵全体の補正(増幅・加速・抵抗)を名前付きの大きめの札で、その下にパッシブ
 function laneHead(e){
@@ -1518,6 +1549,9 @@ function laneHead(e){
   let ps = '';
   for(const x of passives(e)){ if(x.k === 'phase' || x.k === 'broke' || (e.uids.length > 1 && pasUnit(x))) continue; const n = x.k === 'react' ? x.p.min : x.k === 'loot' ? (e.loot || '') : x.k === 'hoard' ? ((e.eaten || []).length || '') : ''; ps += `<span class="st trait${x.on ? '' : ' off'}${x.k === 'react' && PV && PV.react.has(e.i) ? ' on' : ''}"><span class="ic">${PAS_IC[x.k]}</span>${n}</span>`; }
   if(e.sync) ps += `<span class="st trait"><span class="ic">${IC.link}</span>${e.sync}</span>`;
+  // パッシブが多いときは4つまで並べ、残りは「+N」
+  const pl = ps.split('<span class="st trait').slice(1).map(x => '<span class="st trait' + x);
+  if(pl.length > 4) ps = pl.slice(0, 3).join('') + `<span class="st more">+${pl.length - 3}</span>`;
   return h + (ps ? `<span class="lhp">${ps}</span>` : '');
 }
 function foeSts(e){
@@ -1548,10 +1582,12 @@ function renderFoes(){
       el.classList.toggle('broken', broken); el.classList.toggle('tgt', isT);
       el.classList.toggle('act', g.multi && next === k && !broken); el.classList.toggle('ch', g.multi && next === k && !!a.ch && !broken);
       const t = el.querySelector('.hpt');
-      if(u.lst){ // 縦のゲージ: 下から埋まる。予告の減りは上の側に。数字は狭いので、予告のときは減った後の値だけ
-        el.querySelector('.hpb i').style.height = (after / max * 100) + '%';
-        const sb = el.querySelector('.hpb s'); sb.style.bottom = (after / max * 100) + '%'; sb.style.height = ((hp - after) / max * 100) + '%';
+      if(u.lst){ // 縦の目盛り(0.23.6): 自機の部位と同じ区切り。10段で下から埋まる。予告の減りは縞。数字は狭いので、予告のときは減った後の値だけ
+        const N = 10, fa = Math.ceil(after / max * N - 1e-9), fh = Math.ceil(hp / max * N - 1e-9);
+        let sg = ''; for(let j = 0; j < N; j++) sg += `<i class="${j < fa ? 'f' : j < fh ? 'l' : ''}"></i>`;
+        el.querySelector('.segs').innerHTML = sg; el.classList.toggle('low', hp > 0 && hp / max <= .34);
         t.textContent = String(after < hp ? after : hp); t.classList.toggle('pv', after < hp);
+        el.querySelector('.dt').className = 'dt ' + stDot(p);
       } else {
         el.querySelector('.hpb i').style.width = (after / max * 100) + '%';
         const sb = el.querySelector('.hpb s'); sb.style.left = (after / max * 100) + '%'; sb.style.width = ((hp - after) / max * 100) + '%';
@@ -1559,7 +1595,16 @@ function renderFoes(){
       }
       // ユニットに結び付くパッシブ(統率など)は、そのユニットのバーに
       const tied = one || broken ? '' : passives(e).filter(x => pasUnit(x) === k && x.k !== 'broke').map(x => `<span class="st trait"><span class="ic">${PAS_IC[x.k]}</span></span>`).join('');
-      el.querySelector('.sts').innerHTML = one ? (e.uids.length === 1 ? unitSts(e.units[e.uids[0]]) : '') + (g.side ? '' : foeSts(e)) : unitSts(p) + tied;
+      // 状態(0.23.6): 部位型の敵と1体の敵は、体の下(核のバー)にまとめる。部位の状態は札の頭にその部位のアイコン。装甲はバーの左の盾に
+      const plate = (g.list && u.core) || (one && g.side);
+      const pu = one ? e.units[e.uids[0]] : p, ab = el.querySelector('.armb');
+      if(ab){ const av = plate && pu && !pu.broken ? pu.armor : 0; ab.classList.toggle('on', !!av); ab.innerHTML = av ? `<span class="ic">${IC.armor}</span>${av}` : ''; }
+      let stH;
+      if(u.lst) stH = '';
+      else if(plate){ const arr = (one ? (e.uids.length === 1 ? unitStArr(pu, false, true) : []) : unitStArr(p, false, true)); if(g.list) for(const [k2, u2] of Object.entries(g.units)) if(u2.lst) arr.push(...unitStArr(e.units[k2], true)); stH = capSts(arr, ST_MAX); }
+      else if(one) stH = (e.uids.length === 1 ? unitSts(e.units[e.uids[0]]) : '') + foeSts(e);
+      else stH = capSts(unitStArr(p), ST_MAX_BODY) + tied;
+      el.querySelector('.sts').innerHTML = stH;
       if(u.spr){ const sp = document.querySelector(`.foe.us[data-f="${e.i}"][data-u="${k}"]`); if(sp){ sp.classList.toggle('dead', broken); sp.classList.toggle('tgt', isT); } }
       if(u.pt){
         const pe = document.querySelector(`.upt[data-f="${e.i}"][data-u="${k}"]`), ln = document.querySelector(`[data-ul="${e.i}.${k}"]`);

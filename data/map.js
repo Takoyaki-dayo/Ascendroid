@@ -4,8 +4,9 @@
 //   fill: 部屋2〜(最後の1つ前)の中身の合計(3列ぶん)。列ごとの性格(道)は 0.21.0 でなくした
 //   last: 最後の部屋(ボスの手前)。全部の道で同じ
 //   scale: 敵の強さの倍率。hp は耐久と回復、d は攻撃・ガード・装甲・構えの値
-//   tiers: 通常戦に出る遭遇の段。[弱い組, 強い組]。警戒度が strong 以上なら強い組から選ぶ(0.20.0)
-//   boss: ボスの遭遇 / strong: 強い組に切り替わる警戒度
+//   pools(0.23.0、仮): 通常戦に出る遭遇の組。警戒度が at 以上のうちいちばん後の組から選ぶ。
+//     工場がこちらに気付くほど、持ち場の機械から、こちらを追うための機械へ入れ替わっていく(猟犬は追跡の組)
+//   boss: ボスの遭遇
 //   エリア2・3 の敵は今は仮(エリア1 の敵の強化版)。名前も仮
 // 部屋1は必ず通常戦、最後は last。部屋の種類:
 //   battle 通常戦 / elite エリート / rest 整備 / shop ショップ / event イベント / duct 保守通路(何も起きないが警戒が下がる)
@@ -26,9 +27,17 @@
 //   part 'random' でパーツの候補を出す / defrag カードを1枚消す / alert 警戒のゲージの増減
 window.DATA = window.DATA || {};
 DATA.areas = [
-  {id:'a1', rooms:8, transfers:[2, 4, 6], last:'rest', fill:{battle:8, elite:3, event:3, shop:2, rest:1, duct:1}, scale:{hp:1, d:1},       tiers:[[1], [1, 2]], strong:3, boss:'boss'},
-  {id:'a2', rooms:8, transfers:[2, 4, 6], last:'rest', fill:{battle:8, elite:3, event:3, shop:2, rest:1, duct:1}, scale:{hp:1, d:1},       tiers:[[1, 2], [2]], strong:6, boss:'boss2'},
-  {id:'a3', rooms:8, transfers:[2, 4, 6], last:'rest', fill:{battle:8, elite:3, event:3, shop:2, rest:1, duct:1}, scale:{hp:1.05, d:1},    tiers:[[2], [2]],    strong:9, boss:'boss3'},
+  {id:'a1', rooms:8, transfers:[2, 4, 6], last:'rest', fill:{battle:8, elite:3, event:3, shop:2, rest:1, duct:1}, scale:{hp:1, d:1}, boss:'boss',
+    pools:[{at:1, enc:['n_guard', 'n_scout', 'n_def', 'n_scav', 'n_crush']},
+           {at:2, enc:['n_scan', 'n_swarm', 'n_clock', 'n_weld', 'n_twin', 'n_crush']},
+           {at:3, enc:['n_hound', 'n_proc', 'n_accel', 'n_bomb', 'n_squad', 'n_net']}]},
+  {id:'a2', rooms:8, transfers:[2, 4, 6], last:'rest', fill:{battle:8, elite:3, event:3, shop:2, rest:1, duct:1}, scale:{hp:1, d:1}, boss:'boss2',
+    pools:[{at:1, enc:['n_scan', 'n_swarm', 'n_clock', 'n_weld', 'n_twin', 'n_crush']},
+           {at:5, enc:['n_proc', 'n_accel', 'n_bomb', 'n_squad', 'n_net', 'n_clock', 'n_weld']},
+           {at:6, enc:['n_hound', 'n_proc', 'n_bomb', 'n_squad', 'n_net', 'n_weld']}]},
+  {id:'a3', rooms:8, transfers:[2, 4, 6], last:'rest', fill:{battle:8, elite:3, event:3, shop:2, rest:1, duct:1}, scale:{hp:1.05, d:1}, boss:'boss3',
+    pools:[{at:1, enc:['n_proc', 'n_accel', 'n_bomb', 'n_squad', 'n_net', 'n_clock', 'n_weld']},
+           {at:9, enc:['n_hound', 'n_squad', 'n_bomb', 'n_net', 'n_proc']}]},
 ];
 DATA.transit = [
   {id:'lift',  heal:0.5, choices:[{fx:{repair:true}}, {fx:{card:'rare'}}, {fx:{scrap:40}}]},

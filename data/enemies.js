@@ -26,7 +26,10 @@
 //   react: 反応する。コスト min 以上のカードを使い始めると、1サイクル後に撃つ {min, d, p}
 //   sync: 連携する。連携を持つ敵が同じサイクルに攻撃すると、それぞれダメージ+sync
 //   pool: 倒したときの学習で出るカード候補
-// encounters: 遭遇。敵は常に1体(0.15.0 から)。fam は系統、tier 1 は序盤から、2 は部屋3以降。elite / boss は特別な部屋
+//   (0.23.0) steal: スクラップを盗む(撃破すると取り戻す) / eat: 手札のいちばんコストの高いカードを飲み込む(撃破すると捨て札に戻る)
+//     rebuild: 破壊されたユニットを1つ、耐久 rebuild で直す(なければ自分を rebuild の半分回復) / flee: 戦闘から逃げる(報酬のスクラップなし)
+//   敵のひとこと(0.23.0): text/enemies.csv の 敵.say.start(戦闘の始め)・敵.say.pat:番号(その行動のとき)・敵.say.anger(定刻の敵がディレイを受けたとき)
+// encounters: 遭遇。敵は常に1体(0.15.0 から)。fam は系統。どの通常戦がどこで出るかは data/map.js の areas の pools(警戒度ごと)。elite / boss は特別な部屋
 window.DATA = window.DATA || {};
 DATA.foes = {
   drone:    {kind:'drone', hp:75, start:4, ai:'rand',
@@ -80,6 +83,30 @@ DATA.foes = {
     units:{core:{hp:96, vital:true, core:true, icon:'core', armor:10, at:[0, 56], pt:[31, 31]}, gun:{hp:48, icon:'gun', at:[-124, -34], pt:[-4, 16]}, mg:{hp:29, icon:'gun', at:[110, -50], pt:[49, 8]}, legs:{hp:48, icon:'leg', at:[-118, 24], pt:[9, 50]}},
     pat:[{by:'mg', d:3, hits:3, dl:4, p:'calc'}, {by:'legs', d:10, dl:5, p:'mob', guard:{w:3, s:10}}, {by:'mg', d:3, hits:3, dl:4, p:'out'}, {by:'gun', d:24, dl:6, p:'dur', ch:true, wind:{w:4, poise:14}, rec:3}, {by:'core', d:0, dl:4, armor:6}],
     pool:['blow','emp','storm','wall']},
+  // 0.23.0: 警戒度のプールに合わせて足した、性格のはっきりした敵(名前は仮)
+  // 拾い屋: スクラップを盗んで逃げる。逃げる行動は不安定(JUSTで止まる)
+  scav:     {kind:'scav', hp:46, start:2, passives:[{k:'loot'}],
+    pat:[{d:3, dl:3, p:'arm', steal:8}, {d:3, dl:3, p:'mob', steal:8}, {d:3, dl:3, p:'arm', steal:8}, {d:0, dl:4, flee:true, ch:true}],
+    pool:['flick','reload','coil','scan']},
+  // 圧縮機: 手札のいちばん重いカードを飲み込む。体勢を崩せば止まる。倒すと吐き出す
+  crusher:  {kind:'crusher', hp:82, start:4, passives:[{k:'hoard'}],
+    pat:[{d:5, dl:4, p:'dur'}, {d:0, dl:5, eat:1, wind:{w:3, poise:10}}, {d:11, dl:5, p:'out', rec:2}],
+    pool:['wall','blow','reload','backflow']},
+  // 工程管理機: 4サイクルごとに必ず動く。ディレイが効かず、遅らせようとすると怒る(増幅)
+  clock:    {kind:'clock', hp:80, start:4, passives:[{k:'punctual', n:1}],
+    pat:[{d:5, dl:4, p:'calc'}, {d:5, dl:4, p:'arm'}, {d:5, dl:4, p:'mob'}, {d:16, dl:4, p:'dur', ch:true}],
+    pool:['parry','overclock','rapid','crackshot']},
+  // 溶接機: 壊した腕を直してしまう。直す行動は体勢で止められる
+  welder:   {kind:'welder', start:4, look:{s:1.15, at:[0, -6]},
+    units:{core:{hp:72, vital:true, core:true, icon:'core', at:[0, 58], pt:[32, 32]}, torch:{hp:26, icon:'arm', at:[-112, -34], pt:[6, 30]}, clamp:{hp:30, icon:'arm', at:[-108, 30], pt:[12, 49]}},
+    pat:[{by:'clamp', d:5, dl:4, p:'mob', guard:{w:2, s:6}}, {by:'torch', d:9, dl:5, p:'arm'}, {by:'core', d:0, dl:5, rebuild:20, wind:{w:3, poise:10}}, {by:'torch', d:9, dl:5, p:'out'}],
+    pool:['parry','wall','slash','coil']},
+  // 猟犬: 2頭の群れ。迷う(入れ替え・待機)と詰めてくる。片方を倒すと残りが逆上する
+  hound:    {kind:null, start:3,
+    units:{h1:{hp:40, vital:true, icon:'leg', spr:'hound', s:.9, at:[-86, -18]}, h2:{hp:40, vital:true, icon:'leg', spr:'hound', s:.9, at:[84, 8]}},
+    passives:[{k:'pursuit', n:1}, {k:'frenzy', n:2}],
+    pat:[{by:'h1', d:6, dl:3, p:'mob'}, {by:'h2', d:6, dl:3, p:'out'}, {by:'h1', d:4, hits:3, dl:4, p:'arm'}, {by:'h2', d:4, hits:3, dl:4, p:'dur'}],
+    pool:['flick','rapid','emp','storm']},
   warden:   {kind:'warden', start:5, look:{s:1.25, at:[0, -8]},
     units:{core:{hp:170, vital:true, core:true, icon:'core', at:[0, 60], pt:[30, 40]}, eye:{hp:38, icon:'eye', at:[104, -44], pt:[30, 16]}}, react:{min:6, d:10, p:'calc'},
     pat:[{d:10, dl:6, p:'calc'}, {d:10, dl:4, p:'arm'}, {d:0, dl:5, heal:15, wind:{w:4, poise:15}}, {d:34, dl:9, p:'dur', ch:true, wind:{w:4, poise:15}, rec:3}],
@@ -88,17 +115,22 @@ DATA.foes = {
 };
 
 DATA.encounters = {
-  n_guard:{fam:'警備', tier:1, foes:['drone']},
-  n_scout:{fam:'斥候', tier:1, foes:['scout']},
-  n_def:  {fam:'防衛', tier:1, foes:['turret']},
-  n_scan: {fam:'走査', tier:1, foes:['scanner']},
-  n_swarm:{fam:'群体', tier:1, foes:['swarm']},
-  n_net:  {fam:'電脳', tier:2, foes:['hacker']},
-  n_proc: {fam:'処理', tier:2, foes:['exec']},
-  n_accel:{fam:'暴走', tier:2, foes:['accel']},
-  n_twin: {fam:'作業', tier:2, foes:['twin']},
-  n_bomb: {fam:'自爆', tier:2, foes:['bomber']},
-  n_squad:{fam:'小隊', tier:2, foes:['squad']},
+  n_guard:{fam:'警備', foes:['drone']},
+  n_scout:{fam:'斥候', foes:['scout']},
+  n_def:  {fam:'防衛', foes:['turret']},
+  n_scan: {fam:'走査', foes:['scanner']},
+  n_swarm:{fam:'群体', foes:['swarm']},
+  n_net:  {fam:'電脳', foes:['hacker']},
+  n_proc: {fam:'処理', foes:['exec']},
+  n_accel:{fam:'暴走', foes:['accel']},
+  n_twin: {fam:'作業', foes:['twin']},
+  n_bomb: {fam:'自爆', foes:['bomber']},
+  n_squad:{fam:'小隊', foes:['squad']},
+  n_scav: {fam:'屑拾い', foes:['scav']},
+  n_crush:{fam:'廃棄', foes:['crusher']},
+  n_clock:{fam:'工程', foes:['clock']},
+  n_weld: {fam:'修繕', foes:['welder']},
+  n_hound:{fam:'追跡', foes:['hound']},
   e_proc: {fam:'処理', elite:true, foes:['heavyExec']},
   e_def:  {fam:'防衛', elite:true, foes:['turretE']},
   e_net:  {fam:'電脳', elite:true, foes:['hackerE']},

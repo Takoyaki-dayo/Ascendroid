@@ -62,6 +62,7 @@ function apply(D, T){
     else if(where === 'react' && f.react) f.react.n = n;
     else if(where === 'unit' && f.units && f.units[i]) f.units[i].name = n;
     else if(where === 'passive') (f.pname = f.pname || {})[i] = n; // 番号は passives の何番目か。phase は段階変化の名前
+    else if(where === 'say') (f.say = f.say || {})[i] = n; // 敵のひとこと(0.23.0): start / pat:番号 / phase:番号 / anger
     else if(where === 'broke' && f.broke){ const [uid, j] = i.split(':'); if(f.broke[uid] && f.broke[uid][+j]) f.broke[uid][+j].n = n; }
   }
   for(const e of [...(D.events || []), ...(D.transit || [])]){ const t = T.events[e.id]; if(!t) continue; e.title = t.title; e.text = t.text; t.choices.forEach((c, i) => { if(e.choices[i]) Object.assign(e.choices[i], c); }); }

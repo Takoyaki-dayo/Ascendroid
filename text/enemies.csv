@@ -108,3 +108,47 @@ warden.phase.3,照準域,耐久50%未満の行動4
 warden.phase.4,報復態勢,耐久50%未満の行動5
 warden.phase.5,消去プロトコル,耐久50%未満の行動6
 warden.passive.phase,非常態勢,パッシブ(耐久が減ると行動が変わる)
+scav,拾い屋,名前
+scav.pat.0,くすねる,行動1
+scav.pat.1,くすねる,行動2
+scav.pat.2,くすねる,行動3
+scav.pat.3,逃げ出す,行動4
+scav.passive.0,盗品,パッシブ1
+scav.say.start,お、まだ動くのか。,ひとこと: 戦闘の始め
+scav.say.pat:0,いただき。,ひとこと: 行動1のとき
+scav.say.pat:3,じゃあな。,ひとこと: 行動4のとき
+crusher,圧縮機,名前
+crusher.pat.0,選別,行動1
+crusher.pat.1,圧縮,行動2
+crusher.pat.2,プレス,行動3
+crusher.passive.0,腹の中,パッシブ1
+crusher.say.start,分別を開始します。,ひとこと: 戦闘の始め
+crusher.say.pat:1,可燃ごみ。,ひとこと: 行動2のとき
+clock,工程管理機,名前
+clock.pat.0,打刻,行動1
+clock.pat.1,打刻,行動2
+clock.pat.2,打刻,行動3
+clock.pat.3,定時処理,行動4
+clock.passive.0,定刻,パッシブ1
+clock.say.start,定刻です。,ひとこと: 戦闘の始め
+clock.say.pat:3,終業時刻です。,ひとこと: 行動4のとき
+clock.say.anger,遅延は認められません。,ひとこと: ディレイを受けたとき
+welder,溶接機,名前
+welder.unit.core,胴体,ユニットの名前
+welder.unit.torch,溶接腕,ユニットの名前
+welder.unit.clamp,挟み腕,ユニットの名前
+welder.pat.0,挟み込み,行動1
+welder.pat.1,溶断,行動2
+welder.pat.2,再溶接,行動3
+welder.pat.3,溶断,行動4
+welder.say.start,壊れてるな。直してやる。,ひとこと: 戦闘の始め
+welder.say.pat:2,よし、直った。,ひとこと: 行動3のとき
+hound,猟犬,名前
+hound.unit.h1,一頭目,ユニットの名前
+hound.unit.h2,二頭目,ユニットの名前
+hound.pat.0,噛みつき,行動1
+hound.pat.1,噛みつき,行動2
+hound.pat.2,食らいつく,行動3
+hound.pat.3,食らいつく,行動4
+hound.passive.0,追跡,パッシブ1
+hound.passive.1,群れ,パッシブ2

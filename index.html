@@ -134,6 +134,17 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 .foe.ejust{animation:fjust .45s ease-out}
 @keyframes fjust{0%{filter:brightness(2) drop-shadow(0 0 10px #b18cff)}30%{transform:translateX(16px) rotate(6deg)}100%{transform:none;filter:none}}
 .foe.dead{opacity:0;transform:translateY(14px) scaleY(.85)}
+/* 0.23.0: 敵のひとこと・逃走・圧縮機の顎 */
+.say{position:absolute;transform:translate(-50%,-100%);max-width:220px;padding:5px 9px 6px;background:rgba(6,10,15,.92);border:1px solid rgba(255,138,156,.55);border-radius:3px;font-size:12px;line-height:1.4;color:#f3e9ec;white-space:nowrap;pointer-events:none;z-index:6;
+  clip-path:inset(0 100% 0 0);animation:sayIn .32s steps(10) forwards,sayOut .3s ease-in 2.1s forwards}
+.say::after{content:"";position:absolute;left:50%;bottom:-5px;width:8px;height:8px;background:inherit;border-right:1px solid rgba(255,138,156,.55);border-bottom:1px solid rgba(255,138,156,.55);transform:translateX(-50%) rotate(45deg)}
+@keyframes sayIn{to{clip-path:inset(0 0 -8px 0)}}
+@keyframes sayOut{to{opacity:0;transform:translate(-50%,-112%)}}
+.foe.fled{opacity:0 !important;transform:translateX(150px) skewX(-12deg);transition:opacity .55s ease-in,transform .55s ease-in;filter:blur(1px)}
+.eu.fled{opacity:0;transition:opacity .4s}
+.sp-jaw{animation:chew 1.1s ease-in-out infinite}
+@keyframes chew{0%,60%,100%{transform:translateY(0)}75%{transform:translateY(-3px)}}
+.sp-flame{transform-box:fill-box;transform-origin:right center}
 .reticle{position:absolute;inset:5% 5% 4% 5%;border:2px solid var(--cy);border-radius:4px;opacity:0;transition:opacity .15s;
   -webkit-mask:linear-gradient(#000 0 0) top left/14px 14px no-repeat,linear-gradient(#000 0 0) top right/14px 14px no-repeat,linear-gradient(#000 0 0) bottom left/14px 14px no-repeat,linear-gradient(#000 0 0) bottom right/14px 14px no-repeat;
   mask:linear-gradient(#000 0 0) top left/14px 14px no-repeat,linear-gradient(#000 0 0) top right/14px 14px no-repeat,linear-gradient(#000 0 0) bottom left/14px 14px no-repeat,linear-gradient(#000 0 0) bottom right/14px 14px no-repeat}
@@ -395,6 +406,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 .trait-row{display:flex;gap:6px;align-items:center;font-size:10.5px;color:var(--fg2)}
 .trait-row .ic{color:var(--foe2)} .trait-row b{color:var(--fg)}
 .card.src{border-style:dashed}
+.fledmsg{margin:-4px 0 10px;text-align:center;font-size:13px;color:var(--foe2)} .gain .loot{font-family:var(--f-ui, inherit);font-weight:400;font-size:12px;color:var(--fg2);margin-left:8px} .gain .loot b{color:var(--fg);font-family:var(--f-num)}
 .gain{display:flex;align-items:center;gap:5px;justify-content:center;font-family:var(--f-num);font-weight:700;font-size:14px;color:var(--fg);margin:0 0 10px}
 .gain .ic svg{width:14px;height:14px}
 .bodyline .ic svg{width:12px;height:12px}
@@ -951,18 +963,29 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 .float.dim{color:var(--fg2);font-size:13px}
 /* ===== 警戒度(0.20.0) ===== */
 :root{--al1:var(--cy); --al2:#ffb84d; --al3:#ff7a59; --al4:var(--foe)}
-.aring{position:relative;display:inline-flex;align-items:center;justify-content:center;--ac:var(--al1)}
-.aring.t2{--ac:var(--al2)} .aring.t3{--ac:var(--al3)} .aring.t4{--ac:var(--al4)}
+.aring{position:relative;display:inline-flex;align-items:center;justify-content:center;flex:none}
 .aring svg{display:block;overflow:visible}
-.aring .bg{fill:none;stroke:#1f3346}
-.aring .fg{fill:none;stroke:var(--ac);filter:drop-shadow(0 0 3px var(--ac));transition:stroke-dasharray .6s cubic-bezier(.2,.8,.2,1)}
-.aring .tk line{stroke:#0a0f15;stroke-width:1.5}
-.aring b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--f-num);font-weight:700;font-size:10px;letter-spacing:-.02em;color:var(--ac)}
-.aring b.long{font-size:8.5px;letter-spacing:-.06em} .aring.big b.long{font-size:20px}
-.aring.big b{font-size:22px;text-shadow:0 0 10px var(--ac)}
-.aring.t4:not(.big) b{animation:alPulse 1.2s ease-in-out infinite}
-@keyframes alPulse{50%{opacity:.55}}
-.mbtn.alb{padding:0 3px;height:32px;border-color:transparent;background:transparent;margin-left:-6px}
+/* 輪は段 I〜X の10区切り(0.23.0)。済んだ段は段ごとの色、今の段はゲージの進み、印はこのエリアで敵の組が変わる段 */
+.aring .sg{fill:none;stroke-linecap:butt}
+.aring .sg.e{stroke:#1a2c3d} .achip .aring .sg.e{stroke:color-mix(in srgb,var(--ac) 22%,#0d1720)}
+.aring .sg.f{filter:drop-shadow(0 0 2px currentColor)}
+.aring .sg.c{stroke:#24394c}
+.aring .bm{stroke:var(--fg2);stroke-width:1.4;stroke-linecap:round}
+.aring .bm.on{stroke:var(--ac)}
+.aring .ai{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--ac)} .aring .ai svg{width:11px;height:11px}
+.aring b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--f-num);font-weight:700;color:var(--ac);font-size:22px;text-shadow:0 0 10px var(--ac)}
+.aring b.long{font-size:18px;letter-spacing:-.04em}
+/* 上の帯のチップ: 輪+ローマ数字。段が上がるほど光が強くなり、VII からは脈打つ */
+.achip{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 10px 0 4px;border:1px solid color-mix(in srgb,var(--ac) 55%,transparent);border-radius:4px;
+  background:linear-gradient(90deg,color-mix(in srgb,var(--ac) 16%,transparent),color-mix(in srgb,var(--ac) 4%,transparent));box-shadow:0 0 10px color-mix(in srgb,var(--ac) 22%,transparent),inset 0 0 8px color-mix(in srgb,var(--ac) 10%,transparent)}
+.t1{--ac:var(--al1)} .t2{--ac:var(--al2)} .t3{--ac:var(--al3)} .t4{--ac:var(--al4)}
+.achip .an{display:flex;flex-direction:column;align-items:flex-start;line-height:1;min-width:30px}
+.achip .an i{font-style:normal;font-size:8.5px;letter-spacing:.14em;color:color-mix(in srgb,var(--ac) 75%,#fff)}
+.achip .an b{font-family:var(--f-num);font-weight:700;font-size:16px;letter-spacing:.02em;color:var(--ac);text-shadow:0 0 8px color-mix(in srgb,var(--ac) 60%,transparent);margin-top:1px}
+.achip.t3,.achip.t4{animation:alGlow 1.6s ease-in-out infinite}
+.achip.t4{animation-duration:.9s}
+@keyframes alGlow{50%{box-shadow:0 0 18px color-mix(in srgb,var(--ac) 55%,transparent),inset 0 0 12px color-mix(in srgb,var(--ac) 22%,transparent)}}
+.mbtn.alb{padding:0;height:32px;border-color:transparent;background:transparent;margin-left:-2px}
 .alv{display:flex;align-items:center;gap:16px;margin:0 0 10px}
 .adesc{margin:0 0 4px;font-size:11.5px;line-height:1.6;color:var(--fg2)} .anext{margin:0;font-family:var(--f-num);font-size:12px;font-weight:700;color:var(--fg)}
 .aeff{list-style:none;margin:0 0 10px;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:5px 14px}
@@ -978,6 +1001,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 .rs-still.duct .rs-glyph{color:#8fc6d9}
 .rs-heal.al{color:var(--cy)}
 .abanner.al i{color:var(--al2)} .abanner.al.t3 i{color:var(--al3)} .abanner.al.t4 i{color:var(--al4)}
+.abanner.al i.pu{margin-top:4px;font-size:12px;letter-spacing:.12em;font-family:inherit;color:var(--fg)}
 .abanner.al b{text-shadow:0 0 14px rgba(255,184,77,.6)}
 .abanner.al{background:linear-gradient(90deg,transparent,rgba(30,12,8,.92) 25%,rgba(30,12,8,.92) 75%,transparent)}
 @media (prefers-reduced-motion:reduce){#stage *,#stage *::before,#stage *::after{transition:none!important;animation:none!important}}
@@ -1062,7 +1086,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 <script src="data/text.js"></script>
 <script src="js/engine.js"></script>
 <script>
-const APP_VERSION = '0.22.1';
+const APP_VERSION = '0.23.0';
 const $ = s => document.querySelector(s);
 const EN = ENGINE, RULE = EN.RULE;
 const VIEW = RULE.view, NOW = 170, PX = 34, xs = c => NOW + c * PX, STRIP_Y = 150, SWIFT_VIS = 3;
@@ -1108,6 +1132,8 @@ const IC = {
   core:'<svg viewBox="0 0 12 12"><path d="M6 .5L11 3.5V8.5L6 11.5L1 8.5V3.5Z" stroke="currentColor" stroke-width="1.3" fill="none"/><circle cx="6" cy="6" r="1.8" fill="currentColor"/></svg>',
   hit:'<svg viewBox="0 0 14 14"><path d="M2 12L12 2M5 12L12 5M2 9L9 2" stroke="currentColor" stroke-width="1.4" fill="none"/></svg>',
   parry:'<svg viewBox="0 0 16 16"><path d="M8 1.5A6.5 6.5 0 0 1 14.5 8M14 11A6.5 6.5 0 0 1 3 13M1.6 9.5A6.5 6.5 0 0 1 5 2.3" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/><path d="M6 6L10 10M10 6L6 10" stroke="currentColor" stroke-width="1.6"/></svg>',
+  flee:'<svg viewBox="0 0 12 12"><path d="M7 1.5H10.5V10.5H7M1.5 6H7.5M4.8 3.2L7.6 6L4.8 8.8" stroke="currentColor" stroke-width="1.3" fill="none"/></svg>',
+  eat:'<svg viewBox="0 0 12 12"><path d="M2.5 1.5H8.2A2.2 2.2 0 0 0 9.5 5.6V10.5H2.5Z" stroke="currentColor" stroke-width="1.2" fill="none" stroke-linejoin="round"/></svg>',
   clock:'<svg viewBox="0 0 12 12"><circle cx="6" cy="6" r="4.8" stroke="currentColor" stroke-width="1.3" fill="none"/><path d="M6 3.2V6L8 7.3" stroke="currentColor" stroke-width="1.3" fill="none"/></svg>',
   arrow:'<svg viewBox="0 0 24 10" style="width:24px;height:10px"><path d="M1 5H21M17 1L22 5L17 9" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>',
   loop:'<svg viewBox="0 0 24 16" style="width:24px;height:16px"><path d="M2 8A6 6 0 0 0 8 14H16A6 6 0 0 0 16 2H6M9 -1L5 2L9 5" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>',
@@ -1151,6 +1177,12 @@ const SPR = {
   leader:'<svg width="90" height="100" viewBox="0 -4 60 66" aria-hidden="true"><path d="M35 7l5-7" stroke="#4d6578" stroke-width="1.2"/><circle cx="40" cy="0" r="2" fill="#ff4d6a" opacity=".85"/><circle cx="32" cy="12" r="6.5" fill="#152130" stroke="#4d6578" stroke-width="1.2"/><rect x="26" y="10" width="10" height="3" fill="#ff4d6a" opacity=".8"/><path d="M22 20H42L40 42H24Z" fill="#152130" stroke="#4d6578" stroke-width="1.2"/><path d="M27 42l-2 16M37 42l2 16" stroke="#4d6578" stroke-width="3" stroke-linecap="round"/><path d="M23 24l-9-10" stroke="#4d6578" stroke-width="2.5" stroke-linecap="round"/><path d="M41 24l3 12" stroke="#4d6578" stroke-width="2.5" stroke-linecap="round"/></svg>',
   shieldman:'<svg width="90" height="100" viewBox="0 -4 60 66" aria-hidden="true"><circle cx="38" cy="12" r="6" fill="#152130" stroke="#4d6578" stroke-width="1.2"/><rect x="33" y="10" width="9" height="3" fill="#ff4d6a" opacity=".8"/><rect x="30" y="20" width="16" height="21" rx="3" fill="#152130" stroke="#4d6578" stroke-width="1.2"/><path d="M34 41l-2 17M42 41l2 17" stroke="#4d6578" stroke-width="3" stroke-linecap="round"/><path d="M6 16L24 11V53L6 48Z" fill="#152130" stroke="#6f8ea2" stroke-width="1.6" stroke-linejoin="round"/><path d="M11 28H19" stroke="#ff4d6a" stroke-width="2" opacity=".7"/></svg>',
   tank:'<svg width="120" height="100" viewBox="-10 -4 79 66" aria-hidden="true"><path d="M8 38l-6 20M18 38l-2 20M44 38l2 20M54 38l6 20" stroke="#4d6578" stroke-width="3" stroke-linecap="round"/><rect x="2" y="22" width="58" height="17" rx="4" fill="#152130" stroke="#4d6578" stroke-width="1.2"/><rect x="16" y="11" width="26" height="12" rx="3" fill="#152130" stroke="#4d6578" stroke-width="1.2"/><path d="M17 16H-8" stroke="#4d6578" stroke-width="4" stroke-linecap="round"/><rect x="44" y="5" width="9" height="6" rx="1.5" fill="#152130" stroke="#4d6578" stroke-width="1.2"/><path d="M44 8H38" stroke="#4d6578" stroke-width="2"/><circle cx="24" cy="17" r="2.6" fill="#ff4d6a" opacity=".85"/><path d="M8 30H54" stroke="#253545" stroke-width="2"/></svg>',
+  // 0.23.0 の敵(性格を見た目に出す: 色の違うランプ、動く針・炎・顎)
+  scav:'<svg width="90" height="100" viewBox="0 -4 60 66" aria-hidden="true"><path d="M26 46l-5 12M34 46l3 12" stroke="#4d6578" stroke-width="2" stroke-linecap="round"/><path d="M35 13l1-6M41 12l3-5M47 15l4-3" stroke="#6f8ea2" stroke-width="1.5" stroke-linecap="round"/><ellipse cx="41" cy="28" rx="14" ry="15" fill="#1b2a38" stroke="#4d6578" stroke-width="1.2"/><rect x="43" y="22" width="7" height="6" fill="none" stroke="#6f8ea2" stroke-width="1" stroke-dasharray="1.5 1.2"/><path d="M33 36l6 2M46 34l3 4" stroke="#2c4152" stroke-width="1.2"/><rect x="17" y="27" width="20" height="19" rx="5" fill="#152130" stroke="#4d6578" stroke-width="1.2"/><path d="M23 28L35 16" stroke="#4d6578" stroke-width="1.6"/><path d="M18 39l-9 3l-3-2M9 42l-2 3" stroke="#4d6578" stroke-width="1.8" stroke-linecap="round"/><path d="M16 23l-3-8l-5-2" stroke="#4d6578" stroke-width="1.2" fill="none"/><circle cx="8" cy="13" r="1.6" fill="#ffd24d" opacity=".8"/><rect x="8" y="22" width="15" height="11" rx="4" fill="#152130" stroke="#4d6578" stroke-width="1.2"/><circle cx="13" cy="27.5" r="3.2" fill="#ffd24d"/><circle cx="13" cy="27.5" r="1.2" fill="#152130"/><circle cx="19.5" cy="27" r="1.1" fill="#ffd24d" opacity=".5"/></svg>',
+  crusher:'<svg width="90" height="100" viewBox="0 -4 60 66" aria-hidden="true"><rect x="3" y="50" width="54" height="9" rx="4.5" fill="#101a24" stroke="#4d6578" stroke-width="1.2"/><circle cx="9" cy="54.5" r="2.4" fill="none" stroke="#4d6578" stroke-width="1"/><circle cx="18" cy="54.5" r="2.4" fill="none" stroke="#4d6578" stroke-width="1"/><circle cx="27" cy="54.5" r="2.4" fill="none" stroke="#4d6578" stroke-width="1"/><circle cx="36" cy="54.5" r="2.4" fill="none" stroke="#4d6578" stroke-width="1"/><circle cx="45" cy="54.5" r="2.4" fill="none" stroke="#4d6578" stroke-width="1"/><circle cx="51" cy="54.5" r="2.4" fill="none" stroke="#4d6578" stroke-width="1"/><rect x="38" y="2" width="11" height="13" fill="#152130" stroke="#4d6578" stroke-width="1.2"/><path d="M40 6h7" stroke="#2c4152" stroke-width="1.5"/><rect x="5" y="14" width="50" height="37" rx="3" fill="#152130" stroke="#4d6578" stroke-width="1.2"/><clipPath id="crhz"><rect x="5" y="14" width="50" height="5"/></clipPath><g clip-path="url(#crhz)"><path d="M4 14h3l-3 5h-3z" fill="#ffb84d" opacity=".75"/><path d="M10 14h3l-3 5h-3z" fill="#ffb84d" opacity=".75"/><path d="M16 14h3l-3 5h-3z" fill="#ffb84d" opacity=".75"/><path d="M22 14h3l-3 5h-3z" fill="#ffb84d" opacity=".75"/><path d="M28 14h3l-3 5h-3z" fill="#ffb84d" opacity=".75"/><path d="M34 14h3l-3 5h-3z" fill="#ffb84d" opacity=".75"/><path d="M40 14h3l-3 5h-3z" fill="#ffb84d" opacity=".75"/><path d="M46 14h3l-3 5h-3z" fill="#ffb84d" opacity=".75"/><path d="M52 14h3l-3 5h-3z" fill="#ffb84d" opacity=".75"/></g><rect x="9" y="26" width="42" height="16" rx="2" fill="#06090d" stroke="#2c4152" stroke-width="1"/><rect x="11" y="31" width="38" height="6" fill="#ff7a59" opacity=".28"/><g><path d="M11 27l2.5 4l2.5-4z" fill="#c9d6e0"/><path d="M16 27l2.5 4l2.5-4z" fill="#c9d6e0"/><path d="M21 27l2.5 4l2.5-4z" fill="#c9d6e0"/><path d="M26 27l2.5 4l2.5-4z" fill="#c9d6e0"/><path d="M31 27l2.5 4l2.5-4z" fill="#c9d6e0"/><path d="M36 27l2.5 4l2.5-4z" fill="#c9d6e0"/><path d="M41 27l2.5 4l2.5-4z" fill="#c9d6e0"/><path d="M46 27l2.5 4l2.5-4z" fill="#c9d6e0"/></g><g class="sp-jaw"><path d="M11 41l2.5-4l2.5 4z" fill="#c9d6e0"/><path d="M16 41l2.5-4l2.5 4z" fill="#c9d6e0"/><path d="M21 41l2.5-4l2.5 4z" fill="#c9d6e0"/><path d="M26 41l2.5-4l2.5 4z" fill="#c9d6e0"/><path d="M31 41l2.5-4l2.5 4z" fill="#c9d6e0"/><path d="M36 41l2.5-4l2.5 4z" fill="#c9d6e0"/><path d="M41 41l2.5-4l2.5 4z" fill="#c9d6e0"/><path d="M46 41l2.5-4l2.5 4z" fill="#c9d6e0"/></g><rect x="11" y="21" width="7" height="2.2" fill="#ff7a59"/><rect x="42" y="21" width="7" height="2.2" fill="#ff7a59"/><path d="M5 46h50" stroke="#2c4152" stroke-width="1"/></svg>',
+  clock:'<svg width="90" height="100" viewBox="0 -4 60 66" aria-hidden="true"><path d="M22 50v8M38 50v8M18 58h24" stroke="#4d6578" stroke-width="2.4" stroke-linecap="round"/><path d="M30 8V2" stroke="#4d6578" stroke-width="1.4"/><circle cx="30" cy="1.5" r="2" fill="#8fe3ff"/><rect x="16" y="8" width="28" height="44" rx="3" fill="#152130" stroke="#4d6578" stroke-width="1.2"/><path d="M16 26l-7 7v8" stroke="#4d6578" stroke-width="2.2" fill="none" stroke-linecap="round"/><rect x="5" y="41" width="8" height="4" rx="1" fill="#152130" stroke="#8fe3ff" stroke-width="1"/><path d="M44 26l7 7v8" stroke="#4d6578" stroke-width="2.2" fill="none" stroke-linecap="round"/><rect x="47" y="41" width="8" height="4" rx="1" fill="#152130" stroke="#4d6578" stroke-width="1.2"/><circle cx="30" cy="21" r="10.5" fill="#0b1520" stroke="#8fe3ff" stroke-width="1.1"/><line x1="30.00" y1="12.80" x2="30.00" y2="11.00" stroke="#8fe3ff" stroke-width="1.1"/><line x1="34.10" y1="13.90" x2="34.70" y2="12.86" stroke="#8fe3ff" stroke-width="0.6"/><line x1="37.10" y1="16.90" x2="38.14" y2="16.30" stroke="#8fe3ff" stroke-width="0.6"/><line x1="38.20" y1="21.00" x2="40.00" y2="21.00" stroke="#8fe3ff" stroke-width="1.1"/><line x1="37.10" y1="25.10" x2="38.14" y2="25.70" stroke="#8fe3ff" stroke-width="0.6"/><line x1="34.10" y1="28.10" x2="34.70" y2="29.14" stroke="#8fe3ff" stroke-width="0.6"/><line x1="30.00" y1="29.20" x2="30.00" y2="31.00" stroke="#8fe3ff" stroke-width="1.1"/><line x1="25.90" y1="28.10" x2="25.30" y2="29.14" stroke="#8fe3ff" stroke-width="0.6"/><line x1="22.90" y1="25.10" x2="21.86" y2="25.70" stroke="#8fe3ff" stroke-width="0.6"/><line x1="21.80" y1="21.00" x2="20.00" y2="21.00" stroke="#8fe3ff" stroke-width="1.1"/><line x1="22.90" y1="16.90" x2="21.86" y2="16.30" stroke="#8fe3ff" stroke-width="0.6"/><line x1="25.90" y1="13.90" x2="25.30" y2="12.86" stroke="#8fe3ff" stroke-width="0.6"/><line x1="30" y1="21" x2="30" y2="15" stroke="#c9d6e0" stroke-width="1.4" stroke-linecap="round"/><line x1="30" y1="21" x2="30" y2="12.5" stroke="#8fe3ff" stroke-width="1" stroke-linecap="round"><animateTransform attributeName="transform" type="rotate" values="0 30 21;30 30 21;60 30 21;90 30 21;120 30 21;150 30 21;180 30 21;210 30 21;240 30 21;270 30 21;300 30 21;330 30 21" calcMode="discrete" dur="12s" repeatCount="indefinite"/></line><circle cx="30" cy="21" r="1.3" fill="#8fe3ff"/><rect x="23" y="35" width="14" height="14" rx="1.5" fill="#0b1520" stroke="#2c4152" stroke-width="1"/><g><path d="M30 35v9" stroke="#6f8ea2" stroke-width="1"/><circle cx="30" cy="45" r="2.2" fill="#8fe3ff" opacity=".8"/><animateTransform attributeName="transform" type="rotate" values="-16 30 35;16 30 35;-16 30 35" keyTimes="0;.5;1" calcMode="spline" keySplines=".45 0 .55 1;.45 0 .55 1" dur="2s" repeatCount="indefinite"/></g></svg>',
+  welder:'<svg width="90" height="100" viewBox="0 -4 60 66" aria-hidden="true"><path d="M28 46l-3 12M40 46l3 12" stroke="#4d6578" stroke-width="3" stroke-linecap="round"/><rect x="43" y="16" width="9" height="22" rx="3.5" fill="#152130" stroke="#4d6578" stroke-width="1.2"/><path d="M47 38q2 6-6 8" fill="none" stroke="#6f8ea2" stroke-width="1.2"/><path d="M20 22h22l3 24H18z" fill="#152130" stroke="#4d6578" stroke-width="1.2" stroke-linejoin="round"/><rect x="22" y="6" width="18" height="15" rx="3" fill="#152130" stroke="#4d6578" stroke-width="1.2"/><rect x="24" y="11" width="14" height="3.4" fill="#38d3ff"/><rect x="24" y="11" width="14" height="3.4" fill="#38d3ff" opacity=".5"><animate attributeName="opacity" values=".5;.1;.6;.3;.5" dur="1.6s" repeatCount="indefinite"/></rect><path d="M22 28L14 33L11 31" stroke="#4d6578" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/><rect x="7" y="28.5" width="6" height="4" rx="1" fill="#152130" stroke="#6f8ea2" stroke-width="1"/><g class="sp-flame"><path d="M7 30.5q-4-1-6-4q1 3-1 4q2 1 1 4q2-3 6-4z" fill="#ff9a3c"/><path d="M6 30.5q-2.5 0-3.5-1.5q0 1.5-1 1.5q1 .5 1 1.5q1-1.5 3.5-1.5z" fill="#fff1c9"/><animate attributeName="opacity" values="1;.65;1;.8;1" dur=".45s" repeatCount="indefinite"/></g><path d="M23 39L15 46" stroke="#4d6578" stroke-width="3" stroke-linecap="round"/><path d="M15 46l-5-2M15 46l-3 5M10 44l-1 3M12 51l-3-1" stroke="#6f8ea2" stroke-width="1.8" stroke-linecap="round"/></svg>',
+  hound:'<svg width="90" height="100" viewBox="0 -4 60 66" aria-hidden="true"><path d="M22 41l-4 9l-4 1M28 42l0 9M41 41l3 9M47 38l5 10l-3 1" stroke="#4d6578" stroke-width="2.4" stroke-linecap="round" fill="none"/><path d="M51 31l8-5" stroke="#4d6578" stroke-width="1.8" stroke-linecap="round"/><path d="M28 25l2-6l2 6M35 24l2-6l2 6M42 25l2-5l2 5" fill="none" stroke="#6f8ea2" stroke-width="1.2"/><path d="M18 31q9-9 27-5l7 6q-4 9-14 9H24q-8-1-6-10z" fill="#152130" stroke="#4d6578" stroke-width="1.2" stroke-linejoin="round"/><path d="M20 29l-13 1l-5 5l7 2l12-2z" fill="#152130" stroke="#4d6578" stroke-width="1.2" stroke-linejoin="round"/><path d="M19 27l2-7l3 6" fill="#152130" stroke="#4d6578" stroke-width="1.2"/><path d="M7 36.5l8 0.5" stroke="#2c4152" stroke-width="1"/><path d="M7 32.5l9-1" stroke="#ff4d6a" stroke-width="1.6" stroke-linecap="round"/><path d="M3 35.5h4" stroke="#2c4152" stroke-width="1"/></svg>',
   warden:'<svg width="90" height="100" viewBox="0 -4 60 66" aria-hidden="true"><rect x="19" y="0" width="22" height="58" rx="4" fill="#152130" stroke="#4d6578" stroke-width="1.2"/><rect x="6" y="14" width="10" height="30" rx="2" fill="#152130" stroke="#4d6578" stroke-width="1.2"/><rect x="44" y="14" width="10" height="30" rx="2" fill="#152130" stroke="#4d6578" stroke-width="1.2"/><circle cx="30" cy="16" r="5" fill="#ff4d6a" opacity=".85"/><path d="M24 30h12M24 36h12M24 42h12" stroke="#253545" stroke-width="2"/></svg>',
 };
 
@@ -1378,7 +1410,7 @@ function passives(e){
   for(const k of Object.keys(f.broke || {})) out.push({id: 'broke-' + k, name: nm['broke.' + k] || '', k: 'broke', p: {unit: k}, on: !!e.units[k] && !e.units[k].broken});
   return out;
 }
-const PAS_IC = {command: IC.pt_lead, frenzy: IC.frenzy, react: IC.eye, phase: IC.phase, broke: IC.phase};
+const PAS_IC = {command: IC.pt_lead, frenzy: IC.frenzy, react: IC.eye, phase: IC.phase, broke: IC.phase, punctual: IC.clock, pursuit: IC.haste, loot: IC.scrap, hoard: IC.eat};
 function pasText(e, x){
   const un = k => e.units[k] ? e.units[k].name : k;
   if(x.k === 'command') return fillUi('pas.command', {unit: un(x.p.unit), n: x.p.n});
@@ -1386,13 +1418,14 @@ function pasText(e, x){
   if(x.k === 'react') return fillUi('pas.react', {min: x.p.min, part: SLOT_BY[x.p.p].fn, d: x.p.d + (e.str || 0)});
   if(x.k === 'phase') return fillUi('pas.phase', {at: Math.round(x.p.at * 100)});
   if(x.k === 'broke') return fillUi('pas.broke', {unit: un(x.p.unit)});
+  if(['punctual', 'pursuit', 'loot', 'hoard'].includes(x.k)) return fillUi('pas.' + x.k, {n: x.p.n || 1});
   return '';
 }
 // 画面の小さな札: ユニットの状態(クラック・装甲・隙)と、敵全体の状態(増幅・加速・パッシブ)
 function unitSts(p){ return (p.crack ? `<span class="st crack"><span class="ic">${IC.crack}</span>${p.crack}</span>` : '') + (p.armor ? `<span class="st arm"><span class="ic">${IC.armor}</span>${p.armor}</span>` : '') + (p.vuln > 1 ? `<span class="st swf"><span class="ic">${IC.vuln}</span>${p.vuln - 1}</span>` : ''); }
 function foeSts(e){
   let s = '';
-  for(const x of passives(e)){ if(x.k === 'phase' || x.k === 'broke') continue; s += `<span class="st trait${x.on ? '' : ' off'}${x.k === 'react' && PV && PV.react.has(e.i) ? ' on' : ''}"><span class="ic">${PAS_IC[x.k]}</span>${x.k === 'react' ? x.p.min : ''}</span>`; }
+  for(const x of passives(e)){ if(x.k === 'phase' || x.k === 'broke') continue; const n = x.k === 'react' ? x.p.min : x.k === 'loot' ? (e.loot || '') : x.k === 'hoard' ? ((e.eaten || []).length || '') : ''; s += `<span class="st trait${x.on ? '' : ' off'}${x.k === 'react' && PV && PV.react.has(e.i) ? ' on' : ''}"><span class="ic">${PAS_IC[x.k]}</span>${n}</span>`; }
   if(e.sync) s += `<span class="st trait"><span class="ic">${IC.link}</span>${e.sync}</span>`;
   if(e.str) s += `<span class="st str"><span class="ic">${IC.str}</span>${e.str}</span>`;
   if(e.haste) s += `<span class="st str"><span class="ic">${IC.haste}</span>${e.haste}</span>`;
@@ -1514,7 +1547,7 @@ function placeBand(key, x0, x1, y, cls, html){
 const WIN = {wind:'構', guard:'防', counter:'返'};
 // 帯は文字を使わずアイコンと数字で: 体勢(★ ブレイクに要る一撃)・防壁(盾)・反撃(返し矢印)・隙(照準)
 const WIC = {wind:IC.poise, guard:IC.block, counter:IC.counterIc};
-function moveIcon(a){ return a.buff ? `<span class="ic">${IC.str}</span><b>${a.buff}</b>` : a.armor ? `<span class="ic">${IC.armor}</span><b>${a.armor}</b>` : a.heal ? `<b>+${a.heal}</b>` : a.crack ? `<span class="ic">${IC.crack}</span>` : a.noise ? `<span class="ic">${IC.junk}</span>` : a.zone ? `<span class="ic">${IC.zone}</span>` : a.haste ? `<span class="ic">${IC.swift}</span>` : a.summon ? `<b>援</b>` : a.guard ? `<span class="ic">${IC.block}</span>` : '<b>·</b>'; }
+function moveIcon(a){ return a.flee ? `<span class="ic">${IC.flee}</span>` : a.eat ? `<span class="ic">${IC.eat}</span>` : a.rebuild ? `<span class="ic">${IC.rest}</span>` : a.buff ? `<span class="ic">${IC.str}</span><b>${a.buff}</b>` : a.armor ? `<span class="ic">${IC.armor}</span><b>${a.armor}</b>` : a.heal ? `<b>+${a.heal}</b>` : a.crack ? `<span class="ic">${IC.crack}</span>` : a.noise ? `<span class="ic">${IC.junk}</span>` : a.zone ? `<span class="ic">${IC.zone}</span>` : a.haste ? `<span class="ic">${IC.swift}</span>` : a.summon ? `<b>援</b>` : a.guard ? `<span class="ic">${IC.block}</span>` : '<b>·</b>'; }
 function renderMarks(){
   const b = S.b, seen = new Set(), seenB = new Set(), syn = syncTimes(), pv = PV && !busy ? PV : null;
   for(const e of b.foes){
@@ -1688,6 +1721,34 @@ function renderInner(){
 function fxEl(cls, x, y, css){ const el = document.createElement('div'); el.className = cls; el.style.left = x + 'px'; el.style.top = y + 'px'; if(css) Object.assign(el.style, css); $('#fx').appendChild(el); return el; }
 function floatAt(x, y, text, cls){ const el = document.createElement('div'); el.className = 'float ' + (cls || ''); el.textContent = text; el.style.left = x + 'px'; el.style.top = y + 'px'; $('#floats').appendChild(el); setTimeout(() => el.remove(), 950); }
 function pulse(el, cls, ms){ if(!el) return; el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); setTimeout(() => el.classList.remove(cls), ms); }
+// 敵のひとこと(0.23.0)。text/enemies.csv の 敵.say.*。同じひとことは1戦闘に1回だけ
+function foeSay(i, key){
+  const e = S && S.b && S.b.foes[i]; if(!e) return;
+  const t = (FOES[e.key].say || {})[key]; if(!t) return;
+  e._said = e._said || {}; if(e._said[key]) return; e._said[key] = true;
+  const g = GEOM.get(i); let x, y;
+  if(g && g.main){ const z = sprSize(g.main.kind, g.main.s); x = g.main.x; y = g.main.y - z.h / 2 + 4; }
+  else { const c = foeCenter(i); x = c.x; y = c.y - 64; }
+  for(const old of document.querySelectorAll(`.say[data-f="${i}"]`)) old.remove();
+  const el = document.createElement('div'); el.className = 'say'; el.dataset.f = i; el.textContent = t;
+  el.style.left = Math.max(470, Math.min(800, x)) + 'px'; el.style.top = Math.max(40, y) + 'px';
+  $('#floats').appendChild(el); setTimeout(() => el.remove(), 2500);
+}
+// 盗まれたスクラップが自機から敵へ飛ぶ
+function coinFx(p){
+  for(let k = 0; k < 5; k++){
+    const el = fxEl('shard', DROID.x + 10, DROID.y - 50 + k * 4); el.style.background = '#ffd24d'; el.style.transitionDuration = '.5s';
+    el.getBoundingClientRect();
+    setTimeout(() => { el.style.transform = `translate(${p.x - DROID.x - 10 + (k - 2) * 6}px,${p.y - DROID.y + 40 - k * 6}px) rotate(${k * 70}deg)`; el.style.opacity = '.2'; }, k * 40);
+    setTimeout(() => el.remove(), 640);
+  }
+}
+// 飲み込まれたカードが手札から敵の口へ
+function eatFx(i, cards){
+  const p = foeCenter(i);
+  cards.forEach((cd, n) => { const el = cardEls.get(cd.id); cardEls.delete(cd.id); if(el) setTimeout(() => flyCard(el, p.x - 40, p.y - 20), n * 60); floatAt(p.x, p.y - 74 - n * 18, '《' + CARDS[cd.k].name + '》', 'foe'); });
+}
+function fleeFx(i){ for(const el of document.querySelectorAll(`.foe[data-f="${i}"],.eu[data-f="${i}"],.upt[data-f="${i}"]`)) el.classList.add('fled'); rescan('LOST'); }
 function shake(){ pulse($('#shaker'), 'shake', 300); }
 // 再走査: 敵の予定が変わったことを、タイムラインを光が走って描き直すように見せる
 function rescan(tag){ pulse($('#rescan'), 'go', 640); pulse($('#marks'), 'rescan', 600); pulse($('#screen'), 'rescan', 600); if(tag){ const t = $('#rescanTag'); t.textContent = 'RESCAN\n// ' + tag; pulse(t, 'go', 950); } }
@@ -1764,7 +1825,11 @@ function cardFx(x){
     case 'cancel': floatAt(xs(1), ROWY[x.e] - 20, '×', 'cy'); rescan('VOID'); break;
     case 'shift': floatAt(xs(1), ROWY[x.e] - 20, '!!', 'foe'); rescan('SHIFT'); break;
     case 'crack': { const p = unitCenter(x.e, x.unit); floatAt(p.x + 30, p.y - 30, '+' + x.n, 'foe'); break; }
-    case 'delay': floatAt(xs(2), ROWY[x.e] - 14, x.n > 0 ? '+' + x.n : DATA.kwName.resist, x.n > 0 ? 'cy' : 'dim'); break;
+    case 'delay':
+      if(x.anger){ const p = foeCenter(x.e); floatAt(p.x, p.y - 70, '▲' + x.anger, 'foe'); pulse(foeEl(x.e), 'ehit', 280); foeSay(x.e, 'anger'); }
+      else floatAt(xs(2), ROWY[x.e] - 14, x.n > 0 ? '+' + x.n : DATA.kwName.resist, x.n > 0 ? 'cy' : 'dim');
+      break;
+    case 'spit': { const p = foeCenter(x.e); floatAt(p.x, p.y - 60, '+' + x.cards.length, 'cy'); pulse($('#pileDisc'), 'flash', 360); break; }
     case 'block': floatAt(130, 262, '+' + x.n, ''); break;
     case 'swift': floatAt(150, 262, '+' + x.n, 'cy'); break;
     case 'charge': floatAt(170, 252, '+' + x.n, 'cy'); break;
@@ -1790,6 +1855,11 @@ function hitMeFx(r){
 async function foeFx(i, r){
   const e = S.b.foes[i];
   pulse(unitSpr(i, r.by), 'atk', 270);
+  if(r.mv && !(r.eat && !r.eat.length) && !(r.steal === 0)) foeSay(i, r.mv);
+  if(r.steal){ const p = foeCenter(i); floatAt(p.x - 20, p.y - 60, '−' + r.steal, 'foe'); coinFx(p); }
+  if(r.eat && r.eat.length) eatFx(i, r.eat);
+  if(r.rebuild){ const q = unitCenter(i, r.rebuild); pulse(unitEl(i, r.rebuild), 'flash', 420); sparks(q.x, q.y); floatAt(q.x, q.y - 40, DATA.ui['unit.rebuilt'] || '修', 'foe'); }
+  if(r.flee){ fleeFx(i); }
   const mk = r.react ? markEls.get('r' + i) : markEls.get(r.chainLeft > 0 ? `${i}-${e.seq}-${r.chainLeft}` : `${i}-${e.seq - 1}-0`);
   if(mk) mk.classList.add('fire');
   await sleep(110);
@@ -1941,6 +2011,7 @@ async function execute(){
     b.hand.forEach((cd, n) => { const el = cardEls.get(cd.id); cardEls.delete(cd.id); setTimeout(() => flyCard(el, 20, 340), n * 30); });
   }
   const p = EN.beginAction(S, a);
+  if(p.pursuit) for(const x of p.pursuit){ floatAt(xs(1), ROWY[x.e] - 14, '»' + x.n, 'foe'); pulse(foeEl(x.e), 'atk', 270); }
   $('#droid').classList.add('casting');
   renderAll();
   const g = EN.spendGen(S, p.cost, p.k, p.t, false); let r;
@@ -2060,7 +2131,7 @@ function showMap(){
 }
 function alertBanner(){
   const el = document.createElement('div'); el.className = 'abanner al t' + alTier(alLv());
-  el.innerHTML = `<i>${DATA.ui['alert.up']}</i><b>${DATA.ui.alert} ${ROMAN[alLv() - 1]}</b>`;
+  el.innerHTML = `<i>${DATA.ui['alert.up']}</i><b>${DATA.ui.alert} ${ROMAN[alLv() - 1]}</b>${UI.poolUp ? `<i class="pu">${DATA.ui['alert.poolUp']}</i>` : ''}`; UI.poolUp = false;
   $('#mapScr').appendChild(el); setTimeout(() => el.remove(), 2100);
 }
 function areaBanner(){
@@ -2072,12 +2143,28 @@ function areaBanner(){
 const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
 const alLv = () => EN.alertLevel(S.run);
 const alTier = lv => lv >= 10 ? 4 : lv >= 7 ? 3 : lv >= 4 ? 2 : 1;
-// 輪のゲージ: 外の輪が次の段階までの進み、中がローマ数字
+// 輪(0.23.0): 段 I〜X を10区切りに。済んだ段は段ごとの色で埋め、今の段はゲージの進みだけ埋める。
+// 外側の印は、このエリアで出てくる敵の組が入れ替わる段(data/map.js の pools)
+const ALC = lv => `var(--al${alTier(lv)})`;
+function arcD(r, a0, a1){ const p = a => `${(r * Math.cos(a)).toFixed(2)} ${(r * Math.sin(a)).toFixed(2)}`; return `M${p(a0)}A${r} ${r} 0 ${a1 - a0 > Math.PI ? 1 : 0} 1 ${p(a1)}`; }
+function ringSvg(big){
+  const A = DATA.alert, lv = alLv(), N = A.max, r = big ? 34 : 10.5, w = big ? 7 : 3.6, gap = big ? .07 : .12, sz = (r + w + (big ? 6 : 2)) * 2;
+  const prog = lv >= N ? 1 : ((S.run.alert || 0) % A.per) / A.per;
+  let h = '';
+  for(let j = 0; j < N; j++){
+    const a0 = -Math.PI / 2 + j / N * 2 * Math.PI + gap / 2, a1 = a0 + 2 * Math.PI / N - gap, col = ALC(j + 1);
+    if(j < lv - 1) h += `<path class="sg f" d="${arcD(r, a0, a1)}" stroke="${col}" style="color:${col}" stroke-width="${w}"/>`;
+    else if(j === lv - 1){ h += `<path class="sg c" d="${arcD(r, a0, a1)}" stroke-width="${w}"/>`; if(prog > 0) h += `<path class="sg f" d="${arcD(r, a0, a0 + (a1 - a0) * prog)}" stroke="${col}" style="color:${col}" stroke-width="${w}"/>`; }
+    else h += `<path class="sg e" d="${arcD(r, a0, a1)}" stroke-width="${w}"/>`;
+  }
+  for(const p of AREA().pools || []) if(p.at > 1){ const a = -Math.PI / 2 + (p.at - 1) / N * 2 * Math.PI, r0 = r + w / 2 + (big ? 2 : 1), r1 = r0 + (big ? 5 : 2.6);
+    h += `<line class="bm${lv >= p.at ? ' on' : ''}" x1="${(r0 * Math.cos(a)).toFixed(2)}" y1="${(r0 * Math.sin(a)).toFixed(2)}" x2="${(r1 * Math.cos(a)).toFixed(2)}" y2="${(r1 * Math.sin(a)).toFixed(2)}"${big ? '' : ' stroke-width="1"'}/>`; }
+  return `<svg viewBox="${-sz / 2} ${-sz / 2} ${sz} ${sz}" width="${sz}" height="${sz}">${h}</svg>`;
+}
 function alertRing(big){
-  const A = DATA.alert, lv = alLv(), max = lv >= A.max, f = max ? 1 : ((S.run.alert || 0) % A.per) / A.per, r = big ? 30 : 14, c = 2 * Math.PI * r, w = big ? 5 : 2.6;
-  const ticks = Array.from({length: A.per}, (_, i) => { const a = i / A.per * 2 * Math.PI - Math.PI / 2; return `<line x1="${(r + w) * Math.cos(a)}" y1="${(r + w) * Math.sin(a)}" x2="${(r - w) * Math.cos(a)}" y2="${(r - w) * Math.sin(a)}"/>`; }).join('');
-  const sz = (r + w + 2) * 2;
-  return `<span class="aring t${alTier(lv)}${big ? ' big' : ''}"><svg viewBox="${-sz / 2} ${-sz / 2} ${sz} ${sz}" width="${sz}" height="${sz}"><circle r="${r}" class="bg" stroke-width="${w}"/><circle r="${r}" class="fg" stroke-width="${w}" stroke-dasharray="${(c * f).toFixed(2)} ${c.toFixed(2)}" transform="rotate(-90)"/><g class="tk">${ticks}</g></svg><b class="${ROMAN[lv - 1].length >= 3 ? 'long' : ''}">${ROMAN[lv - 1]}</b></span>`;
+  const lv = alLv(), R = ROMAN[lv - 1];
+  if(big) return `<span class="aring big t${alTier(lv)}">${ringSvg(true)}<b class="${R.length >= 3 ? 'long' : ''}">${R}</b></span>`;
+  return `<span class="achip t${alTier(lv)}"><span class="aring">${ringSvg(false)}<span class="ai">${IC.alert}</span></span><span class="an"><i>${DATA.ui['alert.gauge']}</i><b>${R}</b></span></span>`;
 }
 function infoAlert(){
   const A = DATA.alert, lv = alLv(), ar = AREA(), u = DATA.ui, l1 = lv - 1;
@@ -2086,7 +2173,7 @@ function infoAlert(){
   const pct = x => Math.round(x * 100);
   const gains = Object.entries(A.gain).map(([k, v]) => `<span class="ag"><span class="ic">${IC[k]}</span>${DATA.rooms[k].name}<b class="${v < 0 ? 'dn' : ''}">${v > 0 ? '+' + v : '−' + -v}</b></span>`).join('');
   showOv(`<h2>${u.alert} ${ROMAN[lv - 1]}</h2><div class="alv">${alertRing(true)}<div><p class="adesc">${u['alert.desc']}</p><p class="anext">${lv >= A.max ? '' : u['alert.next'].replace('{n}', left)}</p></div></div>
-    <ul class="aeff">${row(l1 > 0, u['alert.enemy'].replace('{hp}', pct(A.enemy.hp * l1)).replace('{d}', pct(A.enemy.d * l1)))}${row(l1 > 0, u['alert.scrap'].replace('{n}', pct(A.scrap * l1)))}${row(lv >= A.learnAt, `${u['alert.learn']}<i>${ROMAN[A.learnAt - 1]}〜</i>`)}${row(lv >= A.partAt, `${u['alert.part']}<i>${ROMAN[A.partAt - 1]}〜</i>`)}${row(lv >= ar.strong, u['alert.strong'].replace('{lv}', ROMAN[ar.strong - 1]))}</ul>
+    <ul class="aeff">${row(l1 > 0, u['alert.enemy'].replace('{hp}', pct(A.enemy.hp * l1)).replace('{d}', pct(A.enemy.d * l1)))}${row(l1 > 0, u['alert.scrap'].replace('{n}', pct(A.scrap * l1)))}${row(lv >= A.learnAt, `${u['alert.learn']}<i>${ROMAN[A.learnAt - 1]}〜</i>`)}${row(lv >= A.partAt, `${u['alert.part']}<i>${ROMAN[A.partAt - 1]}〜</i>`)}${(() => { const ps = (ar.pools || []).filter(p => p.at > 1); if(!ps.length) return ''; const nx = ps.find(p => p.at > lv) || ps[ps.length - 1]; return row(lv >= nx.at, u['alert.pool'].replace('{lv}', ROMAN[nx.at - 1])); })()}</ul>
     <div class="again">${gains}</div>${closeRow}`, true);
 }
 // 地図と部屋の画面の上の帯(本体・部位・スクラップ・デッキ・メニュー)
@@ -2119,7 +2206,7 @@ function completeRoom(){
   const n = UI.node, run = S.run;
   if(n && n.type === 'transit'){ UI.node = null; UI.pick = null; hideOv(); hideOv2(); $('#roomScr').hidden = true; showMap(); return; }
   run.at = n.type === 'boss' ? {boss:true} : {lane:n.lane, idx:n.idx};
-  if(EN.addAlert(run, EN.alertGain(n.type)) > 0) UI.alertUp = true;
+  { const pb = EN.poolIndex(run); if(EN.addAlert(run, EN.alertGain(n.type)) > 0){ UI.alertUp = true; if(EN.poolIndex(run) > pb) UI.poolUp = true; } }
   run.visited.push(nodeKey(n));
   UI.pick = null; UI.learnOpts = []; UI.partOpts = null; UI.after = null;
   hideOv(); hideOv2(); $('#roomScr').hidden = true;
@@ -2135,6 +2222,7 @@ function startBattle(n){
   clearCards(); clearMarks(); buildFoes();
   renderAll(); enter($('#shaker'));
   toast(`${DATA.rooms[n.type].name} · ${ENC[n.enc].fam}`);
+  const bs = S.b; setTimeout(() => { if(S.b === bs && !busy) bs.foes.forEach(e => foeSay(e.i, 'start')); }, 900);
 }
 function partTiles(){
   return `<div class="prow">${SLOTS.map(p => {
@@ -2146,9 +2234,13 @@ function bodyLine(){ return `<div class="bodyline"><span class="ic" style="color
 function onWin(){
   if(UI.node && UI.node.debug){ showDebugResult(true); return; }
   for(const p of SLOTS) S.run.parts[p.id].damaged = !!S.b.broken[p.id];
-  const n = UI.node, gain = Math.round((n.type === 'elite' ? DATA.rewards.elite : n.type === 'battle' ? DATA.rewards.battle : 0) * (1 + DATA.alert.scrap * (alLv() - 1)));
+  // 0.23.0: 逃げられたら戦闘のスクラップはなし。盗まれた分は、倒していれば取り戻す
+  const n = UI.node, fled = EN.fledAll(S), loot = EN.lootBack(S);
+  const gain = fled ? 0 : Math.round((n.type === 'elite' ? DATA.rewards.elite : n.type === 'battle' ? DATA.rewards.battle : 0) * (1 + DATA.alert.scrap * (alLv() - 1)));
   S.run.scrap += gain;
-  showOv(`<h2>戦闘終了</h2>${bodyLine()}${partTiles()}${gain ? `<p class="gain"><span class="ic">${IC.scrap}</span>+${gain}</p>` : ''}<div class="row"><button class="btn" type="button" data-act="afterWin">次へ</button></div>`);
+  const fm = fled ? `<p class="fledmsg">${fillUi('win.fled', {name: S.b.foes.find(e => e.fled).name})}</p>` : '';
+  const lm = loot ? `<span class="loot">${fillUi('win.loot', {n: loot})}</span>` : '';
+  showOv(`<h2>戦闘終了</h2>${fm}${bodyLine()}${partTiles()}${gain || loot ? `<p class="gain"><span class="ic">${IC.scrap}</span>${gain ? '+' + gain : ''}${lm}</p>` : ''}<div class="row"><button class="btn" type="button" data-act="afterWin">次へ</button></div>`);
 }
 function onLose(){
   if(UI.node && UI.node.debug){ showDebugResult(false); return; }
@@ -2253,7 +2345,7 @@ function applyEvent(fx){
   const run = S.run;
   if(fx.body) run.body = Math.max(1, Math.min(run.bodyMax, run.body + fx.body));
   if(fx.scrap) run.scrap += fx.scrap;
-  if(fx.alert && EN.addAlert(run, fx.alert) > 0) UI.alertUp = true;
+  if(fx.alert){ const pb = EN.poolIndex(run); if(EN.addAlert(run, fx.alert) > 0){ UI.alertUp = true; if(EN.poolIndex(run) > pb) UI.poolUp = true; } }
   if(fx.repair) for(const p of SLOTS) run.parts[p.id].damaged = false;
   if(fx.card){ const k = EN.pick(DATA.rareCards); run.deck.push(k); UI.pick = null; showOv(`<h2>取り込んだ</h2><div class="cards"><div class="card static">${cardInner(k, null)}</div></div><div class="row"><button class="btn" type="button" data-act="done">次へ</button></div>`); return; }
   if(fx.part){ UI.partOpts = randomParts(2); UI.pick = null; UI.back = 'map'; showPartOffer(); return; }
@@ -2313,6 +2405,10 @@ function moveLines(e, a){
   if(a.crack) L.push(fillUi('mv.crack', {crack: a.crack}));
   if(a.noise) L.push(fillUi('mv.noise', {noise: a.noise}));
   if(a.summon) L.push(fillUi('mv.summon', {name: FOES[a.summon].name}));
+  if(a.steal) L.push(fillUi('mv.steal', {n: a.steal}));
+  if(a.eat) L.push(fillUi('mv.eat', {n: a.eat}));
+  if(a.rebuild) L.push(fillUi('mv.rebuild', {n: a.rebuild, h: Math.ceil(a.rebuild / 2)}));
+  if(a.flee) L.push(fillUi('mv.flee', {}));
   if(a.zone) L.push(fillUi('mv.zone', {at: a.zone.at, len: a.zone.len, d: a.zone.d + (e.str || 0), part: SLOT_BY[a.zone.p].fn}));
   if(a.haste) L.push(fillUi('mv.haste', {n: a.haste}));
   if(a.buff) L.push(fillUi(a.all ? 'mv.buffAll' : 'mv.buff', {buff: a.buff}));
@@ -2326,7 +2422,7 @@ function moveLines(e, a){
 function moveGlyph(e, a){
   if(a.kind === 'delay') return `<span class="ic">${IC.delay}</span><b>${a.v}</b>`;
   if(a.d > 0) return `<b>${a.d + (e.str || 0)}</b>${a.hits > 1 ? `<i>×${a.hits}</i>` : ''}`;
-  const ic = a.armor ? IC.armor : a.crack ? IC.crack : a.buff ? IC.str : a.noise ? IC.junk : a.zone ? IC.zone : a.haste ? IC.swift : a.guard ? IC.block : null;
+  const ic = a.flee ? IC.flee : a.eat ? IC.eat : a.rebuild ? IC.rest : a.armor ? IC.armor : a.crack ? IC.crack : a.buff ? IC.str : a.noise ? IC.junk : a.zone ? IC.zone : a.haste ? IC.swift : a.guard ? IC.block : null;
   if(ic) return `<span class="ic big">${ic}</span>`;
   const g = a.heal ? '修' : a.summon ? '援' : '·';
   return `<b class="g">${g}</b>`;

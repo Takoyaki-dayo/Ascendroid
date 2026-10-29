@@ -51,7 +51,7 @@ function fight(run, enc, pol){
     const before = st.b.disc.length + st.b.hand.length;
     const o = E.doAction(st, a);
     s.justs += o.justs.length; if(o.interruptedAt !== null) s.intr++;
-    if(o.won || o.dead) return {...s, won:o.won, body:run.body - st.run.body, broken:Object.keys(st.b.broken).length, cycles:st.b.T};
+    if(o.won || o.dead) return {...s, won:o.won && !E.fledAll(st), fled:E.fledAll(st) ? 1 : 0, body:run.body - st.run.body, broken:Object.keys(st.b.broken).length, cycles:st.b.T};
   }
   return {...s, won:false, body:run.body - st.run.body, cycles:st.b.T};
 }
@@ -63,7 +63,7 @@ if(require.main === module && process.argv[4] !== 'run'){
     const R = []; for(let i = 0; i < N; i++) R.push(fight(run, enc, pol));
     const avg = k => (R.reduce((a, r) => a + (r[k] || 0), 0) / N).toFixed(1);
     const plays = {}; for(const r of R) for(const [c, n] of Object.entries(r.plays)) plays[c] = (plays[c] || 0) + n;
-    console.log(enc.padEnd(8), `win ${(R.filter(r => r.won).length / N * 100).toFixed(0)}%`, `body-${avg('body')}`, `brk ${avg('broken')}`, `cyc ${avg('cycles')}`, `wait ${avg('waits')}`, `swap ${avg('swaps')}`, `just ${avg('justs')}`, `intr ${avg('intr')}`, JSON.stringify(plays));
+    console.log(enc.padEnd(8), `win ${(R.filter(r => r.won).length / N * 100).toFixed(0)}%`, ...(R.some(r => r.fled) ? [`fled ${(R.filter(r => r.fled).length / N * 100).toFixed(0)}%`] : []), `body-${avg('body')}`, `brk ${avg('broken')}`, `cyc ${avg('cycles')}`, `wait ${avg('waits')}`, `swap ${avg('swaps')}`, `just ${avg('justs')}`, `intr ${avg('intr')}`, JSON.stringify(plays));
   }
 }
 
@@ -80,7 +80,7 @@ function playRun(pol, seed){
       for(let k = 0; k < 400; k++){ o = E.doAction(st, POL[pol](st)); if(o.won || o.dead) break; }
       if(!o || !o.won) return {clear:false, at:'a' + (run.area + 1) + ':' + n.type, rooms:log.length, body:0, log};
       for(const s of D.slots) run.parts[s.id].damaged = !!st.b.broken[s.id];
-      run.scrap += Math.round((n.type === 'elite' ? D.rewards.elite : n.type === 'battle' ? D.rewards.battle : 0) * (1 + D.alert.scrap * (E.alertLevel(run) - 1)));
+      E.lootBack(st); if(!E.fledAll(st)) run.scrap += Math.round((n.type === 'elite' ? D.rewards.elite : n.type === 'battle' ? D.rewards.battle : 0) * (1 + D.alert.scrap * (E.alertLevel(run) - 1)));
       const pool = [...new Set(D.encounters[n.enc].foes.flatMap(f => D.foes[f].pool))];
       if(pool.length) run.deck.push(pool[Math.floor(R() * pool.length)]);
     } else if(n.type === 'rest'){ run.body = Math.min(run.bodyMax, run.body + 15); for(const s of D.slots) run.parts[s.id].damaged = false; }

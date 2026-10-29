@@ -443,7 +443,9 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 .fsp{display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 9px;border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--fg2);font-size:11px;font-weight:700}
 .fsp b{font-family:var(--f-num);font-size:13px;color:var(--fg)}
 .fsp .ic svg{width:12px;height:12px}
-.fsp.bad{color:var(--foe2);border-color:rgba(255,77,106,.4)} .fsp.good{color:var(--cy);border-color:rgba(56,211,255,.35)} .fsp.arm{color:#cfe3ef;border-color:#3a5064}
+.fsp.bad{color:#fff;background:#c4324d;border-color:#ff8196} .fsp.good{color:var(--cy);border-color:rgba(56,211,255,.35)} .fsp.arm{color:#fff;background:#3b5267;border-color:#9cb9cd}
+.fsp.ecrk{color:#a8eeff;background:rgba(56,211,255,.16);border-color:var(--cy)} .fsp.vul{color:#04121a;background:var(--cy);border-color:#b6f1ff} .fsp.res{color:#e2f3fb;background:#28435a;border-color:#7fa9c6}
+.fsp.bad b,.fsp.arm b,.fsp.res b{color:#fff} .fsp.vul b{color:#04121a} .fsp.ecrk b{color:#d4f6ff}
 .fsp.on{box-shadow:0 0 0 2px var(--cy)}
 .fdet.stx{border-left-color:#3a5064} .fdet.stx.bad{border-left-color:var(--foe)} .fdet.stx.good{border-left-color:var(--cy)}
 .fm-v .ic.big svg{width:17px;height:17px}
@@ -989,21 +991,32 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 /* 抵抗(0.21.0) */
 .st.res{color:#8fc6d9}
 .float.dim{color:var(--fg2);font-size:13px}
-/* ===== 状態の札(0.23.2) ===== */
-.st{height:17px;padding:0 5px 0 4px;gap:3px;border:1px solid #33495c;border-radius:3px;background:rgba(6,10,15,.9);font-size:11.5px;line-height:1;color:var(--fg)}
+/* ===== 状態の札(0.23.2、0.23.3 で色の差を大きく) =====
+   こちらに有利なもの(隙・敵のクラック)は水色、敵の強化(増幅・加速)は赤の塗り、装甲は鋼色の塗り、抵抗は青灰の塗り、パッシブは点線の枠 */
+.st{height:17px;padding:0 5px 0 4px;gap:3px;border:1px solid #3d5468;border-radius:3px;background:rgba(6,10,15,.92);font-size:11.5px;line-height:1;color:var(--fg)}
 .st .ic{display:flex} .st .ic svg{width:11px;height:11px}
-.st.blk{color:var(--fg);border-color:#4a6276}
-.st.swf,.st.chg{color:var(--cy);border-color:rgba(56,211,255,.5)}
-.st.crack{color:var(--foe2);border-color:rgba(255,77,106,.6)}
-.st.arm{color:#dbe8f1;border-color:#5a7488}
-.st.ecrk{color:var(--cy);border-color:rgba(56,211,255,.6)}
-.st.vul{color:#06121a;background:var(--cy);border-color:var(--cy);box-shadow:0 0 8px rgba(56,211,255,.55);animation:vulGlow 1.1s ease-in-out infinite}
+.st.blk{color:#fff;background:#2c4153;border-color:#8fb0c6}
+.st.swf,.st.chg{color:#9eeaff;background:#0d3644;border-color:var(--cy)}
+.st.crack{color:#fff;background:#b8304a;border-color:#ff7088}
+.st.arm{color:#fff;background:#3b5267;border-color:#9cb9cd}
+.st.ecrk{color:#a8eeff;background:#0d3644;border-color:var(--cy)}
+.st.vul{color:#04121a;background:var(--cy);border-color:#b6f1ff;box-shadow:0 0 8px rgba(56,211,255,.6);animation:vulGlow 1.1s ease-in-out infinite}
 @keyframes vulGlow{50%{box-shadow:0 0 2px rgba(56,211,255,.3)}}
-.st.str{color:var(--foe2);border-color:rgba(255,77,106,.6)}
-.st.res{color:#9fc3d4;border-color:#3d5a6e}
-.st.trait{color:var(--foe2);border:1px dashed rgba(255,77,106,.5);background:rgba(22,9,13,.75);opacity:1}
+.st.str{color:#fff;background:#c4324d;border-color:#ff8196}
+.st.res{color:#e2f3fb;background:#28435a;border-color:#7fa9c6}
+.st.trait{color:#ff9aab;border:1px dashed rgba(255,128,150,.75);background:rgba(22,9,13,.8);opacity:1}
 .st.trait.off{opacity:.35}
 .st.trait.on{border-style:solid;border-color:var(--foe2);filter:none;box-shadow:0 0 8px rgba(255,77,106,.6)}
+/* タイムラインの敵の列の頭 */
+.lh{position:absolute;left:97px;top:34px;width:70px;display:flex;flex-direction:column;align-items:flex-start;gap:4px;z-index:2;cursor:pointer;transition:opacity .3s}
+.lh.dead{opacity:0}
+.lh .lhs{height:20px;padding:0 6px 0 4px;font-size:13px;gap:3px;box-shadow:0 1px 6px rgba(0,0,0,.5)}
+.lh .lhs i{font-style:normal;font-family:var(--f-body);font-size:10px;font-weight:700;opacity:.9}
+.lh .lhs .ic svg{width:12px;height:12px}
+.lh .lhp{display:flex;flex-wrap:wrap;gap:3px;margin-top:2px}
+#shaker.peek .lh{opacity:.15}
+.mk b.up{color:#ffd0d8;text-shadow:0 0 6px rgba(255,77,106,.9)}
+.mk .mup{position:absolute;right:-5px;top:-6px;font-style:normal;font-size:9px;line-height:1;color:#fff;background:#c4324d;border:1px solid #ff8196;border-radius:3px;padding:1px 2px}
 .sts{gap:4px;flex-wrap:wrap}
 .eu .sts{gap:3px;min-height:0;justify-content:center}
 .eu.up .sts{position:absolute;left:50%;transform:translateX(-50%);bottom:100%;margin-bottom:2px;flex-wrap:nowrap}
@@ -1135,7 +1148,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 <script src="data/text.js"></script>
 <script src="js/engine.js"></script>
 <script>
-const APP_VERSION = '0.23.2';
+const APP_VERSION = '0.23.3';
 const $ = s => document.querySelector(s);
 const EN = ENGINE, RULE = EN.RULE;
 const VIEW = RULE.view, NOW = 170, PX = 34, xs = c => NOW + c * PX, STRIP_Y = 150, SWIFT_VIS = 3;
@@ -1356,14 +1369,14 @@ function foeGeom(e){
     else if(d.pt && main){ const q = sprPoint(main, d.pt); units[k] = {x, y, cx: q.x, cy: q.y, pt: q}; }
     else units[k] = {x, y, cx: d.core && main ? main.x : x, cy: d.core && main ? main.y : y - 6};
   });
-  // side: 敵全体の状態とパッシブを右端の欄に出す(敵が1体のとき)
+  // side: 敵全体の状態とパッシブを、ユニットのバーではなくタイムラインの列の頭に出す(敵が1体のとき)
   return {A, main, units, multi, side: so};
 }
 function buildFoes(){
   const b = S.b, so = solo();
   ROWY = so ? [86] : [52, 86, 120];
   $('#tl').classList.toggle('solo', so);
-  $('#rows').innerHTML = b.foes.map(e => `<div class="rowline" data-r="${e.i}" style="top:${ROWY[e.i]}px"></div><div class="rowtag" data-r="${e.i}" style="top:${ROWY[e.i] - 8}px">${e.tag}</div>${so ? '' : `<div class="rowhit" data-f="${e.i}" style="top:${ROWY[e.i] - 17}px"></div>`}`).join('');
+  $('#rows').innerHTML = b.foes.map(e => `${so ? `<div class="lh" data-f="${e.i}"></div>` : ''}<div class="rowline" data-r="${e.i}" style="top:${ROWY[e.i]}px"></div><div class="rowtag" data-r="${e.i}" style="top:${ROWY[e.i] - 8}px">${e.tag}</div>${so ? '' : `<div class="rowhit" data-f="${e.i}" style="top:${ROWY[e.i] - 17}px"></div>`}`).join('');
   let h = '';
   GEOM.clear();
   for(const e of b.foes){
@@ -1378,7 +1391,7 @@ function buildFoes(){
       h += `<div class="eu${g.multi ? ' m' : ''}${u.y > 250 ? ' up' : ''}" data-f="${e.i}" data-u="${k}" style="left:${u.x}px;top:${u.y}px"><span class="frow">${g.multi ? `<span class="uic">${pIcon(e.units[k])}</span>` : so ? '' : `<span class="ftag">${e.tag}</span>`}<span class="hpb"><i></i><s></s></span><span class="hpt"></span></span><span class="sts"></span></div>`;
     }
     // ユニットが複数ある敵は、敵全体の状態とパッシブを右上に
-    if(g.side) h += `<div class="ew" data-f="${e.i}"></div>`;
+    // 0.23.3: 敵全体の状態とパッシブは、タイムラインの敵の列の頭(今より左)に出す(laneHead)
   }
   $('#foes').innerHTML = h;
 }
@@ -1475,6 +1488,18 @@ function pasText(e, x){
 // 0.23.2: 状態は札(枠と下地のある小さな四角)。色は「こちらに有利か」で分ける: 隙(塗りの水色)・クラック(水色の枠)はこちらの好機、装甲は鋼色、増幅・加速は赤
 // ユニットの状態(装甲・クラック・隙)は耐久バーに付け、敵全体の状態(増幅・加速・抵抗)とパッシブは右端の欄にまとめる(敵の詳細と同じ分け方)
 function unitSts(p){ return (p.armor ? `<span class="st arm"><span class="ic">${IC.armor}</span>${p.armor}</span>` : '') + (p.crack ? `<span class="st ecrk"><span class="ic">${IC.crack}</span>${p.crack}</span>` : '') + (p.vuln > 1 ? `<span class="st vul"><span class="ic">${IC.vuln}</span>${p.vuln - 1}</span>` : ''); }
+// タイムラインの敵の列の頭(0.23.3): 敵全体の補正(増幅・加速・抵抗)を名前付きの大きめの札で、その下にパッシブ
+function laneHead(e){
+  const m = (k, n, cls) => `<span class="st lhs ${cls}"><span class="ic">${IC[k]}</span><i>${DATA.ui['stname.' + k]}</i><b>${n}</b></span>`;
+  let h = '';
+  if(e.str) h += m('str', e.str, 'str');
+  if(e.haste) h += m('haste', e.haste, 'str');
+  if(e.resist && e.alive) h += m('resist', e.resist, 'res');
+  let ps = '';
+  for(const x of passives(e)){ if(x.k === 'phase' || x.k === 'broke' || (e.uids.length > 1 && pasUnit(x))) continue; const n = x.k === 'react' ? x.p.min : x.k === 'loot' ? (e.loot || '') : x.k === 'hoard' ? ((e.eaten || []).length || '') : ''; ps += `<span class="st trait${x.on ? '' : ' off'}${x.k === 'react' && PV && PV.react.has(e.i) ? ' on' : ''}"><span class="ic">${PAS_IC[x.k]}</span>${n}</span>`; }
+  if(e.sync) ps += `<span class="st trait"><span class="ic">${IC.link}</span>${e.sync}</span>`;
+  return h + (ps ? `<span class="lhp">${ps}</span>` : '');
+}
 function foeSts(e){
   let s = '', ps = '';
   if(e.str) s += `<span class="st str"><span class="ic">${IC.str}</span>${e.str}</span>`;
@@ -1505,7 +1530,9 @@ function renderFoes(){
       el.querySelector('.hpb i').style.width = (after / max * 100) + '%';
       const sb = el.querySelector('.hpb s'); sb.style.left = (after / max * 100) + '%'; sb.style.width = ((hp - after) / max * 100) + '%';
       const t = el.querySelector('.hpt'); t.textContent = after < hp ? `${hp}→${after}` : String(hp); t.classList.toggle('pv', after < hp);
-      el.querySelector('.sts').innerHTML = one ? (e.uids.length === 1 ? unitSts(e.units[e.uids[0]]) : '') + (g.side ? '' : foeSts(e)) : unitSts(p);
+      // ユニットに結び付くパッシブ(統率など)は、そのユニットのバーに
+      const tied = one || broken ? '' : passives(e).filter(x => pasUnit(x) === k && x.k !== 'broke').map(x => `<span class="st trait"><span class="ic">${PAS_IC[x.k]}</span></span>`).join('');
+      el.querySelector('.sts').innerHTML = one ? (e.uids.length === 1 ? unitSts(e.units[e.uids[0]]) : '') + (g.side ? '' : foeSts(e)) : unitSts(p) + tied;
       if(u.spr){ const sp = document.querySelector(`.foe.us[data-f="${e.i}"][data-u="${k}"]`); if(sp){ sp.classList.toggle('dead', broken); sp.classList.toggle('tgt', isT); } }
       if(u.pt){
         const pe = document.querySelector(`.upt[data-f="${e.i}"][data-u="${k}"]`), ln = document.querySelector(`[data-ul="${e.i}.${k}"]`);
@@ -1513,7 +1540,7 @@ function renderFoes(){
         if(pe){ pe.classList.toggle('act', next === k && !broken); pe.classList.toggle('ch', next === k && !!a.ch && !broken); }
       }
     }
-    const ew = document.querySelector(`.ew[data-f="${e.i}"]`); if(ew){ ew.innerHTML = foeSts(e); ew.classList.toggle('dead', !e.alive); }
+    const lh = document.querySelector(`.lh[data-f="${e.i}"]`); if(lh){ lh.innerHTML = laneHead(e); lh.classList.toggle('dead', !e.alive); }
   }
 }
 function renderPreview(){
@@ -1619,7 +1646,9 @@ function renderMarks(){
         if(m.k === 0 && a.wind && pv.fx.has('break:' + e.i)) cls += ' just';
       }
       const by_ = multi && a.by && e.units[a.by] ? `<i class="mby">${pIcon(e.units[a.by])}</i>` : '';
-      const html = by_ + (a.kind === 'delay' ? `<span class="ic">${IC.delay}</span><b>${a.v}</b>` : atk ? `<b>${a.d + (e.str || 0) + (sy ? e.sync : 0)}</b><span class="ic tp">${IC[a.p]}</span>` : moveIcon(a));
+      // 増幅・連携で上がった攻撃は、数字の右上に ▲ を付ける
+      const up = atk && ((e.str || 0) + (sy ? e.sync : 0)) > 0;
+      const html = by_ + (a.kind === 'delay' ? `<span class="ic">${IC.delay}</span><b>${a.v}</b>` : atk ? `<b${up ? ' class="up"' : ''}>${a.d + (e.str || 0) + (sy ? e.sync : 0)}</b>${up ? '<i class="mup">▲</i>' : ''}<span class="ic tp">${IC[a.p]}</span>` : moveIcon(a));
       placeMark(key, xs(m.t) - (so ? 20 : 13), y, cls, html, {e:e.i, kind:'pat', a, t:m.t});
       lastT = Math.max(lastT, m.t);
       if(m.hit) continue;
@@ -2513,15 +2542,15 @@ function seqRow(e, selKey, hlUnit){
 function unitStates(p, k){
   const out = [];
   if(p.armor) out.push({k:'armor', id:'armor-' + k, n:p.armor, cls:'arm'});
-  if(p.crack) out.push({k:'crack', id:'crack-' + k, n:p.crack, cls:'good'});
-  if(p.vuln > 1) out.push({k:'vuln', id:'vuln-' + k, n:p.vuln - 1, cls:'good'});
+  if(p.crack) out.push({k:'crack', id:'crack-' + k, n:p.crack, cls:'good ecrk'});
+  if(p.vuln > 1) out.push({k:'vuln', id:'vuln-' + k, n:p.vuln - 1, cls:'good vul'});
   return out;
 }
 function foeStates(e){
   const out = e.uids.length === 1 ? unitStates(e.units[e.uids[0]], e.uids[0]) : [];
   if(e.str) out.push({k:'str', id:'str', n:e.str, cls:'bad'});
   if(e.haste) out.push({k:'haste', id:'haste', n:e.haste, cls:'bad'});
-  if(e.resist) out.push({k:'resist', id:'resist', n:e.resist, cls:'arm'});
+  if(e.resist) out.push({k:'resist', id:'resist', n:e.resist, cls:'res'});
   return out;
 }
 // ユニットに結び付くパッシブか(統率・破壊で変わる)。結び付くならそのユニットのキー
@@ -2589,7 +2618,7 @@ function renderFocus(){
 }
 function infoFoe(i, uid){
   const e = S.b.foes[i]; if(!e || !e.alive) return;
-  sel = null; PV = null; setPeek(false); renderAll();
+  sel = null; PV = null; setPeek(false); renderAll(); for(const el of document.querySelectorAll('.say')) el.remove();
   UI.focus = {i, sel: uid && e.units[uid] && e.uids.length > 1 ? 'u:' + uid : null};
   // 敵の絵とユニットがすべて入るように寄る
   const g = GEOM.get(i); let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
@@ -2925,6 +2954,7 @@ stage.addEventListener('click', ev => {
   const bd = t.closest('[data-bk]'); if(bd){ if(UI.mvKey === bd.dataset.bk) hideMovePop(); else showMovePop(bd.dataset.bk, bd); return; }
   if(t.closest('#mvpop')) return;
   if(!$('#mvpop').hidden && !t.closest('#hand .card,#redraw,#waitBtn')){ hideMovePop(); if(t.closest('#screen')) return; }
+  const lhd = t.closest('.lh[data-f]'); if(lhd && !sel && !peeking()){ infoFoe(+lhd.dataset.f); return; }
   if(t.closest('#screen') && !sel){ setPeek(!peeking()); return; }
   if(peeking()){ setPeek(false); if(!t.closest('#hand .card,#redraw,#waitBtn')) return; }
   const card = t.closest('#hand .card[data-i]'); if(card){ onCard(+card.dataset.i); return; }

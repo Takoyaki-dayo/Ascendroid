@@ -1021,11 +1021,14 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 .eu .sts{gap:3px;min-height:0;justify-content:center}
 .eu.up .sts{position:absolute;left:50%;transform:translateX(-50%);bottom:100%;margin-bottom:2px;flex-wrap:nowrap}
 .eu.m .sts .st{font-size:10.5px;height:16px;padding:0 4px 0 3px} .eu.m .sts .ic svg{width:10px;height:10px}
-/* 部位型の敵の部位の一覧(0.23.4): 名前は出さず、アイコン・細いバー・数字。控えめに */
-.eu.lst{transform:none;flex-direction:row;align-items:center;gap:4px;padding:2px 5px;border-color:#18242f;background:rgba(9,15,22,.6)}
-.eu.lst .frow{gap:4px} .eu.lst .hpb{width:28px;height:3px} .eu.lst .hpt{font-size:10px;min-width:15px;color:var(--fg2)}
+/* 部位型の敵の部位(0.23.4、0.23.5 から縦のゲージ): 数字・縦のバー・アイコン・状態を上から。名前は出さない(敵の詳細で) */
+.eu.lst{transform:none;width:23px;flex-direction:column;align-items:center;gap:3px;padding:3px 0 4px;border-color:#18242f;background:rgba(9,15,22,.6)}
+.eu.lst .hpt{font-size:10px;line-height:1;color:var(--fg2);min-width:0} .eu.lst .hpt.pv{color:var(--foe2)}
+.eu.lst .hpb.v{width:5px;height:50px;border-radius:2px}
+.eu.lst .hpb.v i{left:0;right:0;top:auto;bottom:0;width:auto;transition:height .25s}
+.eu.lst .hpb.v s{left:0;right:0;width:auto;background:repeating-linear-gradient(45deg,var(--foe) 0 2px,transparent 2px 4px)}
 .eu.lst .uic svg{width:10px;height:10px}
-.eu.lst .sts{flex-wrap:nowrap;gap:2px} .eu.lst .sts .st{height:14px;font-size:9.5px;padding:0 3px 0 2px;gap:2px} .eu.lst .sts .ic svg{width:8px;height:8px}
+.eu.lst .sts{flex-direction:column;align-items:center;gap:2px} .eu.lst .sts .st{height:14px;font-size:9.5px;padding:0 2px;gap:1px} .eu.lst .sts .ic svg{width:8px;height:8px}
 .eu.lst.tgt{border-color:var(--cy);background:rgba(56,211,255,.1)}
 #shaker.focus .eu.lst{opacity:0;pointer-events:none}
 .upt.lic i{width:15px;height:15px;display:flex;align-items:center;justify-content:center;color:var(--fg2);border-width:1px;background:rgba(9,15,22,.9)} .upt.lic i svg{width:9px;height:9px}
@@ -1158,7 +1161,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 <script src="data/text.js"></script>
 <script src="js/engine.js"></script>
 <script>
-const APP_VERSION = '0.23.4';
+const APP_VERSION = '0.23.5';
 const $ = s => document.querySelector(s);
 const EN = ENGINE, RULE = EN.RULE;
 const VIEW = RULE.view, NOW = 170, PX = 34, xs = c => NOW + c * PX, STRIP_Y = 150, SWIFT_VIS = 3;
@@ -1358,7 +1361,7 @@ function foeX(n, i){ return (n === 1 ? [620] : n === 2 ? [560, 690] : [494, 600,
 //   位置は data/enemies.js の look・units の at(本体の絵の中心から)。敵が1体なら右の広いところに置く
 //   ユニットが1つの敵(と、複数の敵がいるとき)は、バーは1本(キー '*')
 const ANCHOR = {x: 665, y: 222};
-const LIST = {x: 732, y: 186, h: 24}; // 部位型の敵の、部位の一覧の左上と1行の高さ
+const LIST = {x: 756, y: 184, w: 27}; // 部位型の敵の、部位の縦のゲージ(0.23.5)の左上と1本の幅
 const GEOM = new Map();
 const sprSize = (kind, s) => ({w: (kind === 'tank' ? 120 : 90) * s, h: 100 * s});
 // ユニットの在りか(0.18.2): units の pt は本体の絵の中の位置(絵の viewBox の座標)。画面の座標に直す
@@ -1379,7 +1382,7 @@ function foeGeom(e){
   if(!multi) units['*'] = {x: A.x, y: A.y + 52, cx: main ? main.x : A.x, cy: main ? main.y : A.y};
   else { let row = 0; e.uids.forEach((k, j) => {
     const d = U[k] || {}, at = d.at || [130, -150 + j * 44], x = A.x + at[0], y = A.y + at[1];
-    if(list && d.pt && !d.core){ const q = sprPoint(main, d.pt); units[k] = {x: LIST.x, y: LIST.y + row++ * LIST.h, cx: q.x, cy: q.y, pt: q, lst: true}; }
+    if(list && d.pt && !d.core){ const q = sprPoint(main, d.pt); units[k] = {x: LIST.x + row++ * LIST.w, y: LIST.y, cx: q.x, cy: q.y, pt: q, lst: true}; }
     else if(list && d.core){ const q = d.pt ? sprPoint(main, d.pt) : {x: main.x, y: main.y}; units[k] = {x: main.x, y: y, cx: q.x, cy: q.y, core: true}; }
     else if(d.spr){ const z = sprSize(d.spr, d.s || 1); units[k] = {x, y: y + z.h / 2 - 2, cx: x, cy: y, spr: d.spr, sx: x - z.w / 2, sy: y - z.h / 2, w: z.w, h: z.h}; }
     else if(d.pt && main){ const q = sprPoint(main, d.pt); units[k] = {x, y, cx: q.x, cy: q.y, pt: q}; }
@@ -1404,7 +1407,8 @@ function buildFoes(){
     for(const [k, u] of pts) h += `<div class="upt${g.list ? ' lic' : ''}" data-f="${e.i}" data-u="${k}" style="left:${u.pt.x}px;top:${u.pt.y}px"><i>${g.list ? pIcon(e.units[k]) : ''}</i><span class="ret"></span></div>`;
     for(const [k, u] of Object.entries(g.units)){
       if(u.spr) h += `<div class="foe us" data-f="${e.i}" data-u="${k}" style="left:${u.sx}px;top:${u.sy}px;width:${u.w}px;height:${u.h}px">${SPR[u.spr]}<span class="reticle"></span></div>`;
-      h += `<div class="eu${g.multi ? ' m' : ''}${u.lst ? ' lst' : ''}${u.y > 250 && !u.lst ? ' up' : ''}" data-f="${e.i}" data-u="${k}" style="left:${u.x}px;top:${u.y}px"><span class="frow">${g.multi ? `<span class="uic">${pIcon(e.units[k])}</span>` : so ? '' : `<span class="ftag">${e.tag}</span>`}<span class="hpb"><i></i><s></s></span><span class="hpt"></span></span><span class="sts"></span></div>`;
+      if(u.lst){ h += `<div class="eu m lst" data-f="${e.i}" data-u="${k}" style="left:${u.x}px;top:${u.y}px"><span class="hpt"></span><span class="hpb v"><i></i><s></s></span><span class="uic">${pIcon(e.units[k])}</span><span class="sts"></span></div>`; continue; }
+      h += `<div class="eu${g.multi ? ' m' : ''}${u.y > 250 ? ' up' : ''}" data-f="${e.i}" data-u="${k}" style="left:${u.x}px;top:${u.y}px"><span class="frow">${g.multi ? `<span class="uic">${pIcon(e.units[k])}</span>` : so ? '' : `<span class="ftag">${e.tag}</span>`}<span class="hpb"><i></i><s></s></span><span class="hpt"></span></span><span class="sts"></span></div>`;
     }
     // ユニットが複数ある敵は、敵全体の状態とパッシブを右上に
     // 0.23.3: 敵全体の状態とパッシブは、タイムラインの敵の列の頭(今より左)に出す(laneHead)
@@ -1543,9 +1547,16 @@ function renderFoes(){
       const isT = !broken && (!!(tt && (one || tt === k)) || !!all);
       el.classList.toggle('broken', broken); el.classList.toggle('tgt', isT);
       el.classList.toggle('act', g.multi && next === k && !broken); el.classList.toggle('ch', g.multi && next === k && !!a.ch && !broken);
-      el.querySelector('.hpb i').style.width = (after / max * 100) + '%';
-      const sb = el.querySelector('.hpb s'); sb.style.left = (after / max * 100) + '%'; sb.style.width = ((hp - after) / max * 100) + '%';
-      const t = el.querySelector('.hpt'); t.textContent = after < hp ? `${hp}→${after}` : String(hp); t.classList.toggle('pv', after < hp);
+      const t = el.querySelector('.hpt');
+      if(u.lst){ // 縦のゲージ: 下から埋まる。予告の減りは上の側に。数字は狭いので、予告のときは減った後の値だけ
+        el.querySelector('.hpb i').style.height = (after / max * 100) + '%';
+        const sb = el.querySelector('.hpb s'); sb.style.bottom = (after / max * 100) + '%'; sb.style.height = ((hp - after) / max * 100) + '%';
+        t.textContent = String(after < hp ? after : hp); t.classList.toggle('pv', after < hp);
+      } else {
+        el.querySelector('.hpb i').style.width = (after / max * 100) + '%';
+        const sb = el.querySelector('.hpb s'); sb.style.left = (after / max * 100) + '%'; sb.style.width = ((hp - after) / max * 100) + '%';
+        t.textContent = after < hp ? `${hp}→${after}` : String(hp); t.classList.toggle('pv', after < hp);
+      }
       // ユニットに結び付くパッシブ(統率など)は、そのユニットのバーに
       const tied = one || broken ? '' : passives(e).filter(x => pasUnit(x) === k && x.k !== 'broke').map(x => `<span class="st trait"><span class="ic">${PAS_IC[x.k]}</span></span>`).join('');
       el.querySelector('.sts').innerHTML = one ? (e.uids.length === 1 ? unitSts(e.units[e.uids[0]]) : '') + (g.side ? '' : foeSts(e)) : unitSts(p) + tied;

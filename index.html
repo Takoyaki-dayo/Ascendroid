@@ -616,7 +616,34 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 .ref{display:inline;padding:0;margin:0;border:0;background:none;color:var(--fg);font:inherit;font-weight:700;text-decoration:underline dotted;text-underline-offset:3px;cursor:pointer}
 .ref.u{color:var(--foe2)}
 .ckw .ref{font-weight:700}
-/* 敵の詳細: ユニットとパッシブ */
+/* 敵の詳細(0.23.1): 敵全体 → ユニット → 行動 の3段 */
+.fwhole{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+.fu2-h .sp{flex:1}
+.fpas{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+.fsec{font-size:9.5px;letter-spacing:.16em;color:var(--dim);margin-top:4px;display:flex;align-items:center;gap:8px}
+.fsec::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent);max-width:300px}
+.fsec.in{margin:0 2px 0 0} .fsec.in::after{display:none}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:5px;max-width:430px}
+.fu2{display:flex;flex-direction:column;gap:3px;padding:5px 8px 6px;border:1px solid var(--line);border-radius:5px;background:var(--panel);cursor:pointer;min-width:0}
+.fu2-h{display:flex;align-items:center;gap:5px;font-size:11.5px;line-height:1}
+.fu2-h .ic{display:flex;color:var(--fg2)} .fu2-h .ic svg{width:12px;height:12px}
+.fu2-h b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fu2-h i{font-style:normal;font-size:9px;padding:1px 4px;border:1px solid #3a5064;border-radius:3px;color:var(--fg2);flex:none}
+.fu2-n{font-family:var(--f-num);font-weight:700;font-size:12px;color:var(--fg)}
+.fu2-bar{display:block;height:2px;background:#1f3346;border-radius:1px;overflow:hidden} .fu2-bar i{display:block;height:100%;background:#c9d6e0}
+.fu2>*{flex:none} .fu2-c{display:flex;flex-wrap:wrap;gap:4px}
+.fu2.act .fu2-h>.ic{color:var(--foe2)}
+.fu2.on{box-shadow:0 0 0 2px var(--cy);border-color:transparent}
+.fu2.broken{opacity:.4} .fu2.broken .fu2-h b{text-decoration:line-through}
+.fu2:active{scale:.97}
+.fsp.fsm{height:18px;padding:0 6px;gap:3px;font-size:10px;border-radius:9px} .fsp.fsm b{font-size:11px} .fsp.fsm .ic svg{width:10px;height:10px}
+.frole{font-size:9.5px;font-weight:400;padding:1px 5px;border:1px solid #3a5064;border-radius:3px;color:var(--fg2);margin-left:2px}
+.fdet .frl{font-size:10.5px;color:var(--dim);margin-bottom:4px}
+.fsk{display:flex;gap:9px;align-items:flex-start;margin-top:5px}
+.fsk>div b{font-size:12px} .fsk>div p{margin:1px 0 0}
+.fsk-n{font-size:10px;color:var(--dim);margin-top:6px}
+.fm.mini{width:34px;height:34px;border-radius:5px;flex:none;pointer-events:none} .fm.mini .fm-v b{font-size:14px} .fm.mini .fm-v i{font-size:8.5px} .fm.mini .fm-p{height:10px} .fm.mini .fm-p .ic svg{width:9px;height:9px} .fm.mini .fm-v .ic.big svg{width:13px;height:13px}
+/* 敵の詳細: ユニットとパッシブ(古い札) */
 .funits{display:flex;gap:5px;flex-wrap:wrap}
 .fu{display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 8px;border:1px solid var(--line);border-radius:5px;background:var(--panel);color:var(--fg);font-size:11px;font-weight:700}
 .fu b{font-family:var(--f-num);font-size:12px;color:var(--fg2)}
@@ -1086,7 +1113,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 <script src="data/text.js"></script>
 <script src="js/engine.js"></script>
 <script>
-const APP_VERSION = '0.23.0';
+const APP_VERSION = '0.23.1';
 const $ = s => document.querySelector(s);
 const EN = ENGINE, RULE = EN.RULE;
 const VIEW = RULE.view, NOW = 170, PX = 34, xs = c => NOW + c * PX, STRIP_Y = 150, SWIFT_VIS = 3;
@@ -2453,7 +2480,11 @@ function seqRow(e, selKey, hlUnit){
   list.forEach((idx, j) => { if(j > 0) h += `<span class="fg">${costTag(e, e.pat[idx].dl)}<i></i></span>`; h += moveBtn(e, e.pat[idx], 'q:' + j, j === 0, selKey, hlUnit); });
   return `<div class="frow-m">${h}<span class="fg loop"><span class="ic">${IC.next}</span></span></div>`;
 }
-// 状態の札。ユニットが1つの敵はそのユニットの状態も、複数ある敵は敵全体の状態(強化・加速)だけ(ユニットの状態はユニットの札から)
+// 敵の詳細(0.23.1): 情報を「敵全体」「ユニット」「行動」の3段に分ける。
+//   敵全体: 名前・耐久の合計・敵全体に掛かる状態(増幅・加速・抵抗)・ユニットに結び付かないパッシブ
+//   ユニット(2つ以上あるとき): 役割(核・急所)・耐久・そのユニットの状態(装甲・クラック・隙)・そのユニットに結び付くパッシブ(統率・破壊で変わる)
+//     押すと、そのユニットが使う行動を下にまとめて出す
+//   ユニットが1つの敵は、ユニットの状態も敵全体の段に出す
 function unitStates(p, k){
   const out = [];
   if(p.armor) out.push({k:'armor', id:'armor-' + k, n:p.armor, cls:'arm'});
@@ -2465,20 +2496,39 @@ function foeStates(e){
   const out = e.uids.length === 1 ? unitStates(e.units[e.uids[0]], e.uids[0]) : [];
   if(e.str) out.push({k:'str', id:'str', n:e.str, cls:'bad'});
   if(e.haste) out.push({k:'haste', id:'haste', n:e.haste, cls:'bad'});
+  if(e.resist) out.push({k:'resist', id:'resist', n:e.resist, cls:'arm'});
   return out;
 }
+// ユニットに結び付くパッシブか(統率・破壊で変わる)。結び付くならそのユニットのキー
+const pasUnit = x => (x.k === 'command' || x.k === 'broke') ? x.p.unit : null;
+const stChip = (x, selKey, sm) => `<button type="button" class="fsp ${x.cls}${sm ? ' fsm' : ''}${selKey === 's:' + x.id ? ' on' : ''}" data-act="foeMove" data-arg="s:${x.id}"><span class="ic">${IC[x.k]}</span>${sm ? '' : DATA.ui['stname.' + x.k]}<b>${x.n}</b></button>`;
+const pasChip = (x, selKey, sm) => `<button type="button" class="fsp pas${sm ? ' fsm' : ''}${x.on ? '' : ' off'}${selKey === 'a:' + x.id ? ' on' : ''}" data-act="foeMove" data-arg="a:${x.id}"><span class="ic">${PAS_IC[x.k]}</span>${x.name}</button>`;
+const roleTag = p => p.core ? DATA.ui['unit.tag.core'] : p.vital ? DATA.ui['unit.tag.vital'] : '';
+// ユニットが使う行動(行動の並び・耐久が減った後の並び)。同じ文の行動は1つにまとめる
+function unitSkills(e, k){
+  const groups = [{pat: e.pat, note: ''}];
+  if(e.phase && !e.phased) groups.push({pat: e.phase.pat, note: fillUi('foe.phase', {at: Math.round(e.phase.at * 100)})});
+  return groups.map(g => {
+    const seen = new Set(), list = [];
+    for(const a of g.pat){ if(EN.actorUid(e, a) !== k) continue; const lines = moveLines(e, a), key = (a.n || '') + '|' + lines.join(''); if(seen.has(key)) continue; seen.add(key); list.push({a, lines}); }
+    return {note: g.note, list};
+  }).filter(g => g.list.length);
+}
 function unitDetail(e, k){
-  const p = e.units[k], lines = [];
-  if(p.core) lines.push(fillUi('unit.core', {}));
-  if(p.vital) lines.push(fillUi('unit.vital', {}));
-  if(!p.vital && !p.core) lines.push(fillUi('unit.part', {}));
-  for(const x of unitStates(p, k)) lines.push(`<b>${DATA.ui['stname.' + x.k]} ${x.n}</b>　${fillUi('st.' + x.k, {n: x.n})}`);
-  return `<div class="fdet stx"><div class="fdn"><span class="ic">${pIcon(p)}</span> ${p.name}<span class="fby">${p.broken ? DATA.ui['unit.broken'] : `${p.hp}/${p.max}`}</span></div>${lines.map(t => `<p>${refText(t)}</p>`).join('')}</div>`;
+  const p = e.units[k], role = p.core ? 'unit.core' : p.vital ? 'unit.vital' : 'unit.part';
+  const skills = unitSkills(e, k);
+  const sk = skills.map(g => (g.note ? `<div class="fsk-n">${g.note}</div>` : '') + g.list.map(({a, lines}) => {
+    const cls = a.kind === 'delay' ? 'dl' : a.ch ? 'ch' : a.d > 0 ? 'atk' : 'mv';
+    const under = a.kind === 'delay' ? '' : a.d > 0 ? `<span class="ic">${IC[a.p]}</span>` : '';
+    return `<div class="fsk"><span class="fm mini ${cls}"><span class="fm-v">${moveGlyph(e, a)}</span><span class="fm-p">${under}</span></span><div><b>${a.n}</b>${lines.map(t => `<p>${refText(t)}</p>`).join('')}</div></div>`;
+  }).join('')).join('');
+  return `<div class="fdet stx unit"><div class="fdn"><span class="ic">${pIcon(p)}</span> ${p.name}${roleTag(p) ? `<span class="frole">${roleTag(p)}</span>` : ''}<span class="fby">${p.broken ? DATA.ui['unit.broken'] : `${p.hp}/${p.max}`}</span></div><p class="frl">${refText(fillUi(role, {}))}</p>${sk || `<p>${fillUi('mv.none', {})}</p>`}</div>`;
 }
 function renderFocus(){
   const f = UI.focus, e = S.b.foes[f.i], rand = e.ai === 'rand', pat = e.pat, multi = e.uids.length > 1, pas = passives(e);
-  const sts = foeStates(e);
-  if(f.sel && f.sel.startsWith('s:') && !sts.some(x => 's:' + x.id === f.sel)) f.sel = null;
+  const whole = foeStates(e), perUnit = multi ? Object.fromEntries(e.uids.map(k => [k, e.units[k].broken ? [] : unitStates(e.units[k], k)])) : {};
+  const allSts = whole.concat(...Object.values(perUnit));
+  if(f.sel && f.sel.startsWith('s:') && !allSts.some(x => 's:' + x.id === f.sel)) f.sel = null;
   if(!f.sel) f.sel = rand ? 'q:0' : 'p:' + (e.idx % pat.length);
   const [tag, idx] = f.sel.split(':');
   const a = tag === 'q' ? pat[[e.idx, ...(e.queue || [])][+idx]] || EN.cur(e) : 'ph'.includes(tag) ? (tag === 'h' ? e.phase.pat : pat)[+idx] || EN.cur(e) : null;
@@ -2487,23 +2537,30 @@ function renderFocus(){
   // ランダムに選ぶ敵: 上にこれから先の行動(決まっている並び)、下に選ばれる候補
   if(rand) rows = seqRow(e, f.sel, hlU) + `<div class="fnote">${fillUi('foe.rand', {})}</div>` + rows;
   if(e.phase && !e.phased) rows += `<div class="fnote">${fillUi('foe.phase', {at: Math.round(e.phase.at * 100)})}</div>` + moveRow(e, e.phase.pat, 'h', 0, false, false, f.sel, hlU);
-  // ユニット(複数あるとき): アイコン・名前・耐久。押すと下に説明と状態
+  // 敵全体のパッシブ(ユニットに結び付かないもの)と、ユニットごとのパッシブ
+  const wholePas = pas.filter(x => !(multi && pasUnit(x) && e.units[pasUnit(x)]));
   const next = EN.actorUid(e, EN.cur(e));
-  const units = multi ? `<div class="funits">${e.uids.map(k => { const p = e.units[k]; return `<button type="button" class="fu${f.sel === 'u:' + k ? ' on' : ''}${p.broken ? ' broken' : ''}${k === next && !p.broken ? ' act' : ''}" data-act="foeMove" data-arg="u:${k}"><span class="ic">${pIcon(p)}</span>${p.name}<b>${p.broken ? '' : p.hp}</b>${(p.broken ? [] : unitStates(p, k)).map(x => `<span class="ic s-${x.cls}">${IC[x.k]}</span>`).join('')}</button>`; }).join('')}</div>` : '';
-  // 状態とパッシブの札。押すと下に説明
-  const chips = sts.map(x => `<button type="button" class="fsp ${x.cls}${f.sel === 's:' + x.id ? ' on' : ''}" data-act="foeMove" data-arg="s:${x.id}"><span class="ic">${IC[x.k]}</span>${DATA.ui['stname.' + x.k]}<b>${x.n}</b></button>`)
-    .concat(pas.map(x => `<button type="button" class="fsp pas${x.on ? '' : ' off'}${f.sel === 'a:' + x.id ? ' on' : ''}" data-act="foeMove" data-arg="a:${x.id}"><span class="ic">${PAS_IC[x.k]}</span>${x.name}</button>`));
-  const sx = tag === 's' ? sts.find(x => x.id === idx) : null, px = tag === 'a' ? pas.find(x => x.id === idx) : null;
+  const units = multi ? `<div class="fsec">${DATA.ui['foe.sec.units']}</div><div class="fgrid">${e.uids.map(k => {
+    const p = e.units[k], tied = pas.filter(x => pasUnit(x) === k), chips = perUnit[k].map(x => stChip(x, f.sel, true)).join('') + tied.map(x => pasChip(x, f.sel, true)).join('');
+    return `<div class="fu2${f.sel === 'u:' + k ? ' on' : ''}${p.broken ? ' broken' : ''}${k === next && !p.broken ? ' act' : ''}" role="button" tabindex="0" data-act="foeMove" data-arg="u:${k}">
+      <div class="fu2-h"><span class="ic">${pIcon(p)}</span><b>${p.name}</b>${roleTag(p) ? `<i>${roleTag(p)}</i>` : ''}<span class="sp"></span><span class="fu2-n">${p.broken ? DATA.ui['unit.broken'] : p.hp}</span></div>
+      <span class="fu2-bar"><i style="width:${p.hp / p.max * 100}%"></i></span>${chips ? `<div class="fu2-c">${chips}</div>` : ''}</div>`;
+  }).join('')}</div>` : '';
+  const sx = tag === 's' ? allSts.find(x => x.id === idx) : null, px = tag === 'a' ? pas.find(x => x.id === idx) : null;
   let det = '';
-  if(sx) det = `<div class="fdet stx ${sx.cls}"><div class="fdn">${DATA.ui['stname.' + sx.k]} ${sx.n}</div><p>${refText(fillUi('st.' + sx.k, {n: sx.n}), DATA.ui['stname.' + sx.k])}</p></div>`;
-  else if(px) det = `<div class="fdet pas"><div class="fdn">${px.name}</div><p>${refText(pasText(e, px))}</p></div>`;
+  if(sx){ const uk = sx.id.includes('-') ? sx.id.split('-')[1] : null, on = multi && uk && e.units[uk] ? `<span class="fby"><span class="ic">${pIcon(e.units[uk])}</span>${e.units[uk].name}</span>` : '';
+    det = `<div class="fdet stx ${sx.cls}"><div class="fdn">${DATA.ui['stname.' + sx.k]} ${sx.n}${on}</div><p>${refText(fillUi('st.' + sx.k, {n: sx.n}), DATA.ui['stname.' + sx.k])}</p></div>`; }
+  else if(px){ const uk = pasUnit(px), on = multi && uk && e.units[uk] ? `<span class="fby"><span class="ic">${pIcon(e.units[uk])}</span>${e.units[uk].name}</span>` : '';
+    det = `<div class="fdet pas"><div class="fdn">${px.name}${on}</div><p>${refText(pasText(e, px))}</p></div>`; }
   else if(tag === 'u' && e.units[idx]) det = unitDetail(e, idx);
   else if(a) det = `<div class="fdet${a.ch ? ' ch' : ''}"><div class="fdn">${a.n}${a.by && multi && e.units[a.by] ? `<span class="fby"><span class="ic">${pIcon(e.units[a.by])}</span>${e.units[a.by].name}${e.units[a.by].broken ? '(' + DATA.ui['unit.broken'] + ')' : ''}</span>` : ''}</div>${moveLines(e, a).map(t => `<p>${refText(t)}</p>`).join('')}</div>`;
   $('#focus').classList.toggle('many', !!(e.phase && !e.phased) || rand || multi);
   $('#focus').innerHTML = `<div class="fhead"><b>${e.name}</b><button class="btn ghost fclose" type="button" data-act="foeClose">戻る</button></div>
-    <div class="fhp"><b>${e.hp}</b><span>/${e.maxHp}</span><span class="ei-bar"><i style="width:${e.hp / e.maxHp * 100}%"></i></span></div>${units}
-    ${chips.length ? `<div class="fsts">${chips.join('')}</div>` : ''}
-    <div class="fmoves">${rows}</div>${det}`;
+    <div class="fhp"><b>${e.hp}</b><span>/${e.maxHp}</span><span class="ei-bar"><i style="width:${e.hp / e.maxHp * 100}%"></i></span></div>${whole.length ? `<div class="fwhole">${whole.map(x => stChip(x, f.sel)).join('')}</div>` : ''}
+    ${wholePas.length ? `<div class="fpas"><span class="fsec in">${DATA.ui['foe.sec.pas']}</span>${wholePas.map(x => pasChip(x, f.sel)).join('')}</div>` : ''}${units}
+    <div class="fsec">${DATA.ui['foe.sec.moves']}</div><div class="fmoves">${rows}</div>${det}`;
+  // ユニットを選んだら、そのユニットの行動の一覧が見えるところまで送る
+  if(tag === 'u'){ const d = $('#focus .fdet'); if(d && d.getBoundingClientRect().bottom > $('#focus').getBoundingClientRect().bottom) d.scrollIntoView({block: 'nearest', behavior: 'smooth'}); }
 }
 function infoFoe(i, uid){
   const e = S.b.foes[i]; if(!e || !e.alive) return;

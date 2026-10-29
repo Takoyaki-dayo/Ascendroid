@@ -1021,6 +1021,16 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 .eu .sts{gap:3px;min-height:0;justify-content:center}
 .eu.up .sts{position:absolute;left:50%;transform:translateX(-50%);bottom:100%;margin-bottom:2px;flex-wrap:nowrap}
 .eu.m .sts .st{font-size:10.5px;height:16px;padding:0 4px 0 3px} .eu.m .sts .ic svg{width:10px;height:10px}
+/* 部位型の敵の部位の一覧(0.23.4): 名前は出さず、アイコン・細いバー・数字。控えめに */
+.eu.lst{transform:none;flex-direction:row;align-items:center;gap:4px;padding:2px 5px;border-color:#18242f;background:rgba(9,15,22,.6)}
+.eu.lst .frow{gap:4px} .eu.lst .hpb{width:28px;height:3px} .eu.lst .hpt{font-size:10px;min-width:15px;color:var(--fg2)}
+.eu.lst .uic svg{width:10px;height:10px}
+.eu.lst .sts{flex-wrap:nowrap;gap:2px} .eu.lst .sts .st{height:14px;font-size:9.5px;padding:0 3px 0 2px;gap:2px} .eu.lst .sts .ic svg{width:8px;height:8px}
+.eu.lst.tgt{border-color:var(--cy);background:rgba(56,211,255,.1)}
+#shaker.focus .eu.lst{opacity:0;pointer-events:none}
+.upt.lic i{width:15px;height:15px;display:flex;align-items:center;justify-content:center;color:var(--fg2);border-width:1px;background:rgba(9,15,22,.9)} .upt.lic i svg{width:9px;height:9px}
+.upt.lic.act i{color:var(--foe2);border-color:var(--foe2)} .upt.lic.ch i{color:var(--just2);border-color:var(--just2)}
+#foes.aim .upt.lic i{width:17px;height:17px} .upt.lic.tgt i{background:var(--cy);border-color:var(--cy);color:#04121a}
 /* 自機の状態は耐久の数字の右(下に置くと手札にかかる) */
 #meSts{position:absolute;left:94px;top:-3px;flex-wrap:nowrap}
 /* ===== 警戒度(0.20.0) ===== */
@@ -1148,7 +1158,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 <script src="data/text.js"></script>
 <script src="js/engine.js"></script>
 <script>
-const APP_VERSION = '0.23.3';
+const APP_VERSION = '0.23.4';
 const $ = s => document.querySelector(s);
 const EN = ENGINE, RULE = EN.RULE;
 const VIEW = RULE.view, NOW = 170, PX = 34, xs = c => NOW + c * PX, STRIP_Y = 150, SWIFT_VIS = 3;
@@ -1348,6 +1358,7 @@ function foeX(n, i){ return (n === 1 ? [620] : n === 2 ? [560, 690] : [494, 600,
 //   位置は data/enemies.js の look・units の at(本体の絵の中心から)。敵が1体なら右の広いところに置く
 //   ユニットが1つの敵(と、複数の敵がいるとき)は、バーは1本(キー '*')
 const ANCHOR = {x: 665, y: 222};
+const LIST = {x: 732, y: 186, h: 24}; // 部位型の敵の、部位の一覧の左上と1行の高さ
 const GEOM = new Map();
 const sprSize = (kind, s) => ({w: (kind === 'tank' ? 120 : 90) * s, h: 100 * s});
 // ユニットの在りか(0.18.2): units の pt は本体の絵の中の位置(絵の viewBox の座標)。画面の座標に直す
@@ -1357,20 +1368,25 @@ function sprPoint(main, pt){ const z = sprSize(main.kind, main.s), vb = sprVB(ma
 function barEdge(u){ const w = 46, h = 28, p = u.pt; if(p.x < u.x - w) return {x: u.x - w, y: u.y + 9}; if(p.x > u.x + w) return {x: u.x + w, y: u.y + 9}; return {x: u.x, y: p.y < u.y ? u.y : u.y + h}; }
 function foeGeom(e){
   const f = FOES[e.key], so = solo(), U = f.units || {};
-  const A = so ? ANCHOR : {x: foeX(S.b.foes.length, e.i) + 45, y: 220};
+  // 部位型(0.23.4): 1つの体にユニットが付いている敵(ユニット自身の絵がない)は、核のバーだけを体の下に出し、
+  //   ほかのユニットは右端に控えめな一覧(アイコン・細いバー・数字)。体の上の印にも同じアイコン。詳しくは敵の詳細で
+  const list = so && e.uids.length > 1 && !!f.kind && !Object.values(U).some(u => u.spr);
+  const A = so ? (list ? {x: ANCHOR.x - 58, y: ANCHOR.y} : ANCHOR) : {x: foeX(S.b.foes.length, e.i) + 45, y: 220};
   const multi = so && e.uids.length > 1, look = (so && f.look) || {s: 1, at: [0, 0]};
   const kind = f.kind || (!multi ? (Object.values(U).find(u => u.spr) || {}).spr || 'drone' : null);
   const main = kind ? {kind, s: look.s, x: A.x + look.at[0], y: A.y + look.at[1]} : null;
   const units = {};
   if(!multi) units['*'] = {x: A.x, y: A.y + 52, cx: main ? main.x : A.x, cy: main ? main.y : A.y};
-  else e.uids.forEach((k, j) => {
+  else { let row = 0; e.uids.forEach((k, j) => {
     const d = U[k] || {}, at = d.at || [130, -150 + j * 44], x = A.x + at[0], y = A.y + at[1];
-    if(d.spr){ const z = sprSize(d.spr, d.s || 1); units[k] = {x, y: y + z.h / 2 - 2, cx: x, cy: y, spr: d.spr, sx: x - z.w / 2, sy: y - z.h / 2, w: z.w, h: z.h}; }
+    if(list && d.pt && !d.core){ const q = sprPoint(main, d.pt); units[k] = {x: LIST.x, y: LIST.y + row++ * LIST.h, cx: q.x, cy: q.y, pt: q, lst: true}; }
+    else if(list && d.core){ const q = d.pt ? sprPoint(main, d.pt) : {x: main.x, y: main.y}; units[k] = {x: main.x, y: y, cx: q.x, cy: q.y, core: true}; }
+    else if(d.spr){ const z = sprSize(d.spr, d.s || 1); units[k] = {x, y: y + z.h / 2 - 2, cx: x, cy: y, spr: d.spr, sx: x - z.w / 2, sy: y - z.h / 2, w: z.w, h: z.h}; }
     else if(d.pt && main){ const q = sprPoint(main, d.pt); units[k] = {x, y, cx: q.x, cy: q.y, pt: q}; }
     else units[k] = {x, y, cx: d.core && main ? main.x : x, cy: d.core && main ? main.y : y - 6};
-  });
+  }); }
   // side: 敵全体の状態とパッシブを、ユニットのバーではなくタイムラインの列の頭に出す(敵が1体のとき)
-  return {A, main, units, multi, side: so};
+  return {A, main, units, multi, side: so, list};
 }
 function buildFoes(){
   const b = S.b, so = solo();
@@ -1383,12 +1399,12 @@ function buildFoes(){
     const g = foeGeom(e); GEOM.set(e.i, g);
     // 絵を持たないユニットは、本体の絵の中の在りかに印を置き、耐久バーと線で結ぶ
     const pts = Object.entries(g.units).filter(([, u]) => u.pt);
-    if(pts.length) h += `<svg class="ulines" viewBox="0 0 844 390" aria-hidden="true">${pts.map(([k, u]) => { const b = barEdge(u); return `<line data-ul="${e.i}.${k}" x1="${b.x}" y1="${b.y}" x2="${u.pt.x}" y2="${u.pt.y}"/>`; }).join('')}</svg>`;
+    if(pts.length && !g.list) h += `<svg class="ulines" viewBox="0 0 844 390" aria-hidden="true">${pts.map(([k, u]) => { const b = barEdge(u); return `<line data-ul="${e.i}.${k}" x1="${b.x}" y1="${b.y}" x2="${u.pt.x}" y2="${u.pt.y}"/>`; }).join('')}</svg>`;
     if(g.main){ const z = sprSize(g.main.kind, g.main.s); h += `<div class="foe" data-f="${e.i}" style="left:${g.main.x - z.w / 2}px;top:${g.main.y - z.h / 2}px;width:${z.w}px;height:${z.h}px">${SPR[g.main.kind]}<span class="reticle"></span></div>`; }
-    for(const [k, u] of pts) h += `<div class="upt" data-f="${e.i}" data-u="${k}" style="left:${u.pt.x}px;top:${u.pt.y}px"><i></i><span class="ret"></span></div>`;
+    for(const [k, u] of pts) h += `<div class="upt${g.list ? ' lic' : ''}" data-f="${e.i}" data-u="${k}" style="left:${u.pt.x}px;top:${u.pt.y}px"><i>${g.list ? pIcon(e.units[k]) : ''}</i><span class="ret"></span></div>`;
     for(const [k, u] of Object.entries(g.units)){
       if(u.spr) h += `<div class="foe us" data-f="${e.i}" data-u="${k}" style="left:${u.sx}px;top:${u.sy}px;width:${u.w}px;height:${u.h}px">${SPR[u.spr]}<span class="reticle"></span></div>`;
-      h += `<div class="eu${g.multi ? ' m' : ''}${u.y > 250 ? ' up' : ''}" data-f="${e.i}" data-u="${k}" style="left:${u.x}px;top:${u.y}px"><span class="frow">${g.multi ? `<span class="uic">${pIcon(e.units[k])}</span>` : so ? '' : `<span class="ftag">${e.tag}</span>`}<span class="hpb"><i></i><s></s></span><span class="hpt"></span></span><span class="sts"></span></div>`;
+      h += `<div class="eu${g.multi ? ' m' : ''}${u.lst ? ' lst' : ''}${u.y > 250 && !u.lst ? ' up' : ''}" data-f="${e.i}" data-u="${k}" style="left:${u.x}px;top:${u.y}px"><span class="frow">${g.multi ? `<span class="uic">${pIcon(e.units[k])}</span>` : so ? '' : `<span class="ftag">${e.tag}</span>`}<span class="hpb"><i></i><s></s></span><span class="hpt"></span></span><span class="sts"></span></div>`;
     }
     // ユニットが複数ある敵は、敵全体の状態とパッシブを右上に
     // 0.23.3: 敵全体の状態とパッシブは、タイムラインの敵の列の頭(今より左)に出す(laneHead)
@@ -1896,7 +1912,7 @@ function cardMotion(k, ti){
   else if(t === 'draw') pulse($('#pileDraw'), 'flash', 360);
 }
 // 耐久バーの上(ダメージの数字を出す場所)
-function unitTop(i, uid){ const g = GEOM.get(i); if(!g) return foeCenter(i); const u = g.units[g.multi ? uid : '*'] || g.units['*']; return u ? {x: u.x, y: u.y - 8} : foeCenter(i); }
+function unitTop(i, uid){ const g = GEOM.get(i); if(!g) return foeCenter(i); const u = g.units[g.multi ? uid : '*'] || g.units['*']; return u ? (u.lst ? {x: u.cx, y: u.cy - 18} : {x: u.x, y: u.y - 8}) : foeCenter(i); }
 function cardFx(x){
   switch(x.kind){
     case 'dmg': { const p = unitTop(x.e, x.unit); floatAt(p.x, p.y, '−' + x.n, 'foe'); pulse(unitEl(x.e, x.unit), 'flash', 260); pulse(unitSpr(x.e, x.unit), 'ehit', 280); break; }
@@ -2624,7 +2640,7 @@ function infoFoe(i, uid){
   const g = GEOM.get(i); let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
   const add = (a, b, c, d) => { x0 = Math.min(x0, a); y0 = Math.min(y0, b); x1 = Math.max(x1, c); y1 = Math.max(y1, d); };
   if(g.main){ const z = sprSize(g.main.kind, g.main.s); add(g.main.x - z.w / 2, g.main.y - z.h / 2, g.main.x + z.w / 2, g.main.y + z.h / 2); }
-  for(const u of Object.values(g.units)){ if(u.spr) add(u.sx, u.sy, u.sx + u.w, u.sy + u.h); add(u.x - 36, u.y, u.x + 36, u.y + 26); }
+  for(const u of Object.values(g.units)){ if(u.spr) add(u.sx, u.sy, u.sx + u.w, u.sy + u.h); if(u.lst) add(u.cx - 14, u.cy - 14, u.cx + 14, u.cy + 14); else add(u.x - 36, u.y, u.x + 36, u.y + 26); }
   const z = Math.min(FOCUS.scale, 340 / (x1 - x0), 330 / (y1 - y0)), cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
   $('#world').style.transform = `translate(${FOCUS.x - z * cx}px, ${FOCUS.y - z * cy}px) scale(${z})`;
   $('#world').style.transformOrigin = '0 0';

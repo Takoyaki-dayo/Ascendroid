@@ -131,6 +131,7 @@ details.grp[open]{gap:5px;padding-bottom:6px}
 .json{width:100%;min-height:320px;font-family:var(--f-mono);font-size:12px;border:1px solid var(--line);border-radius:6px;background:var(--panel);padding:8px;resize:vertical}
 .err{color:var(--foe);font-size:12px}
 .newkey{display:flex;gap:8px;align-items:center}
+.newreq{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:6px 10px;font-size:12px;color:var(--dim);border-bottom:1px solid var(--line)}
 .newkey input{flex:1;min-width:0;border:1px solid var(--line);border-radius:5px;padding:5px 8px;background:var(--panel);font-family:var(--f-mono)}
 /* 送る */
 .send{border-top:1px solid var(--line);padding:10px 14px;display:flex;flex-direction:column;gap:8px;background:var(--panel);border-radius:0 0 10px 10px}
@@ -277,12 +278,12 @@ const KINDS = [
   // セリフ(0.33.0): 自機(K-7)の独り言だけ。場面ごとに1項目(text/lines.csv)。敵のひとことは敵のページの「ひとこと」で(text/enemies.csv の 敵.say.*)
   {id:'lines', label:'セリフ', items:() => lineItems(), head:['場面', '重み', 'セリフ'], cells:it => [nmCell(it), `<td class="num">${it.obj.weight}</td>`, `<td class="tx">${it.obj.lines.length ? it.obj.lines.map(esc).join('<br>') : '<span class="note">(無し)</span>'}</td>`],
     preview:o => `<div class="note">${esc(LHINT)}</div>`},
-  {id:'parts', label:'パーツ', items:() => Object.entries(D.parts).map(([k, p]) => ({key:k, name:p.name, obj:clone(p)})),
+  {id:'parts', label:'パーツ', tmpl:() => ({name:'', slot:'calc', max:0, text:'', fx:{}}), items:() => Object.entries(D.parts).map(([k, p]) => ({key:k, name:p.name, obj:clone(p)})),
     head:['部位', '名前', '耐久', '効果'], cells:it => [`<td>${esc(SLOT[it.obj.slot])}</td>`, nmCell(it), `<td class="num">${it.obj.max}</td>`, `<td class="tx">${esc(it.obj.text)}</td>`],
     preview:o => `<b>${esc(o.name)}</b>(${esc(SLOT[o.slot])}・耐久${o.max})<br>${esc(o.text)}`},
   {id:'keywords', label:'キーワード', items:() => Object.entries(D.kwName).map(([k, n]) => ({key:k, name:n, obj:{name:n, desc:D.keywords[n]}})),
     head:['名前', '説明'], cells:it => [nmCell(it), `<td class="tx">${esc(it.obj.desc)}</td>`]},
-  {id:'events', label:'イベント', items:() => [...D.events, ...(D.transit || [])].map(e => ({key:e.id, name:e.title, obj:clone(e)})),
+  {id:'events', label:'イベント', tmpl:() => ({title:'', text:'', choices:[{label:'', sub:'', fx:{}}, {label:'', sub:'', fx:{}}]}), items:() => [...D.events, ...(D.transit || [])].map(e => ({key:e.id, name:e.title, obj:clone(e)})),
     head:['タイトル', '選択肢1', '選択肢2', '選択肢3'], cells:it => [nmCell(it), ...[0, 1, 2].map(i => { const c = it.obj.choices[i]; return c ? `<td class="tx"><b>${esc(c.label)}</b> ${esc(c.sub)}</td>` : '<td>—</td>'; })]},
   {id:'areas', label:'エリア', items:() => (D.areas || []).map(A => ({key:A.id, name:A.name, obj:clone(A)})),
     head:['名前', '部屋', '敵の強さ(耐久・攻撃)', 'ボス'], cells:it => [nmCell(it), `<td class="num">${it.obj.rooms}</td>`, `<td class="num">×${it.obj.scale.hp} ・ ×${it.obj.scale.d}</td>`, `<td>${esc((D.encounters[it.obj.boss] || {foes:[]}).foes.map(f => D.foes[f] ? D.foes[f].name : f).join('、'))}</td>`]},
@@ -992,7 +993,10 @@ function renderList(){
   if(abm){ $('#tbl').innerHTML = abListHTML(); return; }
   const K = KBY[S.kind], q = S.q.trim().toLowerCase();
   const items = curItems().filter(it => !q || (it.name || '').toLowerCase().includes(q) || it.key.toLowerCase().includes(q));
-  $('#tbl').innerHTML = `<table><thead><tr>${K.head.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${items.map(it => { const cs = K.cells(it).slice(); const rp = itemReplies(S.kind, it.key); if(rp) cs[0] = cs[0].replace(/<\/td>$/, '<span class="badge rp" title="Claude の返事がある">返事</span></td>'); if(eUnsent(S.kind, it.key)) cs[0] = cs[0].replace(/<\/td>$/, '<span class="badge w-review" title="送っていない変更がある">未送信</span></td>'); return `<tr class="row${S.sel === it.key ? ' sel' : ''}${rp ? ' hl' : ''}" data-key="${esc(it.key)}" tabindex="0">${cs.join('')}</tr>`; }).join('')}</tbody></table>`;
+  // 追加の依頼(0.34.1): このタブから送った新しい項目は本体に入るまで一覧に無いので、上に並べる(押すと依頼のタブへ)
+  const nr = REQ.filter(r => r.kind === S.kind && r.type === 'new' && (r.status === 'open' || r.status === 'discuss'));
+  const nrh = nr.length ? `<div class="newreq">追加の依頼: ${nr.map(r => `<button type="button" class="btn quiet sm" data-tab="requests">${esc(r.label || r.key)}</button>`).join('')}</div>` : '';
+  $('#tbl').innerHTML = nrh + `<table><thead><tr>${K.head.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${items.map(it => { const cs = K.cells(it).slice(); const rp = itemReplies(S.kind, it.key); if(rp) cs[0] = cs[0].replace(/<\/td>$/, '<span class="badge rp" title="Claude の返事がある">返事</span></td>'); if(eUnsent(S.kind, it.key)) cs[0] = cs[0].replace(/<\/td>$/, '<span class="badge w-review" title="送っていない変更がある">未送信</span></td>'); return `<tr class="row${S.sel === it.key ? ' sel' : ''}${rp ? ' hl' : ''}" data-key="${esc(it.key)}" tabindex="0">${cs.join('')}</tr>`; }).join('')}</tbody></table>`;
 }
 function fieldHTML(p, v, orig){
   const last = p.split('.').pop(), chg = JSON.stringify(v) !== JSON.stringify(getPath(orig, p)), id = 'f-' + p.replace(/[^\w]/g, '_');
@@ -1032,13 +1036,14 @@ function renderSide0(){
   if(K.wb){ side.innerHTML = wbSideHTML(); wbRefresh(); return; }
   if(K.ab){ side.innerHTML = abSideHTML(); return; }
   if(!it && !(S.draft && S.draft.isNew)){
+    if(innerWidth <= 820){ S.mobileOpen = false; side.hidden = true; } // スマホで何も選んでいないときは一覧に戻す(0.34.1。閉じるボタンの無い画面に取り残された)
     side.innerHTML = `<div class="empty">一覧から項目を選ぶと、ここで数値や文を書き換えられます。書き換えたら、下にコメントを添えて「送る」で依頼になります。数値を変えずにコメントだけ送れば相談になります。</div>`;
     return;
   }
   const orig = S.draft.isNew ? {} : it.obj, o = S.draft.obj;
   let body = '';
   if(K.preview) body += `<div class="preview" id="pv"></div>`;
-  if(S.draft.isNew) body += `<div class="newkey"><label for="newkey">キー</label><input id="newkey" type="text" value="${esc(S.draft.key)}" placeholder="英字のキー(例 overdrive)"></div>`;
+  if(S.draft.isNew) body += `<div class="newkey"><label for="newkey">キー</label><input id="newkey" type="text" value="${esc(S.draft.key)}" placeholder="空なら自動で付ける"></div>`;
   body += `<div class="mode"><button type="button" data-mode="form" class="${S.json ? '' : 'on'}">欄で編集</button><button type="button" data-mode="json" class="${S.json ? 'on' : ''}">JSON で編集</button></div>`;
   if(S.json) body += `<textarea class="json" id="jsonbox" spellcheck="false">${esc(S.jsonText)}</textarea><div id="jsonmsg"></div>`;
   else if(K.form) body += K.form(o, orig);
@@ -1075,7 +1080,7 @@ function refreshDyn(){
   const db = $('#diffbox'); if(db){ db.innerHTML = ch.map(c => `<div class="dl"><span class="p" title="${esc(c.path)}">${esc(c.path)}</span><span class="v"><s>${esc(c.from)}</s> → <b>${esc(c.to)}</b></span></div>`).join(''); db.hidden = !ch.length; }
   const si = $('#sendinfo'); if(si) si.textContent = dbState === 'off' ? 'この表示では送れません(サインインして開いてください)' : ch.length ? `変更 ${ch.length} か所` : S.draft.isNew ? '新しい項目' : '';
   const rs = $('#resetDraft'); if(rs) rs.hidden = !ch.length;
-  const sb = $('#sendBtn'); if(sb) sb.disabled = !(DB && !S.jsonErr && (S.draft.isNew ? S.draft.key.trim() : (ch.length || S.comment.trim())));
+  const sb = $('#sendBtn'); if(sb) sb.disabled = !(DB && !S.jsonErr && (S.draft.isNew ? (S.draft.key.trim() || (S.draft.obj && (S.draft.obj.name || S.draft.obj.title)) || S.comment.trim()) : (ch.length || S.comment.trim())));
   if(!S.json) document.querySelectorAll('#sideb .fld').forEach(f => { const inp = f.querySelector('[data-path]'); if(!inp) return; const p = inp.dataset.path; f.classList.toggle('chg', JSON.stringify(getPath(o, p)) !== JSON.stringify(getPath(orig, p))); });
 }
 const STATUS = {open:'未対応', discuss:'相談中', done:'反映済み', dropped:'見送り'};
@@ -1147,11 +1152,12 @@ function toast(t){ const el = $('#toast'); el.textContent = t; el.classList.add(
 async function send(){
   if(!DB) return;
   const it = curItem();
-  if(S.draft.isNew && !S.draft.key.trim()) return;
+  // キーが空なら自動で付ける(0.34.1。これまでは黙って送らなかった)
+  if(S.draft.isNew && !S.draft.key.trim()) S.draft.key = S.kind.slice(0, 1) + Date.now().toString(36);
   const doc = reqDoc(S.kind, S.draft, S.comment);
   delete EDRAFT[S.kind + '|' + (S.draft.isNew ? '+' : S.draft.key)];
   const btn = $('#sendBtn'); if(btn) btn.disabled = true;
-  try{ await DB.collection('requests').add(doc); S.comment = ''; if(S.draft.isNew){ S.draft = null; S.sel = null; } else startDraft(it); toast('送りました'); }
+  try{ await DB.collection('requests').add(doc); S.comment = ''; if(S.draft.isNew){ S.draft = null; S.sel = null; S.mobileOpen = false; toast('送りました(追加は依頼のタブにあります)'); } else { startDraft(it); toast('送りました'); } }
   catch(e){ toast(e && e.code === 'quota_exceeded' ? '保存できる件数の上限です' : '送れませんでした。もう一度試してください'); }
   renderAll();
 }
@@ -1223,7 +1229,8 @@ document.addEventListener('click', e => {
   if(t.closest('#abReply')){ abReply(); return; }
   const at = t.closest('[data-abtext]'); if(at && S.ab){ S.ab.custom = at.dataset.abtext === 'custom'; if(S.ab.custom && !S.ab.attr.text) S.ab.attr.text = abText(S.ab.attr); S.ab.dirty = true; renderSide(); return; }
   if(t.closest('#addBtn') && KBY[S.kind] && KBY[S.kind].wb){ S.bulkOpen = false; wbStash(); const k = 'n' + Date.now().toString(36); S.sel = k; S.wbDeckOpen = false; wbStart(k); S.mobileOpen = true; renderAll(); setTimeout(() => { const n = $('#w_name'); if(n) n.focus(); }, 50); return; }
-  if(t.closest('#addBtn')){ S.bulkOpen = false; eStash(); const it = curItem(); S.draft = {isNew:true, key:'', obj:it ? clone(it.obj) : {}}; S.sel = null; S.json = true; S.jsonText = JSON.stringify(S.draft.obj, null, 2); S.jsonErr = ''; S.comment = ''; S.mobileOpen = true; renderAll(); return; }
+  // 追加(0.34.1): 型があればその空の形から欄で書く(パーツ・イベント)。無ければ選んでいる項目を写して JSON で
+  if(t.closest('#addBtn')){ S.bulkOpen = false; eStash(); const K = KBY[S.kind], it = curItem(); S.draft = {isNew:true, key:'', obj:K.tmpl ? K.tmpl() : it ? clone(it.obj) : {}}; S.sel = null; S.json = !K.tmpl; S.jsonText = JSON.stringify(S.draft.obj, null, 2); S.jsonErr = ''; S.comment = ''; S.mobileOpen = true; renderAll(); return; }
 });
 document.addEventListener('keydown', e => { if(e.key === 'Enter'){ const row = e.target.closest && e.target.closest('tr.row'); if(row) selectItem(row.dataset.key); } });
 function setMode(json){

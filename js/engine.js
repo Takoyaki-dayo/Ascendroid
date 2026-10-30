@@ -102,6 +102,8 @@ function dmgOf(st, c, d){
   // 攻撃の種類は近接(melee)と遠隔(ranged)。0.17.0 までの物理と光学
   if(dd.t === 'melee'){ n += fx(st, 'out', 'melee'); if(c.cost <= 2) n += fx(st, 'out', 'quickMelee'); if(c.cost >= 4) n += fx(st, 'out', 'heavyMelee'); }
   else n += fx(st, 'arm', 'ranged');
+  // 自機の増幅(0.33.0、カードの amp:{t, n}): この戦闘の間、その種類の攻撃のダメージ+
+  if(st.b && st.b.amp) n += st.b.amp[dd.t] || 0;
   return n;
 }
 function blockOf(st, c){ return c.block + fx(st, 'dur', 'block'); }
@@ -212,6 +214,15 @@ function attrFx(st, A, e, uid, ev, n){
   if(f.block){ gainBlock(b, f.block); ev.push({kind:'block', n:f.block}); }
   if(f.draw){ const m = drawN(b, f.draw); ev.push({kind:'draw', n:m}); }
   if(f.again && live && n != null) hitFoe(st, e, n, ev, uid);
+  // 0.33.0: 侵食(持続)を与える / 本体の耐久を回復する
+  if((f.dotn || f.dotp) && live){ addDot(e.units[uid], f.dotn || 0, f.dotp || 0); ev.push({kind:'dotAdd', e:e.i, unit:uid, n:f.dotn || 0, p:f.dotp || 0}); }
+  if(f.heal){ const r = st.run, v = Math.min(f.heal, r.bodyMax - r.body); r.body += v; ev.push({kind:'heal', n:v}); }
+}
+// ブレイクしたときの属性(0.33.0、on:'break'): このカード(時限を含む)で敵の行動をブレイクしたとき、その敵ごとに1回
+function breakAttr(st, c, ev, extra){
+  const A = attrOf(c); if(!A || A.on !== 'break') return;
+  const es = new Set([...ev.filter(x => x.kind === 'break').map(x => x.e), ...(extra || [])]);
+  for(const i of es){ const e = st.b.foes[i]; if(e) attrFx(st, A, e, e.alive ? defaultUid(e) : null, ev); }
 }
 // ヒットごとの属性を付けて当てる
 function hitA(st, c, e, n, ev, uid){ hitFoe(st, e, n, ev, uid); const A = attrOf(c); if(A && A.on === 'hit') attrFx(st, A, e, uid, ev, n); }
@@ -278,9 +289,14 @@ function applyCard(st, k, ti){
   if(c.draw){ const n = drawN(b, c.draw); if(c.borrow) b.drawIn += c.draw * RULE.draw; ev.push({kind:'draw', n, borrow: !!c.borrow}); }
   // 0.17.0: スウィフトはディレイに統一(パーツの効果も敵へのディレイ)
   if(c.cost === 0){ const s = fx(st, 'mob', 'zeroDelay'); if(s) for(const e of b.foes) if(e.alive){ const v = delayFoe(e, s); ev.push({kind:'delay', e:e.i, n:v, anger:pasN(e, 'punctual')}); } }
+  // 0.33.0: 自分にクラック(selfCrack) / 自機の増幅(amp:{t, n}) / 自分にダメージ(selfDmg、本体に直接。ブロックでは防げない)
+  if(c.selfCrack){ b.crack = (b.crack || 0) + c.selfCrack; ev.push({kind:'selfCrack', n:c.selfCrack}); }
+  if(c.amp && c.amp.n){ (b.amp = b.amp || {})[c.amp.t] = (b.amp[c.amp.t] || 0) + c.amp.n; ev.push({kind:'amp', t:c.amp.t, n:c.amp.n}); }
+  if(c.selfDmg){ const v = Math.min(c.selfDmg, st.run.body); st.run.body -= v; ev.push({kind:'selfDmg', n:v}); }
   // 発動したときの属性: 全体のカードは敵ごと、単体は狙った敵、狙わないカードは自分への効果だけ
   const A = attrOf(c);
   if(A && A.on === 'cast'){ if(targets.length) for(const e of (c.all ? targets : targets.slice(0, 1))) attrFx(st, A, e, uidOf(e), ev); else attrFx(st, A, null, null, ev); }
+  breakAttr(st, c, ev, b.justBroke); b.justBroke = null;
   return ev;
 }
 function fireTimer(st, t){
@@ -289,6 +305,9 @@ function fireTimer(st, t){
   if(!e || !e.alive) e = b.foes.find(f => f.alive);
   if(e) hitA(st, c, e, dmgOf(st, c, c.timer.dmg), ev, e === b.foes[t.e] ? t.unit : defaultUid(e));
   return ev;
+}
+// 時限の後の不安定のブレイクも含めて、ブレイクしたときの属性を働かせる
+function timerBreakAttr(st, t, ev){ const c = D.cards[t.k]; if(c) breakAttr(st, c, ev);
 }
 // 敵の攻撃1回。extra は連携の上乗せ
 function strike(st, e, a, extra, noParry){
@@ -401,6 +420,7 @@ function* spendGen(st, cost, k, ti, noInt){
           const ev = fireTimer(st, t);
           // 不安定(0.31.0): 時限もカードのダメージなので、この行動と同じサイクルに当たればブレイク
           for(const e of b.foes) if(e.alive && e.r <= 0 && cur(e).ch && !e.chain && ev.some(x => x.kind === 'dmg' && x.e === e.i)){ const nm = cur(e).n; advance(e); b.breaks = (b.breaks || 0) + 1; ev.push({kind:'break', e:e.i, name:nm}); }
+          timerBreakAttr(st, t, ev);
           yield {type:'timer', t, ev};
         }
         if(!b.foes.some(e => e.alive)){ b.cast = null; out.won = true; return out; }
@@ -434,7 +454,7 @@ function* spendGen(st, cost, k, ti, noInt){
             const nm = cur(e).n, jp = actorUid(e, cur(e)); advance(e);
             const cr = fx(st, 'calc', 'justCrack'); e.units[jp].crack += cr;
             const dl = fx(st, 'calc', 'justDelay'); if(dl) delayFoe(e, dl);
-            out.justs.push({i:e.i, name:nm}); yield {type:'just', e:e.i, crack:cr, delay:dl};
+            out.justs.push({i:e.i, name:nm}); (b.justBroke = b.justBroke || []).push(e.i); yield {type:'just', e:e.i, crack:cr, delay:dl};
           }
         }
         if(c.parry && real) b.parryNow = true;

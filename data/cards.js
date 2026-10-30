@@ -7,7 +7,8 @@
 // timer: {t:何サイクル後, dmg:{...}} 時限。使った後、t サイクルたつと対象に効果
 // parry: JUST(使い終えたサイクルに敵の行動が重なる)なら、その攻撃を無効にして同じダメージを返す
 // atomic: アトミック(中断されない)
-// (0.29.0〜0.30.0) dot:{n:回数, p:威力} 持続を与える / ward:{w, s} 防壁(w サイクルの間、合計 s までのダメージを防ぐ) / exile: 使うと廃棄(この戦闘の間戻らない)
+// (0.29.0〜0.33.0) dot:{n:回数, p:威力} 侵食(0.29 の持続)を与える / selfCrack: 自分にクラック / amp:{t, n} 自機の増幅(この戦闘の間) / selfDmg: 自分にダメージ(本体に直接)
+//   / ward:{w, s} 防壁(w サイクルの間、合計 s までのダメージを防ぐ) / exile: 使うと廃棄(この戦闘の間戻らない)
 //   breakNext: 対象の敵の次の行動をブレイク / discard: 使い終えた後、手札を選んで捨てる枚数 / grow: この戦闘の間、同じカードのダメージ+ / scrapBreak: このカードでユニットを破壊したときのスクラップ
 // gain: 充電を得る / spend: 充電をすべて消費し、1につき {dmg:{t, n}} のダメージ、または block のブロック(アーキタイプ「充電」)
 window.DATA = window.DATA || {};
@@ -38,7 +39,7 @@ DATA.cards = {
   // 0.31.0: 工房で作られたカード(名前はユーザー)
   dismantle:{cost:4, tgt:true, dmg:{t:'melee', n:15}, scrapBreak:6},
   tempest:  {cost:3, all:true, dmg:{t:'ranged', n:1, x:7}},
-  paradox:  {cost:0, tgt:true, crack:3, breakNext:true, exile:true},
+  paradox:  {cost:0, tgt:true, selfCrack:3, breakNext:true, exile:true},
   iterate:  {cost:1, tgt:true, dmg:{t:'melee', n:0, x:2}, grow:1},
   triple:   {cost:3, tgt:true, dmg:{t:'melee', n:6, x:3}},
   dispose:  {cost:2, tgt:true, dmg:{t:'melee', n:15}, discard:1},

@@ -42,7 +42,7 @@ ui.stname.armor,ブロック,敵の状態の名前
 ui.stname.str,増幅,敵の状態の名前
 ui.stname.crack,クラック,敵の状態の名前
 ui.stname.vuln,隙,敵の状態の名前
-ui.stname.dot,持続,敵の状態の名前(仮)
+ui.stname.dot,侵食,敵の状態の名前(仮)
 ui.st.armor,受けるダメージを{n}まで軽減し、軽減した分減少する。,敵の状態の説明({n} は値)
 ui.st.str,攻撃のダメージ+{n}。,敵の状態の説明
 ui.st.crack,受けるダメージ+{n}。,敵の状態の説明

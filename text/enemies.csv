@@ -11,13 +11,16 @@ turret,迎撃タレット,名前
 turret.pat.0,砲撃,行動1
 turret.pat.1,装甲を重ねる,行動2
 turret.react,迎撃,反応(パッシブの名前と、撃つ行動の名前)
-exec,処刑機 EX-07,名前
+exec,不屈の処刑者,名前
 exec.pat.0,殴打,行動1
 exec.pat.1,充填,行動2
 exec.pat.2,粉砕砲,行動3
 exec.phase.0,殴打,耐久50%未満の行動1
 exec.phase.1,粉砕砲,耐久50%未満の行動2
 exec.passive.phase,処刑態勢,パッシブ(耐久が減ると行動が変わる)
+exec.say.start,……認知。解析。処刑。,ひとこと: 戦闘の始め
+exec.say.pat:2,……瓦解せよ。,ひとこと: 行動3のとき
+exec.say.phase,……処刑。処刑。処刑！,ひとこと: 段階変化したとき
 hacker,ハッカー,名前
 hacker.pat.0,割り込み,行動1
 hacker.pat.1,射撃,行動2
@@ -91,7 +94,7 @@ swarm.pat.2,突撃,行動3
 swarm.pat.3,突撃,行動4
 swarm.pat.4,群体照準,行動5
 swarm.passive.0,群体,パッシブ1
-tank,多脚戦車,名前
+tank,多脚戦車型突破機構,名前
 tank.unit.core,車体,ユニットの名前
 tank.unit.gun,主砲,ユニットの名前
 tank.unit.mg,機銃,ユニットの名前
@@ -126,7 +129,7 @@ crusher.pat.2,プレス,行動3
 crusher.passive.0,腹の中,パッシブ1
 crusher.say.start,分別を開始します。,ひとこと: 戦闘の始め
 crusher.say.pat:1,可燃ごみ。,ひとこと: 行動2のとき
-clock,工程管理機,名前
+clock,タイムキーピング,名前
 clock.pat.0,打刻,行動1
 clock.pat.1,打刻,行動2
 clock.pat.2,打刻,行動3

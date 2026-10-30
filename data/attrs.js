@@ -3,9 +3,10 @@
 // 属性付きのカードはキー「元のキー@属性のキー」で DATA.cards に登録する(attrCard)。エンジンと画面はふつうのカードとして扱う
 //
 // 属性の形: {on, fx}
-//   on: 'hit' ヒットごと(ダメージが当たるたび。時限・充電の消費のダメージも) / 'cast' 発動したとき / 'just' JUST のとき
+//   on: 'hit' ヒットごと(ダメージが当たるたび。時限・充電の消費のダメージも) / 'cast' 発動したとき / 'just' JUST のとき / 'break' このカードで敵の行動をブレイクしたとき(0.33.0)
 //   fx: crack 当たった(狙った)ユニットにクラック / delay 対象の敵にディレイ / gain 充電を得る / block ブロックを得る / draw カードを引く
 //       again もう1回当たる(on:'hit' のときだけ。2回目には属性は働かない)
+//       dotn・dotp 侵食(持続)の回数・威力を与える / heal 本体の耐久を回復する(0.33.0)
 // 付けられるかは「働くかどうか」だけで決まる(attrOk): ヒットごとはダメージを与えるカードだけ、クラック・ディレイは狙う相手のいるカードだけ、など
 // 具体的な属性はまだ入れていない(0.28.0 は仕組みだけ)。カード工房の「属性」タブで作り、試遊で試せる
 window.DATA = window.DATA || {};
@@ -19,8 +20,9 @@ DATA.attrOk = (c, a) => {
   const A = DATA.attrs[a]; if(!A || !c || c.junk || c.attr) return false;
   const f = A.fx || {}, hits = !!(c.dmg || (c.spend && c.spend.dmg) || c.timer), aim = !!(c.tgt || c.all);
   if(A.on === 'hit' && !hits) return false;
+  if(A.on === 'break' && !hits && !c.breakNext) return false;
   if(f.again && A.on !== 'hit') return false;
-  if((f.crack || f.delay) && A.on !== 'hit' && !aim) return false;
+  if((f.crack || f.delay || f.dotn || f.dotp) && A.on !== 'hit' && A.on !== 'break' && !aim) return false;
   return Object.values(f).some(v => v);
 };
 // 属性の効果の文(text/attrs.csv に文が無ければ数値から作る)
@@ -34,8 +36,10 @@ DATA.attrText = a => {
   if(f.block) out.push(`${f.block}ブロックを得る`);
   if(f.draw) out.push(`カードを${f.draw}枚引く`);
   if(f.again) out.push('もう1回当たる');
+  if(f.dotn || f.dotp) out.push(`侵食${f.dotn || 0}/${f.dotp || 0}を与える`);
+  if(f.heal) out.push(`耐久を${f.heal}回復する`);
   if(!out.length) return '';
-  const head = A.on === 'hit' ? 'ヒットごとに、' : A.on === 'just' ? 'JUST：' : '';
+  const head = A.on === 'hit' ? 'ヒットごとに、' : A.on === 'just' ? 'JUST：' : A.on === 'break' ? 'ブレイクしたとき、' : '';
   return head + out.join('。') + '。';
 };
 // 属性付きのカードの定義を作る。c は元のカード(キャラの数値を当てたもの)

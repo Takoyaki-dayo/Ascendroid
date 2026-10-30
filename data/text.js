@@ -24,7 +24,7 @@ window.DATA = window.DATA || {};
     else if(where === 'broke' && f.broke){ const [uid, j] = i.split(':'); if(f.broke[uid] && f.broke[uid][+j]) f.broke[uid][+j].n = n; }
   }
   for(const e of [...(D.events || []), ...(D.transit || [])]){ const t = T.events[e.id]; if(!t) continue; e.title = t.title; e.text = t.text; t.choices.forEach((c, i) => { if(e.choices[i]) Object.assign(e.choices[i], c); }); }
-  D.lines = {speaker: tm.speaker || '', rules: T.lines.rules, room: T.lines.room};
+  D.lines = {speaker: tm.speaker || '', rules: T.lines.rules, room: T.lines.room, roomW: T.lines.roomW || {}};
 })(DATA, {
  "cards": {
   "flick": {
@@ -129,7 +129,7 @@ window.DATA = window.DATA || {};
   },
   "paradox": {
    "name": "論理破綻",
-   "text": "クラック{crack}を与える。次の敵の行動をブレイクする。これを廃棄する。"
+   "text": "クラック{sc}を得る。次の敵の行動をブレイクする。これを廃棄する。"
   },
   "iterate": {
    "name": "パターン反復",
@@ -167,7 +167,7 @@ window.DATA = window.DATA || {};
   },
   {
    "key": "dot",
-   "name": "持続",
+   "name": "侵食",
    "desc": "回数/威力で表す。毎サイクル、威力分のダメージを受け、回数が1減少する。0になると消える。ブロックとクラックの影響を受けない。"
   },
   {
@@ -321,13 +321,16 @@ window.DATA = window.DATA || {};
   "turret.pat.0": "砲撃",
   "turret.pat.1": "装甲を重ねる",
   "turret.react": "迎撃",
-  "exec": "処刑機 EX-07",
+  "exec": "不屈の処刑者",
   "exec.pat.0": "殴打",
   "exec.pat.1": "充填",
   "exec.pat.2": "粉砕砲",
   "exec.phase.0": "殴打",
   "exec.phase.1": "粉砕砲",
   "exec.passive.phase": "処刑態勢",
+  "exec.say.start": "……認知。解析。処刑。",
+  "exec.say.pat:2": "……瓦解せよ。",
+  "exec.say.phase": "……処刑。処刑。処刑！",
   "hacker": "ハッカー",
   "hacker.pat.0": "割り込み",
   "hacker.pat.1": "射撃",
@@ -401,7 +404,7 @@ window.DATA = window.DATA || {};
   "swarm.pat.3": "突撃",
   "swarm.pat.4": "群体照準",
   "swarm.passive.0": "群体",
-  "tank": "多脚戦車",
+  "tank": "多脚戦車型突破機構",
   "tank.unit.core": "車体",
   "tank.unit.gun": "主砲",
   "tank.unit.mg": "機銃",
@@ -436,7 +439,7 @@ window.DATA = window.DATA || {};
   "crusher.passive.0": "腹の中",
   "crusher.say.start": "分別を開始します。",
   "crusher.say.pat:1": "可燃ごみ。",
-  "clock": "工程管理機",
+  "clock": "タイムキーピング",
   "clock.pat.0": "打刻",
   "clock.pat.1": "打刻",
   "clock.pat.2": "打刻",
@@ -564,64 +567,86 @@ window.DATA = window.DATA || {};
    {
     "when": "bodyLow",
     "text": [
-     "本体の損耗が限界に近い。"
-    ]
+     "機能停止箇所多数……もうだめかも。"
+    ],
+    "w": 6
    },
    {
     "when": "partBroken",
     "text": [
-     "{part}、機能停止。"
-    ]
+     "{part}が大破しちゃった。"
+    ],
+    "w": 5
    },
    {
     "when": "vulnNow",
     "text": [
-     "{enemy}に隙がある。"
-    ]
+     "{enemy}に隙がある……狙えるかな？"
+    ],
+    "w": 4
    },
    {
     "when": "windNow",
     "text": [
-     "{enemy}の体勢が浮いた。{poise}以上の一撃でブレイクできる。"
-    ]
+     "……崩せそうな気がする。"
+    ],
+    "w": 4
    },
    {
     "when": "chargeSoon",
     "text": [
-     "{enemy}の{move}まで{t}サイクル。"
-    ]
+     "悪い予感。あと、{t}サイクル。"
+    ],
+    "w": 5
    },
    {
     "when": "handEmpty",
     "text": [
-     "手札がない。"
-    ]
+     "何か考えつかないと……！"
+    ],
+    "w": 3
    },
    {
     "when": "partWorn",
     "text": [
-     "{part}の損傷が直っていない。"
-    ]
+     "{part}、まだ壊れてるみたい。"
+    ],
+    "w": 2
    },
    {
     "when": "focus",
     "text": [
-     "{part}に攻撃が集中している。"
-    ]
+     "{part}が狙われてるみたい。"
+    ],
+    "w": 3
+   },
+   {
+    "when": "idle",
+    "text": [
+     "この先、何があるんだろう。",
+     "あとで部品、磨いておこう。",
+     "……ちょっと眠い。機械なのに。"
+    ],
+    "w": 1
    }
   ],
   "room": {
    "battle": [
-    "搬入区画。",
-    "処理区画。",
-    "配電区画。"
+    "搬入区画。広いねえ……。",
+    "処理区画だ。物騒な物がたくさん。",
+    "配電区画。私にはわかんない。"
    ],
    "elite": [
-    "大型の反応がある。"
+    "強そうな敵。心してかかろうか"
    ],
    "boss": [
-    "中枢区画。"
+    "呼吸を整えて。"
    ]
+  },
+  "roomW": {
+   "battle": 2,
+   "elite": 2,
+   "boss": 2
   }
  },
  "terms": {
@@ -667,7 +692,7 @@ window.DATA = window.DATA || {};
   "ui.stname.str": "増幅",
   "ui.stname.crack": "クラック",
   "ui.stname.vuln": "隙",
-  "ui.stname.dot": "持続",
+  "ui.stname.dot": "侵食",
   "ui.st.armor": "受けるダメージを{n}まで軽減し、軽減した分減少する。",
   "ui.st.str": "攻撃のダメージ+{n}。",
   "ui.st.crack": "受けるダメージ+{n}。",

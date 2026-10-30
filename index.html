@@ -1002,7 +1002,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 .st{height:17px;padding:0 5px 0 4px;gap:3px;border:1px solid #3d5468;border-radius:3px;background:rgba(6,10,15,.92);font-size:11.5px;line-height:1;color:var(--fg)}
 .st .ic{display:flex} .st .ic svg{width:11px;height:11px}
 .st.blk{color:#fff;background:#2c4153;border-color:#8fb0c6}
-.st.swf,.st.chg{color:#9eeaff;background:#0d3644;border-color:var(--cy)}
+.st.swf,.st.chg,.st.amp{color:#9eeaff;background:#0d3644;border-color:var(--cy)}
 .st.crack{color:#fff;background:#b8304a;border-color:#ff7088}
 .st.arm{color:#fff;background:#3b5267;border-color:#9cb9cd}
 .st.ecrk{color:#a8eeff;background:#0d3644;border-color:var(--cy)}
@@ -1187,7 +1187,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 <script src="data/text.js"></script>
 <script src="js/engine.js"></script>
 <script>
-const APP_VERSION = '0.32.4';
+const APP_VERSION = '0.33.0';
 const $ = s => document.querySelector(s);
 const EN = ENGINE, RULE = EN.RULE;
 const VIEW = RULE.view, NOW = 170, PX = 34, xs = c => NOW + c * PX, STRIP_Y = 150, SWIFT_VIS = 3;
@@ -1326,7 +1326,7 @@ function computePreview(){
 }
 
 /* ---------- cards ---------- */
-function cardType(c){ return c.junk ? 'junk' : c.timer ? 'timer' : c.parry ? 'parry' : c.dmg ? c.dmg.t : c.dot ? 'dot' : c.ward ? 'block' : c.spend ? (c.spend.dmg ? c.spend.dmg.t : 'block') : c.block ? 'block' : c.gain ? 'charge' : c.delay ? 'delay' : c.swift ? 'swift' : c.draw ? 'draw' : 'crack'; }
+function cardType(c){ return c.junk ? 'junk' : c.timer ? 'timer' : c.parry ? 'parry' : c.dmg ? c.dmg.t : c.dot ? 'dot' : c.ward ? 'block' : c.amp ? c.amp.t : c.spend ? (c.spend.dmg ? c.spend.dmg.t : 'block') : c.block ? 'block' : c.gain ? 'charge' : c.delay ? 'delay' : c.swift ? 'swift' : c.draw ? 'draw' : 'crack'; }
 const stv = st => st && st.b ? st : {run: S ? S.run : null, b: null};
 function vDmg(st, c, d){ return st && st.run ? EN.dmgOf(stv(st), c, d) : (d || c.dmg).n; }
 function vBlock(st, c){ return st && st.run ? EN.blockOf(stv(st), c) : c.block; }
@@ -1353,7 +1353,8 @@ function cardVal(k, st){
   if(c.swift) return c.swift;
   if(c.gain) return c.gain;
   if(c.draw) return c.draw;
-  return c.crack;
+  if(c.amp) return c.amp.n;
+  return c.crack || c.selfCrack || '';
 }
 // カードの文は text/cards.csv の型に数値を差し込む。{dmg} などはパーツの補正込みの値。キーワードの名前は色を付ける
 // この戦闘で増えたダメージ(0.30.0、grow)
@@ -1362,7 +1363,7 @@ function cardVals(c, st, k){
   return {dmg: c.dmg ? vDmg(st, c) + growV(st, k) : '', discard: c.discard || '', grow: c.grow || '', scrap: c.scrapBreak || '', ww: c.ward ? c.ward.w : '', ws: c.ward ? c.ward.s : '', x: c.dmg && c.dmg.x || '', block: c.block != null ? vBlock(st, c) : '', delay: c.delay || '', swift: c.swift || '',
     crack: c.crack || '', draw: c.draw || '', t: c.timer ? c.timer.t : '', tdmg: c.timer ? vDmg(st, c, c.timer.dmg) : '',
     gain: c.gain || '', per: c.spend ? (c.spend.dmg ? c.spend.dmg.n : c.spend.block) : '',
-    sn: c.spend && c.spend.n || '', sv: c.spend && c.spend.n ? spendVal(st, c) : '', dn: c.dot ? c.dot.n || 0 : '', dp: c.dot ? c.dot.p || 0 : ''};
+    sn: c.spend && c.spend.n || '', sv: c.spend && c.spend.n ? spendVal(st, c) : '', dn: c.dot ? c.dot.n || 0 : '', dp: c.dot ? c.dot.p || 0 : '', sc: c.selfCrack || '', amp: c.amp ? c.amp.n : '', sd: c.selfDmg || ''};
 }
 const KW_CLS = {crack:'kw-f', atomic:'kwp', just:'kw-j'};
 const kwList = () => Object.entries(DATA.kwName).sort((a, b) => b[1].length - a[1].length);
@@ -1488,6 +1489,7 @@ function renderMe(){
   if(S.b.block) st += `<span class="st blk" id="stBlk"><span class="ic">${IC.block}</span>${S.b.block}</span>`;
   if(S.b.swift) st += `<span class="st swf"><span class="ic">${IC.swift}</span>${S.b.swift}</span>`;
   if(S.b.charge) st += `<span class="st chg"><span class="ic">${IC.charge}</span>${S.b.charge}</span>`;
+  for(const [t, n] of Object.entries(S.b.amp || {})) if(n) st += `<span class="st amp" title="${DATA.kwName.str}"><span class="ic">${IC[t]}</span>+${n}</span>`;
   for(const w of S.b.wards || []) st += `<span class="st ward" title="${DATA.kwName.guard}"><span class="ic">${IC.block}</span>${w.left}<i>/${w.s}</i></span>`;
   if(S.b.crack) st += `<span class="st crack"><span class="ic">${IC.crack}</span>${S.b.crack}</span>`;
   $('#meSts').innerHTML = st;
@@ -1881,8 +1883,14 @@ function monologue(){
   const sum = {}; for(const e of b.foes){ if(!e.alive) continue; for(const m of EN.upcoming(e)) if(m.a.kind !== 'delay') sum[m.a.p] = (sum[m.a.p] || 0) + m.a.d; }
   const top = Object.entries(sum).sort((a, c) => c[1] - a[1])[0];
   if(top && top[1] >= 10) hit.focus = {part: SLOT_BY[top[0]].fn};
-  for(const r of L.rules) if(hit[r.when]) return fillLine(r.text, hit[r.when]);
-  const a = L.room[UI.node ? UI.node.type : 'battle']; return a ? pickLine(a) : '';
+  // 0.33.0: 当てはまる場面を重みで1つ選ぶ。idle(どこでも)と部屋ごとの独り言も候補に入る
+  hit.idle = {};
+  const rk = UI.node ? UI.node.type : 'battle', cand = L.rules.filter(r => hit[r.when] && r.text.length).map(r => ({t:r.text, v:hit[r.when], w:r.w || 1}));
+  if(L.room[rk] && L.room[rk].length) cand.push({t:L.room[rk], v:{}, w:(L.roomW || {})[rk] || 1});
+  if(!cand.length) return '';
+  let x = Math.random() * cand.reduce((a, c) => a + c.w, 0), i = 0;
+  for(; i < cand.length - 1; i++){ x -= cand[i].w; if(x <= 0) break; }
+  return fillLine(cand[i].t, cand[i].v);
 }
 function memChips(list){
   const counts = {}; for(const c of list) counts[c.k] = (counts[c.k] || 0) + 1;
@@ -1906,7 +1914,7 @@ function pulse(el, cls, ms){ if(!el) return; el.classList.remove(cls); void el.o
 // 敵のひとこと(0.23.0)。text/enemies.csv の 敵.say.*。同じひとことは1戦闘に1回だけ
 function foeSay(i, key){
   const e = S && S.b && S.b.foes[i]; if(!e) return;
-  const t = (FOES[e.key].say || {})[key]; if(!t) return;
+  const t0 = (FOES[e.key].say || {})[key], t = Array.isArray(t0) ? t0[Math.floor(Math.random() * t0.length)] : t0; if(!t) return; // 0.33.0: 複数あればどれか
   e._said = e._said || {}; if(e._said[key]) return; e._said[key] = true;
   const g = GEOM.get(i); let x, y;
   if(g && g.main){ const z = sprSize(g.main.kind, g.main.s); x = g.main.x; y = g.main.y - z.h / 2 + 4; }
@@ -2011,6 +2019,10 @@ function cardFx(x){
     case 'dot': pulse(unitSpr(x.e, x.unit), 'ehit', 200); break;
     case 'ward': floatAt(130, 250, DATA.kwName.guard + ' ' + x.w + '/' + x.n, 'cy'); break;
     case 'scrapGain': floatAt(170, 240, '+' + x.n, 'cy'); break;
+    case 'amp': floatAt(150, 236, '▲' + x.n, 'cy'); break;
+    case 'selfCrack': floatAt(DROID.x + 10, DROID.y - 92, DATA.kwName.crack + '+' + x.n, 'foe'); break;
+    case 'selfDmg': floatAt(DROID.x + 10, DROID.y - 80, '−' + x.n, 'foe'); pulse($('#droid'), 'glitch', 320); break;
+    case 'heal': if(x.n) floatAt(DROID.x + 10, DROID.y - 80, '+' + x.n, 'cy'); break;
     case 'grow': floatAt(150, 236, '▲' + x.n, 'cy'); break;
     case 'delay':
       if(x.anger){ const p = foeCenter(x.e); floatAt(p.x, p.y - 70, '▲' + x.anger, 'foe'); pulse(foeEl(x.e), 'ehit', 280); foeSay(x.e, 'anger'); }
@@ -2178,7 +2190,7 @@ function flyCard(el, x, y){
   setTimeout(() => el.remove(), 260);
 }
 // 耐久が減って行動が変わった敵を知らせる
-function phaseCheck(){ for(const e of S.b.foes){ if(e.phased && !e._phaseShown && e.alive){ e._phaseShown = true; const p = foeCenter(e.i); floatAt(p.x, p.y - 96, '!!', 'foe big'); pulse(foeEl(e.i), 'ejust', 460); rescan('PHASE'); } } }
+function phaseCheck(){ for(const e of S.b.foes){ if(e.phased && !e._phaseShown && e.alive){ e._phaseShown = true; const p = foeCenter(e.i); floatAt(p.x, p.y - 96, '!!', 'foe big'); pulse(foeEl(e.i), 'ejust', 460); rescan('PHASE'); foeSay(e.i, 'phase'); } } }
 async function showEvent(ev, k, ti){
   if(ev.type === 'card' || ev.type === 'timer' || ev.type === 'dot' || ev.type === 'foe') setTimeout(phaseCheck, 0);
   switch(ev.type){

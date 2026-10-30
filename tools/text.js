@@ -32,14 +32,16 @@ const T = {cards:{}, keywords:[], parts:{}, foes:{}, events:{}, lines:{rules:[],
 for(const r of read('cards.csv')) T.cards[r['キー']] = {name:r['名前'], text:r['テキスト']};
 for(const r of read('keywords.csv')) T.keywords.push({key:r['キー'], name:r['名前'], desc:r['説明']});
 for(const r of read('parts.csv')) T.parts[r['キー']] = {name:r['名前'], text:r['テキスト']};
-for(const r of read('enemies.csv')) T.foes[r['キー']] = r['名前'];
+// ひとこと(敵.say.場面)は同じキーの行を並べると複数のセリフ(毎回どれか1つ。0.33.0)
+for(const r of read('enemies.csv')){ const k = r['キー']; if(k.includes('.say.') && k in T.foes) T.foes[k] = [].concat(T.foes[k], r['名前']); else T.foes[k] = r['名前']; }
 for(const r of read('events.csv')) T.events[r['キー']] = {title:r['タイトル'], text:r['本文'], choices:[1, 2, 3].filter(i => r['選択肢' + i]).map(i => ({label:r['選択肢' + i], sub:r['選択肢' + i + 'の説明']}))};
+// 自機の独り言(0.33.0): 当てはまる場面(部屋ごとの他愛ない独り言 room:部屋 と、どこでも出る idle も含む)を重みで1つ選び、その中のどれか1行。重みは場面の行のどれかに書く(無ければ1)
 for(const r of read('lines.csv')){
-  const w = r['条件'], t = r['セリフ'];
-  if(w.startsWith('room:')){ const k = w.slice(5); (T.lines.room[k] = T.lines.room[k] || []).push(t); continue; }
+  const w = r['条件'], t = r['セリフ'], wt = +(r['重み'] || 0);
+  if(w.startsWith('room:')){ const k = w.slice(5); (T.lines.room[k] = T.lines.room[k] || []).push(t); if(wt) (T.lines.roomW = T.lines.roomW || {})[k] = wt; continue; }
   let rule = T.lines.rules.find(x => x.when === w);
-  if(!rule){ rule = {when:w, text:[]}; T.lines.rules.push(rule); }
-  rule.text.push(t);
+  if(!rule){ rule = {when:w, text:[], w:1}; T.lines.rules.push(rule); }
+  if(t) rule.text.push(t); if(wt) rule.w = wt;
 }
 for(const r of read('terms.csv')) T.terms[r['キー']] = r['名前'];
 // 属性(0.28.0): 名前はカード名の頭に付く。テキストが空なら数値から作る(data/attrs.js の attrText)
@@ -69,7 +71,7 @@ function apply(D, T){
     else if(where === 'broke' && f.broke){ const [uid, j] = i.split(':'); if(f.broke[uid] && f.broke[uid][+j]) f.broke[uid][+j].n = n; }
   }
   for(const e of [...(D.events || []), ...(D.transit || [])]){ const t = T.events[e.id]; if(!t) continue; e.title = t.title; e.text = t.text; t.choices.forEach((c, i) => { if(e.choices[i]) Object.assign(e.choices[i], c); }); }
-  D.lines = {speaker: tm.speaker || '', rules: T.lines.rules, room: T.lines.room};
+  D.lines = {speaker: tm.speaker || '', rules: T.lines.rules, room: T.lines.room, roomW: T.lines.roomW || {}};
 }
 
 const out = `// 自動生成(tools/text.js が text/*.csv から作る)。直接は編集せず、CSV を直して node tools/text.js

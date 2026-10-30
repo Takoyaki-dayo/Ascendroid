@@ -464,7 +464,7 @@ function wbListHTML(){
 function wbStart(key){
   const r = wbRows().find(x => x.key === key);
   if(r) S.wb = {key, isNew:r.isNew, card:clone(r.card), rarity:r.rarity, idea:(r.doc && r.doc.idea) || '', custom: !!(r.card.text && r.card.text !== genText(r.card)), dirty:false, reply:''};
-  else S.wb = {key, isNew:true, card:{cost:1, tgt:true, dmg:{t:'melee', n:4}, name:'', text:''}, rarity:'common', idea:'', custom:false, dirty:true, reply:''};
+  else S.wb = {key, isNew:true, card:{cost:1, name:'', text:''}, rarity:'common', idea:'', custom:false, dirty:true, reply:''};
 }
 const numIn = (id, v, lab, min = 0, max = 99) => `<div class="fld"><label for="${id}">${lab}</label><input id="${id}" data-wb="${id}" type="number" min="${min}" max="${max}" step="1" value="${v ?? ''}"></div>`;
 function wbSideHTML(){
@@ -537,19 +537,19 @@ function wbInput(id, el){
     case 'w_cost': c.cost = num() || 0; break;
     case 'w_rar': w.rarity = el.value; break;
     case 'w_tg': delete c.tgt; delete c.all; if(el.value === 'tgt') c.tgt = true; else if(el.value === 'all') c.all = true; break;
-    case 'w_dt': if(el.value) c.dmg = {t:el.value, n:(c.dmg && c.dmg.n) || 4, x:(c.dmg && c.dmg.x) || undefined}; else delete c.dmg; if(c.dmg && !c.dmg.x) delete c.dmg.x; return 'full';
+    case 'w_dt': if(el.value) c.dmg = {t:el.value, n:(c.dmg && c.dmg.n) || 0, x:(c.dmg && c.dmg.x) || undefined}; else delete c.dmg; if(c.dmg && !c.dmg.x) delete c.dmg.x; return 'full';
     case 'w_dn': c.dmg.n = num() || 0; break;
     case 'w_dx': { const v = num(); if(v > 1) c.dmg.x = v; else delete c.dmg.x; break; }
     case 'w_crack': setN('crack', num()); break;
     case 'w_delay': setN('delay', num()); break;
-    case 'w_tm': if(el.value) c.timer = {t:4, dmg:{t:'ranged', n:9}}; else delete c.timer; return 'full';
+    case 'w_tm': if(el.value) c.timer = {t:1, dmg:{t:'ranged', n:0}}; else delete c.timer; return 'full';
     case 'w_tt': c.timer.t = num() || 1; break;
     case 'w_td': c.timer.dmg.n = num() || 0; break;
     case 'w_tdt': c.timer.dmg.t = el.value; break;
     case 'w_block': { const v = num(); if(v === undefined) delete c.block; else c.block = v; break; }
     case 'w_draw': setN('draw', num()); break;
     case 'w_gain': setN('gain', num()); break;
-    case 'w_sp': if(el.value === 'dmg') c.spend = {dmg:{t:'ranged', n:6}}; else if(el.value === 'block') c.spend = {block:4}; else if(el.value === 'fdmg') c.spend = {n:3, dmg:{t:'ranged', n:16}}; else if(el.value === 'fblock') c.spend = {n:3, block:12}; else delete c.spend; return 'full';
+    case 'w_sp': if(el.value === 'dmg') c.spend = {dmg:{t:'ranged', n:0}}; else if(el.value === 'block') c.spend = {block:0}; else if(el.value === 'fdmg') c.spend = {n:1, dmg:{t:'ranged', n:0}}; else if(el.value === 'fblock') c.spend = {n:1, block:0}; else delete c.spend; return 'full';
     case 'w_sn': c.spend.n = Math.max(1, num() || 1); break;
     case 'w_per': if(c.spend.dmg) c.spend.dmg.n = num() || 0; else c.spend.block = num() || 0; break;
     case 'w_spt': c.spend.dmg.t = el.value; break;
@@ -737,7 +737,7 @@ function abListHTML(){
 function abStart(key){
   const r = abRows().find(x => x.key === key);
   if(r) S.ab = {key, isNew:r.isNew, attr:clone(r.attr), idea:(r.doc && r.doc.idea) || '', test:(r.test || []).slice(), custom: !!r.attr.text, dirty:false, reply:''};
-  else S.ab = {key, isNew:true, attr:{name:'', on:'hit', fx:{crack:1}, text:''}, idea:'', test:[], custom:false, dirty:true, reply:''};
+  else S.ab = {key, isNew:true, attr:{name:'', on:'hit', fx:{}, text:''}, idea:'', test:[], custom:false, dirty:true, reply:''};
 }
 function abOpen(key){ if(S.ab && S.ab.dirty) ABDRAFT[S.ab.key] = S.ab; if(ABDRAFT[key]){ S.ab = ABDRAFT[key]; delete ABDRAFT[key]; } else abStart(key); }
 function abPreview(){

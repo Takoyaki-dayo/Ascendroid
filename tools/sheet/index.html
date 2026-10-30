@@ -293,9 +293,14 @@ const PART_CARDS = new Set(Object.values(D.parts).flatMap(p => (p.fx && p.fx.car
 let WB = {}, WBDECK = null, wbState = 'wait';
 const wbBase = k => { const c = D.classCard(clone(D.cards[k]), K7.cards[k]); return c; };
 const wbBaseRarity = k => PART_CARDS.has(k) ? 'special' : D.startDeck.includes(k) ? 'starter' : (D.rareCards || []).includes(k) ? 'rare' : '';
+// 保存していない編集: 別のカードに移っても捨てずに取っておき、戻ったら続きから(確認のダイアログは出さない)
+const WBDRAFT = {};
+function wbStash(){ if(S.wb && S.wb.dirty) WBDRAFT[S.wb.key] = S.wb; }
+function wbOpen(key){ wbStash(); if(WBDRAFT[key]){ S.wb = WBDRAFT[key]; delete WBDRAFT[key]; } else wbStart(key); }
+const wbUnsaved = k => !!WBDRAFT[k] || !!(S.wb && S.wb.key === k && S.wb.dirty);
 function wbRows(){
-  const keys = new Set([...Object.keys(D.cards).filter(k => !D.cards[k].junk), ...Object.keys(WB)]);
-  return [...keys].map(k => { const d = WB[k]; const card = d ? d.card : wbBase(k); return {key:k, doc:d || null, card, rarity: d ? (d.rarity || '') : wbBaseRarity(k), status: d ? d.status : 'base', isNew: !D.cards[k]}; })
+  const keys = new Set([...Object.keys(D.cards).filter(k => !D.cards[k].junk), ...Object.keys(WB), ...Object.keys(WBDRAFT)]);
+  return [...keys].map(k => { const d = WB[k], dr = WBDRAFT[k]; const card = dr ? dr.card : d ? d.card : wbBase(k); return {key:k, doc:d || null, card, rarity: dr ? (dr.rarity || '') : d ? (d.rarity || '') : wbBaseRarity(k), status: d ? d.status : 'base', isNew: !D.cards[k]}; })
     .sort((a, b) => (a.card.cost - b.card.cost) || RORDER.indexOf(a.rarity) - RORDER.indexOf(b.rarity) || (a.card.name || '').localeCompare(b.card.name || '', 'ja'));
 }
 const wbDeck = () => (WBDECK && WBDECK.startDeck) || D.startDeck;
@@ -343,7 +348,7 @@ function wbListHTML(){
   <table class="wbt"><thead><tr><th>レア度</th><th>コスト</th><th>名前</th><th>種類</th><th>効果(K-7)</th><th>1サイクルあたり</th><th>状態</th></tr></thead><tbody>${rows.map(r => {
     const th = r.doc && r.doc.thread ? r.doc.thread.length : 0, d = cnt(r.key);
     return `<tr class="row${S.sel === r.key ? ' sel' : ''}${r.status === 'cut' ? ' cut' : ''}" data-key="${esc(r.key)}" tabindex="0"><td><span class="rar r-${r.rarity || 'none'}">${RARITY[r.rarity] || '—'}</span></td><td class="num">${r.card.cost}</td>
-      <td class="nm">${esc(r.card.name || '(名前なし)')}${d ? `<span class="badge new" title="最初のデッキの枚数">×${d}</span>` : ''}<span class="k">${esc(r.key)}${r.isNew ? ' · 新規' : ''}</span></td><td style="white-space:nowrap">${wbType(r.card)}</td><td class="tx">${fillText(r.card)}</td><td class="effc">${effHTML(r.card)}</td>
+      <td class="nm">${esc(r.card.name || '(名前なし)')}${d ? `<span class="badge new" title="最初のデッキの枚数">×${d}</span>` : ''}${wbUnsaved(r.key) ? '<span class="badge w-review" title="保存していない変更がある">未保存</span>' : ''}<span class="k">${esc(r.key)}${r.isNew ? ' · 新規' : ''}</span></td><td style="white-space:nowrap">${wbType(r.card)}</td><td class="tx">${fillText(r.card)}</td><td class="effc">${effHTML(r.card)}</td>
       <td>${wbStatusBadge(r.status)}${th ? ` <span class="note">💬${th}</span>` : ''}</td></tr>`; }).join('')}</tbody></table>`;
 }
 /* 編集 */
@@ -390,7 +395,7 @@ function wbSideHTML(){
     ${doc ? `<div class="grp"><h3>添削のやりとり</h3>${thread || '<div class="note">まだありません。「添削に出す」で Claude が見ます。</div>'}<div class="reply"><input id="w_reply" type="text" placeholder="返信・質問" value="${esc(w.reply)}"><button class="btn quiet" type="button" id="wbReply">送る</button></div></div>` : ''}
   </div>
   <div class="send"><div class="row"><span class="sp" id="wbinfo"></span>
-    ${doc && !w.isNew ? '<button class="btn quiet" type="button" id="wbRevert" title="工房での変更を消して本体の値に戻す">本体に戻す</button>' : ''}${doc ? `<button class="btn quiet" type="button" id="wbCut">${st === 'cut' ? '削るのをやめる' : '削る'}</button>` : ''}
+    ${doc && !w.isNew ? `<button class="btn ${S.revertArm === w.key ? '' : 'quiet'}" type="button" id="wbRevert" title="工房での変更を消して本体の値に戻す">${S.revertArm === w.key ? 'もう一度押すと戻す(やりとりも消える)' : '本体に戻す'}</button>` : ''}${doc ? `<button class="btn quiet" type="button" id="wbCut">${st === 'cut' ? '削るのをやめる' : '削る'}</button>` : ''}
     <button class="btn quiet" type="button" id="wbSave">保存</button><button class="btn" type="button" id="wbReview">${st === 'review' ? '添削待ち' : '添削に出す'}</button></div>
     ${doc && (st === 'reviewed' || st === 'review' || st === 'draft') ? '<div class="row"><span class="sp"></span><button class="btn ghost" type="button" id="wbOk">確定にする(本体への反映を頼む)</button></div>' : ''}</div>`;
 }
@@ -439,11 +444,11 @@ async function wbSave(status){
   if(!w.custom) c.text = genText(c);
   const doc = {key:w.key, card:c, rarity:w.rarity || '', idea:w.idea || '', status: status || (prev && prev.status !== 'base' && prev.status !== 'merged' ? prev.status : 'draft'), thread:(prev && prev.thread) || [], at:new Date().toISOString()};
   if(status === 'review' && prev && prev.status === 'review') doc.status = 'review';
-  try{ await DB.doc('cards/' + w.key).set(doc); w.dirty = false; toast(status === 'review' ? '添削に出しました' : status === 'ok' ? '確定にしました' : '保存しました'); }
+  try{ await DB.doc('cards/' + w.key).set(doc); w.dirty = false; delete WBDRAFT[w.key]; toast(status === 'review' ? '添削に出しました' : status === 'ok' ? '確定にしました' : '保存しました'); }
   catch(e){ toast(e && e.code === 'quota_exceeded' ? '保存できる量の上限です' : '保存できませんでした'); }
 }
 async function wbStatus(st){ if(!DB || !S.wb || !WB[S.wb.key]) return; try{ await DB.doc('cards/' + S.wb.key).update({status:st, at:new Date().toISOString()}); toast(WST[st]); }catch(e){ toast('変更できませんでした'); } }
-async function wbRevert(){ if(!DB || !S.wb || !WB[S.wb.key]) return; if(!confirm('工房での変更とやりとりを消して、本体の値に戻しますか?')) return; try{ await DB.doc('cards/' + S.wb.key).delete(); const k = S.wb.key; delete WB[k]; wbStart(k); toast('本体の値に戻しました'); renderAll(); }catch(e){ toast('戻せませんでした'); } }
+async function wbRevert(){ if(!DB || !S.wb || !WB[S.wb.key]) return; if(S.revertArm !== S.wb.key){ S.revertArm = S.wb.key; renderSide(); return; } S.revertArm = null; try{ await DB.doc('cards/' + S.wb.key).delete(); const k = S.wb.key; delete WB[k]; wbStart(k); toast('本体の値に戻しました'); renderAll(); }catch(e){ toast('戻せませんでした'); } }
 async function wbReply(){
   const inp = $('#w_reply'), d = S.wb && WB[S.wb.key]; if(!inp || !d || !DB) return; const t = inp.value.trim(); if(!t) return;
   try{ await DB.doc('cards/' + S.wb.key).update({thread:[...(d.thread || []), {who:'user', text:t, at:new Date().toISOString()}], status: d.status === 'reviewed' ? 'review' : d.status}); S.wb.reply = ''; toast('送りました'); }catch(e){ toast('送れませんでした'); }
@@ -588,7 +593,7 @@ function renderAll(){ document.querySelector('main').classList.toggle('wide', S.
 /* ---------- 編集 ---------- */
 function startDraft(it){ S.draft = {isNew:false, key:it.key, obj:clone(it.obj)}; S.json = false; S.jsonErr = ''; S.comment = ''; }
 function selectItem(key){
-  if(KBY[S.kind] && KBY[S.kind].wb){ if(S.wb && S.wb.dirty && S.wb.key !== key && !confirm('保存していない変更があります。捨てて移りますか?')) return; S.sel = key; S.wbDeckOpen = false; wbStart(key); S.mobileOpen = true; renderAll(); return; }
+  if(KBY[S.kind] && KBY[S.kind].wb){ if(!(S.wb && S.wb.key === key)) wbOpen(key); S.sel = key; S.wbDeckOpen = false; S.revertArm = null; S.mobileOpen = true; renderAll(); return; }
   const it = curItems().find(x => x.key === key); if(!it) return;
   if(S.draft && !S.draft.isNew && S.draft.key === key){ S.mobileOpen = true; renderAll(); return; }
   S.sel = key; startDraft(it); S.mobileOpen = true; renderAll();
@@ -630,7 +635,7 @@ async function drop(id){
 /* ---------- 入力 ---------- */
 document.addEventListener('click', e => {
   const t = e.target;
-  const tab = t.closest('[data-tab]'); if(tab){ S.kind = tab.dataset.tab; S.sel = null; S.draft = null; S.wb = null; S.wbDeckOpen = false; S.mobileOpen = false; S.q = ''; $('#q').value = ''; renderAll(); return; }
+  const tab = t.closest('[data-tab]'); if(tab){ wbStash(); S.kind = tab.dataset.tab; S.sel = null; S.draft = null; S.wb = null; S.wbDeckOpen = false; S.mobileOpen = false; S.q = ''; $('#q').value = ''; renderAll(); return; }
   // カード工房
   const wf = t.closest('[data-wbf]'); if(wf){ S.wbFilter = wf.dataset.wbf; renderList(); return; }
   const wt = t.closest('[data-wbtext]'); if(wt && S.wb){ S.wb.custom = wt.dataset.wbtext === 'custom'; if(S.wb.custom && !S.wb.card.text) S.wb.card.text = genText(S.wb.card); S.wb.dirty = true; renderSide(); return; }
@@ -641,7 +646,7 @@ document.addEventListener('click', e => {
   if(t.closest('#wbCut')){ wbStatus(WB[S.wb.key].status === 'cut' ? 'draft' : 'cut'); return; }
   if(t.closest('#wbRevert')){ wbRevert(); return; }
   if(t.closest('#wbReply')){ wbReply(); return; }
-  if(t.closest('#deckBtn')){ S.wbDeckOpen = true; S.wbDeckDraft = null; S.sel = null; S.wb = null; S.mobileOpen = true; renderAll(); return; }
+  if(t.closest('#deckBtn')){ wbStash(); S.wbDeckOpen = true; S.wbDeckDraft = null; S.sel = null; S.wb = null; S.mobileOpen = true; renderAll(); return; }
   if(t.closest('#deckSave')){ (async () => { try{ await DB.doc('config/deck').set({startDeck:S.wbDeckDraft, at:new Date().toISOString()}); S.wbDeckDraft = null; toast('保存しました'); renderAll(); }catch(e){ toast('保存できませんでした'); } })(); return; }
   if(t.closest('#deckReset')){ S.wbDeckDraft = D.startDeck.slice(); renderSide(); return; }
   if(t.closest('#playBtn')){ openPlay(); return; }
@@ -656,8 +661,8 @@ document.addEventListener('click', e => {
   if(t.closest('#sendBtn')){ send(); return; }
   if(t.closest('#sendGeneral')){ sendGeneral(); return; }
   if(t.closest('#resetDraft')){ const it = curItem(); if(it){ startDraft(it); renderSide(); } return; }
-  if(t.closest('#closeSide')){ S.mobileOpen = false; S.wbDeckOpen = false; renderSide(); return; }
-  if(t.closest('#addBtn') && KBY[S.kind].wb){ if(S.wb && S.wb.dirty && !confirm('保存していない変更があります。捨てて新しく作りますか?')) return; const k = 'n' + Date.now().toString(36); S.sel = k; S.wbDeckOpen = false; wbStart(k); S.mobileOpen = true; renderAll(); setTimeout(() => { const n = $('#w_name'); if(n) n.focus(); }, 50); return; }
+  if(t.closest('#closeSide')){ S.mobileOpen = false; S.wbDeckOpen = false; renderSide(); if(KBY[S.kind].wb) renderList(); return; }
+  if(t.closest('#addBtn') && KBY[S.kind].wb){ wbStash(); const k = 'n' + Date.now().toString(36); S.sel = k; S.wbDeckOpen = false; wbStart(k); S.mobileOpen = true; renderAll(); setTimeout(() => { const n = $('#w_name'); if(n) n.focus(); }, 50); return; }
   if(t.closest('#addBtn')){ const it = curItem(); S.draft = {isNew:true, key:'', obj:it ? clone(it.obj) : {}}; S.sel = null; S.json = true; S.jsonText = JSON.stringify(S.draft.obj, null, 2); S.jsonErr = ''; S.comment = ''; S.mobileOpen = true; renderAll(); return; }
 });
 document.addEventListener('keydown', e => { if(e.key === 'Enter'){ const row = e.target.closest && e.target.closest('tr.row'); if(row) selectItem(row.dataset.key); } });
@@ -673,7 +678,7 @@ document.addEventListener('input', e => {
   const t = e.target;
   if(t.id === 'q'){ S.q = t.value; renderList(); return; }
   if(t.id === 'w_reply' && S.wb){ S.wb.reply = t.value; return; }
-  if(t.dataset && t.dataset.wb && S.wb){ const r = wbInput(t.dataset.wb, t); S.wb.dirty = true; if(r === 'full') renderSide(); else wbRefresh(); return; }
+  if(t.dataset && t.dataset.wb && S.wb){ const was = S.wb.dirty, r = wbInput(t.dataset.wb, t); S.wb.dirty = true; if(r === 'full') renderSide(); else wbRefresh(); if(!was && innerWidth > 820) renderList(); return; }
   if(t.id === 'comment'){ S.comment = t.value; refreshDyn(); return; }
   if(t.id === 'newkey'){ S.draft.key = t.value; later(); return; }
   if(t.id === 'jsonbox'){ S.jsonText = t.value; try{ S.draft.obj = JSON.parse(t.value); S.jsonErr = ''; }catch(err){ S.jsonErr = 'JSON の書き方が崩れています: ' + err.message; } later(); return; }
@@ -694,12 +699,14 @@ addEventListener('resize', () => { const side = $('#side'); if(S.kind === 'reque
 const typing = () => { const a = document.activeElement; return !!a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) && a.id !== 'q'; };
 document.addEventListener('focusout', () => setTimeout(flushRender, 400));
 // 押している最中に描き直すと、押したボタンが消えて別の物が押される。指(マウス)を離すまで待つ
-let PRESS = false;
-document.addEventListener('pointerdown', () => { PRESS = true; }, true);
-const pressEnd = () => setTimeout(() => { PRESS = false; flushRender(); }, 80);
-document.addEventListener('pointerup', pressEnd, true);
-document.addEventListener('pointercancel', pressEnd, true);
-const busy = () => PRESS || typing();
+// 離したことが届かない場合(ダイアログ・画面の切り替えなど)もあるので、押してから1.2秒たったら押していない扱い
+let PRESS = 0;
+document.addEventListener('pointerdown', () => { PRESS = Date.now(); setTimeout(flushRender, 1300); }, true);
+const pressEnd = () => { const at = PRESS; setTimeout(() => { if(PRESS === at) PRESS = 0; flushRender(); }, 80); };
+for(const ev of ['pointerup', 'pointercancel', 'click']) document.addEventListener(ev, pressEnd, true);
+addEventListener('blur', pressEnd); document.addEventListener('visibilitychange', pressEnd);
+const pressing = () => PRESS && Date.now() - PRESS < 1200;
+const busy = () => pressing() || typing();
 function flushRender(){ if(S.pending && !busy()){ S.pending = false; renderAll(); } }
 // データベースから届いた変更を描く。押している・入力している間は後回し。side=false なら右の欄は描き直さない
 function requestRender(side){

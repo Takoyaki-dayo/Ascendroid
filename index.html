@@ -619,6 +619,12 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 #ref{position:absolute;inset:0;background:rgba(5,9,14,.55);display:flex;align-items:center;justify-content:center;z-index:70;padding:12px}
 #refbox{max-width:520px;width:auto;min-width:300px;border-color:var(--cy-dim);box-shadow:0 12px 40px rgba(0,0,0,.55)}
 #refbox h2{font-size:14px;margin:0 0 6px}
+/* カードの拡大(0.34.0) */
+.czoom{display:flex;gap:18px;align-items:flex-start}
+.czoom .zw{width:173px;height:245px;flex:none;position:relative}
+.czoom .zw .card{position:absolute;left:0;top:0;transform:scale(1.8);transform-origin:0 0;cursor:default}
+.czoom .card .ref{font:inherit;background:none;border:0;padding:0;text-decoration:underline dotted;text-underline-offset:2px;cursor:pointer}
+.czoom .ckw{font-size:11.5px;max-width:240px}
 .rdesc{margin:0 0 12px;font-size:12px;line-height:1.6;color:var(--fg2)}
 .ref{display:inline;padding:0;margin:0;border:0;background:none;color:var(--fg);font:inherit;font-weight:700;text-decoration:underline dotted;text-underline-offset:3px;cursor:pointer}
 .ref.u{color:var(--foe2)}
@@ -1187,7 +1193,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 <script src="data/text.js"></script>
 <script src="js/engine.js"></script>
 <script>
-const APP_VERSION = '0.33.0';
+const APP_VERSION = '0.34.0';
 const $ = s => document.querySelector(s);
 const EN = ENGINE, RULE = EN.RULE;
 const VIEW = RULE.view, NOW = 170, PX = 34, xs = c => NOW + c * PX, STRIP_Y = 150, SWIFT_VIS = 3;
@@ -1367,16 +1373,18 @@ function cardVals(c, st, k){
 }
 const KW_CLS = {crack:'kw-f', atomic:'kwp', just:'kw-j'};
 const kwList = () => Object.entries(DATA.kwName).sort((a, b) => b[1].length - a[1].length);
-function cardText(k, st){
+// refs(0.34.0): 拡大表示ではキーワードとカード名(《》)を押すと説明を重ねる
+function cardText(k, st, refs){
   const c = CARDS[k], v = cardVals(c, st, k);
   let h = (c.text || '').replace(/[&<>]/g, x => ({'&':'&amp;', '<':'&lt;', '>':'&gt;'})[x]).replace(/\{(\w+)\}/g, (m, n) => n in v ? `<b>${v[n]}</b>` : m);
   if(c.attrText) h += c.attrText.replace(/[&<>]/g, x => ({'&':'&amp;', '<':'&lt;', '>':'&gt;'})[x]).replace(/(\d+)/g, '<b>$1</b>');
   for(const [key, name] of kwList()) h = h.split(name).join(`\u0000${key}\u0000`);
-  return h.replace(/\u0000(\w+)\u0000/g, (m, key) => `<span class="${KW_CLS[key] || 'kw'}">${DATA.kwName[key]}</span>`);
+  if(refs) h = h.replace(/《([^《》]+)》/g, (m, n) => { const ck = Object.keys(CARDS).find(x => CARDS[x].name === n); return ck ? `<button type="button" class="ref" data-act="ref" data-arg="card:${ck}">《${n}》</button>` : m; });
+  return h.replace(/\u0000(\w+)\u0000/g, (m, key) => refs ? `<button type="button" class="${KW_CLS[key] || 'kw'} ref" data-act="ref" data-arg="kw:${key}">${DATA.kwName[key]}</button>` : `<span class="${KW_CLS[key] || 'kw'}">${DATA.kwName[key]}</span>`);
 }
-function cardInner(k, st, count){
+function cardInner(k, st, count, refs){
   const c = CARDS[k];
-  return `<span class="chd"><span class="cost${c.cost === 0 ? ' zero' : ''}">${c.cost}</span><span class="cname${c.attr ? ' ca' : ''}">${c.name}</span></span><span class="cart t-${cardType(c)}"><span class="cwm">${IC[cardType(c)]}</span>${c.atomic ? '<i class="atom"></i>' : ''}<span class="cval"><span class="ic">${IC[cardType(c)]}</span><b>${cardVal(k, st)}</b></span></span><span class="ctx${((CARDS[k].text || '') + (CARDS[k].attrText || '')).replace(/\{\w+\}/g, '00').length > 22 ? ' long' : ''}">${cardText(k, st)}</span>${count > 1 ? `<span class="cnt">×${count}</span>` : ''}`;
+  return `<i class="ck" data-ck="${k}" hidden></i><span class="chd"><span class="cost${c.cost === 0 ? ' zero' : ''}">${c.cost}</span><span class="cname${c.attr ? ' ca' : ''}">${c.name}</span></span><span class="cart t-${cardType(c)}"><span class="cwm">${IC[cardType(c)]}</span>${c.atomic ? '<i class="atom"></i>' : ''}<span class="cval"><span class="ic">${IC[cardType(c)]}</span><b>${cardVal(k, st)}</b></span></span><span class="ctx${((CARDS[k].text || '') + (CARDS[k].attrText || '')).replace(/\{\w+\}/g, '00').length > 22 ? ' long' : ''}">${cardText(k, st, refs)}</span>${count > 1 ? `<span class="cnt">×${count}</span>` : ''}`;
 }
 // 長押しで説明を出すキーワード: カードの文に出てくるもの
 function cardKw(k){
@@ -2607,6 +2615,7 @@ const closeRow = '<div class="row"><button class="btn" type="button" data-act="c
 // キーワードの説明の一覧(カードの詳細と、参照の重ね)
 const kwBlock = k => cardKw(k).map(w => `<span><b>${w}</b> ${refText(KW[w], w)}</span>`).join('');
 function infoCard(k){
+  if(true){ UI.refs = []; pushRef('card:' + k); return; } // 0.34.0: 拡大して重ねる(用語の逆引き付き)
   showOv(`<div style="display:flex;gap:16px;align-items:flex-start"><div class="cards" style="margin:0"><div class="card static">${cardInner(k, S)}</div></div><div class="ckw">${kwBlock(k)}</div></div>${closeRow}`, true);
 }
 /* ---------- 参照(0.18.0) ----------
@@ -2632,7 +2641,7 @@ function renderRef(){
   const [kind, key] = r[r.length - 1].split(':');
   let h = '';
   if(kind === 'kw'){ const name = DATA.kwName[key]; h = `<h2>${name}</h2><p class="rdesc">${refText(KW[name] || '', name)}</p>`; }
-  else if(kind === 'card') h = `<div style="display:flex;gap:16px;align-items:flex-start"><div class="cards" style="margin:0"><div class="card static">${cardInner(key, S && S.b ? S : null)}</div></div><div class="ckw">${kwBlock(key)}</div></div>`;
+  else if(kind === 'card') h = `<div class="czoom"><div class="zw"><div class="card static">${cardInner(key, S && S.b ? S : null, 0, true)}</div></div><div class="ckw">${kwBlock(key)}</div></div>`;
   h += `<div class="row">${r.length > 1 ? '<button class="btn ghost" type="button" data-act="refBack">戻る</button>' : ''}<button class="btn" type="button" data-act="refClose">閉じる</button></div>`;
   const fresh = el.hidden || el._n !== r.length; el._n = r.length; $('#refbox').innerHTML = h; el.hidden = false; if(fresh) enter(el);
 }
@@ -3079,6 +3088,10 @@ let lpTimer = null, longFired = false, swipe = null, swallow = false;
 const inBattle = () => UI.screen === 'battle' && S && S.b;
 stage.addEventListener('pointerdown', ev => {
   swipe = {x: ev.clientX, y: ev.clientY};
+  // 0.34.0: 報酬・ショップ・イベントなどのカードも長押しで拡大(手札は下の処理)
+  const oc = !ev.target.closest('#hand') && !ev.target.closest('#ref') && ev.target.closest('.card');
+  const ock = oc && oc.querySelector('.ck');
+  if(ock){ clearTimeout(lpTimer); lpTimer = setTimeout(() => { longFired = true; setTimeout(() => { longFired = false; }, 700); UI.refs = []; pushRef('card:' + ock.dataset.ck); }, 430); return; }
   if(!inBattle() || busy || !$('#ov').hidden || !$('#ref').hidden || UI.view === 'self' || UI.focus) return;
   const c = ev.target.closest('#hand .card[data-i]'), f = ev.target.closest('.foe[data-f],.eu[data-f],.ew[data-f],.upt[data-f]');
   if(!c && !f) return;

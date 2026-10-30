@@ -151,6 +151,8 @@ function hurtFoe(b, e, d, ev, uid){
   p.hp -= take; ev.push({kind:'dmg', e:e.i, unit:uid, n:take});
   if(p.hp <= 0 && !p.broken){
     p.broken = true; p.vuln = 0; ev.push({kind:'unitBreak', e:e.i, unit:uid});
+    // 持続(0.29.0): 壊れたユニットの持続は核へ移る(回数・威力とも足す)
+    if(p.dot){ const c = coreUid(e); if(c && c !== uid && !e.units[c].broken) addDot(e.units[c], p.dot.n, p.dot.p); delete p.dot; }
     // パッシブ frenzy: ユニットが破壊されるたび攻撃力+
     for(const ps of e.pas || []) if(ps.k === 'frenzy' && e.alive){ e.str = (e.str || 0) + ps.n; ev.push({kind:'frenzy', e:e.i, n:ps.n}); }
     // broke: このユニットが破壊されると行動の並びが変わる
@@ -213,6 +215,20 @@ function attrFx(st, A, e, uid, ev, n){
 }
 // ヒットごとの属性を付けて当てる
 function hitA(st, c, e, n, ev, uid){ hitFoe(st, e, n, ev, uid); const A = attrOf(c); if(A && A.on === 'hit') attrFx(st, A, e, uid, ev, n); }
+// 持続(0.29.0、名前は仮): ユニットごとに {n:回数, p:威力}。カードで足す(合算)。毎サイクルの終わりに威力分のダメージを与え、回数が1減る。0で消える
+// 回数0のユニットに威力だけ足したときは回数1にする。持続のダメージはヒットではない(クラック・隙・ブロック・防壁・反撃・体勢・属性はどれも関係しない)
+function addDot(u, n, p){ const d = u.dot || {n:0, p:0}; d.n += n || 0; d.p += p || 0; if(d.n <= 0 && d.p > 0) d.n = 1; if(d.n > 0) u.dot = d; }
+function tickDots(st){
+  const b = st.b, ev = [];
+  for(const e of b.foes) if(e.alive) for(const k of e.uids.slice()){
+    const u = e.units[k]; if(!u.dot || u.broken) continue;
+    const d = u.dot; d.n--; if(d.n <= 0) delete u.dot;
+    if(d.p > 0){ ev.push({kind:'dot', e:e.i, unit:k, n:d.p}); b.dotDmg = (b.dotDmg || 0) + d.p; b.dotPeak = Math.max(b.dotPeak || 0, d.p); hurtFoe(b, e, d.p, ev, k); }
+    if(!e.alive) break;
+  }
+  if(ev.length) b.dotCyc = (b.dotCyc || 0) + 1;
+  return ev;
+}
 // 決まった量の充電を消費するカード(spend.n)は、充電が足りないと使えない
 const spendShort = (b, c) => !!(c && c.spend && c.spend.n && (b.charge || 0) < c.spend.n);
 function applyCard(st, k, ti){
@@ -235,6 +251,7 @@ function applyCard(st, k, ti){
   }
   if(c.gain){ b.charge = (b.charge || 0) + c.gain; ev.push({kind:'charge', n:c.gain}); }
   if(c.crack) for(const e of targets) if(e.alive){ const k = uidOf(e); e.units[k].crack += c.crack; ev.push({kind:'crack', e:e.i, unit:k, n:c.crack}); }
+  if(c.dot) for(const e of targets) if(e.alive) for(const k of (c.all ? liveUids(e) : [uidOf(e)])){ addDot(e.units[k], c.dot.n, c.dot.p); ev.push({kind:'dotAdd', e:e.i, unit:k, n:c.dot.n || 0, p:c.dot.p || 0}); }
   if(c.delay) for(const e of targets) if(e.alive){ const v = delayFoe(e, c.delay); ev.push({kind:'delay', e:e.i, n:v, anger:pasN(e, 'punctual')}); }
   if(c.block){ const n = blockOf(st, c); gainBlock(b, n); ev.push({kind:'block', n}); }
   if(c.swift){ b.swift += c.swift; ev.push({kind:'swift', n:c.swift}); }
@@ -358,6 +375,11 @@ function* spendGen(st, cost, k, ti, noInt){
       if(due.length){
         b.timers = b.timers.filter(t => t.left > 0);
         for(const t of due){ const ev = fireTimer(st, t); yield {type:'timer', t, ev}; }
+        if(!b.foes.some(e => e.alive)){ b.cast = null; out.won = true; return out; }
+      }
+      // 持続(0.29.0): 時限の後、敵の行動の前
+      if(b.foes.some(e => e.alive && e.uids.some(k => e.units[k].dot))){
+        const ev = tickDots(st); if(ev.length) yield {type:'dot', ev};
         if(!b.foes.some(e => e.alive)){ b.cast = null; out.won = true; return out; }
       }
       // 手札が届く(型によって、弾倉にたまる / 届かない)
@@ -648,7 +670,7 @@ function nextNodes(run){
 
 const API = {RULE, makeFoe, defaultUid, liveUids, actorUid, parseT, gap, reloadCost, rngFrom, setRandom, shuffle, pick, clone, cur, advance, partOf, fx, partCards, battleDeck, partMax, dmgOf, blockOf,
   drawOne, drawN, upcoming, arrivals, applyCard, enemyAct, spendGen, runGen, newBattle, actions, actionCost, beginAction, endAction, doAction,
-  newRun, nextArea, delayFoe, lootBack, fledAll, pasN, attrOf, spendShort, regDeck, genMap, nextNodes, reachAfter, scaledFoe, alertLevel, addAlert, alertGain, encFor, poolIndex};
+  newRun, nextArea, delayFoe, addDot, tickDots, lootBack, fledAll, pasN, attrOf, spendShort, regDeck, genMap, nextNodes, reachAfter, scaledFoe, alertLevel, addAlert, alertGain, encFor, poolIndex};
 root.ENGINE = API;
 if(typeof module !== 'undefined') module.exports = API;
 })(typeof window !== 'undefined' ? window : globalThis);

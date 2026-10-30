@@ -142,6 +142,11 @@ window.DATA = window.DATA || {};
    "desc": "受けるダメージが数値分増加する。"
   },
   {
+   "key": "dot",
+   "name": "持続",
+   "desc": "回数/威力で表す。毎サイクル、威力分のダメージを受け、回数が1減少する。0になると消える。ブロックとクラックの影響を受けない。"
+  },
+  {
    "key": "atomic",
    "name": "アトミック",
    "desc": "発動前に攻撃を受けてもブレイクされない。"
@@ -633,10 +638,12 @@ window.DATA = window.DATA || {};
   "ui.stname.str": "増幅",
   "ui.stname.crack": "クラック",
   "ui.stname.vuln": "隙",
+  "ui.stname.dot": "持続",
   "ui.st.armor": "受けるダメージを{n}まで軽減し、軽減した分減少する。",
   "ui.st.str": "攻撃のダメージ+{n}。",
   "ui.st.crack": "受けるダメージ+{n}。",
   "ui.st.vuln": "あと{n}サイクル、受けるダメージが1.5倍。",
+  "ui.st.dot": "あと{n}サイクル、毎サイクル{p}ダメージを受ける。",
   "ui.st.none": "状態の変化はない。",
   "ui.mv.zone": "{at}サイクル後から{len}サイクルの間、こちらのタイムラインに射界を置く。その間にカードが発動すると{part}に{d}ダメージを受ける。",
   "ui.mv.haste": "加速{n}：これ以後、行動のコストが{n}減少する。",
@@ -653,7 +660,7 @@ window.DATA = window.DATA || {};
   "ui.win.fled": "{name}に逃げられた。",
   "ui.win.loot": "取り戻した{n}",
   "ui.stname.haste": "加速",
-  "ui.st.haste": "行動のコストが{n}縮んでいる(最短2)。",
+  "ui.st.haste": "行動のコストが{n}縮んでいる。",
   "ui.stname.resist": "抵抗",
   "ui.st.resist": "次の行動まで、受けるディレイが{n}減る。ディレイを受けるたびに1増え、行動すると0に戻る。",
   "ui.unit.tag.core": "核",

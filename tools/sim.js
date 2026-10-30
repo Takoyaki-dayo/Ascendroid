@@ -11,11 +11,13 @@ const E = ctx.ENGINE, D = ctx.DATA;
   for(const [k, o] of Object.entries(C.cards)) D.classCard(D.cards[k], o); }
 
 function threat(st){ let s = 0; for(const e of st.b.foes) if(e.alive){ s += e.pat.reduce((a, x) => a + (x.d || 0), 0) / e.pat.reduce((a, x) => a + x.dl, 0); } return s; }
-const zero = () => ({dmg:0, kills:0, justs:0, bodyLoss:0, partLoss:0, breaks:0, elapsed:0, won:false, dead:false});
+// 持続(0.29.0): まだ入っていない持続のダメージ(回数×威力、耐久まで)
+const dotPot = st => st.b.foes.reduce((a, e) => a + (e.alive ? Math.min(e.hp, e.uids.reduce((s, k) => s + (e.units[k].dot && !e.units[k].broken ? e.units[k].dot.n * e.units[k].dot.p : 0), 0)) : 0), 0);
+const zero = () => ({dot:0, dmg:0, kills:0, justs:0, bodyLoss:0, partLoss:0, breaks:0, elapsed:0, won:false, dead:false});
 function measure(before, after, out){
   const hpB = before.b.foes.reduce((a, e) => a + (e.hp || 0), 0), hpA = after.b.foes.reduce((a, e) => a + (e.hp || 0), 0); // 部位は耐久を持たない
   const partsB = Object.values(before.b.parts).reduce((a, p) => a + p.cur, 0), partsA = Object.values(after.b.parts).reduce((a, p) => a + p.cur, 0);
-  return {dmg:hpB - hpA, kills:before.b.foes.filter(e => e.alive).length - after.b.foes.filter(e => e.alive).length, justs:out.justs.length,
+  return {dot:dotPot(after) - dotPot(before), dmg:hpB - hpA, kills:before.b.foes.filter(e => e.alive).length - after.b.foes.filter(e => e.alive).length, justs:out.justs.length,
     bodyLoss:before.run.body - after.run.body, partLoss:partsB - partsA, breaks:Object.keys(after.b.broken).length - Object.keys(before.b.broken).length,
     elapsed:out.elapsed, won:out.won, dead:out.dead, hand:after.b.hand.length};
 }
@@ -23,9 +25,9 @@ function score(st, acc, lam){
   if(acc.won) return 1e4 - acc.elapsed;
   if(acc.dead) return -1e4;
   let next = 0; for(const e of st.b.foes) if(e.alive && E.cur(e).d) next = Math.max(next, E.cur(e).d);
-  return acc.dmg + 6 * acc.kills + 4 * acc.justs - 1.6 * acc.bodyLoss - 0.8 * acc.partLoss - 5 * acc.breaks + 0.6 * Math.min(st.b.block, next) - lam * acc.elapsed + 1.2 * st.b.hand.length;
+  return acc.dmg + 0.7 * acc.dot + 6 * acc.kills + 4 * acc.justs - 1.6 * acc.bodyLoss - 0.8 * acc.partLoss - 5 * acc.breaks + 0.6 * Math.min(st.b.block, next) - lam * acc.elapsed + 1.2 * st.b.hand.length;
 }
-function add(a, o){ const r = {...a}; for(const k of ['dmg','kills','justs','bodyLoss','partLoss','breaks','elapsed']) r[k] += o[k]; r.won = o.won; r.dead = o.dead; return r; }
+function add(a, o){ const r = {...a}; for(const k of ['dot','dmg','kills','justs','bodyLoss','partLoss','breaks','elapsed']) r[k] += o[k]; r.won = o.won; r.dead = o.dead; return r; }
 function search(st, depth, acc, lam){
   let best = -Infinity, bestA = null;
   const acts = E.actions(st);

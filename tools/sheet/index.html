@@ -178,7 +178,7 @@ tr.row.cut td{opacity:.45} tr.row.cut td.nm{text-decoration:line-through}
   </header>
   <main>
     <section class="listwrap" id="listwrap">
-      <div class="tools"><input id="q" type="search" placeholder="名前・キーで絞り込む" aria-label="絞り込み"><button class="btn ghost" id="addBtn" type="button">＋ 追加</button><button class="btn quiet" id="deckBtn" type="button" hidden>最初のデッキ</button><button class="btn" id="playBtn" type="button" hidden>試遊</button></div>
+      <div class="tools"><input id="q" type="search" placeholder="名前・キーで絞り込む" aria-label="絞り込み"><button class="btn ghost" id="addBtn" type="button">＋ 追加</button><button class="btn quiet" id="deckBtn" type="button" hidden>最初のデッキ</button><button class="btn ghost" id="bulkBtn" type="button" hidden>まとめて添削に出す</button><button class="btn" id="playBtn" type="button" hidden>試遊</button></div>
       <div class="tbl" id="tbl"></div>
     </section>
     <aside class="side" id="side"></aside>
@@ -447,11 +447,48 @@ function wbInput(id, el){
   }
   return 'part';
 }
+// 編集中のカード w から保存する文書を作る
+function wbDoc(w, status){
+  const prev = WB[w.key], c = clone(w.card);
+  if(!w.custom) c.text = genText(c);
+  return {key:w.key, card:c, rarity:w.rarity || '', idea:w.idea || '', status: status || (prev && prev.status !== 'base' && prev.status !== 'merged' ? prev.status : 'draft'), thread:(prev && prev.thread) || [], at:new Date().toISOString()};
+}
+// まとめて添削に出す: 保存していない編集と、作業中(保存だけした)のカードをすべて「添削待ち」にする
+function bulkKeys(){
+  const ks = new Set(Object.keys(WBDRAFT));
+  if(S.wb && S.wb.dirty) ks.add(S.wb.key);
+  for(const [k, d] of Object.entries(WB)) if(d.status === 'draft') ks.add(k);
+  return [...ks];
+}
+function bulkLabel(){
+  const b = $('#bulkBtn'); if(!b) return;
+  const n = bulkKeys().length, wbm = !!KBY[S.kind].wb;
+  b.hidden = !wbm; b.disabled = !n || !DB;
+  if(S.bulkArm && !n) S.bulkArm = false;
+  b.className = 'btn ' + (S.bulkArm ? '' : 'ghost');
+  b.textContent = S.bulkArm ? `もう一度押すと ${n}枚を出す` : `まとめて添削に出す${n ? ' ' + n : ''}`;
+}
+async function wbBulk(){
+  if(!DB) return;
+  const ks = bulkKeys(); if(!ks.length) return;
+  if(!S.bulkArm){ S.bulkArm = true; bulkLabel(); clearTimeout(wbBulk.t); wbBulk.t = setTimeout(() => { S.bulkArm = false; bulkLabel(); }, 4000); return; }
+  S.bulkArm = false; clearTimeout(wbBulk.t);
+  let ok = 0, ng = 0;
+  for(const k of ks){
+    const w = WBDRAFT[k] || (S.wb && S.wb.key === k && S.wb.dirty ? S.wb : null);
+    try{
+      if(w){ await DB.doc('cards/' + k).set(wbDoc(w, 'review')); w.dirty = false; delete WBDRAFT[k]; }
+      else await DB.doc('cards/' + k).update({status:'review', at:new Date().toISOString()});
+      ok++;
+    }catch(e){ ng++; }
+  }
+  toast(ng ? `${ok}枚を出しました(${ng}枚は出せませんでした)` : `${ok}枚を添削に出しました`);
+  renderAll();
+}
 async function wbSave(status){
   if(!DB || !S.wb) return;
-  const w = S.wb, prev = WB[w.key], c = clone(w.card);
-  if(!w.custom) c.text = genText(c);
-  const doc = {key:w.key, card:c, rarity:w.rarity || '', idea:w.idea || '', status: status || (prev && prev.status !== 'base' && prev.status !== 'merged' ? prev.status : 'draft'), thread:(prev && prev.thread) || [], at:new Date().toISOString()};
+  const w = S.wb, prev = WB[w.key];
+  const doc = wbDoc(w, status);
   if(status === 'review' && prev && prev.status === 'review') doc.status = 'review';
   try{ await DB.doc('cards/' + w.key).set(doc); w.dirty = false; delete WBDRAFT[w.key]; toast(status === 'review' ? '添削に出しました' : status === 'ok' ? '確定にしました' : '保存しました'); }
   catch(e){ toast(e && e.code === 'quota_exceeded' ? '保存できる量の上限です' : '保存できませんでした'); }
@@ -485,7 +522,7 @@ function openPlay(){
 addEventListener('message', e => { if(e.data && e.data.type === 'asc-ready' && !$('#play').hidden){ try{ e.source.postMessage(wbPayload(), '*'); }catch(_){} } });
 
 /* ---------- 描く ---------- */
-function renderTabs(){
+function renderTabs(){ bulkLabel();
   const all = REQ.filter(r => r.status === 'open' || r.status === 'discuss').length;
   $('#tabs').innerHTML = KINDS.map(k => { const n = k.wb ? Object.values(WB).filter(d => d.status === 'reviewed').length : kindOpen(k.id); return `<button class="tab${S.kind === k.id ? ' on' : ''}" type="button" data-tab="${k.id}">${k.label}${n ? `<span class="n">${n}</span>` : ''}</button>`; }).join('')
     + `<button class="tab${S.kind === 'requests' ? ' on' : ''}" type="button" data-tab="requests">依頼${all ? `<span class="n">${all}</span>` : ''}</button>`;
@@ -495,7 +532,7 @@ function renderList(){
   $('#listwrap').querySelector('.tools').hidden = req;
   if(req){ $('#tbl').innerHTML = `<div class="reqpane" style="padding:10px">${renderReqPane()}</div>`; return; }
   const wbm = !!KBY[S.kind].wb;
-  $('#deckBtn').hidden = !wbm; $('#playBtn').hidden = !wbm; $('#addBtn').textContent = wbm ? '＋ 新しいカード' : '＋ 追加';
+  $('#deckBtn').hidden = !wbm; $('#playBtn').hidden = !wbm; bulkLabel(); $('#addBtn').textContent = wbm ? '＋ 新しいカード' : '＋ 追加';
   if(wbm){ $('#tbl').innerHTML = wbListHTML(); return; }
   const K = KBY[S.kind], q = S.q.trim().toLowerCase();
   const items = curItems().filter(it => !q || (it.name || '').toLowerCase().includes(q) || it.key.toLowerCase().includes(q));
@@ -657,6 +694,7 @@ document.addEventListener('click', e => {
   if(t.closest('#wbCut')){ wbStatus(WB[S.wb.key].status === 'cut' ? 'draft' : 'cut'); return; }
   if(t.closest('#wbRevert')){ wbRevert(); return; }
   if(t.closest('#wbReply')){ wbReply(); return; }
+  if(t.closest('#bulkBtn')){ wbBulk(); return; }
   if(t.closest('#deckBtn')){ wbStash(); S.wbDeckOpen = true; S.wbDeckDraft = null; S.sel = null; S.wb = null; S.mobileOpen = true; renderAll(); return; }
   if(t.closest('#deckSave')){ (async () => { try{ await DB.doc('config/deck').set({startDeck:S.wbDeckDraft, at:new Date().toISOString()}); S.wbDeckDraft = null; toast('保存しました'); renderAll(); }catch(e){ toast('保存できませんでした'); } })(); return; }
   if(t.closest('#deckReset')){ S.wbDeckDraft = D.startDeck.slice(); renderSide(); return; }
@@ -689,7 +727,7 @@ document.addEventListener('input', e => {
   const t = e.target;
   if(t.id === 'q'){ S.q = t.value; renderList(); return; }
   if(t.id === 'w_reply' && S.wb){ S.wb.reply = t.value; return; }
-  if(t.dataset && t.dataset.wb && S.wb){ const was = S.wb.dirty, r = wbInput(t.dataset.wb, t); S.wb.dirty = true; if(r === 'full') renderSide(); else wbRefresh(); if(!was && innerWidth > 820) renderList(); return; }
+  if(t.dataset && t.dataset.wb && S.wb){ const was = S.wb.dirty, r = wbInput(t.dataset.wb, t); S.wb.dirty = true; if(r === 'full') renderSide(); else wbRefresh(); if(!was){ bulkLabel(); if(innerWidth > 820) renderList(); } return; }
   if(t.id === 'comment'){ S.comment = t.value; refreshDyn(); return; }
   if(t.id === 'newkey'){ S.draft.key = t.value; later(); return; }
   if(t.id === 'jsonbox'){ S.jsonText = t.value; try{ S.draft.obj = JSON.parse(t.value); S.jsonErr = ''; }catch(err){ S.jsonErr = 'JSON の書き方が崩れています: ' + err.message; } later(); return; }

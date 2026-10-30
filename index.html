@@ -1187,7 +1187,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 <script src="data/text.js"></script>
 <script src="js/engine.js"></script>
 <script>
-const APP_VERSION = '0.31.0';
+const APP_VERSION = '0.32.0';
 const $ = s => document.querySelector(s);
 const EN = ENGINE, RULE = EN.RULE;
 const VIEW = RULE.view, NOW = 170, PX = 34, xs = c => NOW + c * PX, STRIP_Y = 150, SWIFT_VIS = 3;
@@ -2447,15 +2447,35 @@ function onLose(){
 // 学習: 候補は全カード(パーツ専用とノイズを除く)から。倒した敵の pool のカードだけ、ごくわずかに出やすい
 // (同じアーキタイプを作るために同じ敵とばかり戦う、を避けるため。地図にも敵は出さない)
 const LEARN_BIAS = 1.3;
+// レア度(0.32.0): 報酬・ショップに出せるカード(初期のカード・パーツのカード・ノイズ・属性付きは除く)
+const offerPool = () => Object.keys(CARDS).filter(k => !CARDS[k].junk && !CARDS[k].attr && !CARDS[k].cut && !['charge','scatter'].includes(k) && DATA.rarityOf(k) !== 'starter');
+// レア度を1つ引く。kind は battle / elite / shop。報酬(battle・elite)は救済(rareOff)を使い、更新する
+function rollRarity(kind){
+  const R = DATA.rarityRule, w = Object.assign({}, R[kind] || R.battle), run = S.run, pity = kind !== 'shop';
+  if(pity){ if(run.rareOff == null) run.rareOff = R.pity.start; w.rare = Math.max(0, w.rare + run.rareOff); w.common = Math.max(0, w.common - Math.max(0, run.rareOff)); }
+  let x = Math.random() * (w.common + w.uncommon + w.rare), r = 'common';
+  if((x -= w.common) >= 0) r = (x -= w.uncommon) >= 0 ? 'rare' : 'uncommon';
+  if(pity){ if(r === 'rare') run.rareOff = R.pity.start; else if(r === 'common') run.rareOff += R.pity.step; }
+  return r;
+}
+// n 枚を選ぶ。1枚ごとにレア度を引き、そのレア度の中から(近い敵の学習の候補は少し出やすく)。そのレア度が尽きたら残りから
+function rarityPick(n, kind, near){
+  const all = offerPool(), out = [];
+  for(let j = 0; j < n; j++){
+    const r = rollRarity(kind);
+    let pool = all.filter(k => !out.includes(k) && DATA.rarityOf(k) === r);
+    if(!pool.length) pool = all.filter(k => !out.includes(k));
+    if(!pool.length) break;
+    const ws = pool.map(k => near && near.has(k) ? LEARN_BIAS : 1);
+    let x = Math.random() * ws.reduce((a, b) => a + b, 0), i = 0;
+    for(; i < pool.length - 1; i++){ x -= ws[i]; if(x <= 0) break; }
+    out.push(pool[i]);
+  }
+  return out;
+}
 function learnOptions(n){
   const near = new Set(ENC[UI.node.enc].foes.flatMap(k => FOES[k].pool || []));
-  const pool = Object.keys(CARDS).filter(k => !CARDS[k].junk && !CARDS[k].attr && !['charge','scatter'].includes(k)).map(k => ({k, w: near.has(k) ? LEARN_BIAS : 1}));
-  const out = [];
-  while(out.length < n && pool.length){
-    let x = Math.random() * pool.reduce((a, c) => a + c.w, 0), i = 0;
-    for(; i < pool.length - 1; i++){ x -= pool[i].w; if(x <= 0) break; }
-    out.push(pool.splice(i, 1)[0].k);
-  }
+  const out = rarityPick(n, UI.node && UI.node.type === 'elite' ? 'elite' : 'battle', near);
   // 属性(0.28.0): エリートの報酬は必ず、通常の戦闘はときどき属性付きで出る
   const r = UI.node && UI.node.type === 'elite' ? DATA.attrRule.elite : DATA.attrRule.battle;
   return out.map(k => Math.random() < r ? withAttr(k) : k);
@@ -2524,12 +2544,12 @@ function showAttach(){
   const ks = Object.keys(counts).filter(k => DATA.attrOk(CARDS[k], a));
   showOv(`<h2>「${DATA.attrs[a].name || a}」を付けるカードを選択</h2><p class="sub">${DATA.attrText(a)}</p><div class="cards">${ks.length ? ks.map(k => `<button class="card static${pk === k ? ' picked' : ''}" type="button" data-act="pick" data-arg="${k}" data-view="attach">${cardInner(k, null, counts[k])}</button>`).join('') : `<p class="sub">${DATA.ui['attr.none'] || ''}</p>`}</div><div class="row"><button class="btn ghost" type="button" data-act="backAttach">戻る</button><span class="sp"></span><button class="btn" type="button" data-act="attach" ${pk ? '' : 'disabled'}>決定</button></div>`);
 }
-const price = k => DATA.shop.price[CARDS[k].cost] ?? 30;
+const price = k => Math.round((DATA.shop.price[CARDS[k].cost] ?? 30) * (DATA.rarityRule.price[DATA.rarityOf(k)] || 1));
 function showShop(){
   const sh = DATA.shop, run = S.run;
   const nk = UI.node ? nodeKey(UI.node) + '@' + run.area : '';
   if(!UI.offers && run.shop && run.shop.at === nk) UI.offers = run.shop.offers;
-  if(!UI.offers){ const pool = Object.keys(CARDS).filter(k => !['charge','scatter'].includes(k) && !CARDS[k].junk && !CARDS[k].attr); UI.offers = EN.shuffle(pool).slice(0, sh.offers); }
+  if(!UI.offers) UI.offers = rarityPick(sh.offers, 'shop', null);
   // 属性(0.28.0): 属性だけを買って、デッキのカードに付ける
   if(!UI.attrOffers && run.shop && run.shop.at === nk && run.shop.attrs) UI.attrOffers = run.shop.attrs;
   if(!UI.attrOffers) UI.attrOffers = EN.shuffle(Object.keys(DATA.attrs)).slice(0, DATA.attrRule.shop);
@@ -2560,7 +2580,7 @@ function applyEvent(fx){
   if(fx.scrap) run.scrap += fx.scrap;
   if(fx.alert){ const pb = EN.poolIndex(run); if(EN.addAlert(run, fx.alert) > 0){ UI.alertUp = true; if(EN.poolIndex(run) > pb) UI.poolUp = true; } }
   if(fx.repair) for(const p of SLOTS) run.parts[p.id].damaged = false;
-  if(fx.card){ const k = EN.pick(DATA.rareCards); run.deck.push(k); UI.pick = null; showOv(`<h2>取り込んだ</h2><div class="cards"><div class="card static">${cardInner(k, null)}</div></div><div class="row"><button class="btn" type="button" data-act="done">次へ</button></div>`); return; }
+  if(fx.card){ const k = EN.pick(offerPool().filter(x => DATA.rarityOf(x) === 'rare')); run.deck.push(k); UI.pick = null; showOv(`<h2>取り込んだ</h2><div class="cards"><div class="card static">${cardInner(k, null)}</div></div><div class="row"><button class="btn" type="button" data-act="done">次へ</button></div>`); return; }
   if(fx.part){ UI.partOpts = randomParts(2); UI.pick = null; UI.back = 'map'; showPartOffer(); return; }
   if(fx.defrag){ UI.pick = null; UI.back = 'event'; showDefrag(); return; }
   completeRoom();

@@ -50,4 +50,16 @@ DATA.cards = {
 DATA.startDeck = ['jab','jab','jab','jab','guard','guard','guard','guard','slash','hack'];
 
 // 珍しいカード(イベントの報酬)
-DATA.rareCards = ['blow','parry','emp','scan','tempest','paradox'];
+// レア度(0.32.0、工房のレア度): starter 初期(報酬・ショップに出ない) / common / uncommon / rare。書いていないカードはコモン
+DATA.rarity = {
+  jab:'starter', guard:'starter', slash:'starter',
+  flick:'common', capacitor:'common', coil:'common', iterate:'common', rapid:'common', crackshot:'common', wall:'common', arc:'common', dispose:'common', backflow:'common', storm:'common', scatter:'common', charge:'common',
+  hack:'uncommon', reload:'uncommon', timebomb:'uncommon', cell:'uncommon', triple:'uncommon', dismantle:'uncommon',
+  scan:'rare', paradox:'rare', parry:'rare', tempest:'rare', blow:'rare', emp:'rare',
+};
+// 出やすさ(StS にならう): 報酬の1枚ごとにレア度を引いてから、そのレア度の中で選ぶ。rare は run.rareOff(はじめ pity.start)を足した値
+//   コモンを1枚出すたびに rareOff が pity.step 増え、レアが出ると pity.start に戻る(StS の救済)。price はショップの値段の倍率
+DATA.rarityRule = {battle:{common:60, uncommon:37, rare:3}, elite:{common:50, uncommon:40, rare:10}, shop:{common:54, uncommon:37, rare:9},
+  pity:{start:-5, step:1}, price:{common:1, uncommon:1.4, rare:2}};
+DATA.rarityOf = k => DATA.rarity[String(k).split('@')[0]] || 'common';
+DATA.rareCards = Object.keys(DATA.rarity).filter(k => DATA.rarity[k] === 'rare');

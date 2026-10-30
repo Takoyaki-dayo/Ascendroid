@@ -354,7 +354,7 @@ const WST = {base:'本体のまま', draft:'作業中', review:'添削待ち', r
 const PART_CARDS = new Set(Object.values(D.parts).flatMap(p => (p.fx && p.fx.cards) || []));
 let WB = {}, WBDECK = null, wbState = 'wait';
 const wbBase = k => { const c = D.classCard(clone(D.cards[k]), K7.cards[k]); return c; };
-const wbBaseRarity = k => D.startDeck.includes(k) ? 'starter' : (D.rareCards || []).includes(k) ? 'rare' : '';
+const wbBaseRarity = k => (D.rarity && D.rarity[k]) || 'common';
 // 保存していない編集: 別のカードに移っても捨てずに取っておき、戻ったら続きから(確認のダイアログは出さない)
 const WBDRAFT = {};
 // 欄の組(0.29.0)。sum はカードがその組で使っている中身の短い文(空なら使っていない)
@@ -673,7 +673,9 @@ function wbDeckHTML(){
 function wbPayload(){
   const cards = {};
   for(const [k, d] of Object.entries(WB)){ if(d.status === 'cut'){ cards[k] = null; continue; } const c = clone(d.card); if(!c.text) c.text = genText(c); cards[k] = c; }
-  return Object.assign({type:'asc-cards', cards, startDeck: wbDeck(), at: Date.now()}, abPayload());
+  // レア度(0.32.0): 工房で付けたレア度を試遊の出やすさに使う
+  const rarity = {}; for(const [k, d] of Object.entries(WB)) if(d.rarity) rarity[k] = d.rarity;
+  return Object.assign({type:'asc-cards', cards, rarity, startDeck: wbDeck(), at: Date.now()}, abPayload());
 }
 function openPlay(){
   const p = wbPayload();

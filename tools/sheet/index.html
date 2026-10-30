@@ -240,11 +240,12 @@ const KINDS = [
   {id:'cards', label:'カード工房', wb:true, items:() => wbRows().map(r => ({key:r.key, name:r.card.name, obj:r.card})), head:[], cells:() => []},
   {id:'attrs', label:'属性', ab:true, items:() => abRows().map(r => ({key:r.key, name:r.attr.name, obj:r.attr})), head:[], cells:() => []},
   // 敵(0.28.0): 出るところ(appear。エリアと警戒度。変えたいときは書き換えて送る)と、パッシブの中身を上に出す
-  {id:'foes', label:'敵', items:() => Object.entries(D.foes).map(([k, f]) => ({key:k, name:f.name, obj:Object.assign({appear:foeAppear(k)}, clone(f))})),
+  {id:'foes', label:'敵', items:() => Object.entries(D.foes).map(([k, f]) => ({key:k, name:f.name, obj:Object.assign({appear:foeAppear(k)}, clone(f), {say:foeSay(f)})})),
     head:['名前', '耐久', '出るところ', '行動'], cells:it => [nmCell(it), `<td class="num">${esc(unitHp(it.obj))}</td>`, `<td>${esc(it.obj.appear.join('、') || '—')}</td>`, `<td class="tx">${esc(it.obj.pat.map(a => a.n).join(' → '))}</td>`],
     preview:o => foePreview(o)},
-  // セリフ(0.28.0): 敵のひとこと(text/enemies.csv の 敵.say.*)と、自機の独り言(text/lines.csv)
-  {id:'lines', label:'セリフ', items:() => lineItems(), head:['場面', 'セリフ'], cells:it => [nmCell(it), `<td class="tx">${esc(it.obj.text)}</td>`]},
+  // セリフ(0.33.0): 自機(K-7)の独り言だけ。場面ごとに1項目(text/lines.csv)。敵のひとことは敵のページの「ひとこと」で(text/enemies.csv の 敵.say.*)
+  {id:'lines', label:'セリフ', items:() => lineItems(), head:['場面', 'セリフ'], cells:it => [nmCell(it), `<td class="tx">${it.obj.lines.length ? it.obj.lines.map(esc).join('<br>') : '<span class="note">(無し)</span>'}</td>`],
+    preview:o => `<div class="note">${esc(LHINT)}</div>`},
   {id:'parts', label:'パーツ', items:() => Object.entries(D.parts).map(([k, p]) => ({key:k, name:p.name, obj:clone(p)})),
     head:['部位', '名前', '耐久', '効果'], cells:it => [`<td>${esc(SLOT[it.obj.slot])}</td>`, nmCell(it), `<td class="num">${it.obj.max}</td>`, `<td class="tx">${esc(it.obj.text)}</td>`],
     preview:o => `<b>${esc(o.name)}</b>(${esc(SLOT[o.slot])}・耐久${o.max})<br>${esc(o.text)}`},
@@ -265,7 +266,14 @@ const KBY = Object.fromEntries(KINDS.map(k => [k.id, k]));
 // 敵の出るところ: 通常の遭遇はエリアの警戒度の段(pools)、エリート・ボスは遭遇の区分
 function foeAppear(fk){
   const out = [];
-  (D.areas || []).forEach((A, i) => { for(const p of A.pools || []) if(p.enc.some(e => D.encounters[e] && D.encounters[e].foes.includes(fk))) out.push(`エリア${i + 1} 警戒${ROMAN[p.at - 1]}〜`); if(D.encounters[A.boss] && D.encounters[A.boss].foes.includes(fk)) out.push(`エリア${i + 1} ボス`); });
+  // 警戒度の段は次の段が始まるまで(0.33.0: 「〜」だけだと最後まで出るように見えたので、終わりの段も書く。続く段はまとめる)
+  const mx = (D.alert && D.alert.max) || 10;
+  (D.areas || []).forEach((A, i) => {
+    const P = (A.pools || []).slice().sort((x, y) => x.at - y.at), rg = [];
+    P.forEach((p, j) => { if(!p.enc.some(e => D.encounters[e] && D.encounters[e].foes.includes(fk))) return; const lo = p.at, hi = j + 1 < P.length ? P[j + 1].at - 1 : mx; const last = rg[rg.length - 1]; if(last && last[1] + 1 === lo) last[1] = hi; else rg.push([lo, hi]); });
+    for(const [lo, hi] of rg) out.push(`エリア${i + 1} 警戒${ROMAN[lo - 1]}${hi > lo ? '〜' + ROMAN[hi - 1] : ''}`);
+    if(D.encounters[A.boss] && D.encounters[A.boss].foes.includes(fk)) out.push(`エリア${i + 1} ボス`);
+  });
   if(Object.values(D.encounters).some(e => e.elite && e.foes.includes(fk))) out.push('エリート');
   return out;
 }
@@ -275,13 +283,26 @@ function foePreview(o){
   return `<b>${esc(o.name || '')}</b> <span class="note">${esc((o.appear || []).join('、') || '出ない')}</span>${ps.length ? `<div style="margin-top:4px">${ps.join('')}</div>` : '<div class="note">パッシブなし</div>'}`;
 }
 // セリフの一覧。キーは 敵.say.場面 / line.条件.番号 / room.部屋.番号
-const SAYW = (k, f) => k === 'start' ? '戦闘の始め' : k === 'anger' ? '怒ったとき' : k.startsWith('pat:') ? `「${(f.pat[+k.slice(4)] || {}).n || k}」のとき` : k.startsWith('phase:') ? `段階変化の「${((f.phase || {}).pat || [])[+k.slice(6)] ? f.phase.pat[+k.slice(6)].n : k}」のとき` : k;
+const SAYW = (k, f) => k === 'start' ? '戦闘の始め' : k === 'anger' ? '怒ったとき' : k.startsWith('pat:') ? `行動${+k.slice(4) + 1}「${(f.pat[+k.slice(4)] || {}).n || k}」のとき` : k.startsWith('phase:') ? `段階変化の行動${+k.slice(6) + 1}「${((f.phase || {}).pat || [])[+k.slice(6)] ? f.phase.pat[+k.slice(6)].n : k}」のとき` : k;
+// 敵のひとこと: どの場面でも書けるように、行動・段階変化の行動ごとと戦闘の始め(定刻の敵は怒ったときも)を空で用意する
+function foeSay(f){
+  const o = {start:(f.say || {}).start || ''};
+  (f.pat || []).forEach((a, i) => { o['pat:' + i] = (f.say || {})['pat:' + i] || ''; });
+  ((f.phase || {}).pat || []).forEach((a, i) => { o['phase:' + i] = (f.say || {})['phase:' + i] || ''; });
+  if((f.passives || []).some(p => p.k === 'punctual') || (f.say || {}).anger) o.anger = (f.say || {}).anger || '';
+  for(const [k, t] of Object.entries(f.say || {})) if(!(k in o)) o[k] = t;
+  return o;
+}
+// 自機の独り言(0.33.0): 戦闘中の場面(上から順に調べ、最初に当てはまった場面のどれか1つ)と、どれにも当てはまらないときの部屋ごとの1行
+const LW = {bodyLow:'本体の損耗が大きいとき', partBroken:'部位が壊れたとき', vulnNow:'敵に隙ができたとき', windNow:'敵の体勢が浮いたとき', chargeSoon:'敵の大技が近いとき', handEmpty:'手札がないとき', partWorn:'部位の損傷が直っていないとき', focus:'1つの部位に攻撃が集中しているとき'};
+const LVARS = {bodyLow:'', partBroken:'{part} 部位', vulnNow:'{enemy} 敵', windNow:'{enemy} 敵 / {move} 行動 / {poise} ブレイクに要る一撃', chargeSoon:'{enemy} 敵 / {move} 大技 / {t} あと何サイクル', handEmpty:'', partWorn:'{part} 部位', focus:'{part} 部位'};
+const LROOM = {battle:'通常戦', elite:'エリート', boss:'ボス'};
+const LHINT = 'セリフは1行に1つ。複数あると毎回どれか1つ。戦闘中の場面は「順番」の小さいものから調べ、最初に当てはまった場面のセリフを出す。どれにも当てはまらないときは部屋ごとのセリフ。';
 function lineItems(){
-  const out = [];
-  for(const [fk, f] of Object.entries(D.foes)) for(const [k, t] of Object.entries(f.say || {})) out.push({key:`${fk}.say.${k}`, name:`${f.name}・${SAYW(k, f)}`, obj:{text:t}});
-  const LW = {bodyLow:'本体の損耗が大きいとき', partBroken:'部位が壊れたとき', vulnNow:'敵に隙ができたとき', windNow:'敵の体勢が浮いたとき', chargeSoon:'敵の大技が近いとき', handEmpty:'手札がないとき', partWorn:'部位の損傷が直っていないとき', focus:'1つの部位に攻撃が集中しているとき'};
-  for(const r of (D.lines && D.lines.rules) || []) r.text.forEach((t, j) => out.push({key:`line.${r.when}.${j}`, name:`独り言・${LW[r.when] || r.when}`, obj:{text:t}}));
-  for(const [rk, ts] of Object.entries((D.lines && D.lines.room) || {})) ts.forEach((t, j) => out.push({key:`room.${rk}.${j}`, name:`部屋・${D.rooms[rk] && D.rooms[rk].name || rk}`, obj:{text:t}}));
+  const out = [], rules = (D.lines && D.lines.rules) || [];
+  const order = [...rules.map(r => r.when), ...Object.keys(LW).filter(w => !rules.some(r => r.when === w))];
+  order.forEach((w, i) => { const r = rules.find(x => x.when === w); out.push({key:`line.${w}`, name:`${i + 1}. ${LW[w] || w}`, obj:{order:i + 1, lines:r ? r.text.slice() : [], vars:LVARS[w] || ''}}); });
+  for(const [rk, nm] of Object.entries(LROOM)) out.push({key:`room.${rk}`, name:`当てはまらないとき・${nm}`, obj:{lines:((D.lines && D.lines.room) || {})[rk] ? D.lines.room[rk].slice() : []}});
   return out;
 }
 function nmCell(it){ const n = openCount(S.kind, it.key); return `<td class="nm">${esc(it.name || it.key)}${n ? ` <span class="badge open">${n}</span>` : ''}<span class="k">${esc(it.key)}</span></td>`; }
@@ -308,7 +329,7 @@ function diff(a, b){
   return out;
 }
 // 欄の名前
-const LB = {dot:'持続(回数/威力)', ward:'防壁(サイクル数/量)', exile:'廃棄', breakNext:'次の行動をブレイク', discard:'選んで捨てる枚数', grow:'戦闘中に増えるダメージ', scrapBreak:'破壊でスクラップ', wary:'警戒版', patAdd:'足す行動', cost:'コスト', name:'名前', text:'効果文', tgt:'単体を狙う', all:'全体', dmg:'ダメージ', n:'名前・値', t:'種類', x:'回数', block:'ブロック', delay:'ディレイ', crack:'クラック', draw:'引く枚数',
+const LB = {say:'ひとこと(空なら言わない)', lines:'セリフ', order:'順番(小さいほど先に調べる)', dot:'持続(回数/威力)', ward:'防壁(サイクル数/量)', exile:'廃棄', breakNext:'次の行動をブレイク', discard:'選んで捨てる枚数', grow:'戦闘中に増えるダメージ', scrapBreak:'破壊でスクラップ', wary:'警戒版', patAdd:'足す行動', cost:'コスト', name:'名前', text:'効果文', tgt:'単体を狙う', all:'全体', dmg:'ダメージ', n:'名前・値', t:'種類', x:'回数', block:'ブロック', delay:'ディレイ', crack:'クラック', draw:'引く枚数',
   timer:'遅れて効く', atomic:'アトミック', parry:'受け流し', gain:'充電を得る', spend:'充電を消費', per:'充電1あたり', junk:'ノイズ', k7:'K-7 の数値',
   hp:'耐久', start:'最初の行動まで', kind:'見た目', ai:'行動の選び方', pat:'行動', phase:'耐久が減った後', at:'条件・位置', d:'ダメージ', dl:'コスト', p:'狙う部位', ch:'不安定',
   appear:'出るところ', wind:'体勢', w:'窓', poise:'ブレイクに要る一撃', guard:'防壁', s:'量・大きさ', counter:'反撃', rec:'隙', buff:'増幅', hits:'回数', armor:'装甲', heal:'修復', noise:'ノイズ', haste:'加速', zone:'危険域',
@@ -826,9 +847,11 @@ function fieldHTML(p, v, orig){
   else if(last === 'p' && typeof v === 'string' && SLOT[v]) input = `<select id="${id}" data-path="${esc(p)}" data-t="str">${Object.entries(SLOT).map(([k, n]) => `<option value="${k}"${k === v ? ' selected' : ''}>${n}</option>`).join('')}</select>`;
   else if(last === 't' && (v === 'melee' || v === 'ranged')) input = `<select id="${id}" data-path="${esc(p)}" data-t="str">${Object.entries(TNAME).map(([k, n]) => `<option value="${k}"${k === v ? ' selected' : ''}>${n}</option>`).join('')}</select>`;
   else if(typeof v === 'string') input = v.length > 22 ? `<textarea id="${id}" data-path="${esc(p)}" data-t="str">${esc(v)}</textarea>` : `<input id="${id}" type="text" data-path="${esc(p)}" data-t="str" value="${esc(v)}">`;
+  else if(last === 'lines' && isPrimArr(v)) input = `<textarea id="${id}" data-path="${esc(p)}" data-t="lines" rows="${Math.max(2, v.length + 1)}" placeholder="1行に1つ">${esc(v.join('\n'))}</textarea>`;
   else if(isPrimArr(v)) input = `<input id="${id}" type="text" data-path="${esc(p)}" data-t="arr" value="${esc(v.join(', '))}">`;
   else input = `<input id="${id}" type="text" data-path="${esc(p)}" data-t="json" value="${esc(JSON.stringify(v))}">`;
-  const lab = last === 'n' ? (typeof v === 'number' ? '値' : '名前') : segLabel(last);
+  if(last === 'vars') return v ? `<div class="note">差し込み: ${esc(v)}</div>` : '';
+  const lab = last === 'n' ? (typeof v === 'number' ? '値' : '名前') : p.startsWith('say.') ? SAYW(last, orig) : segLabel(last);
   return `<div class="fld${chg ? ' chg' : ''}"><label for="${id}" title="${esc(p)}">${esc(lab)}<i>${esc(last)}</i></label>${input}</div>`;
 }
 // 右の欄を描き直しても、同じ項目を見ている間はスクロール位置と入力中の欄をそのままにする
@@ -1064,6 +1087,7 @@ document.addEventListener('input', e => {
     const p = t.dataset.path, ty = t.dataset.t; let v;
     if(ty === 'bool') v = t.checked;
     else if(ty === 'num') v = t.value === '' ? undefined : Number(t.value);
+    else if(ty === 'lines') v = t.value.split('\n').map(s => s.trim()).filter(Boolean);
     else if(ty === 'arr') v = t.value.split(/[,、]\s*/).map(s => s.trim()).filter(Boolean).map(s => /^-?\d+(\.\d+)?$/.test(s) ? Number(s) : s);
     else if(ty === 'json'){ try{ v = JSON.parse(t.value); }catch(_){ return; } }
     else v = t.value;

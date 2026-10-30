@@ -29,6 +29,9 @@
 //   (0.23.0) steal: スクラップを盗む(撃破すると取り戻す) / eat: 手札のいちばんコストの高いカードを飲み込む(撃破すると捨て札に戻る)
 //     rebuild: 破壊されたユニットを1つ、耐久 rebuild で直す(なければ自分を rebuild の半分回復) / flee: 戦闘から逃げる(報酬のスクラップなし)
 //   敵のひとこと(0.23.0): text/enemies.csv の 敵.say.start(戦闘の始め)・敵.say.pat:番号(その行動のとき)・敵.say.anger(定刻の敵がディレイを受けたとき)
+//   wary(0.30.0): 警戒版 [{at, ...}]。警戒度が at 以上の遭遇では、書いた欄で置き換えた形で出る(いちばん高い at を1つ)
+//     passives は足す、patAdd は行動の並びの最後に足す、それ以外(hp・start・pat・phase・react・units など)は置き換え。警戒版を持つ敵は警戒度の数値の上乗せを受けない
+//     例: wary:[{at:4, passives:[{k:'frenzy', n:1}]}, {at:7, patAdd:[{d:12, dl:6, p:'dur'}]}]
 // encounters: 遭遇。敵は常に1体(0.15.0 から)。fam は系統。どの通常戦がどこで出るかは data/map.js の areas の pools(警戒度ごと)。elite / boss は特別な部屋
 window.DATA = window.DATA || {};
 DATA.foes = {

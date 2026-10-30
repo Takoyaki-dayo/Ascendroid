@@ -308,7 +308,7 @@ function diff(a, b){
   return out;
 }
 // 欄の名前
-const LB = {dot:'持続(回数/威力)', cost:'コスト', name:'名前', text:'効果文', tgt:'単体を狙う', all:'全体', dmg:'ダメージ', n:'名前・値', t:'種類', x:'回数', block:'ブロック', delay:'ディレイ', crack:'クラック', draw:'引く枚数',
+const LB = {dot:'持続(回数/威力)', ward:'防壁(サイクル数/量)', exile:'廃棄', breakNext:'次の行動をブレイク', discard:'選んで捨てる枚数', grow:'戦闘中に増えるダメージ', scrapBreak:'破壊でスクラップ', wary:'警戒版', patAdd:'足す行動', cost:'コスト', name:'名前', text:'効果文', tgt:'単体を狙う', all:'全体', dmg:'ダメージ', n:'名前・値', t:'種類', x:'回数', block:'ブロック', delay:'ディレイ', crack:'クラック', draw:'引く枚数',
   timer:'遅れて効く', atomic:'アトミック', parry:'受け流し', gain:'充電を得る', spend:'充電を消費', per:'充電1あたり', junk:'ノイズ', k7:'K-7 の数値',
   hp:'耐久', start:'最初の行動まで', kind:'見た目', ai:'行動の選び方', pat:'行動', phase:'耐久が減った後', at:'条件・位置', d:'ダメージ', dl:'コスト', p:'狙う部位', ch:'不安定',
   appear:'出るところ', wind:'体勢', w:'窓', poise:'ブレイクに要る一撃', guard:'防壁', s:'量・大きさ', counter:'反撃', rec:'隙', buff:'増幅', hits:'回数', armor:'装甲', heal:'修復', noise:'ノイズ', haste:'加速', zone:'危険域',
@@ -360,11 +360,12 @@ const WBDRAFT = {};
 // 欄の組(0.29.0)。sum はカードがその組で使っている中身の短い文(空なら使っていない)
 const FOLDS = {
   atk:{title:'攻撃', sum:c => [c.dmg ? `${TNAME[c.dmg.t]}${c.dmg.n}${c.dmg.x > 1 ? '×' + c.dmg.x : ''}` : '', c.crack ? 'クラック' + c.crack : '', c.delay ? 'ディレイ' + c.delay : '']},
-  def:{title:'守り・手札', sum:c => [c.block != null && c.block !== '' ? 'ブロック' + c.block : '', c.draw ? c.draw + '枚引く' : '']},
+  def:{title:'守り・手札', sum:c => [c.block != null && c.block !== '' ? 'ブロック' + c.block : '', c.ward ? `防壁${c.ward.w}/${c.ward.s}` : '', c.draw ? c.draw + '枚引く' : '', c.discard ? c.discard + '枚選んで捨てる' : '']},
   timer:{title:'時限', sum:c => [c.timer ? `${c.timer.t}サイクル後に${c.timer.dmg.n}` : '']},
   charge:{title:'充電', sum:c => [c.gain ? '得る' + c.gain : '', c.spend ? (c.spend.n ? c.spend.n + '消費' : 'すべて消費') : '']},
   dot:{title:'持続(仮)', sum:c => [c.dot ? `${c.dot.n || 0}/${c.dot.p || 0}` : '']},
-  trait:{title:'性質', sum:c => [c.atomic ? 'アトミック' : '', c.parry ? '受け流し' : '']},
+  trait:{title:'性質', sum:c => [c.atomic ? 'アトミック' : '', c.parry ? '受け流し' : '', c.exile ? '廃棄' : '']},
+  etc:{title:'特殊', sum:c => [c.breakNext ? '次の行動をブレイク' : '', c.grow ? '戦闘中+' + c.grow : '', c.scrapBreak ? '破壊でスクラップ' + c.scrapBreak : '']},
 };
 const foldSum = (g, c) => FOLDS[g].sum(c).filter(Boolean).join('・');
 // 欄の組の開閉。見出しを押して変えたものだけ、この端末に覚える
@@ -390,14 +391,20 @@ function genText(c){
   if(c.crack) out.push(`${all}クラック{crack}を与える。`);
   if(c.delay) out.push(`${all}ディレイ{delay}を与える。`);
   if(c.dot) out.push(`${all}持続{dn}/{dp}を与える。`);
+  if(c.breakNext) out.push('次の敵の行動をブレイクする。');
   if(c.timer) out.push('{t}サイクル後、{tdmg}ダメージを与える。');
   if(c.block != null && c.block !== '') out.push('{block}ブロックを得る。');
+  if(c.ward) out.push('防壁{ww}/{ws}を得る。');
   if(c.parry) out.push('JUST：攻撃を無効にし、同じダメージを返す。');
   if(c.gain) out.push('充電{gain}を得る。');
   if(c.draw) out.push('カードを{draw}枚引く。');
+  if(c.discard) out.push('手札を{discard}枚選んで捨てる。');
+  if(c.scrapBreak) out.push('ユニットを破壊したとき、スクラップ{scrap}を得る。');
+  if(c.grow) out.push(`この戦闘の間、全ての《${c.name || 'このカード'}》のダメージを{grow}増加させる。`);
+  if(c.exile) out.push('これを廃棄する。');
   return out.join('');
 }
-const cardVals = c => ({dmg: c.dmg && c.dmg.n, x: c.dmg && c.dmg.x, block: c.block, delay: c.delay, crack: c.crack, draw: c.draw, t: c.timer && c.timer.t, tdmg: c.timer && c.timer.dmg && c.timer.dmg.n, gain: c.gain, per: c.spend ? (c.spend.dmg ? c.spend.dmg.n : c.spend.block) : null, sn: c.spend && c.spend.n, sv: c.spend && c.spend.n ? (c.spend.dmg ? c.spend.dmg.n : c.spend.block) : null, dn: c.dot ? c.dot.n || 0 : null, dp: c.dot ? c.dot.p || 0 : null});
+const cardVals = c => ({dmg: c.dmg && c.dmg.n, x: c.dmg && c.dmg.x, block: c.block, delay: c.delay, crack: c.crack, draw: c.draw, t: c.timer && c.timer.t, tdmg: c.timer && c.timer.dmg && c.timer.dmg.n, gain: c.gain, per: c.spend ? (c.spend.dmg ? c.spend.dmg.n : c.spend.block) : null, sn: c.spend && c.spend.n, sv: c.spend && c.spend.n ? (c.spend.dmg ? c.spend.dmg.n : c.spend.block) : null, dn: c.dot ? c.dot.n || 0 : null, dp: c.dot ? c.dot.p || 0 : null, discard: c.discard, grow: c.grow, scrap: c.scrapBreak, ww: c.ward && c.ward.w, ws: c.ward && c.ward.s});
 function fillText(c){ const v = cardVals(c), t = c.text || genText(c); return esc(t).replace(/\{(\w+)\}/g, (m, n) => v[n] != null ? `<b>${esc(v[n])}</b>` : m); }
 const wbType = c => c.dmg ? TNAME[c.dmg.t] : c.timer ? TNAME[c.timer.dmg.t] : c.spend && c.spend.dmg ? TNAME[c.spend.dmg.t] : '—';
 // 1サイクルあたりの強さ(標準パーツの補正 +2 込み)。全体・充電の消費は別に書く
@@ -407,12 +414,12 @@ const BASE_BLK = (() => { const c = wbBase('guard'); return c && c.block != null
 function eff(c){
   const cyc = Math.max(1, c.cost || 0), fs = c.spend && c.spend.n;
   const dmg = c.dmg ? c.dmg.n * (c.dmg.x || 1) : c.timer ? c.timer.dmg.n : fs && c.spend.dmg ? c.spend.dmg.n : 0;
-  const blk = c.block != null && c.block !== '' ? c.block : fs && c.spend.block != null ? c.spend.block : 0;
+  const blk = c.block != null && c.block !== '' ? c.block : fs && c.spend.block != null ? c.spend.block : c.ward ? c.ward.s : 0;
   return {dmg, blk, dc: dmg / cyc, bc: blk / cyc, instant: !c.cost};
 }
 function effHTML(c, wide){
   const f = eff(c), r = [];
-  if(f.dmg) r.push(`<span class="ef ${f.dc > BASE_DMG * 1.05 ? 'up' : f.dc < BASE_DMG * .95 ? 'dn' : ''}" title="初期のジャブは ${BASE_DMG}"><i>攻</i>${f.instant ? f.dmg + '<em>即時</em>' : f.dc.toFixed(1)}${c.all ? '<em>全体</em>' : ''}</span>`);
+  if(f.dmg) r.push(`<span class="ef ${f.dc > BASE_DMG * 1.05 ? 'up' : f.dc < BASE_DMG * .95 ? 'dn' : ''}" title="初期の打撃は ${BASE_DMG}"><i>攻</i>${f.instant ? f.dmg + '<em>即時</em>' : f.dc.toFixed(1)}${c.all ? '<em>全体</em>' : ''}</span>`);
   if(f.blk) r.push(`<span class="ef ${f.bc > BASE_BLK * 1.05 ? 'up' : f.bc < BASE_BLK * .95 ? 'dn' : ''}" title="初期の障壁展開は ${BASE_BLK}"><i>守</i>${f.instant ? f.blk + '<em>即時</em>' : f.bc.toFixed(1)}</span>`);
   if(c.dot) r.push(`<span class="ef" title="持続(回数/威力)。合算されるので1サイクルあたりの強さは出さない"><i>持</i>${c.dot.n || 0}/${c.dot.p || 0}</span>`);
   if(c.spend) r.push(c.spend.n ? `<span class="ef"><i>充</i>${c.spend.n}消費</span>` : `<span class="ef"><i>充</i>1あたり${(c.spend.dmg ? c.spend.dmg.n : c.spend.block)}</span>`);
@@ -462,7 +469,7 @@ function wbSideHTML(){
       ${dt ? numIn('w_dn', c.dmg.n, 'ダメージの値') + numIn('w_dx', c.dmg.x || 1, '回数', 1, 9) : ''}
       ${numIn('w_crack', c.crack, 'クラック')}${numIn('w_delay', c.delay, 'ディレイ')}`)}
     ${fold('def', `
-      ${numIn('w_block', c.block, 'ブロック')}${numIn('w_draw', c.draw, '引く枚数')}`)}
+      ${numIn('w_block', c.block, 'ブロック')}${numIn('w_ww', c.ward ? c.ward.w : '', '防壁のサイクル数')}${numIn('w_ws', c.ward ? c.ward.s : '', '防壁の量')}${numIn('w_draw', c.draw, '引く枚数')}${numIn('w_discard', c.discard, '手札を選んで捨てる枚数')}`)}
     ${fold('timer', `
       <div class="fld"><label for="w_tm">遅れて効く</label>${sel('w_tm', tm ? 'on' : '', [['', 'なし'], ['on', 'あり']])}</div>
       ${tm ? numIn('w_tt', c.timer.t, '何サイクル後', 1, 9) + numIn('w_td', c.timer.dmg.n, 'そのダメージ') + `<div class="fld"><label for="w_tdt">種類</label>${sel('w_tdt', c.timer.dmg.t, [['ranged', '遠隔'], ['melee', '近接']])}</div>` : ''}`)}
@@ -475,10 +482,13 @@ function wbSideHTML(){
       ${numIn('w_dotn', c.dot ? c.dot.n : '', '回数')}${numIn('w_dotp', c.dot ? c.dot.p : '', '威力')}
       <div class="note">与えたユニットの持続に足される(合算)。毎サイクル威力分のダメージ、回数が1減り、0で消える</div>`)}
     ${fold('trait', `
-      <div class="fld"><label>性質</label><span class="chks"><label><input type="checkbox" data-wb="w_atomic"${c.atomic ? ' checked' : ''}> アトミック</label><label><input type="checkbox" data-wb="w_parry"${c.parry ? ' checked' : ''}> 受け流し(JUST)</label></span></div>`)}
+      <div class="fld"><label>性質</label><span class="chks"><label><input type="checkbox" data-wb="w_atomic"${c.atomic ? ' checked' : ''}> アトミック</label><label><input type="checkbox" data-wb="w_parry"${c.parry ? ' checked' : ''}> 受け流し(JUST)</label><label><input type="checkbox" data-wb="w_exile"${c.exile ? ' checked' : ''}> 廃棄(使うとこの戦闘の間戻らない)</label></span></div>`)}
+    ${fold('etc', `
+      <div class="fld"><label>敵の行動</label><span class="chks"><label><input type="checkbox" data-wb="w_brk"${c.breakNext ? ' checked' : ''}> 次の敵の行動をブレイクする</label></span></div>
+      ${numIn('w_grow', c.grow, 'この戦闘の間、同じカードのダメージ+')}${numIn('w_scrapb', c.scrapBreak, 'ユニットを破壊したときのスクラップ')}`)}
     <div class="grp"><h3>効果文</h3>
       <div class="mode"><button type="button" data-wbtext="auto" class="${w.custom ? '' : 'on'}">欄から作る</button><button type="button" data-wbtext="custom" class="${w.custom ? 'on' : ''}">自分で書く</button></div>
-      ${w.custom ? `<textarea id="w_text" data-wb="w_text" class="wtext" placeholder="{dmg} などの差し込みが使えます">${esc(c.text || genText(c))}</textarea><div class="note">差し込み: {dmg} ダメージ / {x} 回数 / {block} / {delay} / {crack} / {draw} / {t} {tdmg} 遅れて効く / {gain} / {per} 充電1あたり / {dn} {dp} 持続の回数・威力</div>` : `<div class="note" id="w_auto"></div>`}
+      ${w.custom ? `<textarea id="w_text" data-wb="w_text" class="wtext" placeholder="{dmg} などの差し込みが使えます">${esc(c.text || genText(c))}</textarea><div class="note">差し込み: {dmg} ダメージ / {x} 回数 / {block} / {delay} / {crack} / {draw} / {t} {tdmg} 遅れて効く / {gain} / {per} 充電1あたり / {dn} {dp} 持続の回数・威力 / {ww} {ws} 防壁 / {discard} / {grow} / {scrap}</div>` : `<div class="note" id="w_auto"></div>`}
     </div>
     <div class="grp"><h3>やりたいこと・メモ</h3><textarea id="w_idea" data-wb="w_idea" class="wtext" placeholder="狙い、まだ作れない効果(例: 使うたびにダメージ+1)、迷っている点など">${esc(w.idea)}</textarea></div>
     ${doc ? `<div class="grp"><h3>添削のやりとり</h3>${thread || '<div class="note">まだありません。「添削に出す」で Claude が見ます。</div>'}<div class="reply"><input id="w_reply" type="text" placeholder="返信・質問" value="${esc(w.reply)}"><button class="btn quiet" type="button" id="wbReply">送る</button></div></div>` : ''}
@@ -523,6 +533,12 @@ function wbInput(id, el){
     case 'w_per': if(c.spend.dmg) c.spend.dmg.n = num() || 0; else c.spend.block = num() || 0; break;
     case 'w_spt': c.spend.dmg.t = el.value; break;
     case 'w_dotn': case 'w_dotp': { const d = c.dot || {n:0, p:0}; d[id === 'w_dotn' ? 'n' : 'p'] = num() || 0; if(!d.n && !d.p) delete c.dot; else c.dot = d; break; }
+    case 'w_ww': case 'w_ws': { const d = c.ward || {w:0, s:0}; d[id === 'w_ww' ? 'w' : 's'] = num() || 0; if(!d.w && !d.s) delete c.ward; else c.ward = d; break; }
+    case 'w_discard': setN('discard', num()); break;
+    case 'w_grow': setN('grow', num()); break;
+    case 'w_scrapb': setN('scrapBreak', num()); break;
+    case 'w_exile': if(el.checked) c.exile = true; else delete c.exile; break;
+    case 'w_brk': if(el.checked) c.breakNext = true; else delete c.breakNext; break;
     case 'w_atomic': if(el.checked) c.atomic = true; else delete c.atomic; break;
     case 'w_parry': if(el.checked) c.parry = true; else delete c.parry; break;
     case 'w_text': c.text = el.value; break;

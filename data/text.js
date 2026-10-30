@@ -36,7 +36,7 @@ window.DATA = window.DATA || {};
    "text": "クラック{crack}を与える。カードを{draw}枚引く。"
   },
   "jab": {
-   "name": "ジャブ",
+   "name": "打撃",
    "text": "{dmg}ダメージを与える。"
   },
   "guard": {
@@ -44,7 +44,7 @@ window.DATA = window.DATA || {};
    "text": "{block}ブロックを得る。"
   },
   "hack": {
-   "name": "遅延ハック",
+   "name": "妨害回路",
    "text": "ディレイ{delay}を与える。"
   },
   "reload": {
@@ -56,7 +56,7 @@ window.DATA = window.DATA || {};
    "text": "{t}サイクル後、{tdmg}ダメージを与える。"
   },
   "rapid": {
-   "name": "連撃",
+   "name": "二連撃",
    "text": "{dmg}ダメージを{x}回与える。"
   },
   "crackshot": {
@@ -92,7 +92,7 @@ window.DATA = window.DATA || {};
    "text": "敵のすべてのユニットに{dmg}ダメージを与える。"
   },
   "blow": {
-   "name": "過負荷打撃",
+   "name": "過負荷",
    "text": "{dmg}ダメージを与える。"
   },
   "capacitor": {
@@ -100,7 +100,7 @@ window.DATA = window.DATA || {};
    "text": "充電{gain}を得る。"
   },
   "arc": {
-   "name": "帯電打撃",
+   "name": "フリクション",
    "text": "{dmg}ダメージを与える。充電{gain}を得る。"
   },
   "coil": {
@@ -145,6 +145,11 @@ window.DATA = window.DATA || {};
    "key": "dot",
    "name": "持続",
    "desc": "回数/威力で表す。毎サイクル、威力分のダメージを受け、回数が1減少する。0になると消える。ブロックとクラックの影響を受けない。"
+  },
+  {
+   "key": "exile",
+   "name": "廃棄",
+   "desc": "この戦闘の間、山札にも捨て札にも戻らない。"
   },
   {
    "key": "atomic",
@@ -194,7 +199,7 @@ window.DATA = window.DATA || {};
   {
    "key": "guard",
    "name": "防壁",
-   "desc": "このサイクルの間、合計で一定値までのダメージを防ぐ。"
+   "desc": "このサイクルの間、合計で一定値までのダメージを防ぐ。カードで得るときは「サイクル数/量」で書く。"
   },
   {
    "key": "counter",
@@ -644,6 +649,8 @@ window.DATA = window.DATA || {};
   "ui.st.crack": "受けるダメージ+{n}。",
   "ui.st.vuln": "あと{n}サイクル、受けるダメージが1.5倍。",
   "ui.st.dot": "あと{n}サイクル、毎サイクル{p}ダメージを受ける。",
+  "ui.choose.discard": "捨てるカードを選ぶ(あと{n}枚)",
+  "ui.choose.exile": "廃棄するカードを選ぶ(あと{n}枚)",
   "ui.st.none": "状態の変化はない。",
   "ui.mv.zone": "{at}サイクル後から{len}サイクルの間、こちらのタイムラインに射界を置く。その間にカードが発動すると{part}に{d}ダメージを受ける。",
   "ui.mv.haste": "加速{n}：これ以後、行動のコストが{n}減少する。",

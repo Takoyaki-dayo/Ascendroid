@@ -7,6 +7,8 @@
 // timer: {t:何サイクル後, dmg:{...}} 時限。使った後、t サイクルたつと対象に効果
 // parry: JUST(使い終えたサイクルに敵の行動が重なる)なら、その攻撃を無効にして同じダメージを返す
 // atomic: アトミック(中断されない)
+// (0.29.0〜0.30.0) dot:{n:回数, p:威力} 持続を与える / ward:{w, s} 防壁(w サイクルの間、合計 s までのダメージを防ぐ) / exile: 使うと廃棄(この戦闘の間戻らない)
+//   breakNext: 対象の敵の次の行動をブレイク / discard: 使い終えた後、手札を選んで捨てる枚数 / grow: この戦闘の間、同じカードのダメージ+ / scrapBreak: このカードでユニットを破壊したときのスクラップ
 // gain: 充電を得る / spend: 充電をすべて消費し、1につき {dmg:{t, n}} のダメージ、または block のブロック(アーキタイプ「充電」)
 window.DATA = window.DATA || {};
 DATA.cards = {
@@ -14,11 +16,11 @@ DATA.cards = {
   scan:     {cost:0, tgt:true, crack:1, draw:1},
   jab:      {cost:1, tgt:true, dmg:{t:'melee', n:4}},
   guard:    {cost:1, block:5},
-  hack:     {cost:1, tgt:true, delay:2},
+  hack:     {cost:1, tgt:true, delay:3},
   reload:   {cost:1, draw:2},
   timebomb: {cost:1, tgt:true, timer:{t:4, dmg:{t:'ranged', n:12}}},
   rapid:    {cost:2, tgt:true, dmg:{t:'melee', n:2, x:2}},
-  crackshot:{cost:2, tgt:true, dmg:{t:'ranged', n:2}, crack:2},
+  crackshot:{cost:2, tgt:true, dmg:{t:'ranged', n:2}, crack:1},
   parry:    {cost:2, block:3, parry:true},
   slash:    {cost:3, tgt:true, dmg:{t:'melee', n:8}},
   wall:     {cost:3, block:10},
@@ -26,7 +28,7 @@ DATA.cards = {
   scatter:  {cost:3, all:true, dmg:{t:'ranged', n:4}},
   charge:   {cost:4, tgt:true, atomic:true, dmg:{t:'ranged', n:10}},
   emp:      {cost:4, all:true, dmg:{t:'ranged', n:5}},
-  blow:     {cost:6, tgt:true, dmg:{t:'melee', n:20}},
+  blow:     {cost:6, tgt:true, dmg:{t:'ranged', n:20}},
   // 充電(貯めて消費する)
   capacitor:{cost:1, gain:4},
   arc:      {cost:2, tgt:true, dmg:{t:'melee', n:4}, gain:2},
@@ -41,4 +43,4 @@ DATA.cards = {
 DATA.startDeck = ['jab','jab','jab','jab','guard','guard','guard','guard','slash','hack'];
 
 // 珍しいカード(イベントの報酬)
-DATA.rareCards = ['blow','parry','timebomb','emp','scatter'];
+DATA.rareCards = ['blow','parry','emp','scan'];

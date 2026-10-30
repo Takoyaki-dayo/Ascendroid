@@ -191,6 +191,10 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 /* hand: tall cards peek from the bottom edge */
 #handShade{position:absolute;left:0;top:170px;width:844px;height:220px;background:linear-gradient(180deg,rgba(10,15,21,0),rgba(10,15,21,.88) 40%);opacity:0;transition:opacity .2s;pointer-events:none}
 #handShade.on{opacity:1}
+/* 手札を選ぶ(0.30.0) */
+#chooseBar{position:absolute;left:300px;top:276px;z-index:30;padding:3px 10px;border:1px solid var(--cy);border-radius:4px;background:#0b2230;color:#bff2ff;font-size:12px;font-weight:700;pointer-events:none}
+#hand.choosing .card{outline:1.5px dashed var(--cy);outline-offset:-3px}
+.st.ward{color:#bfe9ff;border-color:#5fc9ff;border-style:dashed} .st.ward i{font-style:normal;opacity:.75;font-size:.85em;margin-left:1px}
 .pile{position:absolute;left:8px;width:66px;height:36px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--fg2);display:flex;align-items:center;justify-content:center;gap:6px}
 .pile .ic svg{width:14px;height:14px}
 .pile b{font-family:var(--f-num);font-size:13px}
@@ -1154,6 +1158,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
       <button class="pile" id="pileDisc" type="button" style="top:344px" aria-label="捨て札"><span class="ic" id="icDisc"></span><b id="nDisc">0</b></button>
       <div id="handCnt" class="np"><span class="ic" id="icHand"></span><b id="nHand"></b></div>
       <div id="hand"></div>
+      <div id="chooseBar" hidden></div>
       <button id="redraw" type="button" aria-label="引き直し"><span id="icRedraw"></span><b id="rdCost">5</b></button>
       <button id="waitBtn" type="button" aria-label="待機"><span id="icWait"></span><b>1</b></button>
       <div id="inner"></div>
@@ -1182,7 +1187,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 <script src="data/text.js"></script>
 <script src="js/engine.js"></script>
 <script>
-const APP_VERSION = '0.29.0';
+const APP_VERSION = '0.30.0';
 const $ = s => document.querySelector(s);
 const EN = ENGINE, RULE = EN.RULE;
 const VIEW = RULE.view, NOW = 170, PX = 34, xs = c => NOW + c * PX, STRIP_Y = 150, SWIFT_VIS = 3;
@@ -1321,7 +1326,7 @@ function computePreview(){
 }
 
 /* ---------- cards ---------- */
-function cardType(c){ return c.junk ? 'junk' : c.timer ? 'timer' : c.parry ? 'parry' : c.dmg ? c.dmg.t : c.dot ? 'dot' : c.spend ? (c.spend.dmg ? c.spend.dmg.t : 'block') : c.block ? 'block' : c.gain ? 'charge' : c.delay ? 'delay' : c.swift ? 'swift' : c.draw ? 'draw' : 'crack'; }
+function cardType(c){ return c.junk ? 'junk' : c.timer ? 'timer' : c.parry ? 'parry' : c.dmg ? c.dmg.t : c.dot ? 'dot' : c.ward ? 'block' : c.spend ? (c.spend.dmg ? c.spend.dmg.t : 'block') : c.block ? 'block' : c.gain ? 'charge' : c.delay ? 'delay' : c.swift ? 'swift' : c.draw ? 'draw' : 'crack'; }
 const stv = st => st && st.b ? st : {run: S ? S.run : null, b: null};
 function vDmg(st, c, d){ return st && st.run ? EN.dmgOf(stv(st), c, d) : (d || c.dmg).n; }
 function vBlock(st, c){ return st && st.run ? EN.blockOf(stv(st), c) : c.block; }
@@ -1340,8 +1345,9 @@ function cardVal(k, st){
   if(c.timer) return vDmg(st, c, c.timer.dmg);
   if(c.spend) return spendVal(st, c);
   if(c.parry) return vBlock(st, c);
-  if(c.dmg) return vDmg(st, c) + (c.dmg.x ? '×' + c.dmg.x : '');
+  if(c.dmg) return vDmg(st, c) + growV(st, k) + (c.dmg.x ? '×' + c.dmg.x : '');
   if(c.block) return vBlock(st, c);
+  if(c.ward) return c.ward.w + '/' + c.ward.s;
   if(c.dot) return (c.dot.n || 0) + '/' + (c.dot.p || 0);
   if(c.delay) return c.delay;
   if(c.swift) return c.swift;
@@ -1350,8 +1356,10 @@ function cardVal(k, st){
   return c.crack;
 }
 // カードの文は text/cards.csv の型に数値を差し込む。{dmg} などはパーツの補正込みの値。キーワードの名前は色を付ける
-function cardVals(c, st){
-  return {dmg: c.dmg ? vDmg(st, c) : '', x: c.dmg && c.dmg.x || '', block: c.block != null ? vBlock(st, c) : '', delay: c.delay || '', swift: c.swift || '',
+// この戦闘で増えたダメージ(0.30.0、grow)
+const growV = (st, k) => st && st.b && k ? EN.growOf(st.b, k) : 0;
+function cardVals(c, st, k){
+  return {dmg: c.dmg ? vDmg(st, c) + growV(st, k) : '', discard: c.discard || '', grow: c.grow || '', scrap: c.scrapBreak || '', ww: c.ward ? c.ward.w : '', ws: c.ward ? c.ward.s : '', x: c.dmg && c.dmg.x || '', block: c.block != null ? vBlock(st, c) : '', delay: c.delay || '', swift: c.swift || '',
     crack: c.crack || '', draw: c.draw || '', t: c.timer ? c.timer.t : '', tdmg: c.timer ? vDmg(st, c, c.timer.dmg) : '',
     gain: c.gain || '', per: c.spend ? (c.spend.dmg ? c.spend.dmg.n : c.spend.block) : '',
     sn: c.spend && c.spend.n || '', sv: c.spend && c.spend.n ? spendVal(st, c) : '', dn: c.dot ? c.dot.n || 0 : '', dp: c.dot ? c.dot.p || 0 : ''};
@@ -1359,7 +1367,7 @@ function cardVals(c, st){
 const KW_CLS = {crack:'kw-f', atomic:'kwp', just:'kw-j'};
 const kwList = () => Object.entries(DATA.kwName).sort((a, b) => b[1].length - a[1].length);
 function cardText(k, st){
-  const c = CARDS[k], v = cardVals(c, st);
+  const c = CARDS[k], v = cardVals(c, st, k);
   let h = (c.text || '').replace(/[&<>]/g, x => ({'&':'&amp;', '<':'&lt;', '>':'&gt;'})[x]).replace(/\{(\w+)\}/g, (m, n) => n in v ? `<b>${v[n]}</b>` : m);
   if(c.attrText) h += c.attrText.replace(/[&<>]/g, x => ({'&':'&amp;', '<':'&lt;', '>':'&gt;'})[x]).replace(/(\d+)/g, '<b>$1</b>');
   for(const [key, name] of kwList()) h = h.split(name).join(`\u0000${key}\u0000`);
@@ -1467,6 +1475,9 @@ function renderAll(){
   if(!S.b) return;
   $('#shaker').classList.toggle('executing', busy);
   renderMe(); renderParts(); renderRows(); renderFoes(); renderPreview(); renderMarks(); renderStrip(); renderHand(); renderSide();
+  const ch = S.b.choose, cb = $('#chooseBar');
+  if(cb){ cb.hidden = !ch || busy; if(ch) cb.innerHTML = fillUi('choose.' + ch.kind, {n: ch.n}); }
+  $('#hand').classList.toggle('choosing', !!ch && !busy);
 }
 function renderMe(){
   const body = S.run.body, after = PV ? PV.body : body, max = S.run.bodyMax;
@@ -1477,6 +1488,7 @@ function renderMe(){
   if(S.b.block) st += `<span class="st blk" id="stBlk"><span class="ic">${IC.block}</span>${S.b.block}</span>`;
   if(S.b.swift) st += `<span class="st swf"><span class="ic">${IC.swift}</span>${S.b.swift}</span>`;
   if(S.b.charge) st += `<span class="st chg"><span class="ic">${IC.charge}</span>${S.b.charge}</span>`;
+  for(const w of S.b.wards || []) st += `<span class="st ward" title="${DATA.kwName.guard}"><span class="ic">${IC.block}</span>${w.left}<i>/${w.s}</i></span>`;
   if(S.b.crack) st += `<span class="st crack"><span class="ic">${IC.crack}</span>${S.b.crack}</span>`;
   $('#meSts').innerHTML = st;
 }
@@ -1997,6 +2009,9 @@ function cardFx(x){
     case 'crack': { const p = unitCenter(x.e, x.unit); floatAt(p.x + 30, p.y - 30, '+' + x.n, 'foe'); break; }
     case 'dotAdd': { const p = unitCenter(x.e, x.unit); floatAt(p.x + 30, p.y - 44, '+' + x.n + '/' + x.p, 'dot'); break; }
     case 'dot': pulse(unitSpr(x.e, x.unit), 'ehit', 200); break;
+    case 'ward': floatAt(130, 250, DATA.kwName.guard + ' ' + x.w + '/' + x.n, 'cy'); break;
+    case 'scrapGain': floatAt(170, 240, '+' + x.n, 'cy'); break;
+    case 'grow': floatAt(150, 236, '▲' + x.n, 'cy'); break;
     case 'delay':
       if(x.anger){ const p = foeCenter(x.e); floatAt(p.x, p.y - 70, '▲' + x.anger, 'foe'); pulse(foeEl(x.e), 'ehit', 280); foeSay(x.e, 'anger'); }
       else floatAt(xs(2), ROWY[x.e] - 14, x.n > 0 ? '+' + x.n : DATA.kwName.resist, x.n > 0 ? 'cy' : 'dim');
@@ -2087,17 +2102,26 @@ function recalc(){
   // 印や帯の中身を出しているなら、選んだカードに合わせて出し直す(使い終わりが重なるか)
   if(UI.mvKey){ const el = document.querySelector(`[data-mk="${UI.mvKey}"],[data-bk="${UI.mvKey}"]`); if(el) showMovePop(UI.mvKey, el); else hideMovePop(); }
 }
+// 手札を選ぶ(0.30.0): 処理などのカードの後。押したカードを捨てる(時間は使わない)
+function onChoose(i){
+  const cd = S.b.hand[i]; if(!cd) return;
+  const el = cardEls.get(cd.id); cardEls.delete(cd.id); if(el) flyCard(el, 20, 344);
+  EN.beginAction(S, {type:'choose', i}); sel = null; PV = null; renderAll();
+}
 function onCard(i){
+  if(S.b.choose){ onChoose(i); return; }
   const k = S.b.hand[i].k, c = CARDS[k];
   if(EN.spendShort(S.b, c)) return; // 決まった量の充電が足りない
   if(sel && sel.kind === 'card' && sel.i === i){ execute(); return; }
   sel = {kind:'card', i, k, target: c.tgt ? defaultTarget() : null}; recalc();
 }
 function onWait(){
+  if(S.b.choose) return;
   if(sel && sel.kind === 'wait'){ execute(); return; }
   sel = {kind:'wait'}; recalc();
 }
 function onRedraw(){
+  if(S.b.choose) return;
   if(!RULE.econ && RULE.freeWait && !S.b.hand.length) return;
   const kind = rdKind();
   if(sel && sel.kind === kind){ execute(); return; }

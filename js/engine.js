@@ -229,6 +229,8 @@ function tickDots(st){
   if(ev.length) b.dotCyc = (b.dotCyc || 0) + 1;
   return ev;
 }
+// この戦闘で増えたダメージ(grow)。キーは属性を除いた元のカード
+const growOf = (b, k) => (b && b.grow && k) ? (b.grow[String(k).split('@')[0]] || 0) : 0;
 // 決まった量の充電を消費するカード(spend.n)は、充電が足りないと使えない
 const spendShort = (b, c) => !!(c && c.spend && c.spend.n && (b.charge || 0) < c.spend.n);
 function applyCard(st, k, ti){
@@ -237,8 +239,9 @@ function applyCard(st, k, ti){
   // 全体のカードは敵のすべてのユニット。単体は指定のユニット(なければおまかせ)
   const targets = c.all ? b.foes.filter(e => e.alive) : (c.tgt ? [b.foes[T.i]].filter(e => e && e.alive) : []);
   const uidOf = e => !c.all && T.uid && e.units[T.uid] && !e.units[T.uid].broken ? T.uid : defaultUid(e);
+  const base = String(k).split('@')[0], ev0 = ev.length;
   if(c.dmg){
-    const n = dmgOf(st, c);
+    const n = dmgOf(st, c) + growOf(b, k);
     for(const e of targets) for(const k of (c.all ? liveUids(e) : [uidOf(e)])) for(let h = 0; h < (c.dmg.x || 1); h++){ if(!e.alive || e.units[k].broken) break; hitA(st, c, e, n, ev, k); }
   }
   // 充電: spend は貯めた充電をすべて消費し、1につき dmg / block。gain は充電を得る(消費の後)
@@ -249,11 +252,21 @@ function applyCard(st, k, ti){
     if(mul > 0 && c.spend.dmg){ const d = dmgOf(st, c, {t:c.spend.dmg.t, n:c.spend.dmg.n * mul}); for(const e of targets) for(const k of (c.all ? liveUids(e) : [uidOf(e)])) if(e.alive && !e.units[k].broken) hitA(st, c, e, d, ev, k); }
     if(mul > 0 && c.spend.block){ const m = c.spend.block * mul + fx(st, 'dur', 'block'); gainBlock(b, m); ev.push({kind:'block', n:m}); }
   }
+  // ユニットを破壊したときスクラップ(0.30.0、scrapBreak): このカードのダメージで壊れたユニットの数だけ
+  if(c.scrapBreak){ const nb = ev.slice(ev0).filter(x => x.kind === 'unitBreak').length; if(nb){ const v = c.scrapBreak * nb; st.run.scrap = (st.run.scrap || 0) + v; ev.push({kind:'scrapGain', n:v}); } }
+  // この戦闘の間、同じカード(属性違いも含む)のダメージが増える(0.30.0、grow)
+  if(c.grow){ b.grow = b.grow || {}; b.grow[base] = (b.grow[base] || 0) + c.grow; ev.push({kind:'grow', k:base, n:c.grow}); }
   if(c.gain){ b.charge = (b.charge || 0) + c.gain; ev.push({kind:'charge', n:c.gain}); }
   if(c.crack) for(const e of targets) if(e.alive){ const k = uidOf(e); e.units[k].crack += c.crack; ev.push({kind:'crack', e:e.i, unit:k, n:c.crack}); }
   if(c.dot) for(const e of targets) if(e.alive) for(const k of (c.all ? liveUids(e) : [uidOf(e)])){ addDot(e.units[k], c.dot.n, c.dot.p); ev.push({kind:'dotAdd', e:e.i, unit:k, n:c.dot.n || 0, p:c.dot.p || 0}); }
   if(c.delay) for(const e of targets) if(e.alive){ const v = delayFoe(e, c.delay); ev.push({kind:'delay', e:e.i, n:v, anger:pasN(e, 'punctual')}); }
   if(c.block){ const n = blockOf(st, c); gainBlock(b, n); ev.push({kind:'block', n}); }
+  // 防壁(0.30.0、ward:{w, s}): w サイクルの間、合計 s までのダメージを防ぐ
+  if(c.ward){ (b.wards = b.wards || []).push({left:c.ward.w, s:c.ward.s, id:b.uid++}); ev.push({kind:'ward', n:c.ward.s, w:c.ward.w}); }
+  // 次の敵の行動をブレイクする(0.30.0、breakNext): 対象の敵の次の行動を飛ばす
+  if(c.breakNext) for(const e of targets) if(e.alive){ const nm = cur(e).n; advance(e); b.breaks = (b.breaks || 0) + 1; ev.push({kind:'break', e:e.i, name:nm}); }
+  // 手札を選んで捨てる(0.30.0、discard): カードを使い終えた後、手札から選ぶ(actions が選ぶ行動だけになる)
+  if(c.discard) b.chooseNext = {kind:'discard', n:c.discard};
   if(c.swift){ b.swift += c.swift; ev.push({kind:'swift', n:c.swift}); }
   if(c.timer && targets[0]){ b.timers.push({id:b.uid++, left:c.timer.t, k, e:targets[0].i, unit:uidOf(targets[0])}); ev.push({kind:'timerSet', e:targets[0].i, t:c.timer.t}); }
   if(c.draw){ const n = drawN(b, c.draw); if(c.borrow) b.drawIn += c.draw * RULE.draw; ev.push({kind:'draw', n, borrow: !!c.borrow}); }
@@ -275,15 +288,18 @@ function fireTimer(st, t){
 function strike(st, e, a, extra, noParry){
   const b = st.b, raw = a.d + (extra || 0) + (b.crack || 0);
   if(b.parryNow && !noParry){ const ev = []; hurtFoe(b, e, raw, ev, actorUid(e, a.by ? a : cur(e))); return {kind:'parried', name:a.n, raw, ev}; }
-  const ab = Math.min(b.block, raw); b.block -= ab; b.blockUsed = (b.blockUsed || 0) + ab;
-  const rem = raw - ab, p = b.parts[a.p];
+  // 防壁(0.30.0): 期限付きの守り。古いものから先に受ける。残りをブロックが受ける
+  let wd = 0; for(const w of b.wards || []){ const x = Math.min(w.s, raw - wd); w.s -= x; wd += x; if(wd >= raw) break; }
+  if(b.wards) b.wards = b.wards.filter(w => w.s > 0);
+  const ab = Math.min(b.block, raw - wd); b.block -= ab; b.blockUsed = (b.blockUsed || 0) + ab + wd;
+  const rem = raw - wd - ab, p = b.parts[a.p];
   let partLoss = 0, bodyLoss = 0, broke = false;
   if(rem > 0){
     if(p.cur > 0){ partLoss = Math.min(p.cur, rem); p.cur -= partLoss; if(p.cur === 0){ broke = true; b.broken[a.p] = true; } bodyLoss = rem - partLoss; }
     else bodyLoss = rem;
     st.run.body = Math.max(0, st.run.body - bodyLoss);
   }
-  return {kind:'hit', name:a.n, part:a.p, raw, extra:extra || 0, blocked:ab, partLoss, bodyLoss, broke, hurt:rem > 0};
+  return {kind:'hit', name:a.n, part:a.p, raw, extra:extra || 0, blocked:ab + wd, partLoss, bodyLoss, broke, hurt:rem > 0};
 }
 // ディレイ(0.21.0): 敵は次の行動までにディレイを受けるたび抵抗が1増え、その分だけ次のディレイが減る。行動すると0に戻る(enemyAct)
 // 敵の列が1本になってディレイが強すぎたため。重ねがけを止める
@@ -367,6 +383,7 @@ function* spendGen(st, cost, k, ti, noInt){
       b.zones = b.zones.filter(z => z.to >= 0);
       decayBlock(b);
       for(const t of b.timers) t.left--;
+      if(b.wards && b.wards.length){ for(const w of b.wards) w.left--; b.wards = b.wards.filter(w => w.left > 0 && w.s > 0); }
     }
     yield {type:'tick', real};
     if(real){
@@ -458,9 +475,28 @@ function runGen(g){ let r; while(!(r = g.next()).done){} return r.value; }
 /* ---------- 戦闘の準備と、行動の候補 ---------- */
 // 強化(0.19.0): エリアの倍率で敵の数値を上げた定義を作る。hp(耐久・回復)と d(攻撃・ガード・装甲・構え)
 const scaledCache = {};
-function scaledFoe(key, sc){
-  if(!sc || (sc.hp === 1 && sc.d === 1)) return D.foes[key];
-  const id = key + '@' + sc.hp + '/' + sc.d; if(scaledCache[id]) return scaledCache[id];
+// 警戒版(0.30.0): 敵のデータの wary:[{at, ...}] は、警戒度が at 以上の遭遇で使う形。いちばん高い at を1つ選ぶ
+//   書いた欄はそのまま置き換える(hp・start・pat・phase・react・units など)。ただし passives は足し、patAdd は行動の並びの最後に足す
+//   警戒版を持つ敵は、警戒度による数値の上乗せ(DATA.alert.enemy)を受けない
+const waryTier = (key, lv) => { const W = D.foes[key] && D.foes[key].wary; if(!W || !lv) return null; let t = null; for(const w of W) if(w.at <= lv && (!t || w.at > t.at)) t = w; return t; };
+const waryCache = {};
+function waryFoe(key, lv){
+  const t = waryTier(key, lv); if(!t) return D.foes[key];
+  const id = key + '!' + t.at; if(waryCache[id]) return waryCache[id];
+  const f = Object.assign({}, D.foes[key]);
+  for(const [k, v] of Object.entries(t)){
+    if(k === 'at') continue;
+    if(k === 'passives') f.passives = (f.passives || []).concat(v);
+    else if(k === 'patAdd') f.pat = f.pat.concat(v);
+    else f[k] = v;
+  }
+  delete f.wary; f.waryAt = t.at;
+  return waryCache[id] = f;
+}
+function scaledFoe(key, sc, lv){
+  const src = waryFoe(key, lv), wk = src.waryAt ? key + '!' + src.waryAt : key;
+  if(!sc || (sc.hp === 1 && sc.d === 1)) return src;
+  const id = wk + '@' + sc.hp + '/' + sc.d; if(scaledCache[id]) return scaledCache[id];
   // s はガードの量のときだけ(ユニットの絵の大きさの s は変えない)
   const H = ['hp', 'heal', 'rebuild'], DK = ['d', 'armor', 'poise'];
   const walk = (o, pk) => { if(Array.isArray(o)) return o.map(x => walk(x, pk)); if(!o || typeof o !== 'object') return o; const r = {};
@@ -470,12 +506,12 @@ function scaledFoe(key, sc){
       else r[k] = walk(v, k);
     } return r; };
   // 行動の文(n)・パッシブ(k の n は数)は変えない
-  const f = walk(D.foes[key], ''); if(D.foes[key].passives) f.passives = D.foes[key].passives;
+  const f = walk(src, ''); if(src.passives) f.passives = src.passives;
   return scaledCache[id] = f;
 }
-function makeFoe(key, i, sc){
-  const f = scaledFoe(key, sc);
-  const e = {key, i, name:f.name, tag:'ABCDEF'[i], kind:f.kind, pat:f.pat, idx:0, r:f.start, seq:0, alive:true,
+function makeFoe(key, i, sc, lv){
+  const f = scaledFoe(key, sc, lv);
+  const e = {key, i, wary:f.waryAt || 0, name:f.name, tag:'ABCDEF'[i], kind:f.kind, pat:f.pat, idx:0, r:f.start, seq:0, alive:true,
     react:f.react || null, sync:f.sync || 0, reactIn:null, ai:f.ai || null, phase:f.phase || null, phased:false, hist:[], chain:0, sh:0, str:0, haste:0, pas:f.passives || []};
   // ユニット。書かなければ耐久 hp の核1つ
   const defs = f.units || {core:{hp:f.hp, vital:true, core:true}};
@@ -511,10 +547,12 @@ function newBattle(run, encKey){
   const lv = alertLevel(run) - 1, ae = AL().enemy || {hp:0, d:0};
   const sc = A ? {hp:+(A.scale.hp * es.hp * (1 + ae.hp * lv)).toFixed(3), d:+(A.scale.d * es.d * (1 + ae.d * lv)).toFixed(3)} : null;
   if(!E.boss && !E.elite) run.lastEnc = encKey;
-  for(const key of E.foes) foes.push(makeFoe(key, foes.length, sc));
+  // 警戒版を持つ敵は、警戒度の上乗せの無い倍率で
+  const sc0 = A ? {hp:+(A.scale.hp * es.hp).toFixed(3), d:+(A.scale.d * es.d).toFixed(3)} : null;
+  for(const key of E.foes) foes.push(makeFoe(key, foes.length, D.foes[key].wary ? sc0 : sc, alertLevel(run)));
   let uid = 1;
   const cards = shuffle(battleDeck(run).map(k => ({k, id:uid++})));
-  const b = {enc:encKey, T:0, block:0, swift:0, foes, parts, draw:cards, disc:[], hand:[], cast:null, broken:{}, over:false, timers:[], zones:[], drawIn:RULE.draw, handMax:RULE.handMax, uid:1000, parryNow:false, charge:0};
+  const b = {enc:encKey, T:0, block:0, swift:0, foes, parts, draw:cards, disc:[], hand:[], cast:null, broken:{}, over:false, timers:[], zones:[], drawIn:RULE.draw, handMax:RULE.handMax, uid:1000, parryNow:false, charge:0, exile:[], wards:[], grow:{}, choose:null};
   st.b = b;
   b.handMax += fx(st, 'calc', 'handMax');
   const sb = fx(st, 'dur', 'startBlock'); if(sb) gainBlock(b, sb);
@@ -527,6 +565,8 @@ function newBattle(run, encKey){
 // 今できる行動: カード(対象ごと)、入れ替え(手札があるとき)、待機(手札がないとき)
 function actions(st){
   const b = st.b, out = [], seen = new Set();
+  // 手札を選ぶ間(0.30.0): 選ぶ行動だけ
+  if(b.choose) return b.hand.map((cd, i) => ({type:'choose', i, k:cd.k}));
   b.hand.forEach((cd, i) => {
     const c = D.cards[cd.k];
     if(spendShort(b, c)) return;
@@ -546,7 +586,7 @@ function actions(st){
   return out;
 }
 function reloadCost(st){ const ec = econ(); return ec.type === 'mag' ? (ec.r || 1) : (ec.r || 2) + (ec.heat || 0) * st.b.reloads; }
-function actionCost(st, a){ return a.type === 'card' ? D.cards[a.k].cost : a.type === 'swap' ? st.b.hand.length : a.type === 'reload' ? reloadCost(st) : a.type === 'pass' ? Math.max(1, st.b.turnIn) : 1; }
+function actionCost(st, a){ return a.type === 'choose' ? 0 : a.type === 'card' ? D.cards[a.k].cost : a.type === 'swap' ? st.b.hand.length : a.type === 'reload' ? reloadCost(st) : a.type === 'pass' ? Math.max(1, st.b.turnIn) : 1; }
 // 行動を1つ、手札の出し入れまで含めて準備する。spendGen の前に呼ぶ
 // 追跡(passive pursuit): 入れ替え・待機・再装填のたび、敵の次の行動が早まる
 function pursue(st){
@@ -556,12 +596,20 @@ function pursue(st){
 }
 function beginAction(st, a){
   const b = st.b;
+  if(a.type === 'choose') return beginAction0(st, a);
   if(a.type !== 'card'){ const pu = pursue(st); const p = beginAction0(st, a); if(pu.length) p.pursuit = pu; return p; }
   return beginAction0(st, a);
 }
 function beginAction0(st, a){
   const b = st.b;
   if(a.type === 'card'){ const cd = b.hand.splice(a.i, 1)[0]; return {card:cd, cost:D.cards[cd.k].cost, k:cd.k, t:a.t, n:0}; }
+  // 手札を選ぶ(0.30.0): 時間は使わない。discard は捨て札へ、exile は廃棄へ
+  if(a.type === 'choose'){
+    const ch = b.choose, cd = b.hand.splice(a.i, 1)[0];
+    if(cd){ (ch && ch.kind === 'exile' ? (b.exile = b.exile || []) : b.disc).push(cd); }
+    if(ch){ ch.n--; if(ch.n <= 0 || !b.hand.length) b.choose = null; }
+    return {card:null, cost:0, k:null, t:null, n:0, chose:cd || null};
+  }
   if(a.type === 'swap'){ const n = b.hand.length; b.disc.push(...b.hand); b.hand = []; return {card:null, cost:n, k:null, t:null, n}; }
   if(a.type === 'reload'){
     const ec = econ(), cost = reloadCost(st);
@@ -575,7 +623,10 @@ function beginAction0(st, a){
 }
 function endAction(st, p, out){
   const b = st.b;
-  if(p.card && p.card.k !== 'noise') b.disc.push(p.card); // ノイズは使うと消える
+  // ノイズは使うと消える。廃棄(0.30.0、exile)のカードはこの戦闘の間、廃棄に置く(山札にも捨て札にも戻らない)
+  if(p.card && p.card.k !== 'noise'){ if(D.cards[p.card.k] && D.cards[p.card.k].exile) (b.exile = b.exile || []).push(p.card); else b.disc.push(p.card); }
+  // 手札を選ぶカードは、使い終えたら選ぶ番(手札が無ければ何もしない)
+  if(b.chooseNext){ const ch = b.chooseNext; b.chooseNext = null; if(!out.dead && !out.won && b.hand.length) b.choose = {kind:ch.kind, n:Math.min(ch.n, b.hand.length)}; }
   if(p.reload && !out.dead && !out.won){ const ec = econ(); if(ec.blockReset === 'end' || ec.blockReset === true) b.block = 0; }
   if(p.mag && !out.dead && !out.won){ while(b.mag.length && b.hand.length < b.handMax) b.hand.push(b.mag.shift()); }
   if(p.n && !out.dead && !out.won) drawN(b, p.n);
@@ -670,7 +721,7 @@ function nextNodes(run){
 
 const API = {RULE, makeFoe, defaultUid, liveUids, actorUid, parseT, gap, reloadCost, rngFrom, setRandom, shuffle, pick, clone, cur, advance, partOf, fx, partCards, battleDeck, partMax, dmgOf, blockOf,
   drawOne, drawN, upcoming, arrivals, applyCard, enemyAct, spendGen, runGen, newBattle, actions, actionCost, beginAction, endAction, doAction,
-  newRun, nextArea, delayFoe, addDot, tickDots, lootBack, fledAll, pasN, attrOf, spendShort, regDeck, genMap, nextNodes, reachAfter, scaledFoe, alertLevel, addAlert, alertGain, encFor, poolIndex};
+  newRun, nextArea, delayFoe, addDot, tickDots, growOf, waryTier, lootBack, fledAll, pasN, attrOf, spendShort, regDeck, genMap, nextNodes, reachAfter, scaledFoe, alertLevel, addAlert, alertGain, encFor, poolIndex};
 root.ENGINE = API;
 if(typeof module !== 'undefined') module.exports = API;
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -324,7 +324,8 @@ const kindOpen = kind => REQ.filter(r => r.kind === kind && (r.status === 'open'
 // Claude の返事にまだ答えていないもの(やりとりの最後が Claude)。一覧・タブ・依頼で目立たせる
 const lastWho = t => t && t.length ? t[t.length - 1].who : '';
 const needsMe = r => (r.status === 'open' || r.status === 'discuss') && lastWho(r.thread) === 'claude';
-const cardNeedsMe = d => !!d && d.status !== 'merged' && d.status !== 'cut' && lastWho(d.thread) === 'claude';
+// 工房のカード・属性は「添削済み」のときだけ(確定・作業中・添削待ち・削るにしたら、返信しなくても消える)
+const cardNeedsMe = d => !!d && d.status === 'reviewed' && lastWho(d.thread) === 'claude';
 const kindReplies = kind => kind === 'cards' ? Object.values(WB).filter(cardNeedsMe).length : kind === 'attrs' ? Object.values(AB).filter(cardNeedsMe).length : REQ.filter(r => needsMe(r) && (r.kind === kind || (r.type === 'batch' && kind === 'requests'))).length;
 const itemReplies = (kind, key) => REQ.filter(r => needsMe(r) && r.kind === kind && r.key === key).length;
 const allReplies = () => REQ.filter(needsMe).length + Object.values(WB).filter(cardNeedsMe).length + Object.values(AB).filter(cardNeedsMe).length;
@@ -499,7 +500,7 @@ function wbInput(id, el){
 function wbDoc(w, status){
   const prev = WB[w.key], c = clone(w.card);
   if(!w.custom) c.text = genText(c);
-  return {key:w.key, card:c, rarity:w.rarity || '', idea:w.idea || '', status: status || (prev && prev.status !== 'base' && prev.status !== 'merged' ? prev.status : 'draft'), thread:(prev && prev.thread) || [], at:new Date().toISOString()};
+  return {key:w.key, card:c, rarity:w.rarity || '', idea:w.idea || '', status: status || (prev && prev.status !== 'base' && prev.status !== 'merged' && prev.status !== 'reviewed' ? prev.status : 'draft'), thread:(prev && prev.thread) || [], at:new Date().toISOString()};
 }
 // まとめて添削に出す: 保存していない編集と、作業中(保存だけした)のカードをすべて「添削待ち」にする
 function bulkKeys(){
@@ -727,7 +728,7 @@ async function abSave(status){
   if(!DB || !S.ab) return;
   const w = S.ab, prev = AB[w.key], a = clone(w.attr);
   if(!w.custom) a.text = '';
-  const doc = {key:w.key, attr:a, idea:w.idea || '', test:w.test.slice(), status: status || (prev && prev.status !== 'base' && prev.status !== 'merged' ? prev.status : 'draft'), thread:(prev && prev.thread) || [], at:new Date().toISOString()};
+  const doc = {key:w.key, attr:a, idea:w.idea || '', test:w.test.slice(), status: status || (prev && prev.status !== 'base' && prev.status !== 'merged' && prev.status !== 'reviewed' ? prev.status : 'draft'), thread:(prev && prev.thread) || [], at:new Date().toISOString()};
   try{ await DB.doc('attrs/' + w.key).set(doc); w.dirty = false; delete ABDRAFT[w.key]; toast(status === 'review' ? '添削に出しました' : status === 'ok' ? '確定にしました' : '保存しました'); }
   catch(e){ toast('保存できませんでした'); }
 }

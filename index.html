@@ -1187,7 +1187,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 <script src="data/text.js"></script>
 <script src="js/engine.js"></script>
 <script>
-const APP_VERSION = '0.30.0';
+const APP_VERSION = '0.31.0';
 const $ = s => document.querySelector(s);
 const EN = ENGINE, RULE = EN.RULE;
 const VIEW = RULE.view, NOW = 170, PX = 34, xs = c => NOW + c * PX, STRIP_Y = 150, SWIFT_VIS = 3;
@@ -2945,7 +2945,7 @@ function showRules(first){
       : RULE.econ.type === 'turn' ? `<li>${RULE.econ.len}サイクルごとに区切り(点線)。区切りで手札を捨てて${RULE.econ.hand}枚引き、ブロックも消える。右下の上段は区切りまで待つ。</li>`
       : `<li>手札は自動では届かない。好きなときに右下のリフレッシュ(${RULE.econ.r}サイクル)で、手札を全部捨てて${RULE.econ.hand}枚引く。リフレッシュ中もブロックは残り、新しい手札が来るとすべて失う。</li>`}
     <li>奥の画面に敵の行動の予定が流れてくる。数字はダメージ、下の印は狙う部位。紫の丸は不安定な行動、砂時計は自分へのディレイ。</li>
-    <li>カードが発動する前に攻撃を受けるとブレイクされる。ブロックで全部防ぐか、菱形のあるカード(アトミック)ならブレイクされない。不安定な行動と同じサイクルに発動すると、JUSTでブレイクする(行動が止まる)。</li>
+    <li>カードが発動する前に攻撃を受けるとブレイクされる。ブロックで全部防ぐか、菱形のあるカード(アトミック)ならブレイクされない。不安定な行動と同じサイクルにカードでダメージを与えると、ブレイクする(行動が止まる。発動が重なればJUST、時限が当たってもよい)。</li>
     <li>目の印の敵は、重いカードを使い始めると撃ってくる。鎖の印の敵は、仲間と同時に攻撃すると強くなる。</li>
     <li>予定の下の帯は、その間にカードが発動したときに効く。<b>体勢</b>は一度に数字以上のダメージでブレイク。<b>防壁</b>は数字までダメージを防がれる。<b>反撃</b>は攻撃するたびに撃ち返される。<b>隙</b>はダメージ1.5倍。</li>
     ${!RULE.econ ? `<li>右下は手札の入れ替え(枚数ぶんのサイクル)${RULE.freeWait ? 'と、1サイクルの待機' : '。手札がないときは1サイクルの待機'}。</li>` : RULE.freeWait || RULE.econ.type === 'turn' ? '<li>右下の下段は1サイクルの待機。</li>' : ''}

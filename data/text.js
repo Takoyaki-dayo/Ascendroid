@@ -73,7 +73,7 @@ window.DATA = window.DATA || {};
   },
   "wall": {
    "name": "防御姿勢",
-   "text": "{block}ブロックを得る。"
+   "text": "防壁{ww}/{ws}を得る。"
   },
   "backflow": {
    "name": "逆流",
@@ -109,7 +109,7 @@ window.DATA = window.DATA || {};
   },
   "storm": {
    "name": "放電網",
-   "text": "充電をすべて消費し、敵のすべてのユニットに1につき{per}ダメージを与える。"
+   "text": "充電{sn}を消費し、敵のすべてのユニットに{sv}ダメージを与える。"
   },
   "cell": {
    "name": "電磁障壁",
@@ -118,6 +118,30 @@ window.DATA = window.DATA || {};
   "noise": {
    "name": "ノイズ",
    "text": "効果なし。使うか捨てると消える。"
+  },
+  "dismantle": {
+   "name": "解体",
+   "text": "{dmg}ダメージを与える。ユニットを破壊したとき、スクラップ{scrap}を得る。"
+  },
+  "tempest": {
+   "name": "暴風雨",
+   "text": "敵のすべてのユニットに{dmg}ダメージを{x}回与える。"
+  },
+  "paradox": {
+   "name": "論理破綻",
+   "text": "クラック{crack}を与える。次の敵の行動をブレイクする。これを廃棄する。"
+  },
+  "iterate": {
+   "name": "パターン反復",
+   "text": "{dmg}ダメージを{x}回与える。この戦闘の間、全ての《パターン反復》のダメージを{grow}増加させる。"
+  },
+  "triple": {
+   "name": "三連撃",
+   "text": "{dmg}ダメージを{x}回与える。"
+  },
+  "dispose": {
+   "name": "処理",
+   "text": "{dmg}ダメージを与える。手札を{discard}枚選んで捨てる。"
   }
  },
  "keywords": [
@@ -179,7 +203,7 @@ window.DATA = window.DATA || {};
   {
    "key": "chargeMove",
    "name": "不安定",
-   "desc": "この行動にJUSTを重ねると、ブレイクする。"
+   "desc": "この行動と同じサイクルにカードでダメージを与えると、ブレイクする。"
   },
   {
    "key": "vuln",
@@ -622,7 +646,7 @@ window.DATA = window.DATA || {};
   "ui.mv.atk": "{part}に{d}ダメージを与える。",
   "ui.mv.hits": "{part}に{d}ダメージを{hits}回与える。",
   "ui.mv.delay": "こちらにディレイ{v}を与える。",
-  "ui.mv.charge": "不安定。JUSTを重ねるとブレイクする。",
+  "ui.mv.charge": "不安定。同じサイクルにカードでダメージを与えるとブレイクする。",
   "ui.mv.wind": "体勢{w}/{poise}：{w}サイクル前から、一度に{poise}以上のダメージを受けるとブレイクする。",
   "ui.mv.guard": "防壁{w}/{s}：{w}サイクル前から、合計で{s}までのダメージを防ぐ。",
   "ui.mv.counter": "反撃{w}/{cd}：{w}サイクル前から、攻撃を受けるたびに{cd}ダメージを与える。",

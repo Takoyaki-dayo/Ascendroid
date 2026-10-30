@@ -23,8 +23,8 @@ DATA.cards = {
   crackshot:{cost:2, tgt:true, dmg:{t:'ranged', n:2}, crack:1},
   parry:    {cost:2, block:3, parry:true},
   slash:    {cost:3, tgt:true, dmg:{t:'melee', n:8}},
-  wall:     {cost:3, block:10},
-  backflow: {cost:3, all:true, delay:4},
+  wall:     {cost:2, ward:{w:6, s:14}},
+  backflow: {cost:3, all:true, delay:6},
   scatter:  {cost:3, all:true, dmg:{t:'ranged', n:4}},
   charge:   {cost:4, tgt:true, atomic:true, dmg:{t:'ranged', n:10}},
   emp:      {cost:4, all:true, dmg:{t:'ranged', n:5}},
@@ -32,9 +32,16 @@ DATA.cards = {
   // 充電(貯めて消費する)
   capacitor:{cost:1, gain:4},
   arc:      {cost:2, tgt:true, dmg:{t:'melee', n:4}, gain:2},
-  coil:     {cost:0, gain:2, draw:1},
-  storm:    {cost:4, all:true, spend:{dmg:{t:'ranged', n:3}}},
+  coil:     {cost:1, gain:2, draw:1},
+  storm:    {cost:4, all:true, spend:{n:3, dmg:{t:'ranged', n:16}}},
   cell:     {cost:1, spend:{block:4}},
+  // 0.31.0: 工房で作られたカード(名前はユーザー)
+  dismantle:{cost:4, tgt:true, dmg:{t:'melee', n:15}, scrapBreak:6},
+  tempest:  {cost:3, all:true, dmg:{t:'ranged', n:1, x:7}},
+  paradox:  {cost:0, tgt:true, crack:3, breakNext:true, exile:true},
+  iterate:  {cost:1, tgt:true, dmg:{t:'melee', n:0, x:2}, grow:1},
+  triple:   {cost:3, tgt:true, dmg:{t:'melee', n:6, x:3}},
+  dispose:  {cost:2, tgt:true, dmg:{t:'melee', n:15}, discard:1},
   // 敵のノイズ注入で山札に混ざる。何もせず、使うと消える(ショップや学習には出ない)
   noise:    {cost:1, junk:true},
 };
@@ -43,4 +50,4 @@ DATA.cards = {
 DATA.startDeck = ['jab','jab','jab','jab','guard','guard','guard','guard','slash','hack'];
 
 // 珍しいカード(イベントの報酬)
-DATA.rareCards = ['blow','parry','emp','scan'];
+DATA.rareCards = ['blow','parry','emp','scan','tempest','paradox'];

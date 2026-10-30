@@ -229,6 +229,12 @@ function tickDots(st){
   if(ev.length) b.dotCyc = (b.dotCyc || 0) + 1;
   return ev;
 }
+// このカードが敵 e にダメージを与えるか(不安定のブレイク、0.31.0)。時限は撃ったときには当たらない
+function cardHitsFoe(b, c, e, ti){
+  const dmg = !!c.dmg || !!(c.spend && c.spend.dmg && (c.spend.n ? (b.charge || 0) >= c.spend.n : (b.charge || 0) > 0));
+  if(!dmg) return false;
+  return !!c.all || (!!c.tgt && parseT(ti).i === e.i);
+}
 // この戦闘で増えたダメージ(grow)。キーは属性を除いた元のカード
 const growOf = (b, k) => (b && b.grow && k) ? (b.grow[String(k).split('@')[0]] || 0) : 0;
 // 決まった量の充電を消費するカード(spend.n)は、充電が足りないと使えない
@@ -391,7 +397,12 @@ function* spendGen(st, cost, k, ti, noInt){
       const due = b.timers.filter(t => t.left <= 0);
       if(due.length){
         b.timers = b.timers.filter(t => t.left > 0);
-        for(const t of due){ const ev = fireTimer(st, t); yield {type:'timer', t, ev}; }
+        for(const t of due){
+          const ev = fireTimer(st, t);
+          // 不安定(0.31.0): 時限もカードのダメージなので、この行動と同じサイクルに当たればブレイク
+          for(const e of b.foes) if(e.alive && e.r <= 0 && cur(e).ch && !e.chain && ev.some(x => x.kind === 'dmg' && x.e === e.i)){ const nm = cur(e).n; advance(e); b.breaks = (b.breaks || 0) + 1; ev.push({kind:'break', e:e.i, name:nm}); }
+          yield {type:'timer', t, ev};
+        }
         if(!b.foes.some(e => e.alive)){ b.cast = null; out.won = true; return out; }
       }
       // 持続(0.29.0): 時限の後、敵の行動の前
@@ -418,7 +429,8 @@ function* spendGen(st, cost, k, ti, noInt){
         const jev = [], JA = attrOf(c);
         if(real && JA && JA.on === 'just') for(const e of b.foes) if(e.alive && e.r <= 0) attrFx(st, JA, e, actorUid(e, cur(e)), jev);
         if(real) for(const e of b.foes){
-          if(e.alive && e.r <= 0 && cur(e).ch && !e.chain){
+          // 不安定(0.31.0): カードでダメージを与えるときだけ(防御のカードや持続ではブレイクしない)
+          if(e.alive && e.r <= 0 && cur(e).ch && !e.chain && cardHitsFoe(b, c, e, ti)){
             const nm = cur(e).n, jp = actorUid(e, cur(e)); advance(e);
             const cr = fx(st, 'calc', 'justCrack'); e.units[jp].crack += cr;
             const dl = fx(st, 'calc', 'justDelay'); if(dl) delayFoe(e, dl);

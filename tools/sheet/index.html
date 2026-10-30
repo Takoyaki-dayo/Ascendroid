@@ -90,6 +90,8 @@ td .k{display:block;font-family:var(--f-mono);font-size:10.5px;color:var(--dim);
 .newkey input{flex:1;min-width:0;border:1px solid var(--line);border-radius:5px;padding:5px 8px;background:var(--panel);font-family:var(--f-mono)}
 /* 送る */
 .send{border-top:1px solid var(--line);padding:10px 14px;display:flex;flex-direction:column;gap:8px;background:var(--panel);border-radius:0 0 10px 10px}
+.bis{display:flex;flex-direction:column;gap:8px}
+.bi{display:flex;flex-direction:column;gap:3px;padding:6px 0;border-bottom:1px solid var(--line)} .bi>b,.bi>a b{font-size:13px} .bi .badge{align-self:flex-start}
 .diff{display:flex;flex-direction:column;gap:3px;max-height:140px;overflow:auto}
 .dl{display:grid;grid-template-columns:minmax(0,10em) minmax(0,1fr);gap:8px;font-size:12px}
 .dl .p{font-family:var(--f-mono);font-size:11px;color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -467,38 +469,57 @@ function bulkEdits(){
   if(S.draft && KBY[S.kind] && !KBY[S.kind].wb && S.kind !== 'requests' && !EDRAFT[S.kind + '|' + (S.draft.isNew ? '+' : S.draft.key)] && eDirty(S.kind, S.draft, S.comment)) out.push({kind:S.kind, draft:S.draft, comment:S.comment, cur:true});
   return out;
 }
+// まとめて相談: 工房のカード(添削待ちにする)と、カード以外の送っていない変更、全体への相談を1件の依頼(type:'batch')にまとめて送る
+function bulkCards(){
+  return bulkKeys().map(k => {
+    const w = WBDRAFT[k] || (S.wb && S.wb.key === k && S.wb.dirty ? S.wb : null), card = w ? w.card : WB[k].card;
+    const base = D.cards[k] ? wbBase(k) : null;
+    return {key:k, w, card, isNew:!base, changes: base ? diff(base, card).filter(c => c.path !== 'text') : []};
+  });
+}
+function bulkCount(){ return bulkKeys().length + bulkEdits().length; }
 function bulkLabel(){
   const b = $('#bulkBtn'); if(!b) return;
-  const n = bulkKeys().length + bulkEdits().length;
-  b.disabled = !n || !DB;
-  if(S.bulkArm && !n) S.bulkArm = false;
-  b.className = 'btn sm ' + (S.bulkArm ? '' : 'ghost');
-  b.textContent = S.bulkArm ? `もう一度押すと ${n}件を出す` : `まとめて添削に出す${n ? ' ' + n : ''}`;
+  const n = bulkCount();
+  b.disabled = !DB;
+  b.className = 'btn sm ' + (S.bulkOpen ? '' : 'ghost');
+  b.textContent = `まとめて相談${n ? ' ' + n : ''}`;
 }
-async function wbBulk(){
+const dlHTML = ch => ch.length ? `<div class="diff">${ch.map(c => `<div class="dl"><span class="p" title="${esc(c.path)}">${esc(c.path)}</span><span class="v"><s>${esc(c.from)}</s> → <b>${esc(c.to)}</b></span></div>`).join('')}</div>` : '';
+function bulkHTML(){
+  const cs = bulkCards(), es = bulkEdits();
+  const cards = cs.map(c => `<div class="bi"><b>${esc(c.card.name || c.key)}</b>${c.isNew ? '<span class="badge new">新規</span>' : ''}${c.w ? '<span class="badge w-review">未保存</span>' : ''}${dlHTML(c.changes) || (c.isNew ? `<div class="note">${fillText(c.card)}</div>` : '<div class="note">数値の変更なし</div>')}</div>`).join('');
+  const edits = es.map(e => { const d = reqDoc(e.kind, e.draft, e.comment); return `<div class="bi"><b>${esc(KBY[e.kind].label)} · ${esc(d.label)}</b>${d.type === 'new' ? '<span class="badge new">追加</span>' : ''}${dlHTML(d.changes)}${d.comment ? `<div class="cm">${esc(d.comment)}</div>` : ''}</div>`; }).join('');
+  return `<div class="side-h"><div><h2>まとめて相談</h2><span class="k">カード ${cs.length}・そのほか ${es.length}</span></div><button class="btn quiet x" type="button" id="closeSide">閉じる</button></div>
+  <div class="side-b">
+    ${cs.length ? `<div class="grp"><h3>カード(添削待ちにする)</h3>${cards}</div>` : ''}
+    ${es.length ? `<div class="grp"><h3>敵・パーツなどの変更</h3>${edits}</div>` : ''}
+    ${!cs.length && !es.length ? '<div class="note">送っていない変更はありません。下に相談だけ書いて送ることもできます。</div>' : ''}
+    <div class="grp"><h3>全体への相談・質問</h3><textarea id="bulkText" class="wtext" placeholder="例: 序盤が単調な気がする。この変更で手応えが出るか見てほしい">${esc(S.bulkText || '')}</textarea></div>
+  </div>
+  <div class="send"><div class="row btns"><button class="btn" type="button" id="bulkSend"${DB ? '' : ' disabled'}>まとめて送る</button></div></div>`;
+}
+async function bulkSend(){
   if(!DB) return;
-  const ks = bulkKeys(), es = bulkEdits(); if(!ks.length && !es.length) return;
-  if(!S.bulkArm){ S.bulkArm = true; bulkLabel(); clearTimeout(wbBulk.t); wbBulk.t = setTimeout(() => { S.bulkArm = false; bulkLabel(); }, 4000); return; }
-  S.bulkArm = false; clearTimeout(wbBulk.t);
-  let ok = 0, ng = 0;
-  for(const k of ks){
-    const w = WBDRAFT[k] || (S.wb && S.wb.key === k && S.wb.dirty ? S.wb : null);
-    try{
-      if(w){ await DB.doc('cards/' + k).set(wbDoc(w, 'review')); w.dirty = false; delete WBDRAFT[k]; }
-      else await DB.doc('cards/' + k).update({status:'review', at:new Date().toISOString()});
-      ok++;
-    }catch(e){ ng++; }
-  }
-  for(const e of es){
-    try{
-      if(e.draft.isNew && !e.draft.key.trim()) continue;
-      await DB.collection('requests').add(reqDoc(e.kind, e.draft, e.comment));
+  const cs = bulkCards(), es = bulkEdits().filter(e => !(e.draft.isNew && !e.draft.key.trim())), text = (S.bulkText || '').trim();
+  if(!cs.length && !es.length && !text) return;
+  const btn = $('#bulkSend'); if(btn) btn.disabled = true;
+  const now = new Date().toISOString();
+  try{
+    for(const c of cs){
+      if(c.w){ await DB.doc('cards/' + c.key).set(wbDoc(c.w, 'review')); c.w.dirty = false; delete WBDRAFT[c.key]; }
+      else await DB.doc('cards/' + c.key).update({status:'review', at:now});
+    }
+    const items = es.map(e => JSON.parse(JSON.stringify(reqDoc(e.kind, e.draft, e.comment), (k, v) => k === 'at' || k === 'status' || k === 'thread' ? undefined : v)));
+    const doc = {at:now, kind:'batch', key:'', label:`カード${cs.length}・そのほか${es.length}`, type:'batch', cards:cs.map(c => ({key:c.key, name:c.card.name || c.key, isNew:c.isNew, changes:c.changes})), items, changes:[], comment:text, status:'open', thread:[]};
+    await DB.collection('requests').add(doc);
+    for(const e of es){
       delete EDRAFT[e.kind + '|' + (e.draft.isNew ? '+' : e.draft.key)];
       if(e.cur || (S.kind === e.kind && S.draft === e.draft)){ S.comment = ''; if(e.draft.isNew){ S.draft = null; S.sel = null; } else { const it = curItem(); if(it) startDraft(it); } }
-      ok++;
-    }catch(err){ ng++; }
-  }
-  toast(ng ? `${ok}件を出しました(${ng}件は出せませんでした)` : `${ok}件を添削に出しました`);
+    }
+    S.bulkText = ''; S.bulkOpen = false; S.mobileOpen = false;
+    toast('まとめて送りました');
+  }catch(e){ toast('送れませんでした。もう一度試してください'); if(btn) btn.disabled = false; }
   renderAll();
 }
 async function wbSave(status){
@@ -570,7 +591,7 @@ function fieldHTML(p, v, orig){
 // 右の欄を描き直しても、同じ項目を見ている間はスクロール位置と入力中の欄をそのままにする
 // (描き直しで一番上に戻ると、次に押したところに別のボタンが来てしまう)
 function renderSide(){
-  const side = $('#side'), view = [S.kind, S.sel, S.wbDeckOpen ? 'deck' : '', S.draft && S.draft.isNew ? 'new' : ''].join('|');
+  const side = $('#side'), view = [S.kind, S.sel, S.bulkOpen ? 'bulk' : '', S.wbDeckOpen ? 'deck' : '', S.draft && S.draft.isNew ? 'new' : ''].join('|');
   const ob = side.querySelector('.side-b'), top = ob && side.dataset.view === view ? ob.scrollTop : 0;
   const ae = document.activeElement, fid = ae && side.contains(ae) && ae.id ? ae.id : '';
   let sel = null; try{ if(fid && typeof ae.selectionStart === 'number') sel = [ae.selectionStart, ae.selectionEnd]; }catch(_){}
@@ -583,6 +604,7 @@ function renderSide(){
 function syncSideMode(){ const side = $('#side'), on = innerWidth <= 820 && !side.hidden; $('.app').classList.toggle('sideopen', on); document.body.classList.toggle('sideopen', on); }
 function renderSide0(){
   const side = $('#side');
+  if(S.bulkOpen){ side.hidden = innerWidth <= 820 && !S.mobileOpen; side.innerHTML = bulkHTML(); return; }
   if(S.kind === 'requests'){ side.innerHTML = `<div class="empty">依頼の一覧は左にあります。項目を選ぶと、その項目の依頼も見られます。</div>`; side.hidden = innerWidth <= 820; return; }
   const it = curItem(), K = KBY[S.kind];
   side.hidden = innerWidth <= 820 && !S.mobileOpen;
@@ -637,15 +659,20 @@ const STATUS = {open:'未対応', discuss:'相談中', done:'反映済み', drop
 const fmt = iso => { if(!iso) return ''; const d = new Date(iso); if(isNaN(d)) return ''; const z = n => String(n).padStart(2, '0'); return `${z(d.getMonth() + 1)}/${z(d.getDate())} ${z(d.getHours())}:${z(d.getMinutes())}`; };
 function reqHTML(r, withItem){
   const K = KBY[r.kind];
-  const item = withItem ? (r.kind === 'general' ? '<span class="t">全体</span>' : `<a data-goto="${esc(r.kind)}|${esc(r.key || '')}">${esc(K ? K.label : r.kind)}${r.label ? ' · ' + esc(r.label) : ''}</a>`) : '';
+  const item = withItem ? (r.kind === 'general' ? '<span class="t">全体</span>' : r.kind === 'batch' ? `<span class="t">まとめて相談 · ${esc(r.label || '')}</span>` : `<a data-goto="${esc(r.kind)}|${esc(r.key || '')}">${esc(K ? K.label : r.kind)}${r.label ? ' · ' + esc(r.label) : ''}</a>`) : '';
   const ch = (r.changes || []).map(c => `<div class="dl"><span class="p" title="${esc(c.path)}">${esc(c.path)}</span><span class="v"><s>${esc(c.from)}</s> → <b>${esc(c.to)}</b></span></div>`).join('');
   const thread = (r.thread || []).map(m => `<div class="msg ${m.who === 'claude' ? 'claude' : 'user'}"><span class="w">${m.who === 'claude' ? 'Claude' : 'あなた'} · ${fmt(m.at)}</span>${esc(m.text)}</div>`).join('');
   return `<div class="req ${esc(r.status)}" data-req="${esc(r.id)}">
     <div class="req-h"><span class="badge ${esc(r.status)}">${STATUS[r.status] || r.status}</span>${r.type === 'new' ? '<span class="badge new">追加</span>' : r.type === 'note' ? '<span class="badge dropped">相談</span>' : ''}${item}<span class="d">${fmt(r.at)}${r.version ? ' · ' + esc(r.version) : ''}</span></div>
-    ${ch ? `<div class="diff">${ch}</div>` : ''}${r.type === 'new' && r.obj ? `<div class="note">キー ${esc(r.key)}: <code>${esc(JSON.stringify(r.obj)).slice(0, 300)}</code></div>` : ''}
+    ${r.type === 'batch' ? batchBody(r) : ''}${ch ? `<div class="diff">${ch}</div>` : ''}${r.type === 'new' && r.obj ? `<div class="note">キー ${esc(r.key)}: <code>${esc(JSON.stringify(r.obj)).slice(0, 300)}</code></div>` : ''}
     ${r.comment ? `<div class="cm">${esc(r.comment)}</div>` : ''}${thread}
     ${r.status === 'done' || r.status === 'dropped' ? '' : `<div class="reply"><input type="text" data-reply="${esc(r.id)}" placeholder="返信" aria-label="返信"><button class="btn quiet" type="button" data-send-reply="${esc(r.id)}">返信</button><button class="btn quiet" type="button" data-drop="${esc(r.id)}">取り下げ</button></div>`}
   </div>`;
+}
+function batchBody(r){
+  const cs = (r.cards || []).map(c => `<div class="bi"><a data-goto="cards|${esc(c.key)}"><b>カード · ${esc(c.name)}</b></a>${c.isNew ? '<span class="badge new">新規</span>' : ''}${dlHTML(c.changes || [])}</div>`).join('');
+  const is = (r.items || []).map(d => `<div class="bi"><a data-goto="${esc(d.kind)}|${esc(d.key || '')}"><b>${esc(KBY[d.kind] ? KBY[d.kind].label : d.kind)} · ${esc(d.label || d.key)}</b></a>${d.type === 'new' ? '<span class="badge new">追加</span>' : ''}${dlHTML(d.changes || [])}${d.comment ? `<div class="cm">${esc(d.comment)}</div>` : ''}</div>`).join('');
+  return cs || is ? `<div class="bis">${cs}${is}</div>` : '';
 }
 function renderReqPane(){
   const f = S.reqFilter, rs = REQ.filter(r => f === 'all' || (f === 'active' ? r.status === 'open' || r.status === 'discuss' : r.status === f)).sort((a, b) => (b.at || '').localeCompare(a.at || ''));
@@ -653,7 +680,7 @@ function renderReqPane(){
   const general = `<div class="req"><div class="req-h"><span class="t">項目によらない依頼・相談</span></div><textarea id="generalText" placeholder="例: 新しいアーキタイプ「侵食」を作りたい。カード案は…" style="width:100%;min-height:60px;border:1px solid var(--line);border-radius:6px;padding:6px 8px;background:var(--panel)"></textarea><div class="reply"><span class="sp" style="flex:1"></span><button class="btn" type="button" id="sendGeneral"${DB ? '' : ' disabled'}>送る</button></div></div>`;
   return `<div class="reqs"><div class="filters">${fl}</div>${general}${rs.length ? rs.map(r => reqHTML(r, true)).join('') : `<div class="note">${dbState === 'wait' ? '読み込み中…' : dbState === 'off' ? 'この表示では依頼を読めません。' : 'まだ依頼はありません。'}</div>`}</div>`;
 }
-function renderAll(){ document.querySelector('main').classList.toggle('wide', S.kind === 'requests'); renderTabs(); renderList(); renderSide(); }
+function renderAll(){ document.querySelector('main').classList.toggle('wide', S.kind === 'requests' && !S.bulkOpen); renderTabs(); renderList(); renderSide(); }
 
 /* ---------- 編集 ---------- */
 // カード以外の未送信の編集: 別の項目・タブに移っても取っておく(キーは「種類|キー」、新規は「種類|+」)
@@ -680,6 +707,7 @@ function reqDoc(kind, d, comment){
 }
 function startDraft(it){ S.draft = {isNew:false, key:it.key, obj:clone(it.obj)}; S.json = false; S.jsonErr = ''; S.comment = ''; }
 function selectItem(key){
+  S.bulkOpen = false;
   if(KBY[S.kind] && KBY[S.kind].wb){ if(!(S.wb && S.wb.key === key)) wbOpen(key); S.sel = key; S.wbDeckOpen = false; S.revertArm = null; S.mobileOpen = true; renderAll(); return; }
   const it = curItems().find(x => x.key === key); if(!it) return;
   if(S.draft && !S.draft.isNew && S.draft.key === key){ S.mobileOpen = true; renderAll(); return; }
@@ -720,7 +748,7 @@ async function drop(id){
 /* ---------- 入力 ---------- */
 document.addEventListener('click', e => {
   const t = e.target;
-  const tab = t.closest('[data-tab]'); if(tab){ wbStash(); eStash(); S.kind = tab.dataset.tab; S.sel = null; S.draft = null; S.wb = null; S.wbDeckOpen = false; S.mobileOpen = false; S.q = ''; $('#q').value = ''; renderAll(); return; }
+  const tab = t.closest('[data-tab]'); if(tab){ S.bulkOpen = false; wbStash(); eStash(); S.kind = tab.dataset.tab; S.sel = null; S.draft = null; S.wb = null; S.wbDeckOpen = false; S.mobileOpen = false; S.q = ''; $('#q').value = ''; renderAll(); return; }
   // カード工房
   const wf = t.closest('[data-wbf]'); if(wf){ S.wbFilter = wf.dataset.wbf; renderList(); return; }
   const wt = t.closest('[data-wbtext]'); if(wt && S.wb){ S.wb.custom = wt.dataset.wbtext === 'custom'; if(S.wb.custom && !S.wb.card.text) S.wb.card.text = genText(S.wb.card); S.wb.dirty = true; renderSide(); return; }
@@ -731,8 +759,9 @@ document.addEventListener('click', e => {
   if(t.closest('#wbCut')){ wbStatus(WB[S.wb.key].status === 'cut' ? 'draft' : 'cut'); return; }
   if(t.closest('#wbRevert')){ wbRevert(); return; }
   if(t.closest('#wbReply')){ wbReply(); return; }
-  if(t.closest('#bulkBtn')){ wbBulk(); return; }
-  if(t.closest('#deckBtn')){ wbStash(); S.wbDeckOpen = true; S.wbDeckDraft = null; S.sel = null; S.wb = null; S.mobileOpen = true; renderAll(); return; }
+  if(t.closest('#bulkBtn')){ S.bulkOpen = !S.bulkOpen; S.mobileOpen = S.bulkOpen || !!S.sel; renderAll(); return; }
+  if(t.closest('#bulkSend')){ bulkSend(); return; }
+  if(t.closest('#deckBtn')){ S.bulkOpen = false; wbStash(); S.wbDeckOpen = true; S.wbDeckDraft = null; S.sel = null; S.wb = null; S.mobileOpen = true; renderAll(); return; }
   if(t.closest('#deckSave')){ (async () => { try{ await DB.doc('config/deck').set({startDeck:S.wbDeckDraft, at:new Date().toISOString()}); S.wbDeckDraft = null; toast('保存しました'); renderAll(); }catch(e){ toast('保存できませんでした'); } })(); return; }
   if(t.closest('#deckReset')){ S.wbDeckDraft = D.startDeck.slice(); renderSide(); return; }
   if(t.closest('#playBtn')){ openPlay(); return; }
@@ -747,9 +776,9 @@ document.addEventListener('click', e => {
   if(t.closest('#sendBtn')){ send(); return; }
   if(t.closest('#sendGeneral')){ sendGeneral(); return; }
   if(t.closest('#resetDraft')){ const it = curItem(); if(it){ startDraft(it); renderSide(); } return; }
-  if(t.closest('#closeSide')){ S.mobileOpen = false; S.wbDeckOpen = false; renderSide(); if(KBY[S.kind].wb) renderList(); return; }
-  if(t.closest('#addBtn') && KBY[S.kind].wb){ wbStash(); const k = 'n' + Date.now().toString(36); S.sel = k; S.wbDeckOpen = false; wbStart(k); S.mobileOpen = true; renderAll(); setTimeout(() => { const n = $('#w_name'); if(n) n.focus(); }, 50); return; }
-  if(t.closest('#addBtn')){ eStash(); const it = curItem(); S.draft = {isNew:true, key:'', obj:it ? clone(it.obj) : {}}; S.sel = null; S.json = true; S.jsonText = JSON.stringify(S.draft.obj, null, 2); S.jsonErr = ''; S.comment = ''; S.mobileOpen = true; renderAll(); return; }
+  if(t.closest('#closeSide')){ if(S.bulkOpen){ S.bulkOpen = false; renderAll(); return; } S.mobileOpen = false; S.wbDeckOpen = false; renderSide(); if(KBY[S.kind].wb) renderList(); return; }
+  if(t.closest('#addBtn') && KBY[S.kind].wb){ S.bulkOpen = false; wbStash(); const k = 'n' + Date.now().toString(36); S.sel = k; S.wbDeckOpen = false; wbStart(k); S.mobileOpen = true; renderAll(); setTimeout(() => { const n = $('#w_name'); if(n) n.focus(); }, 50); return; }
+  if(t.closest('#addBtn')){ S.bulkOpen = false; eStash(); const it = curItem(); S.draft = {isNew:true, key:'', obj:it ? clone(it.obj) : {}}; S.sel = null; S.json = true; S.jsonText = JSON.stringify(S.draft.obj, null, 2); S.jsonErr = ''; S.comment = ''; S.mobileOpen = true; renderAll(); return; }
 });
 document.addEventListener('keydown', e => { if(e.key === 'Enter'){ const row = e.target.closest && e.target.closest('tr.row'); if(row) selectItem(row.dataset.key); } });
 function setMode(json){
@@ -763,6 +792,7 @@ const later = () => refreshDyn();
 document.addEventListener('input', e => {
   const t = e.target;
   if(t.id === 'q'){ S.q = t.value; renderList(); return; }
+  if(t.id === 'bulkText'){ S.bulkText = t.value; return; }
   if(t.id === 'w_reply' && S.wb){ S.wb.reply = t.value; return; }
   if(t.dataset && t.dataset.wb && S.wb){ const was = S.wb.dirty, r = wbInput(t.dataset.wb, t); S.wb.dirty = true; if(r === 'full') renderSide(); else wbRefresh(); if(!was){ bulkLabel(); if(innerWidth > 820) renderList(); } return; }
   if(t.id === 'comment'){ S.comment = t.value; refreshDyn(); return; }

@@ -80,6 +80,21 @@ td .k{display:block;font-family:var(--f-mono);font-size:10.5px;color:var(--dim);
 .mode button.on{border-color:var(--cy);color:var(--cy);background:var(--cy-soft)}
 .grp{display:flex;flex-direction:column;gap:5px}
 .grp h3{margin:4px 0 0;font-size:11.5px;color:var(--dim);font-weight:700;letter-spacing:.03em}
+/* 敵のページ(0.32.3) */
+.hpc{font-family:var(--f-num, monospace);font-size:12.5px;white-space:nowrap;line-height:1.5}
+.aps{display:inline-flex;flex-wrap:wrap;gap:3px} .ap{white-space:nowrap;font-size:11.5px;border:1px solid var(--line);border-radius:4px;padding:0 5px;background:var(--panel)}
+details.fgrp > summary{font-size:12.5px;color:var(--fg)}
+.ar{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:flex-end;margin:3px 0}
+.ff{display:flex;flex-direction:column;gap:1px;min-width:62px;flex:0 1 84px} .ff span{font-size:10.5px;color:var(--dim);white-space:nowrap}
+.ff input,.ff select{width:100%;min-width:0;border:1px solid var(--line);background:var(--panel);border-radius:5px;padding:3px 6px}
+.ff.fw{flex:1 1 160px} .ff.fb{flex:0 0 auto;min-width:0;align-items:center} .ff.fb input{width:auto}
+.ff.chg input,.ff.chg select{border-color:var(--cy);background:var(--cy-soft)}
+.act{border:1px solid var(--line);border-radius:7px;padding:6px 8px;margin:6px 0;background:var(--panel)}
+.act .ah{display:flex;align-items:flex-end;gap:8px} .act .ah > b{font-family:var(--f-num, monospace);color:var(--dim);padding-bottom:5px}
+.act .ax{border-top:1px dashed var(--line);padding-top:4px} .xg{display:inline-flex;gap:4px;align-items:flex-end;border:1px solid var(--line);border-radius:6px;padding:2px 5px} .xg > i{font-style:normal;font-size:11px;font-weight:700;align-self:center}
+.act .af select{font-size:11.5px;border:1px dashed var(--line);border-radius:5px;background:transparent;padding:2px 4px}
+.ur{border-bottom:1px dashed var(--line);padding-bottom:4px}
+.chips{display:flex;flex-wrap:wrap;gap:4px} .chip{border:1px solid var(--line);border-radius:12px;padding:1px 9px;font-size:12px;background:var(--panel);cursor:pointer} .chip.on{border-color:var(--cy);background:var(--cy-soft);font-weight:700}
 /* 折りたためる欄の組(0.29.0)。カードが使っている組は開き、使っていない組は見出しだけ */
 details.grp{gap:0;border-top:1px solid var(--line);padding-top:2px}
 details.grp > summary{list-style:none;cursor:pointer;display:flex;align-items:baseline;gap:8px;padding:6px 0;font-size:11.5px;color:var(--dim);font-weight:700;letter-spacing:.03em;touch-action:manipulation}
@@ -241,8 +256,8 @@ const KINDS = [
   {id:'attrs', label:'属性', ab:true, items:() => abRows().map(r => ({key:r.key, name:r.attr.name, obj:r.attr})), head:[], cells:() => []},
   // 敵(0.28.0): 出るところ(appear。エリアと警戒度。変えたいときは書き換えて送る)と、パッシブの中身を上に出す
   {id:'foes', label:'敵', items:() => Object.entries(D.foes).map(([k, f]) => ({key:k, name:f.name, obj:Object.assign({appear:foeAppear(k)}, clone(f), {say:foeSay(f)})})),
-    head:['名前', '耐久', '出るところ', '行動'], cells:it => [nmCell(it), `<td class="num">${esc(unitHp(it.obj))}</td>`, `<td>${esc(it.obj.appear.join('、') || '—')}</td>`, `<td class="tx">${esc(it.obj.pat.map(a => a.n).join(' → '))}</td>`],
-    preview:o => foePreview(o)},
+    head:['名前', '耐久', '行動', '出るところ'], cells:it => [nmCell(it), `<td class="hpc">${String(unitHp(it.obj)).split('・').map(esc).join('<br>')}</td>`, `<td class="tx">${esc(it.obj.pat.map(a => a.n).join(' → '))}</td>`, `<td>${appearChips(it.obj.appear)}</td>`],
+    preview:o => foePreview(o), form:(o, orig) => foeForm(o, orig)},
   // セリフ(0.33.0): 自機(K-7)の独り言だけ。場面ごとに1項目(text/lines.csv)。敵のひとことは敵のページの「ひとこと」で(text/enemies.csv の 敵.say.*)
   {id:'lines', label:'セリフ', items:() => lineItems(), head:['場面', 'セリフ'], cells:it => [nmCell(it), `<td class="tx">${it.obj.lines.length ? it.obj.lines.map(esc).join('<br>') : '<span class="note">(無し)</span>'}</td>`],
     preview:o => `<div class="note">${esc(LHINT)}</div>`},
@@ -263,6 +278,62 @@ const KINDS = [
     head:['名前', '補給', '待機'], cells:it => [nmCell(it), `<td>${esc(it.obj.sys)}</td>`, `<td>${it.obj.wait ? 'あり' : 'なし'}</td>`]},
 ];
 const KBY = Object.fromEntries(KINDS.map(k => [k.id, k]));
+/* 敵のページ(0.32.3): 欄を敵の形に合わせて並べる(基本・ユニット・行動・段階変化・パッシブ・ひとこと・学習・見た目) */
+const appearChips = a => (a && a.length) ? `<span class="aps">${a.map(x => `<span class="ap">${esc(x.replace('エリア', 'エ').replace(' 警戒', ' '))}</span>`).join('')}</span>` : '<span class="note">出ない</span>';
+// 小さい欄。p は obj の中の道、lab は表示名。kind: num / str / bool / part / unit
+function fIn(p, o, orig, lab, kind, opts){
+  const v = getPath(o, p), chg = JSON.stringify(v) !== JSON.stringify(getPath(orig, p)), id = 'f-' + p.replace(/[^\w]/g, '_');
+  let input;
+  if(kind === 'bool') input = `<input id="${id}" type="checkbox" data-path="${esc(p)}" data-t="bool"${v ? ' checked' : ''}>`;
+  else if(kind === 'part') input = `<select id="${id}" data-path="${esc(p)}" data-t="str">${Object.entries(SLOT).map(([k, n]) => `<option value="${k}"${k === v ? ' selected' : ''}>${n}</option>`).join('')}</select>`;
+  else if(kind === 'unit') input = `<select id="${id}" data-path="${esc(p)}" data-t="str"><option value=""${v ? '' : ' selected'}>(本体)</option>${opts.map(([k, n]) => `<option value="${k}"${k === v ? ' selected' : ''}>${esc(n)}</option>`).join('')}</select>`;
+  else if(kind === 'str') input = `<input id="${id}" type="text" data-path="${esc(p)}" data-t="str" value="${esc(v ?? '')}">`;
+  else if(kind === 'arr') input = `<input id="${id}" type="text" data-path="${esc(p)}" data-t="arr" value="${esc((v || []).join('、'))}">`;
+  else input = `<input id="${id}" type="number" step="any" data-path="${esc(p)}" data-t="num" value="${v ?? ''}">`;
+  return `<label class="ff${chg ? ' chg' : ''}${kind === 'bool' ? ' fb' : ''}${kind === 'str' || kind === 'arr' ? ' fw' : ''}"><span>${esc(lab)}</span>${input}</label>`;
+}
+// 行動の属性: 道と表示名。窓のあるものは中の欄も
+const ACT_X = [['wind', '体勢', [['w', '窓'], ['poise', '一撃']]], ['guard', '防壁', [['w', '窓'], ['s', '量']]], ['counter', '反撃', [['w', '窓'], ['d', 'ダメージ']]],
+  ['zone', '射界', [['at', '何サイクル後'], ['len', '長さ'], ['d', 'ダメージ'], ['p', '部位']]], ['rec', '隙(サイクル)'], ['buff', '増幅'], ['armor', 'ブロック'], ['heal', '修復'], ['crack', 'こちらにクラック'],
+  ['noise', 'ノイズ(枚)'], ['haste', '加速'], ['steal', '盗むスクラップ'], ['eat', '飲み込む枚数'], ['rebuild', '直す耐久'], ['wt', '重み'], ['v', 'ディレイの量']];
+function actHTML(base, a, o, orig, units, i){
+  const by = a.by && units.length ? (units.find(u => u[0] === a.by) || [a.by, a.by])[1] : '';
+  let h = `<div class="act"><div class="ah"><b>${i + 1}</b>${fIn(base + '.n', o, orig, '名前', 'str')}</div><div class="ar">`;
+  if(units.length) h += fIn(base + '.by', o, orig, 'ユニット', 'unit', units);
+  if(a.kind === 'delay') h += fIn(base + '.v', o, orig, '自分にディレイ');
+  else { h += fIn(base + '.d', o, orig, 'ダメージ'); if(a.d) h += fIn(base + '.p', o, orig, '部位', 'part'); }
+  h += fIn(base + '.dl', o, orig, '次まで') + (a.hits != null ? fIn(base + '.hits', o, orig, '回数') : '') + fIn(base + '.ch', o, orig, '不安定', 'bool') + '</div>';
+  const xs = ACT_X.filter(([k]) => a[k] != null && !(k === 'v' && a.kind === 'delay'));
+  if(xs.length) h += `<div class="ar ax">${xs.map(([k, lab, sub]) => sub && typeof a[k] === 'object' ? `<span class="xg"><i>${lab}</i>${sub.map(([sk, sl]) => fIn(`${base}.${k}.${sk}`, o, orig, sl, sk === 'p' ? 'part' : 'num')).join('')}</span>` : fIn(`${base}.${k}`, o, orig, lab, typeof a[k] === 'boolean' ? 'bool' : 'num')).join('')}</div>`;
+  const rest = Object.keys(a).filter(k => !['n', 'by', 'd', 'p', 'dl', 'hits', 'ch', 'kind', 'v', 'all', 'flee', 'summon'].includes(k) && !ACT_X.some(x => x[0] === k));
+  const flags = [a.flee ? '逃げる' : '', a.all ? '味方全員' : '', a.summon ? '増援: ' + a.summon : '', ...rest.map(k => k + ': ' + JSON.stringify(a[k]))].filter(Boolean);
+  const add = ACT_X.filter(([k]) => a[k] == null && k !== 'v');
+  h += `<div class="ar af">${flags.length ? `<span class="note">${esc(flags.join(' / '))}</span>` : ''}<select data-addx="${esc(base)}"><option value="">＋属性を足す</option>${a.hits == null ? '<option value="hits">回数(多段)</option>' : ''}${add.map(([k, lab]) => `<option value="${k}">${lab}</option>`).join('')}</select></div>`;
+  return h + '</div>';
+}
+function foeForm(o, orig){
+  const g = (t, body, open = true, note = '') => `<details class="grp fgrp"${open ? ' open' : ''}><summary>${t}${note ? `<span class="gs">${note}</span>` : ''}</summary>${body}</details>`;
+  const units = o.units ? Object.entries(o.units).map(([k, u]) => [k, u.name || k]) : [];
+  let h = '';
+  h += g('基本', `<div class="ar">${fIn('name', o, orig, '名前', 'str')}${o.units ? '' : fIn('hp', o, orig, '耐久')}${fIn('start', o, orig, '最初の行動まで')}</div>
+    <div class="note">出るところ: ${appearChips(o.appear)}</div><div class="ar">${fIn('appear', o, orig, '出るところを変える(例: エリア1 警戒I〜II)', 'arr')}</div>`);
+  if(o.units) h += g('ユニット', Object.entries(o.units).map(([k, u]) => `<div class="ar ur">${fIn(`units.${k}.name`, o, orig, '名前', 'str')}${fIn(`units.${k}.hp`, o, orig, '耐久')}${fIn(`units.${k}.armor`, o, orig, 'ブロック')}${fIn(`units.${k}.vital`, o, orig, '急所', 'bool')}${fIn(`units.${k}.core`, o, orig, '核', 'bool')}<span class="note">${esc(k)}</span></div>`).join(''), true, `${units.length}つ`);
+  h += g('行動', `<div class="note">${o.ai === 'rand' ? '重みで選ぶ(同じ行動は3回続けない)' : '上から順に繰り返す'}。「次まで」は次の行動までのサイクル。行動の足し引きは JSON で</div>` + (o.pat || []).map((a, i) => actHTML(`pat.${i}`, a, o, orig, units, i)).join(''), true, `${(o.pat || []).length}つ`);
+  if(o.phase) h += g('段階変化', `<div class="ar">${fIn('phase.at', o, orig, '耐久の割合(0.5 = 50%未満で)')}</div>` + (o.phase.pat || []).map((a, i) => actHTML(`phase.pat.${i}`, a, o, orig, units, i)).join(''), true);
+  if(o.react) h += g('反応', `<div class="note">コスト「最小」以上のカードを使い始めると、1サイクル後に撃つ</div><div class="ar">${fIn('react.min', o, orig, '最小コスト')}${fIn('react.d', o, orig, 'ダメージ')}${fIn('react.p', o, orig, '部位', 'part')}</div>`);
+  const pas = o.passives || [];
+  h += g('パッシブ', pas.length ? pas.map((p, j) => `<div class="ar">${fIn(`pname.${j}`, o, orig, '名前', 'str')}${p.n != null ? fIn(`passives.${j}.n`, o, orig, '数') : ''}<span class="note">${esc((D.ui['pas.' + p.k] || p.k).replace(/\{(\w+)\}/g, (m, n) => n === 'unit' ? (o.units && o.units[p.unit] ? o.units[p.unit].name : p.unit) : n in p ? p[n] : m))}</span></div>`).join('') : '<div class="note">なし(足すときは JSON で passives)</div>', !!pas.length);
+  h += g('ひとこと', Object.keys(o.say || {}).map(k => `<div class="ar">${fIn(`say.${k}`, o, orig, SAYW(k, o), 'str')}</div>`).join('') + '<div class="note">空なら言わない</div>', true, `${Object.values(o.say || {}).filter(Boolean).length}つ`);
+  const pool = o.pool || [], cand = Object.keys(D.cards).filter(k => !D.cards[k].junk && (D.rarity || {})[k] !== 'starter' || pool.includes(k));
+  h += g('学習で出やすいカード', `<div class="chips">${cand.map(k => `<button type="button" class="chip${pool.includes(k) ? ' on' : ''}" data-pool="${esc(k)}">${esc(D.cards[k].name || k)}</button>`).join('')}</div>`, true, pool.map(k => (D.cards[k] || {}).name || k).join('・'));
+  h += g('警戒版', o.wary ? `<div class="ar">${fieldHTML('wary', o.wary, orig)}</div>` : '<div class="note">まだない。JSON で wary:[{at:警戒度, ...}] を足す(書き方は README)</div>', !!o.wary);
+  const look = ['kind', 'look', 'ai', 'sync', 'broke'].filter(k => o[k] != null);
+  const art = [];
+  for(const k of look){ const f = flat({[k]: o[k]}); for(const p of Object.keys(f)) art.push(fieldHTML(p, f[p], orig)); }
+  if(o.units) for(const k of Object.keys(o.units)){ const f = flat({units:{[k]:o.units[k]}}); for(const p of Object.keys(f)) if(!/\.(name|hp|armor|vital|core)$/.test(p)) art.push(fieldHTML(p, f[p], orig)); }
+  h += g('見た目・配置', art.join(''), false);
+  return h;
+}
 // 敵の出るところ: 通常の遭遇はエリアの警戒度の段(pools)、エリート・ボスは遭遇の区分
 function foeAppear(fk){
   const out = [];
@@ -886,6 +957,7 @@ function renderSide0(){
   if(S.draft.isNew) body += `<div class="newkey"><label for="newkey">キー</label><input id="newkey" type="text" value="${esc(S.draft.key)}" placeholder="英字のキー(例 overdrive)"></div>`;
   body += `<div class="mode"><button type="button" data-mode="form" class="${S.json ? '' : 'on'}">欄で編集</button><button type="button" data-mode="json" class="${S.json ? 'on' : ''}">JSON で編集</button></div>`;
   if(S.json) body += `<textarea class="json" id="jsonbox" spellcheck="false">${esc(S.jsonText)}</textarea><div id="jsonmsg"></div>`;
+  else if(K.form) body += K.form(o, orig);
   else {
     const f = flat(o), groups = {};
     for(const p of Object.keys(f)){ const parent = p.includes('.') ? p.slice(0, p.lastIndexOf('.')) : ''; (groups[parent] = groups[parent] || []).push(p); }
@@ -1024,6 +1096,8 @@ async function drop(id){
 document.addEventListener('click', e => {
   const t = e.target;
   const tab = t.closest('[data-tab]'); if(tab){ S.bulkOpen = false; wbStash(); eStash(); if(S.ab && S.ab.dirty) ABDRAFT[S.ab.key] = S.ab; S.ab = null; S.kind = tab.dataset.tab; S.sel = null; S.draft = null; S.wb = null; S.wbDeckOpen = false; S.mobileOpen = false; S.q = ''; $('#q').value = ''; renderAll(); return; }
+  // 敵のページ: 学習で出やすいカードを押して入れ外し
+  const pl = t.closest('[data-pool]'); if(pl && S.draft){ const k = pl.dataset.pool, a = (S.draft.obj.pool = (S.draft.obj.pool || []).slice()), i = a.indexOf(k); if(i >= 0) a.splice(i, 1); else a.push(k); renderSide(); later(); return; }
   // カード工房
   const wf = t.closest('[data-wbf]'); if(wf){ S.wbFilter = wf.dataset.wbf; renderList(); return; }
   const wt = t.closest('[data-wbtext]'); if(wt && S.wb){ S.wb.custom = wt.dataset.wbtext === 'custom'; if(S.wb.custom && !S.wb.card.text) S.wb.card.text = genText(S.wb.card); S.wb.dirty = true; renderSide(); return; }
@@ -1078,6 +1152,12 @@ document.addEventListener('input', e => {
   if(t.id === 'bulkText'){ S.bulkText = t.value; keepUnsent(); return; }
   if(t.id === 'w_reply' && S.wb){ S.wb.reply = t.value; return; }
   if(t.id === 'a_reply' && S.ab){ S.ab.reply = t.value; return; }
+  // 敵のページ: 行動に属性を足す(値は0から)
+  if(t.dataset && t.dataset.addx && S.draft && t.value){
+    const a = getPath(S.draft.obj, t.dataset.addx), k = t.value, W = {wind:{w:0, poise:0}, guard:{w:0, s:0}, counter:{w:0, d:0}, zone:{at:0, len:0, d:0, p:'calc'}};
+    if(a && a[k] == null){ a[k] = W[k] ? clone(W[k]) : 0; }
+    renderSide(); later(); return;
+  }
   if(t.dataset && t.dataset.ab && S.ab){ const was = S.ab.dirty, r = abInput(t.dataset.ab, t); S.ab.dirty = true; if(r === 'full') renderSide(); else abRefresh(); if(!was || r === 'full') renderList(); return; }
   if(t.dataset && t.dataset.wb && S.wb){ const was = S.wb.dirty, r = wbInput(t.dataset.wb, t); S.wb.dirty = true; if(!S.wb.custom && t.dataset.wb !== 'w_text') S.wb.card.text = genText(S.wb.card); if(r === 'full') renderSide(); else wbRefresh(); if(!was){ bulkLabel(); if(innerWidth > 820) renderList(); } return; }
   if(t.id === 'comment'){ S.comment = t.value; refreshDyn(); return; }

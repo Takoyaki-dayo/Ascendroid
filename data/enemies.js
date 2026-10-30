@@ -33,7 +33,7 @@
 window.DATA = window.DATA || {};
 DATA.foes = {
   drone:    {kind:'drone', hp:75, start:4, ai:'rand',
-    pat:[{d:8, dl:6, p:'calc', wt:2}, {d:4, hits:2, dl:5, p:'out', wt:1}, {d:0, dl:5, crack:1, wt:1}], pool:['jab','rapid','guard','flick','capacitor','discharge']},
+    pat:[{d:8, dl:6, p:'calc', wt:2}, {d:4, hits:2, dl:5, p:'out', wt:1}, {d:0, dl:5, crack:1, wt:1}], pool:['jab','rapid','guard','flick','capacitor']},
   scout:    {kind:'scout', hp:74, start:2, ai:'rand',
     pat:[{d:3, dl:3, p:'out', wt:2}, {d:3, hits:3, dl:5, p:'mob', wt:1}, {d:7, dl:5, p:'out', wind:{w:2, poise:6}, rec:2, wt:1}],
     pool:['jab','flick','reload','coil','arc']},

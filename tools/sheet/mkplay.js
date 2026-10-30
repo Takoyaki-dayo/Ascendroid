@@ -17,8 +17,7 @@ s = s.slice(0, i) + '</body>\n</html>\n';
 s = s.replace(/<script src="(data|js)\//g, '<script src="../$1/');
 rep('<title>', '<title>試遊 ');
 // 本体のセーブと混ざらないように
-rep('function loadSave(){ try{ const o = JSON.parse(localStorage.getItem(SAVE_KEY)); return o && o.v === 1 && o.run && o.run.map ? o : null; }catch(e){ return null; } }',
-  'function loadSave(){ try{ const o = JSON.parse(localStorage.getItem(SAVE_KEY)); if(o && o.run && o.run.deck) o.run.deck = o.run.deck.filter(k => CARDS[k] && !CARDS[k].cut); return o && o.v === 1 && o.run && o.run.map ? o : null; }catch(e){ return null; } }');
+rep('o.run.deck = o.run.deck.filter(k => DATA.regAttrCard(CARDS, k));', 'o.run.deck = o.run.deck.filter(k => DATA.regAttrCard(CARDS, k) && !CARDS[k].cut);');
 s = s.replace(/const SAVE_KEY = '([^']+)'/, "const SAVE_KEY = '$1.wb'");
 if(!s.includes(".wb'")) throw new Error('SAVE_KEY が見つからない');
 // 削ったカードは報酬・店・デバッグの候補から外す

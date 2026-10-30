@@ -63,3 +63,23 @@ Claude の返事は依頼(や工房のカード)の thread に1件ずつ書く�
 ### 試遊版を作る
 
 `node tools/sheet/mkplay.js <公開用フォルダ>` で `play/index.html` ができる(ゲームの index.html から PWA を外し、data と js は `../` から読む)。公開時は `js/engine.js` も一緒に載せる。
+
+## 属性の工房(0.28.0)
+
+タブ「属性」で、カードの属性(data/attrs.js の DATA.attrs)を作り・直し、添削に出し、試遊する。
+
+- 一覧: 名前(カード名の頭に付く)・いつ働くか(ヒットごと / 発動したとき / JUST のとき)・効果・付けられるカードの数・状態
+- 右の編集: 名前・いつ・効果(クラック・ディレイ・充電・ブロック・引く・もう1回当たる)・効果文(数値から作る / 自分で書く)・メモ・試遊で付けるカード
+- 付けられるかは本体の決まり(DATA.attrOk)で調べる。働かない組み合わせには付かない
+- 保存先 `attrs/<key>` `{key, attr:{name, on, fx, text}, idea, test:[カードのキー], status, thread, at}`。status はカードと同じ
+- 試遊: 工房の属性を本体の DATA.attrs に当て、test のカードを属性付きで最初のデッキに足す
+- 確定(ok)を反映する: 定義(on・fx)は data/attrs.js の DATA.attrs、名前と文は text/attrs.csv(node tools/text.js)。反映したら `status:'merged'`
+
+## セリフ(0.28.0)
+
+タブ「セリフ」で、敵のひとこと(text/enemies.csv の `敵.say.場面`)と自機の独り言(text/lines.csv)を一覧し、書き換えて依頼として送る(kind `lines`、path `text`)。キーは `敵.say.場面` / `line.条件.番号` / `room.部屋.番号`。反映は該当する CSV の行を直す
+
+## 敵の出るところとパッシブ(0.28.0)
+
+敵タブの上の欄に、パッシブの名前と文、出るところ(エリアと警戒度の段・エリート・ボス)を出す。出るところは欄の `appear` を書き換えて送れる(反映は data/map.js の areas.pools)
+

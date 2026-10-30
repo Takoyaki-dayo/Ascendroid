@@ -229,8 +229,13 @@ const cardType = c => c.dmg ? TNAME[c.dmg.t] : c.timer ? TNAME[c.timer.dmg.t] : 
 const unitHp = f => f.units ? Object.values(f.units).map(u => `${u.name || ''} ${u.hp}`).join('・') : f.hp;
 const KINDS = [
   {id:'cards', label:'カード工房', wb:true, items:() => wbRows().map(r => ({key:r.key, name:r.card.name, obj:r.card})), head:[], cells:() => []},
-  {id:'foes', label:'敵', items:() => Object.entries(D.foes).map(([k, f]) => ({key:k, name:f.name, obj:clone(f)})),
-    head:['名前', '耐久', '最初の行動', '行動'], cells:it => [nmCell(it), `<td class="num">${esc(unitHp(it.obj))}</td>`, `<td class="num">${it.obj.start}</td>`, `<td class="tx">${esc(it.obj.pat.map(a => a.n).join(' → '))}</td>`]},
+  {id:'attrs', label:'属性', ab:true, items:() => abRows().map(r => ({key:r.key, name:r.attr.name, obj:r.attr})), head:[], cells:() => []},
+  // 敵(0.28.0): 出るところ(appear。エリアと警戒度。変えたいときは書き換えて送る)と、パッシブの中身を上に出す
+  {id:'foes', label:'敵', items:() => Object.entries(D.foes).map(([k, f]) => ({key:k, name:f.name, obj:Object.assign({appear:foeAppear(k)}, clone(f))})),
+    head:['名前', '耐久', '出るところ', '行動'], cells:it => [nmCell(it), `<td class="num">${esc(unitHp(it.obj))}</td>`, `<td>${esc(it.obj.appear.join('、') || '—')}</td>`, `<td class="tx">${esc(it.obj.pat.map(a => a.n).join(' → '))}</td>`],
+    preview:o => foePreview(o)},
+  // セリフ(0.28.0): 敵のひとこと(text/enemies.csv の 敵.say.*)と、自機の独り言(text/lines.csv)
+  {id:'lines', label:'セリフ', items:() => lineItems(), head:['場面', 'セリフ'], cells:it => [nmCell(it), `<td class="tx">${esc(it.obj.text)}</td>`]},
   {id:'parts', label:'パーツ', items:() => Object.entries(D.parts).map(([k, p]) => ({key:k, name:p.name, obj:clone(p)})),
     head:['部位', '名前', '耐久', '効果'], cells:it => [`<td>${esc(SLOT[it.obj.slot])}</td>`, nmCell(it), `<td class="num">${it.obj.max}</td>`, `<td class="tx">${esc(it.obj.text)}</td>`],
     preview:o => `<b>${esc(o.name)}</b>(${esc(SLOT[o.slot])}・耐久${o.max})<br>${esc(o.text)}`},
@@ -248,6 +253,28 @@ const KINDS = [
     head:['名前', '補給', '待機'], cells:it => [nmCell(it), `<td>${esc(it.obj.sys)}</td>`, `<td>${it.obj.wait ? 'あり' : 'なし'}</td>`]},
 ];
 const KBY = Object.fromEntries(KINDS.map(k => [k.id, k]));
+// 敵の出るところ: 通常の遭遇はエリアの警戒度の段(pools)、エリート・ボスは遭遇の区分
+function foeAppear(fk){
+  const out = [];
+  (D.areas || []).forEach((A, i) => { for(const p of A.pools || []) if(p.enc.some(e => D.encounters[e] && D.encounters[e].foes.includes(fk))) out.push(`エリア${i + 1} 警戒${ROMAN[p.at - 1]}〜`); if(D.encounters[A.boss] && D.encounters[A.boss].foes.includes(fk)) out.push(`エリア${i + 1} ボス`); });
+  if(Object.values(D.encounters).some(e => e.elite && e.foes.includes(fk))) out.push('エリート');
+  return out;
+}
+function foePreview(o){
+  const nm = o.pname || {}, ps = (o.passives || []).map((p, j) => { const t = (D.ui['pas.' + p.k] || '').replace(/\{(\w+)\}/g, (m, n) => n === 'unit' ? (o.units && o.units[p.unit] ? o.units[p.unit].name : p.unit) : n in p ? p[n] : n === 'n' ? 1 : m); return `<div><b>${esc(nm[j] || p.k)}</b> ${esc(t)}</div>`; });
+  if(o.phase) ps.push(`<div><b>${esc(nm.phase || '段階変化')}</b> 耐久${Math.round(o.phase.at * 100)}%未満で行動が変わる</div>`);
+  return `<b>${esc(o.name || '')}</b> <span class="note">${esc((o.appear || []).join('、') || '出ない')}</span>${ps.length ? `<div style="margin-top:4px">${ps.join('')}</div>` : '<div class="note">パッシブなし</div>'}`;
+}
+// セリフの一覧。キーは 敵.say.場面 / line.条件.番号 / room.部屋.番号
+const SAYW = (k, f) => k === 'start' ? '戦闘の始め' : k === 'anger' ? '怒ったとき' : k.startsWith('pat:') ? `「${(f.pat[+k.slice(4)] || {}).n || k}」のとき` : k.startsWith('phase:') ? `段階変化の「${((f.phase || {}).pat || [])[+k.slice(6)] ? f.phase.pat[+k.slice(6)].n : k}」のとき` : k;
+function lineItems(){
+  const out = [];
+  for(const [fk, f] of Object.entries(D.foes)) for(const [k, t] of Object.entries(f.say || {})) out.push({key:`${fk}.say.${k}`, name:`${f.name}・${SAYW(k, f)}`, obj:{text:t}});
+  const LW = {bodyLow:'本体の損耗が大きいとき', partBroken:'部位が壊れたとき', vulnNow:'敵に隙ができたとき', windNow:'敵の体勢が浮いたとき', chargeSoon:'敵の大技が近いとき', handEmpty:'手札がないとき', partWorn:'部位の損傷が直っていないとき', focus:'1つの部位に攻撃が集中しているとき'};
+  for(const r of (D.lines && D.lines.rules) || []) r.text.forEach((t, j) => out.push({key:`line.${r.when}.${j}`, name:`独り言・${LW[r.when] || r.when}`, obj:{text:t}}));
+  for(const [rk, ts] of Object.entries((D.lines && D.lines.room) || {})) ts.forEach((t, j) => out.push({key:`room.${rk}.${j}`, name:`部屋・${D.rooms[rk] && D.rooms[rk].name || rk}`, obj:{text:t}}));
+  return out;
+}
 function nmCell(it){ const n = openCount(S.kind, it.key); return `<td class="nm">${esc(it.name || it.key)}${n ? ` <span class="badge open">${n}</span>` : ''}<span class="k">${esc(it.key)}</span></td>`; }
 
 /* ---------- 項目を平らにする(編集の欄と、差分) ---------- */
@@ -275,7 +302,7 @@ function diff(a, b){
 const LB = {cost:'コスト', name:'名前', text:'効果文', tgt:'単体を狙う', all:'全体', dmg:'ダメージ', n:'名前・値', t:'種類', x:'回数', block:'ブロック', delay:'ディレイ', crack:'クラック', draw:'引く枚数',
   timer:'遅れて効く', atomic:'アトミック', parry:'受け流し', gain:'充電を得る', spend:'充電を消費', per:'充電1あたり', junk:'ノイズ', k7:'K-7 の数値',
   hp:'耐久', start:'最初の行動まで', kind:'見た目', ai:'行動の選び方', pat:'行動', phase:'耐久が減った後', at:'条件・位置', d:'ダメージ', dl:'コスト', p:'狙う部位', ch:'不安定',
-  wind:'体勢', w:'窓', poise:'ブレイクに要る一撃', guard:'防壁', s:'量・大きさ', counter:'反撃', rec:'隙', buff:'増幅', hits:'回数', armor:'装甲', heal:'修復', noise:'ノイズ', haste:'加速', zone:'危険域',
+  appear:'出るところ', wind:'体勢', w:'窓', poise:'ブレイクに要る一撃', guard:'防壁', s:'量・大きさ', counter:'反撃', rec:'隙', buff:'増幅', hits:'回数', armor:'装甲', heal:'修復', noise:'ノイズ', haste:'加速', zone:'危険域',
   len:'長さ', wt:'重み', by:'行動するユニット', units:'ユニット', vital:'急所', core:'核', icon:'アイコン', spr:'絵', look:'本体の絵', react:'反応', min:'最小コスト', passives:'パッシブ', pool:'学習で出やすいカード',
   pname:'パッシブの名前', broke:'破壊で変わる行動', sync:'連携', unit:'ユニット', slot:'部位', max:'耐久', fx:'効果の中身', cards:'カード', desc:'説明', title:'タイトル', choices:'選択肢', label:'選択肢の名前', rooms:'部屋数', transfers:'乗り換えの場所', last:'ボスの手前の部屋', scale:'敵の強さの倍率', pools:'警戒度ごとの敵の組', enc:'遭遇', boss:'ボス', heal:'回復(最大の割合)', per:'1段の目盛り', gain:'区画ごとの増減', enemy:'1段ごとの敵の上乗せ', scrap:'1段ごとのスクラップの上乗せ', learnAt:'学習の候補が増える段', partAt:'鹵獲の候補が増える段', alert:'警戒の増減',
   sub:'選択肢の説明', fam:'系統', tier:'段階', elite:'エリート', boss:'ボス', foes:'敵', econ:'補給', r:'サイクル', hand:'枚数', blockReset:'ブロック消去', wait:'待機', sys:'補給の名前', id:'キー',
@@ -298,9 +325,9 @@ const kindOpen = kind => REQ.filter(r => r.kind === kind && (r.status === 'open'
 const lastWho = t => t && t.length ? t[t.length - 1].who : '';
 const needsMe = r => (r.status === 'open' || r.status === 'discuss') && lastWho(r.thread) === 'claude';
 const cardNeedsMe = d => !!d && d.status !== 'merged' && d.status !== 'cut' && lastWho(d.thread) === 'claude';
-const kindReplies = kind => kind === 'cards' ? Object.values(WB).filter(cardNeedsMe).length : REQ.filter(r => needsMe(r) && (r.kind === kind || (r.type === 'batch' && kind === 'requests'))).length;
+const kindReplies = kind => kind === 'cards' ? Object.values(WB).filter(cardNeedsMe).length : kind === 'attrs' ? Object.values(AB).filter(cardNeedsMe).length : REQ.filter(r => needsMe(r) && (r.kind === kind || (r.type === 'batch' && kind === 'requests'))).length;
 const itemReplies = (kind, key) => REQ.filter(r => needsMe(r) && r.kind === kind && r.key === key).length;
-const allReplies = () => REQ.filter(needsMe).length + Object.values(WB).filter(cardNeedsMe).length;
+const allReplies = () => REQ.filter(needsMe).length + Object.values(WB).filter(cardNeedsMe).length + Object.values(AB).filter(cardNeedsMe).length;
 function curItems(){ return KBY[S.kind].items(); }
 function curItem(){ return S.sel ? curItems().find(it => it.key === S.sel) : null; }
 
@@ -317,7 +344,7 @@ const WST = {base:'本体のまま', draft:'作業中', review:'添削待ち', r
 const PART_CARDS = new Set(Object.values(D.parts).flatMap(p => (p.fx && p.fx.cards) || []));
 let WB = {}, WBDECK = null, wbState = 'wait';
 const wbBase = k => { const c = D.classCard(clone(D.cards[k]), K7.cards[k]); return c; };
-const wbBaseRarity = k => PART_CARDS.has(k) ? 'special' : D.startDeck.includes(k) ? 'starter' : (D.rareCards || []).includes(k) ? 'rare' : '';
+const wbBaseRarity = k => D.startDeck.includes(k) ? 'starter' : (D.rareCards || []).includes(k) ? 'rare' : '';
 // 保存していない編集: 別のカードに移っても捨てずに取っておき、戻ったら続きから(確認のダイアログは出さない)
 const WBDRAFT = {};
 function wbStash(){ if(S.wb && S.wb.dirty) WBDRAFT[S.wb.key] = S.wb; }
@@ -333,7 +360,8 @@ const wbDeck = () => (WBDECK && WBDECK.startDeck) || D.startDeck;
 function genText(c){
   const all = c.all ? '敵のすべてのユニットに' : '', out = [];
   if(c.atomic) out.push('アトミック。');
-  if(c.spend){ if(c.spend.dmg) out.push(`充電をすべて消費し、${all}1につき{per}ダメージを与える。`); else if(c.spend.block != null) out.push('充電をすべて消費し、1につき{per}ブロックを得る。'); }
+  if(c.spend && c.spend.n){ if(c.spend.dmg) out.push(`充電{sn}を消費し、${all}{sv}ダメージを与える。`); else if(c.spend.block != null) out.push('充電{sn}を消費し、{sv}ブロックを得る。'); }
+  else if(c.spend){ if(c.spend.dmg) out.push(`充電をすべて消費し、${all}1につき{per}ダメージを与える。`); else if(c.spend.block != null) out.push('充電をすべて消費し、1につき{per}ブロックを得る。'); }
   if(c.dmg) out.push(c.dmg.x > 1 ? `${all}{dmg}ダメージを{x}回与える。` : `${all}{dmg}ダメージを与える。`);
   if(c.crack) out.push(`${all}クラック{crack}を与える。`);
   if(c.delay) out.push(`${all}ディレイ{delay}を与える。`);
@@ -344,22 +372,24 @@ function genText(c){
   if(c.draw) out.push('カードを{draw}枚引く。');
   return out.join('');
 }
-const cardVals = c => ({dmg: c.dmg && c.dmg.n, x: c.dmg && c.dmg.x, block: c.block, delay: c.delay, crack: c.crack, draw: c.draw, t: c.timer && c.timer.t, tdmg: c.timer && c.timer.dmg && c.timer.dmg.n, gain: c.gain, per: c.spend ? (c.spend.dmg ? c.spend.dmg.n : c.spend.block) : null});
+const cardVals = c => ({dmg: c.dmg && c.dmg.n, x: c.dmg && c.dmg.x, block: c.block, delay: c.delay, crack: c.crack, draw: c.draw, t: c.timer && c.timer.t, tdmg: c.timer && c.timer.dmg && c.timer.dmg.n, gain: c.gain, per: c.spend ? (c.spend.dmg ? c.spend.dmg.n : c.spend.block) : null, sn: c.spend && c.spend.n, sv: c.spend && c.spend.n ? (c.spend.dmg ? c.spend.dmg.n : c.spend.block) : null});
 function fillText(c){ const v = cardVals(c), t = c.text || genText(c); return esc(t).replace(/\{(\w+)\}/g, (m, n) => v[n] != null ? `<b>${esc(v[n])}</b>` : m); }
 const wbType = c => c.dmg ? TNAME[c.dmg.t] : c.timer ? TNAME[c.timer.dmg.t] : c.spend && c.spend.dmg ? TNAME[c.spend.dmg.t] : '—';
 // 1サイクルあたりの強さ(標準パーツの補正 +2 込み)。全体・充電の消費は別に書く
-const BASE_DMG = 5, BASE_BLK = 6; // 初期のジャブ・障壁展開(標準パーツ込み)
+// 1サイクルあたりの強さ(0.28.0 からパーツの補正を入れない。カードそのものの数値で比べる)。基準は初期のジャブ・障壁展開(K-7)
+const BASE_DMG = (() => { const c = wbBase('jab'); return c && c.dmg ? c.dmg.n / Math.max(1, c.cost) : 3; })();
+const BASE_BLK = (() => { const c = wbBase('guard'); return c && c.block != null ? c.block / Math.max(1, c.cost) : 4; })();
 function eff(c){
-  const cyc = Math.max(1, c.cost || 0);
-  const dmg = c.dmg ? (c.dmg.n + 2) * (c.dmg.x || 1) : c.timer ? c.timer.dmg.n + 2 : 0;
-  const blk = c.block != null && c.block !== '' ? c.block + 2 : 0;
+  const cyc = Math.max(1, c.cost || 0), fs = c.spend && c.spend.n;
+  const dmg = c.dmg ? c.dmg.n * (c.dmg.x || 1) : c.timer ? c.timer.dmg.n : fs && c.spend.dmg ? c.spend.dmg.n : 0;
+  const blk = c.block != null && c.block !== '' ? c.block : fs && c.spend.block != null ? c.spend.block : 0;
   return {dmg, blk, dc: dmg / cyc, bc: blk / cyc, instant: !c.cost};
 }
 function effHTML(c, wide){
   const f = eff(c), r = [];
   if(f.dmg) r.push(`<span class="ef ${f.dc > BASE_DMG * 1.05 ? 'up' : f.dc < BASE_DMG * .95 ? 'dn' : ''}" title="初期のジャブは ${BASE_DMG}"><i>攻</i>${f.instant ? f.dmg + '<em>即時</em>' : f.dc.toFixed(1)}${c.all ? '<em>全体</em>' : ''}</span>`);
   if(f.blk) r.push(`<span class="ef ${f.bc > BASE_BLK * 1.05 ? 'up' : f.bc < BASE_BLK * .95 ? 'dn' : ''}" title="初期の障壁展開は ${BASE_BLK}"><i>守</i>${f.instant ? f.blk + '<em>即時</em>' : f.bc.toFixed(1)}</span>`);
-  if(c.spend) r.push(`<span class="ef"><i>充</i>1あたり${(c.spend.dmg ? c.spend.dmg.n : c.spend.block)}</span>`);
+  if(c.spend) r.push(c.spend.n ? `<span class="ef"><i>充</i>${c.spend.n}消費</span>` : `<span class="ef"><i>充</i>1あたり${(c.spend.dmg ? c.spend.dmg.n : c.spend.block)}</span>`);
   return r.join('') || (wide ? '<span class="note">攻撃・ブロックなし</span>' : '—');
 }
 function wbStatusBadge(st){ return st === 'base' ? '' : `<span class="badge w-${st}">${WST[st] || st}</span>`; }
@@ -369,7 +399,7 @@ function wbListHTML(){
     (f === 'all' || (f === 'changed' ? r.status !== 'base' : f === 'review' ? r.status === 'review' : f === 'reviewed' ? r.status === 'reviewed' : f === 'pool' ? r.status !== 'cut' : true)));
   const deck = wbDeck(), cnt = k => deck.filter(x => x === k).length;
   const fl = [['all', 'すべて'], ['changed', '工房で変えた'], ['review', '添削待ち'], ['reviewed', '添削済み']].map(([k, n]) => `<button type="button" class="btn ${f === k ? '' : 'quiet'} sm" data-wbf="${k}">${n}</button>`).join('');
-  return `<div class="wbbar">${fl}<span class="sp"></span><span class="note">1サイクルあたり(標準パーツ込み)。<b class="up">水色</b>は初期カードより強い、<b class="dn">赤</b>は弱い</span></div>
+  return `<div class="wbbar">${fl}<span class="sp"></span><span class="note">1サイクルあたり(パーツ抜き)。<b class="up">水色</b>は初期カードより強い、<b class="dn">赤</b>は弱い</span></div>
   <table class="wbt"><thead><tr><th>レア度</th><th>コスト</th><th>名前</th><th>種類</th><th>効果(K-7)</th><th>1サイクルあたり</th><th>状態</th></tr></thead><tbody>${rows.map(r => {
     const th = r.doc && r.doc.thread ? r.doc.thread.length : 0, d = cnt(r.key);
     return `<tr class="row${S.sel === r.key ? ' sel' : ''}${r.status === 'cut' ? ' cut' : ''}${cardNeedsMe(r.doc) ? ' hl' : ''}" data-key="${esc(r.key)}" tabindex="0"><td><span class="rar r-${r.rarity || 'none'}">${RARITY[r.rarity] || '—'}</span></td><td class="num">${r.card.cost}</td>
@@ -387,7 +417,7 @@ function wbSideHTML(){
   if(S.wbDeckOpen) return wbDeckHTML();
   if(!S.wb) return `<div class="empty">一覧からカードを選ぶか、「＋新しいカード」で作ります。<br>数値は K-7 での値(パーツの補正の前)です。保存すると Claude が読めるようになり、「添削に出す」で見てもらえます。<br>右上の「試遊」で、保存したカードを入れた状態で遊べます。</div>`;
   const w = S.wb, c = w.card, doc = WB[w.key], st = doc ? doc.status : 'base';
-  const tg = c.all ? 'all' : c.tgt ? 'tgt' : 'none', dt = c.dmg ? c.dmg.t : '', sp = c.spend ? (c.spend.dmg ? 'dmg' : 'block') : '', tm = !!c.timer;
+  const tg = c.all ? 'all' : c.tgt ? 'tgt' : 'none', dt = c.dmg ? c.dmg.t : '', sp = c.spend ? (c.spend.n ? 'f' : '') + (c.spend.dmg ? 'dmg' : 'block') : '', tm = !!c.timer;
   const sel = (id, v, opts) => `<select id="${id}" data-wb="${id}">${opts.map(([k, n]) => `<option value="${k}"${k === v ? ' selected' : ''}>${n}</option>`).join('')}</select>`;
   const thread = (doc && doc.thread || []).map(m => `<div class="msg ${m.who === 'claude' ? 'claude' : 'user'}"><span class="w">${m.who === 'claude' ? 'Claude' : 'あなた'} · ${fmt(m.at)}</span>${esc(m.text)}</div>`).join('');
   return `<div class="side-h"><div><h2>${esc(c.name || '(名前なし)')}</h2><span class="k">${esc(w.key)}${w.isNew ? ' · 新規' : ''} ${wbStatusBadge(st)} <span class="badge w-review" id="wbinfo"${w.dirty ? '' : ' hidden'}>未保存</span></span></div><button class="btn quiet x" type="button" id="closeSide">閉じる</button></div>
@@ -408,8 +438,9 @@ function wbSideHTML(){
     </div>
     <div class="grp"><h3>守り・そのほか</h3>
       ${numIn('w_block', c.block, 'ブロック')}${numIn('w_draw', c.draw, '引く枚数')}${numIn('w_gain', c.gain, '充電を得る')}
-      <div class="fld"><label for="w_sp">充電を消費</label>${sel('w_sp', sp, [['', 'しない'], ['dmg', '1につきダメージ'], ['block', '1につきブロック']])}</div>
-      ${sp ? numIn('w_per', c.spend.dmg ? c.spend.dmg.n : c.spend.block, '充電1あたり') + (sp === 'dmg' ? `<div class="fld"><label for="w_spt">種類</label>${sel('w_spt', c.spend.dmg.t, [['ranged', '遠隔'], ['melee', '近接']])}</div>` : '') : ''}
+      <div class="fld"><label for="w_sp">充電を消費</label>${sel('w_sp', sp, [['', 'しない'], ['dmg', 'すべて・1につきダメージ'], ['block', 'すべて・1につきブロック'], ['fdmg', '決まった量・ダメージ'], ['fblock', '決まった量・ブロック']])}</div>
+      ${sp && sp[0] === 'f' ? numIn('w_sn', c.spend.n, '消費する充電', 1) : ''}
+      ${sp ? numIn('w_per', c.spend.dmg ? c.spend.dmg.n : c.spend.block, sp[0] === 'f' ? (sp === 'fdmg' ? 'ダメージ(合計)' : 'ブロック(合計)') : '充電1あたり') + (c.spend.dmg ? `<div class="fld"><label for="w_spt">種類</label>${sel('w_spt', c.spend.dmg.t, [['ranged', '遠隔'], ['melee', '近接']])}</div>` : '') : ''}
       <div class="fld"><label>性質</label><span class="chks"><label><input type="checkbox" data-wb="w_atomic"${c.atomic ? ' checked' : ''}> アトミック</label><label><input type="checkbox" data-wb="w_parry"${c.parry ? ' checked' : ''}> 受け流し(JUST)</label></span></div>
     </div>
     <div class="grp"><h3>効果文</h3>
@@ -453,7 +484,8 @@ function wbInput(id, el){
     case 'w_block': { const v = num(); if(v === undefined) delete c.block; else c.block = v; break; }
     case 'w_draw': setN('draw', num()); break;
     case 'w_gain': setN('gain', num()); break;
-    case 'w_sp': if(el.value === 'dmg') c.spend = {dmg:{t:'ranged', n:6}}; else if(el.value === 'block') c.spend = {block:4}; else delete c.spend; return 'full';
+    case 'w_sp': if(el.value === 'dmg') c.spend = {dmg:{t:'ranged', n:6}}; else if(el.value === 'block') c.spend = {block:4}; else if(el.value === 'fdmg') c.spend = {n:3, dmg:{t:'ranged', n:16}}; else if(el.value === 'fblock') c.spend = {n:3, block:12}; else delete c.spend; return 'full';
+    case 'w_sn': c.spend.n = Math.max(1, num() || 1); break;
     case 'w_per': if(c.spend.dmg) c.spend.dmg.n = num() || 0; else c.spend.block = num() || 0; break;
     case 'w_spt': c.spend.dmg.t = el.value; break;
     case 'w_atomic': if(el.checked) c.atomic = true; else delete c.atomic; break;
@@ -590,7 +622,7 @@ function wbDeckHTML(){
 function wbPayload(){
   const cards = {};
   for(const [k, d] of Object.entries(WB)){ if(d.status === 'cut'){ cards[k] = null; continue; } const c = clone(d.card); if(!c.text) c.text = genText(c); cards[k] = c; }
-  return {type:'asc-cards', cards, startDeck: wbDeck(), at: Date.now()};
+  return Object.assign({type:'asc-cards', cards, startDeck: wbDeck(), at: Date.now()}, abPayload());
 }
 function openPlay(){
   const p = wbPayload();
@@ -599,6 +631,121 @@ function openPlay(){
   $('#playInfo').textContent = `工房のカード ${Object.values(p.cards).filter(Boolean).length}枚・削る ${Object.values(p.cards).filter(x => !x).length}枚・最初のデッキ ${p.startDeck.length}枚`;
 }
 addEventListener('message', e => { if(e.data && e.data.type === 'asc-ready' && !$('#play').hidden){ try{ e.source.postMessage(wbPayload(), '*'); }catch(_){} } });
+
+/* ---------- 属性の工房(0.28.0) ----------
+   属性(data/attrs.js の DATA.attrs)を作り・直し、添削に出す。保存先は共有データベースの attrs/<key>
+   attrs/<key> {key, attr:{name, on, fx:{crack, delay, gain, block, draw, again}, text}, idea, test:[カードのキー], status, thread, at}
+   test は「試遊で、この属性を付けて最初のデッキに入れるカード」 */
+let AB = {};
+const ABDRAFT = {};
+const AON = {hit:'ヒットごと', cast:'発動したとき', just:'JUST のとき'};
+const AFX = [['crack', 'クラック(当たった・狙ったユニットに)'], ['delay', 'ディレイ(対象の敵に)'], ['gain', '充電を得る'], ['block', 'ブロックを得る'], ['draw', 'カードを引く']];
+function abBase(k){ const a = D.attrs[k]; return a ? {name:a.name || '', on:a.on, fx:clone(a.fx || {}), text:a.text || ''} : null; }
+function abRows(){
+  const keys = new Set([...Object.keys(D.attrs || {}), ...Object.keys(AB), ...Object.keys(ABDRAFT), ...(S.ab ? [S.ab.key] : [])]);
+  return [...keys].map(k => { const d = AB[k], dr = ABDRAFT[k] || (S.ab && S.ab.key === k && (S.ab.dirty || S.ab.isNew) ? S.ab : null); return {key:k, doc:d || null, attr: dr ? dr.attr : d ? d.attr : abBase(k), test: dr ? dr.test : d ? (d.test || []) : [], status: d ? d.status : 'base', isNew: !(D.attrs || {})[k]}; })
+    .filter(r => r.attr).sort((a, b) => (a.attr.name || '').localeCompare(b.attr.name || '', 'ja'));
+}
+// 属性の定義 a を仮に置いて、本体の決まり(attrOk・attrText)で調べる
+function withTmp(a, fn){ const had = '__ab' in D.attrs; D.attrs.__ab = a; try{ return fn('__ab'); } finally { if(!had) delete D.attrs.__ab; } }
+const abText = a => withTmp(a, k => D.attrText(k));
+// 付けられるカード(工房のカードの値で調べる。削るカードは除く)
+const abCards = a => withTmp(a, k => wbRows().filter(r => r.status !== 'cut' && !r.card.junk && D.attrOk(r.card, k)));
+function abNeedsMe(d){ return cardNeedsMe(d); }
+function abListHTML(){
+  const q = S.q.trim().toLowerCase(), rows = abRows().filter(r => !q || (r.attr.name || '').toLowerCase().includes(q) || r.key.includes(q));
+  if(!rows.length) return `<div class="note" style="padding:14px">属性はまだありません。「＋ 新しい属性」で作ります。カードに1つだけ付き、名前がカード名の頭に付きます(「〇〇された連撃」)。</div>`;
+  return `<table class="wbt"><thead><tr><th>名前</th><th>いつ</th><th>効果</th><th>付けられるカード</th><th>状態</th></tr></thead><tbody>${rows.map(r => {
+    const th = r.doc && r.doc.thread ? r.doc.thread.length : 0, n = abCards(r.attr).length, un = !!ABDRAFT[r.key] || !!(S.ab && S.ab.key === r.key && S.ab.dirty);
+    return `<tr class="row${S.sel === r.key ? ' sel' : ''}${r.status === 'cut' ? ' cut' : ''}${abNeedsMe(r.doc) ? ' hl' : ''}" data-key="${esc(r.key)}" tabindex="0"><td class="nm">${esc(r.attr.name || '(名前なし)')}${un ? '<span class="badge w-review">未保存</span>' : ''}<span class="k">${esc(r.key)}${r.isNew ? ' · 新規' : ''}</span></td><td style="white-space:nowrap">${AON[r.attr.on] || '—'}</td><td class="tx">${esc(abText(r.attr)) || '—'}</td><td class="num">${n}枚</td><td>${wbStatusBadge(r.status)}${th ? ` <span class="note">💬${th}</span>` : ''}</td></tr>`;
+  }).join('')}</tbody></table>`;
+}
+function abStart(key){
+  const r = abRows().find(x => x.key === key);
+  if(r) S.ab = {key, isNew:r.isNew, attr:clone(r.attr), idea:(r.doc && r.doc.idea) || '', test:(r.test || []).slice(), custom: !!r.attr.text, dirty:false, reply:''};
+  else S.ab = {key, isNew:true, attr:{name:'', on:'hit', fx:{crack:1}, text:''}, idea:'', test:[], custom:false, dirty:true, reply:''};
+}
+function abOpen(key){ if(S.ab && S.ab.dirty) ABDRAFT[S.ab.key] = S.ab; if(ABDRAFT[key]){ S.ab = ABDRAFT[key]; delete ABDRAFT[key]; } else abStart(key); }
+function abPreview(){
+  const a = S.ab.attr, ok = abCards(a), r = ok.find(x => S.ab.test.includes(x.key)) || ok[0];
+  if(!r) return `<div class="cardpv"><div class="note">この属性を付けられるカードがありません(働かない組み合わせ)。</div></div>`;
+  return `<div class="cardpv"><div class="cf"><span class="cc">${r.card.cost}</span><b style="color:var(--just)">${esc(a.name || '')}</b><b>${esc(r.card.name || r.key)}</b><span class="ct">例</span></div><div class="cft">${fillText(r.card)}${esc(abText(a))}</div></div>`;
+}
+function abSideHTML(){
+  if(!S.ab) return `<div class="empty">一覧から属性を選ぶか、「＋ 新しい属性」で作ります。<br>属性はカードに1つだけ付き、名前がカード名の頭に付きます。働かない組み合わせ(ヒットごとの属性を攻撃しないカードに、など)には付けられません。<br>「試遊」で、付けたカードを最初のデッキに入れて遊べます。</div>`;
+  const w = S.ab, a = w.attr, doc = AB[w.key], st = doc ? doc.status : 'base', f = a.fx || {};
+  const ok = abCards(a);
+  const thread = doc && doc.thread && doc.thread.length ? doc.thread.map(m => `<div class="msg ${m.who === 'claude' ? 'claude' : 'user'}"><span class="w">${m.who === 'claude' ? 'Claude' : 'あなた'} · ${fmt(m.at)}</span>${esc(m.text)}</div>`).join('') : '';
+  const sel = (id, v, opts) => `<select id="${id}" data-ab="${id}">${opts.map(([k, n]) => `<option value="${k}"${k === v ? ' selected' : ''}>${n}</option>`).join('')}</select>`;
+  const num = (id, v, lab) => `<div class="fld"><label for="${id}">${lab}</label><input id="${id}" data-ab="${id}" type="number" min="0" max="99" step="1" value="${v || ''}"></div>`;
+  return `<div class="side-h"><div><h2>${esc(a.name || '(名前なし)')}</h2><span class="k">${esc(w.key)}${w.isNew ? ' · 新規' : ''} ${wbStatusBadge(st)} <span class="badge w-review" id="abinfo"${w.dirty ? '' : ' hidden'}>未保存</span></span></div><button class="btn quiet x" type="button" id="closeSide">閉じる</button></div>
+  <div class="side-b">
+    <div id="abpv">${abPreview()}</div>
+    <div class="grp"><h3>基本</h3>
+      <div class="fld"><label for="a_name">名前(頭に付く)</label><input id="a_name" data-ab="a_name" type="text" value="${esc(a.name)}" placeholder="例: 〇〇された"></div>
+      <div class="fld"><label for="a_on">いつ働くか</label>${sel('a_on', a.on, Object.entries(AON))}</div>
+    </div>
+    <div class="grp"><h3>効果</h3>
+      ${AFX.map(([k, n]) => num('a_' + k, f[k], n)).join('')}
+      <div class="chks"><label><input type="checkbox" data-ab="a_again"${f.again ? ' checked' : ''}${a.on === 'hit' ? '' : ' disabled'}>もう1回当たる(ヒットごとのときだけ)</label></div>
+    </div>
+    <div class="grp"><h3>効果文</h3>
+      <div class="mode"><button type="button" data-abtext="auto" class="${w.custom ? '' : 'on'}">数値から作る</button><button type="button" data-abtext="custom" class="${w.custom ? 'on' : ''}">自分で書く</button></div>
+      ${w.custom ? `<textarea id="a_text" data-ab="a_text" class="wtext">${esc(a.text)}</textarea><div class="note">{crack} などで数値を差し込めます</div>` : `<div class="note" id="abtx">${esc(abText(a)) || '効果がありません'}</div>`}
+    </div>
+    <div class="grp"><h3>メモ(狙い)</h3><textarea id="a_idea" data-ab="a_idea" class="wtext" placeholder="この属性でやりたいこと">${esc(w.idea)}</textarea></div>
+    <div class="grp"><h3>試遊で付けるカード(${ok.length}枚に付けられる)</h3>
+      <div class="chks" style="flex-direction:column;gap:4px">${ok.length ? ok.map(r => `<label><input type="checkbox" data-ab="t:${esc(r.key)}"${w.test.includes(r.key) ? ' checked' : ''}>${esc(r.card.name || r.key)} <span class="note">${r.card.cost}</span></label>`).join('') : '<span class="note">付けられるカードがありません</span>'}</div>
+    </div>
+    ${doc ? `<div class="grp"><h3>添削のやりとり</h3>${thread || '<div class="note">まだありません。「添削に出す」で Claude が見ます。</div>'}<div class="reply"><input id="a_reply" type="text" placeholder="返信・質問" value="${esc(w.reply)}"><button class="btn quiet" type="button" id="abReply">送る</button></div></div>` : ''}
+  </div>
+  <div class="send"><div class="row btns">
+    ${doc ? `<button class="btn quiet" type="button" id="abCut">${st === 'cut' ? '削るのをやめる' : '削る'}</button>` : ''}
+    <button class="btn quiet" type="button" id="abSave">保存</button><button class="btn" type="button" id="abReview">${st === 'review' ? '添削待ち' : '添削に出す'}</button></div>
+    ${doc && (st === 'reviewed' || st === 'review' || st === 'draft') ? '<div class="row btns"><button class="btn ghost" type="button" id="abOk">確定にする(本体への反映を頼む)</button></div>' : ''}</div>`;
+}
+// 入力: 'full' なら右の欄を描き直す
+function abInput(id, el){
+  const w = S.ab, a = w.attr, f = a.fx = a.fx || {}, num = () => el.value === '' ? 0 : Math.max(0, Math.round(Number(el.value)));
+  if(id === 'a_name'){ a.name = el.value; return 'part'; }
+  if(id === 'a_on'){ a.on = el.value; if(a.on !== 'hit') delete f.again; return 'full'; }
+  if(id === 'a_again'){ if(el.checked) f.again = true; else delete f.again; return 'full'; }
+  if(id === 'a_text'){ a.text = el.value; return 'part'; }
+  if(id === 'a_idea'){ w.idea = el.value; return 'part'; }
+  if(id.startsWith('t:')){ const k = id.slice(2); w.test = w.test.filter(x => x !== k); if(el.checked) w.test.push(k); return 'part'; }
+  const k = id.slice(2); if(AFX.some(x => x[0] === k)){ const v = num(); if(v) f[k] = v; else delete f[k]; return 'full'; }
+  return 'part';
+}
+function abRefresh(){
+  if(!S.ab) return;
+  const pv = $('#abpv'); if(pv) pv.innerHTML = abPreview();
+  const tx = $('#abtx'); if(tx) tx.textContent = abText(S.ab.attr) || '効果がありません';
+  const inf = $('#abinfo'); if(inf) inf.hidden = !S.ab.dirty;
+  const h = document.querySelector('#side .side-h h2'); if(h) h.textContent = S.ab.attr.name || '(名前なし)';
+}
+async function abSave(status){
+  if(!DB || !S.ab) return;
+  const w = S.ab, prev = AB[w.key], a = clone(w.attr);
+  if(!w.custom) a.text = '';
+  const doc = {key:w.key, attr:a, idea:w.idea || '', test:w.test.slice(), status: status || (prev && prev.status !== 'base' && prev.status !== 'merged' ? prev.status : 'draft'), thread:(prev && prev.thread) || [], at:new Date().toISOString()};
+  try{ await DB.doc('attrs/' + w.key).set(doc); w.dirty = false; delete ABDRAFT[w.key]; toast(status === 'review' ? '添削に出しました' : status === 'ok' ? '確定にしました' : '保存しました'); }
+  catch(e){ toast('保存できませんでした'); }
+}
+async function abStatus(st){ if(!DB || !S.ab || !AB[S.ab.key]) return; try{ await DB.doc('attrs/' + S.ab.key).update({status:st, at:new Date().toISOString()}); toast(WST[st]); }catch(e){ toast('変更できませんでした'); } }
+async function abReply(){
+  const inp = $('#a_reply'), d = S.ab && AB[S.ab.key]; if(!inp || !d || !DB) return; const t = inp.value.trim(); if(!t) return;
+  try{ await DB.doc('attrs/' + S.ab.key).update({thread:[...(d.thread || []), {who:'user', text:t, at:new Date().toISOString()}], status: d.status === 'reviewed' ? 'review' : d.status}); S.ab.reply = ''; toast('送りました'); }catch(e){ toast('送れませんでした'); }
+}
+// 試遊に渡す属性: 工房の属性(削るものは null)と、試遊で付けるカード
+function abPayload(){
+  const attrs = {}, test = [];
+  for(const r of abRows()){
+    if(r.status === 'cut'){ attrs[r.key] = null; continue; }
+    const a = clone(r.attr); if(!a.text) delete a.text; attrs[r.key] = a;
+    for(const k of r.test || []) test.push({card:k, attr:r.key});
+  }
+  return {attrs, attrTest:test};
+}
 
 /* ---------- 描く ---------- */
 function renderTabs(){ bulkLabel();
@@ -610,9 +757,10 @@ function renderList(){
   const req = S.kind === 'requests';
   $('#listwrap').querySelector('.tools').hidden = req;
   if(req){ $('#tbl').innerHTML = `<div class="reqpane" style="padding:10px">${renderReqPane()}</div>`; return; }
-  const wbm = !!KBY[S.kind].wb;
-  $('#deckBtn').hidden = !wbm; $('#playBtn').hidden = !wbm; bulkLabel(); $('#addBtn').textContent = wbm ? '＋ 新しいカード' : '＋ 追加';
+  const wbm = !!KBY[S.kind].wb, abm = !!KBY[S.kind].ab;
+  $('#deckBtn').hidden = !wbm; $('#playBtn').hidden = !wbm && !abm; bulkLabel(); $('#addBtn').textContent = wbm ? '＋ 新しいカード' : abm ? '＋ 新しい属性' : '＋ 追加';
   if(wbm){ $('#tbl').innerHTML = wbListHTML(); return; }
+  if(abm){ $('#tbl').innerHTML = abListHTML(); return; }
   const K = KBY[S.kind], q = S.q.trim().toLowerCase();
   const items = curItems().filter(it => !q || (it.name || '').toLowerCase().includes(q) || it.key.toLowerCase().includes(q));
   $('#tbl').innerHTML = `<table><thead><tr>${K.head.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${items.map(it => { const cs = K.cells(it).slice(); const rp = itemReplies(S.kind, it.key); if(rp) cs[0] = cs[0].replace(/<\/td>$/, '<span class="badge rp" title="Claude の返事がある">返事</span></td>'); if(eUnsent(S.kind, it.key)) cs[0] = cs[0].replace(/<\/td>$/, '<span class="badge w-review" title="送っていない変更がある">未送信</span></td>'); return `<tr class="row${S.sel === it.key ? ' sel' : ''}${rp ? ' hl' : ''}" data-key="${esc(it.key)}" tabindex="0">${cs.join('')}</tr>`; }).join('')}</tbody></table>`;
@@ -651,6 +799,7 @@ function renderSide0(){
   const it = curItem(), K = KBY[S.kind];
   side.hidden = innerWidth <= 820 && !S.mobileOpen;
   if(K.wb){ side.innerHTML = wbSideHTML(); wbRefresh(); return; }
+  if(K.ab){ side.innerHTML = abSideHTML(); return; }
   if(!it && !(S.draft && S.draft.isNew)){
     side.innerHTML = `<div class="empty">一覧から項目を選ぶと、ここで数値や文を書き換えられます。書き換えたら、下にコメントを添えて「送る」で依頼になります。数値を変えずにコメントだけ送れば相談になります。</div>`;
     return;
@@ -752,6 +901,7 @@ function reqDoc(kind, d, comment){
 function startDraft(it){ S.draft = {isNew:false, key:it.key, obj:clone(it.obj)}; S.json = false; S.jsonErr = ''; S.comment = ''; }
 function selectItem(key){
   S.bulkOpen = false;
+  if(KBY[S.kind] && KBY[S.kind].ab){ if(!(S.ab && S.ab.key === key)) abOpen(key); S.sel = key; S.mobileOpen = true; renderAll(); return; }
   if(KBY[S.kind] && KBY[S.kind].wb){ if(!(S.wb && S.wb.key === key)) wbOpen(key); S.sel = key; S.wbDeckOpen = false; S.revertArm = null; S.mobileOpen = true; renderAll(); return; }
   const it = curItems().find(x => x.key === key); if(!it) return;
   if(S.draft && !S.draft.isNew && S.draft.key === key){ S.mobileOpen = true; renderAll(); return; }
@@ -797,7 +947,7 @@ async function drop(id){
 /* ---------- 入力 ---------- */
 document.addEventListener('click', e => {
   const t = e.target;
-  const tab = t.closest('[data-tab]'); if(tab){ S.bulkOpen = false; wbStash(); eStash(); S.kind = tab.dataset.tab; S.sel = null; S.draft = null; S.wb = null; S.wbDeckOpen = false; S.mobileOpen = false; S.q = ''; $('#q').value = ''; renderAll(); return; }
+  const tab = t.closest('[data-tab]'); if(tab){ S.bulkOpen = false; wbStash(); eStash(); if(S.ab && S.ab.dirty) ABDRAFT[S.ab.key] = S.ab; S.ab = null; S.kind = tab.dataset.tab; S.sel = null; S.draft = null; S.wb = null; S.wbDeckOpen = false; S.mobileOpen = false; S.q = ''; $('#q').value = ''; renderAll(); return; }
   // カード工房
   const wf = t.closest('[data-wbf]'); if(wf){ S.wbFilter = wf.dataset.wbf; renderList(); return; }
   const wt = t.closest('[data-wbtext]'); if(wt && S.wb){ S.wb.custom = wt.dataset.wbtext === 'custom'; if(S.wb.custom && !S.wb.card.text) S.wb.card.text = genText(S.wb.card); S.wb.dirty = true; renderSide(); return; }
@@ -827,6 +977,13 @@ document.addEventListener('click', e => {
   if(t.closest('#sendGeneral')){ sendGeneral(); return; }
   if(t.closest('#resetDraft')){ const it = curItem(); if(it){ startDraft(it); renderSide(); } return; }
   if(t.closest('#closeSide')){ if(S.bulkOpen){ S.bulkOpen = false; renderAll(); return; } S.mobileOpen = false; S.wbDeckOpen = false; renderSide(); if(KBY[S.kind] && KBY[S.kind].wb) renderList(); return; }
+  if(t.closest('#addBtn') && KBY[S.kind] && KBY[S.kind].ab){ S.bulkOpen = false; if(S.ab && S.ab.dirty) ABDRAFT[S.ab.key] = S.ab; const k = 'a' + Date.now().toString(36); S.sel = k; abStart(k); S.mobileOpen = true; renderAll(); setTimeout(() => { const n = $('#a_name'); if(n) n.focus(); }, 50); return; }
+  if(t.closest('#abSave')){ abSave(); return; }
+  if(t.closest('#abReview')){ abSave('review'); return; }
+  if(t.closest('#abOk')){ abSave('ok'); return; }
+  if(t.closest('#abCut')){ abStatus(AB[S.ab.key].status === 'cut' ? 'draft' : 'cut'); return; }
+  if(t.closest('#abReply')){ abReply(); return; }
+  const at = t.closest('[data-abtext]'); if(at && S.ab){ S.ab.custom = at.dataset.abtext === 'custom'; if(S.ab.custom && !S.ab.attr.text) S.ab.attr.text = abText(S.ab.attr); S.ab.dirty = true; renderSide(); return; }
   if(t.closest('#addBtn') && KBY[S.kind] && KBY[S.kind].wb){ S.bulkOpen = false; wbStash(); const k = 'n' + Date.now().toString(36); S.sel = k; S.wbDeckOpen = false; wbStart(k); S.mobileOpen = true; renderAll(); setTimeout(() => { const n = $('#w_name'); if(n) n.focus(); }, 50); return; }
   if(t.closest('#addBtn')){ S.bulkOpen = false; eStash(); const it = curItem(); S.draft = {isNew:true, key:'', obj:it ? clone(it.obj) : {}}; S.sel = null; S.json = true; S.jsonText = JSON.stringify(S.draft.obj, null, 2); S.jsonErr = ''; S.comment = ''; S.mobileOpen = true; renderAll(); return; }
 });
@@ -844,7 +1001,9 @@ document.addEventListener('input', e => {
   if(t.id === 'q'){ S.q = t.value; renderList(); return; }
   if(t.id === 'bulkText'){ S.bulkText = t.value; keepUnsent(); return; }
   if(t.id === 'w_reply' && S.wb){ S.wb.reply = t.value; return; }
-  if(t.dataset && t.dataset.wb && S.wb){ const was = S.wb.dirty, r = wbInput(t.dataset.wb, t); S.wb.dirty = true; if(r === 'full') renderSide(); else wbRefresh(); if(!was){ bulkLabel(); if(innerWidth > 820) renderList(); } return; }
+  if(t.id === 'a_reply' && S.ab){ S.ab.reply = t.value; return; }
+  if(t.dataset && t.dataset.ab && S.ab){ const was = S.ab.dirty, r = abInput(t.dataset.ab, t); S.ab.dirty = true; if(r === 'full') renderSide(); else abRefresh(); if(!was || r === 'full') renderList(); return; }
+  if(t.dataset && t.dataset.wb && S.wb){ const was = S.wb.dirty, r = wbInput(t.dataset.wb, t); S.wb.dirty = true; if(!S.wb.custom && t.dataset.wb !== 'w_text') S.wb.card.text = genText(S.wb.card); if(r === 'full') renderSide(); else wbRefresh(); if(!was){ bulkLabel(); if(innerWidth > 820) renderList(); } return; }
   if(t.id === 'comment'){ S.comment = t.value; refreshDyn(); return; }
   if(t.id === 'newkey'){ S.draft.key = t.value; later(); return; }
   if(t.id === 'jsonbox'){ S.jsonText = t.value; try{ S.draft.obj = JSON.parse(t.value); S.jsonErr = ''; }catch(err){ S.jsonErr = 'JSON の書き方が崩れています: ' + err.message; } later(); return; }
@@ -909,6 +1068,13 @@ renderAll();
     if(changed && S.wb && !S.wb.dirty && WB[cur]){ const rp = S.wb.reply; wbStart(cur); S.wb.reply = rp; }
     requestRender(changed && !!(KBY[S.kind] && KBY[S.kind].wb));
   }, () => { wbState = 'off'; });
+  DB.collection('attrs').onSnapshot(s => {
+    const cur = S.ab ? S.ab.key : null, before = cur ? JSON.stringify(AB[cur] || null) : '';
+    AB = {}; for(const d of s.docs) AB[d.id] = d.data();
+    const changed = !cur || JSON.stringify(AB[cur] || null) !== before;
+    if(changed && S.ab && !S.ab.dirty && AB[cur]){ const rp = S.ab.reply; abStart(cur); S.ab.reply = rp; }
+    requestRender(changed && !!(KBY[S.kind] && KBY[S.kind].ab));
+  }, () => {});
   DB.doc('config/deck').onSnapshot(d => { WBDECK = d.exists ? d.data() : null; requestRender(S.wbDeckOpen && !S.wbDeckDraft); }, () => {});
   DB.collection('requests').onSnapshot(s => { REQ = s.docs.map(d => Object.assign({id:d.id}, d.data())); dbState = 'on'; if(busy()){ S.pending = true; renderTabs(); refreshDyn(); } else renderAll(); },
     () => { dbState = 'off'; DB = null; renderAll(); });

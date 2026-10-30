@@ -661,7 +661,7 @@ window.DATA = window.DATA || {};
   "ui.foe.sec.pas": "パッシブ",
   "ui.foe.sec.units": "ユニット",
   "ui.foe.sec.moves": "行動",
-  "ui.pas.command": "【{unit}】ユニットが破壊されていない間、すべての行動のコスト-{n}(最短2)。",
+  "ui.pas.command": "【{unit}】ユニットが破壊されていない間、すべての行動のコスト-{n}。",
   "ui.pas.frenzy": "ユニットが破壊されるたび、増幅{n}を得る。",
   "ui.pas.react": "コスト{min}以上のカードを使い始めると、1サイクル後に{part}に{d}ダメージを与える。",
   "ui.pas.phase": "耐久が{at}%を切ると、行動が変わる。",

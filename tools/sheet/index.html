@@ -492,17 +492,7 @@ function bulkCards(){
     return {key:k, w, card, isNew:!base, changes, idea};
   });
 }
-// 送り済みでまだ対応していないもの(まとめて相談に含めていないもの)。まとめて相談に入れると、その相談の中で一緒に答える
-function bulkOpenReqs(){
-  const inBatch = new Set(REQ.filter(r => r.type === 'batch' && (r.status === 'open' || r.status === 'discuss')).flatMap(r => r.refs || []));
-  return REQ.filter(r => r.type !== 'batch' && (r.status === 'open' || r.status === 'discuss') && !inBatch.has(r.id)).sort((a, b) => (a.at || '').localeCompare(b.at || ''));
-}
-function bulkReviewCards(){
-  const inBatch = new Set(REQ.filter(r => r.type === 'batch' && (r.status === 'open' || r.status === 'discuss')).flatMap(r => (r.cards || []).map(c => c.key)));
-  const mine = new Set(bulkKeys());
-  return Object.entries(WB).filter(([k, d]) => d.status === 'review' && !mine.has(k) && !inBatch.has(k)).map(([k, d]) => ({key:k, card:d.card, idea:d.idea || ''}));
-}
-function bulkCount(){ return bulkKeys().length + bulkEdits().length + bulkOpenReqs().length + bulkReviewCards().length; }
+function bulkCount(){ return bulkKeys().length + bulkEdits().length; }
 // 送っていない編集は端末に保存しておく(ページの更新や読み込み直しで消えないように)
 const KEEP_KEY = 'asc.sheet.unsent';
 function keepUnsent(){
@@ -533,45 +523,44 @@ function bulkLabel(){
 const dlHTML = ch => ch.length ? `<div class="diff">${ch.map(c => `<div class="dl"><span class="p" title="${esc(c.path)}">${esc(c.path)}</span><span class="v"><s>${esc(c.from)}</s> → <b>${esc(c.to)}</b></span></div>`).join('')}</div>` : '';
 function bulkHTML(){
   const cs = bulkCards(), es = bulkEdits();
-  const os = bulkOpenReqs(), rc = bulkReviewCards();
   const cards = cs.map(c => `<div class="bi"><b>${esc(c.card.name || c.key)}</b>${c.isNew ? '<span class="badge new">新規</span>' : ''}${c.w ? '<span class="badge w-review">未保存</span>' : ''}${dlHTML(c.changes) || (c.isNew ? `<div class="note">${fillText(c.card)}</div>` : c.idea ? '' : '<div class="note">本体から変えていない</div>')}${c.idea ? `<div class="cm">${esc(c.idea)}</div>` : ''}</div>`).join('');
-  const oneLine = r => r.kind === 'general' ? '' : r.changes && r.changes.length ? r.changes.map(c => `${c.path}: ${c.to}`).join(' / ') : '';
-  const sent = os.map(r => `<div class="bi"><b>${r.kind === 'general' ? '全体' : esc(KBY[r.kind] ? KBY[r.kind].label : r.kind)}${r.label ? ' · ' + esc(r.label) : ''}</b>${oneLine(r) ? `<div class="note one">${esc(oneLine(r))}</div>` : ''}${r.comment ? `<div class="cm one">${esc(r.comment)}</div>` : ''}${(r.thread || []).length ? `<div class="note">やりとり ${r.thread.length}</div>` : ''}</div>`).join('')
-    + rc.map(c => `<div class="bi"><b>カード · ${esc(c.card.name || c.key)}</b><span class="badge w-review">添削待ち</span>${c.idea ? `<div class="cm one">${esc(c.idea)}</div>` : ''}</div>`).join('');
   const edits = es.map(e => { const d = reqDoc(e.kind, e.draft, e.comment); return `<div class="bi"><b>${esc(KBY[e.kind].label)} · ${esc(d.label)}</b>${d.type === 'new' ? '<span class="badge new">追加</span>' : ''}${dlHTML(d.changes)}${d.comment ? `<div class="cm">${esc(d.comment)}</div>` : ''}</div>`; }).join('');
-  return `<div class="side-h"><div><h2>まとめて相談</h2><span class="k">未送信: カード ${cs.length}・そのほか ${es.length} / 送り済み ${os.length + rc.length}</span></div><button class="btn quiet x" type="button" id="closeSide">閉じる</button></div>
+  return `<div class="side-h"><div><h2>まとめて相談</h2><span class="k">カード ${cs.length}・そのほか ${es.length}(1件ずつ送り、返事も1件ずつ)</span></div><button class="btn quiet x" type="button" id="closeSide">閉じる</button></div>
   <div class="side-b">
     ${cs.length ? `<div class="grp"><h3>カード(添削待ちにする)</h3>${cards}</div>` : ''}
     ${es.length ? `<div class="grp"><h3>敵・パーツなどの変更</h3>${edits}</div>` : ''}
-    ${os.length || rc.length ? `<div class="grp"><h3>送り済みで対応待ち(${os.length + rc.length}件・一緒に相談する)</h3>${sent}</div>` : ''}
-    ${!cs.length && !es.length && !os.length && !rc.length ? '<div class="note">相談するものはありません。下に相談だけ書いて送ることもできます。</div>' : ''}
-    <div class="grp"><h3>全体への相談・質問</h3><textarea id="bulkText" class="wtext" placeholder="例: 序盤が単調な気がする。この変更で手応えが出るか見てほしい">${esc(S.bulkText || '')}</textarea></div>
+    ${!cs.length && !es.length ? '<div class="note">送っていない変更はありません。下に相談だけ書いて送ることもできます。</div>' : ''}
+    <div class="grp"><h3>全体への相談・質問(別の1件として送る)</h3><textarea id="bulkText" class="wtext" placeholder="例: 序盤が単調な気がする。この変更で手応えが出るか見てほしい">${esc(S.bulkText || '')}</textarea></div>
   </div>
   <div class="send"><div class="row btns"><button class="btn" type="button" id="bulkSend"${DB ? '' : ' disabled'}>まとめて送る</button></div></div>`;
 }
+// まとめて送る: 1件ずつ送る(まとめて1件にはしない。返事も項目ごとに付く)
+//   カード → 保存して添削待ち / カード以外の変更 → 項目ごとの依頼 / 全体への相談 → 項目によらない依頼
 async function bulkSend(){
   if(!DB) return;
   const cs = bulkCards(), es = bulkEdits().filter(e => !(e.draft.isNew && !e.draft.key.trim())), text = (S.bulkText || '').trim();
-  const os = bulkOpenReqs(), rc = bulkReviewCards();
-  if(!cs.length && !es.length && !os.length && !rc.length && !text) return;
+  if(!cs.length && !es.length && !text) return;
   const btn = $('#bulkSend'); if(btn) btn.disabled = true;
   const now = new Date().toISOString();
-  try{
-    for(const c of cs){
+  let ok = 0, ng = 0;
+  for(const c of cs){
+    try{
       if(c.w){ await DB.doc('cards/' + c.key).set(wbDoc(c.w, 'review')); c.w.dirty = false; delete WBDRAFT[c.key]; }
       else await DB.doc('cards/' + c.key).update({status:'review', at:now});
-    }
-    const items = es.map(e => JSON.parse(JSON.stringify(reqDoc(e.kind, e.draft, e.comment), (k, v) => k === 'at' || k === 'status' || k === 'thread' ? undefined : v)));
-    const cards = cs.map(c => ({key:c.key, name:c.card.name || c.key, isNew:c.isNew, changes:c.changes})).concat(rc.map(c => ({key:c.key, name:c.card.name || c.key, isNew:!D.cards[c.key], changes:[]})));
-    const doc = {at:now, kind:'batch', key:'', label:`カード${cards.length}・変更${items.length}・依頼${os.length}`, type:'batch', cards, items, refs:os.map(r => r.id), changes:[], comment:text, status:'open', thread:[]};
-    await DB.collection('requests').add(doc);
-    for(const e of es){
+      ok++;
+    }catch(e){ ng++; }
+  }
+  for(const e of es){
+    try{
+      await DB.collection('requests').add(reqDoc(e.kind, e.draft, e.comment));
       delete EDRAFT[e.kind + '|' + (e.draft.isNew ? '+' : e.draft.key)];
       if(e.cur || (S.kind === e.kind && S.draft === e.draft)){ S.comment = ''; if(e.draft.isNew){ S.draft = null; S.sel = null; } else { const it = curItem(); if(it) startDraft(it); } }
-    }
-    S.bulkText = ''; S.bulkOpen = false; S.mobileOpen = false;
-    toast('まとめて送りました');
-  }catch(e){ toast('送れませんでした。もう一度試してください'); if(btn) btn.disabled = false; }
+      ok++;
+    }catch(err){ ng++; }
+  }
+  if(text){ try{ await DB.collection('requests').add({at:now, kind:'general', key:'', label:'', type:'note', changes:[], comment:text, status:'open', thread:[]}); S.bulkText = ''; ok++; }catch(e){ ng++; } }
+  if(!ng){ S.bulkOpen = false; S.mobileOpen = false; }
+  toast(ng ? `${ok}件を送りました(${ng}件は送れませんでした)` : `${ok}件を送りました`);
   renderAll();
 }
 async function wbSave(status){

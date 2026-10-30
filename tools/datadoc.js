@@ -2,7 +2,7 @@
 // 使い方: node tools/datadoc.js > out.json
 const fs = require('fs'), vm = require('vm'), path = require('path');
 const ctx = {}; ctx.window = ctx; vm.createContext(ctx);
-for(const f of ['parts','cards','enemies','map','classes','text']) vm.runInContext(fs.readFileSync(path.join(__dirname, '../data', f + '.js'), 'utf8'), ctx);
+for(const f of ['parts','cards','enemies','map','classes','attrs','text']) vm.runInContext(fs.readFileSync(path.join(__dirname, '../data', f + '.js'), 'utf8'), ctx);
 const D = ctx.DATA, SL = Object.fromEntries(D.slots.map(s => [s.id, s]));
 const ver = (fs.readFileSync(path.join(__dirname, '../index.html'), 'utf8').match(/APP_VERSION = '([\d.]+)'/) || [])[1];
 const out = {};

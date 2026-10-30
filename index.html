@@ -203,6 +203,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 .chd{display:flex;align-items:center;gap:4px;height:26px;padding:0 5px;flex:none}
 .cost{width:18px;height:18px;flex:none;border:1.5px solid var(--cy);border-radius:9px;background:var(--bg);color:var(--cy);font-family:var(--f-num);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center}
 .cname{font-size:10.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.cname.ca{color:#c9b3ff} /* 属性付きのカードの名前(0.28.0) */
 .cart{position:relative;display:block;height:60px;flex:none;margin:0 4px;border-radius:4px;background:repeating-linear-gradient(135deg,#17222e 0 6px,#131c27 6px 12px)}
 .atom{position:absolute;left:6px;top:7px;width:7px;height:7px;background:var(--fg);transform:rotate(45deg)}
 .cval{position:absolute;right:5px;top:4px;display:flex;align-items:center;gap:3px;padding:1px 4px;border-radius:4px;background:rgba(10,15,21,.75)}
@@ -1172,10 +1173,11 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 <script src="data/enemies.js"></script>
 <script src="data/map.js"></script>
 <script src="data/classes.js"></script>
+<script src="data/attrs.js"></script>
 <script src="data/text.js"></script>
 <script src="js/engine.js"></script>
 <script>
-const APP_VERSION = '0.27.0';
+const APP_VERSION = '0.28.0';
 const $ = s => document.querySelector(s);
 const EN = ENGINE, RULE = EN.RULE;
 const VIEW = RULE.view, NOW = 170, PX = 34, xs = c => NOW + c * PX, STRIP_Y = 150, SWIFT_VIS = 3;
@@ -1320,6 +1322,8 @@ function vBlock(st, c){ return st && st.run ? EN.blockOf(stv(st), c) : c.block; 
 // 充電を消費するカード: 戦闘中は今の充電での値、戦闘の外では 1あたりの値
 function spendVal(st, c){
   const per = c.spend.dmg ? c.spend.dmg.n : c.spend.block;
+  // 決まった量を消費するカード(0.28.0): 値は合計
+  if(c.spend.n) return c.spend.dmg ? vDmg(st, c, {t:c.spend.dmg.t, n:per}) : per + EN.fx(stv(st), 'dur', 'block');
   if(!(st && st.b)) return '×' + per;
   const n = st.b.charge || 0; if(!n) return 0;
   return c.spend.dmg ? vDmg(st, c, {t:c.spend.dmg.t, n:per * n}) : per * n + EN.fx(stv(st), 'dur', 'block');
@@ -1342,19 +1346,21 @@ function cardVal(k, st){
 function cardVals(c, st){
   return {dmg: c.dmg ? vDmg(st, c) : '', x: c.dmg && c.dmg.x || '', block: c.block != null ? vBlock(st, c) : '', delay: c.delay || '', swift: c.swift || '',
     crack: c.crack || '', draw: c.draw || '', t: c.timer ? c.timer.t : '', tdmg: c.timer ? vDmg(st, c, c.timer.dmg) : '',
-    gain: c.gain || '', per: c.spend ? (c.spend.dmg ? c.spend.dmg.n : c.spend.block) : ''};
+    gain: c.gain || '', per: c.spend ? (c.spend.dmg ? c.spend.dmg.n : c.spend.block) : '',
+    sn: c.spend && c.spend.n || '', sv: c.spend && c.spend.n ? spendVal(st, c) : ''};
 }
 const KW_CLS = {crack:'kw-f', atomic:'kwp', just:'kw-j'};
 const kwList = () => Object.entries(DATA.kwName).sort((a, b) => b[1].length - a[1].length);
 function cardText(k, st){
   const c = CARDS[k], v = cardVals(c, st);
   let h = (c.text || '').replace(/[&<>]/g, x => ({'&':'&amp;', '<':'&lt;', '>':'&gt;'})[x]).replace(/\{(\w+)\}/g, (m, n) => n in v ? `<b>${v[n]}</b>` : m);
+  if(c.attrText) h += c.attrText.replace(/[&<>]/g, x => ({'&':'&amp;', '<':'&lt;', '>':'&gt;'})[x]).replace(/(\d+)/g, '<b>$1</b>');
   for(const [key, name] of kwList()) h = h.split(name).join(`\u0000${key}\u0000`);
   return h.replace(/\u0000(\w+)\u0000/g, (m, key) => `<span class="${KW_CLS[key] || 'kw'}">${DATA.kwName[key]}</span>`);
 }
 function cardInner(k, st, count){
   const c = CARDS[k];
-  return `<span class="chd"><span class="cost${c.cost === 0 ? ' zero' : ''}">${c.cost}</span><span class="cname">${c.name}</span></span><span class="cart t-${cardType(c)}"><span class="cwm">${IC[cardType(c)]}</span>${c.atomic ? '<i class="atom"></i>' : ''}<span class="cval"><span class="ic">${IC[cardType(c)]}</span><b>${cardVal(k, st)}</b></span></span><span class="ctx${(CARDS[k].text || '').replace(/\{\w+\}/g, '00').length > 22 ? ' long' : ''}">${cardText(k, st)}</span>${count > 1 ? `<span class="cnt">×${count}</span>` : ''}`;
+  return `<span class="chd"><span class="cost${c.cost === 0 ? ' zero' : ''}">${c.cost}</span><span class="cname${c.attr ? ' ca' : ''}">${c.name}</span></span><span class="cart t-${cardType(c)}"><span class="cwm">${IC[cardType(c)]}</span>${c.atomic ? '<i class="atom"></i>' : ''}<span class="cval"><span class="ic">${IC[cardType(c)]}</span><b>${cardVal(k, st)}</b></span></span><span class="ctx${((CARDS[k].text || '') + (CARDS[k].attrText || '')).replace(/\{\w+\}/g, '00').length > 22 ? ' long' : ''}">${cardText(k, st)}</span>${count > 1 ? `<span class="cnt">×${count}</span>` : ''}`;
 }
 // 長押しで説明を出すキーワード: カードの文に出てくるもの
 function cardKw(k){
@@ -1798,7 +1804,7 @@ function renderHand(){
       el.style.left = '20px'; el.style.top = '330px'; el.style.transform = 'scale(.3) rotate(-10deg)'; el.style.opacity = '0';
       $('#hand').appendChild(el); cardEls.set(cd.id, el); fresh = true;
     }
-    el.dataset.i = i; el.disabled = busy;
+    el.dataset.i = i; el.disabled = busy; el.classList.toggle('off', EN.spendShort(b, CARDS[cd.k]));
     const html = cardInner(cd.k, S);
     if(el._h !== html){ el.innerHTML = html; el._h = html; }
     el.classList.toggle('sel', i === selI);
@@ -2071,6 +2077,7 @@ function recalc(){
 }
 function onCard(i){
   const k = S.b.hand[i].k, c = CARDS[k];
+  if(EN.spendShort(S.b, c)) return; // 決まった量の充電が足りない
   if(sel && sel.kind === 'card' && sel.i === i){ execute(); return; }
   sel = {kind:'card', i, k, target: c.tgt ? defaultTarget() : null}; recalc();
 }
@@ -2187,7 +2194,7 @@ function saveRun(pending){
   if(!S || !S.run || S.run.debug || (UI.node && UI.node.debug)) return;
   try{ localStorage.setItem(SAVE_KEY, JSON.stringify({v:1, run:S.run, pending:pending || null, cls:clsKey(), at:Date.now()})); }catch(e){}
 }
-function loadSave(){ try{ const o = JSON.parse(localStorage.getItem(SAVE_KEY)); return o && o.v === 1 && o.run && o.run.map ? o : null; }catch(e){ return null; } }
+function loadSave(){ try{ const o = JSON.parse(localStorage.getItem(SAVE_KEY)); if(o && o.run && Array.isArray(o.run.deck)) o.run.deck = o.run.deck.filter(k => DATA.regAttrCard(CARDS, k)); return o && o.v === 1 && o.run && o.run.map ? o : null; }catch(e){ return null; } }
 function clearSave(){ try{ localStorage.removeItem(SAVE_KEY); }catch(e){} }
 function resumeRun(){
   const o = loadSave(); if(!o){ showTitle(); return; }
@@ -2405,15 +2412,20 @@ function onLose(){
 const LEARN_BIAS = 1.3;
 function learnOptions(n){
   const near = new Set(ENC[UI.node.enc].foes.flatMap(k => FOES[k].pool || []));
-  const pool = Object.keys(CARDS).filter(k => !CARDS[k].junk && !['charge','scatter'].includes(k)).map(k => ({k, w: near.has(k) ? LEARN_BIAS : 1}));
+  const pool = Object.keys(CARDS).filter(k => !CARDS[k].junk && !CARDS[k].attr && !['charge','scatter'].includes(k)).map(k => ({k, w: near.has(k) ? LEARN_BIAS : 1}));
   const out = [];
   while(out.length < n && pool.length){
     let x = Math.random() * pool.reduce((a, c) => a + c.w, 0), i = 0;
     for(; i < pool.length - 1; i++){ x -= pool[i].w; if(x <= 0) break; }
     out.push(pool.splice(i, 1)[0].k);
   }
-  return out;
+  // 属性(0.28.0): エリートの報酬は必ず、通常の戦闘はときどき属性付きで出る
+  const r = UI.node && UI.node.type === 'elite' ? DATA.attrRule.elite : DATA.attrRule.battle;
+  return out.map(k => Math.random() < r ? withAttr(k) : k);
 }
+// 属性: カード k に付けられる属性 / 1つ選んで付けたカードのキー(付けられなければそのまま)
+const attrsFor = k => Object.keys(DATA.attrs).filter(a => DATA.attrOk(CARDS[k], a));
+function withAttr(k){ const as = attrsFor(k); if(!as.length) return k; const key = k + '@' + EN.pick(as); DATA.regAttrCard(CARDS, key); return key; }
 function afterWin(){
   const n = UI.node;
   if(n.type === 'boss'){ completeRoom(); return; }
@@ -2469,18 +2481,28 @@ function showDefrag(){
   const counts = groupDeck(S.run.deck), pk = UI.pick;
   showOv(`<h2>消去するカードを選択</h2><div class="cards">${Object.keys(counts).map(k => `<button class="card static${pk === k ? ' picked' : ''}" type="button" data-act="pick" data-arg="${k}" data-view="defrag">${cardInner(k, null, counts[k])}</button>`).join('')}</div><div class="row"><button class="btn ghost" type="button" data-act="backDefrag">戻る</button><span class="sp"></span><button class="btn" type="button" data-act="del" ${pk ? '' : 'disabled'}>決定</button></div>`);
 }
+// 属性を付けるカードを選ぶ(ショップで属性を買ったとき)。付けられるのは属性がまだ無く、その属性が働くカードだけ
+function showAttach(){
+  const a = UI.attachA, counts = groupDeck(S.run.deck), pk = UI.pick;
+  const ks = Object.keys(counts).filter(k => DATA.attrOk(CARDS[k], a));
+  showOv(`<h2>「${DATA.attrs[a].name || a}」を付けるカードを選択</h2><p class="sub">${DATA.attrText(a)}</p><div class="cards">${ks.length ? ks.map(k => `<button class="card static${pk === k ? ' picked' : ''}" type="button" data-act="pick" data-arg="${k}" data-view="attach">${cardInner(k, null, counts[k])}</button>`).join('') : `<p class="sub">${DATA.ui['attr.none'] || ''}</p>`}</div><div class="row"><button class="btn ghost" type="button" data-act="backAttach">戻る</button><span class="sp"></span><button class="btn" type="button" data-act="attach" ${pk ? '' : 'disabled'}>決定</button></div>`);
+}
 const price = k => DATA.shop.price[CARDS[k].cost] ?? 30;
 function showShop(){
   const sh = DATA.shop, run = S.run;
   const nk = UI.node ? nodeKey(UI.node) + '@' + run.area : '';
   if(!UI.offers && run.shop && run.shop.at === nk) UI.offers = run.shop.offers;
-  if(!UI.offers){ const pool = Object.keys(CARDS).filter(k => !['charge','scatter'].includes(k) && !CARDS[k].junk); UI.offers = EN.shuffle(pool).slice(0, sh.offers); }
-  run.shop = {at: nk, offers: UI.offers};
+  if(!UI.offers){ const pool = Object.keys(CARDS).filter(k => !['charge','scatter'].includes(k) && !CARDS[k].junk && !CARDS[k].attr); UI.offers = EN.shuffle(pool).slice(0, sh.offers); }
+  // 属性(0.28.0): 属性だけを買って、デッキのカードに付ける
+  if(!UI.attrOffers && run.shop && run.shop.at === nk && run.shop.attrs) UI.attrOffers = run.shop.attrs;
+  if(!UI.attrOffers) UI.attrOffers = EN.shuffle(Object.keys(DATA.attrs)).slice(0, DATA.attrRule.shop);
+  run.shop = {at: nk, offers: UI.offers, attrs: UI.attrOffers};
   const pk = UI.pick, can = c => run.scrap >= c;
   const offers = UI.offers.map((k, i) => k ? `<div class="sitem"><button class="card static${pk === 'c' + i ? ' picked' : ''}${can(price(k)) ? '' : ' off'}" type="button" data-act="pick" data-arg="c${i}" data-view="shop">${cardInner(k, null)}</button><span class="price${can(price(k)) ? '' : ' no'}"><span class="ic">${IC.scrap}</span>${price(k)}</span></div>` : '<div class="sitem sold"></div>').join('');
   const svc = (id, ic, name, sub, c) => `<button class="opt${pk === id ? ' picked' : ''}${can(c) ? '' : ' off'}" type="button" data-act="pick" data-arg="${id}" data-view="shop"><span class="ic">${IC[ic]}</span><b>${name}</b><span>${sub}</span><span class="price${can(c) ? '' : ' no'}"><span class="ic">${IC.scrap}</span>${c}</span></button>`;
-  const cost = pk ? (pk[0] === 'c' ? price(UI.offers[+pk.slice(1)]) : pk === 'defrag' ? sh.defrag : sh.repairCost) : 0;
-  showRoom('shop', `<h2>ショップ</h2><div class="shop"><div class="cards">${offers}</div><div class="svc">${svc('defrag', 'defrag', 'デフラグ', DATA.ui.defrag, sh.defrag)}${svc('repair', 'repair', '修理', DATA.ui.repair.replace('{n}', sh.repairBody), sh.repairCost)}</div></div><div class="row"><button class="btn ghost" type="button" data-act="leave">出る</button><button class="btn" type="button" data-act="buy" ${pk && can(cost) ? '' : 'disabled'}>購入</button></div>`, false);
+  const cost = pk ? (pk[0] === 'c' ? price(UI.offers[+pk.slice(1)]) : pk[0] === 'a' ? DATA.attrRule.price : pk === 'defrag' ? sh.defrag : sh.repairCost) : 0;
+  const attrs = (UI.attrOffers || []).map((a, i) => a && DATA.attrs[a] ? svc('a' + i, 'swift', DATA.attrs[a].name || a, DATA.attrText(a), DATA.attrRule.price) : '').join('');
+  showRoom('shop', `<h2>ショップ</h2><div class="shop"><div class="cards">${offers}</div><div class="svc">${svc('defrag', 'defrag', 'デフラグ', DATA.ui.defrag, sh.defrag)}${svc('repair', 'repair', '修理', DATA.ui.repair.replace('{n}', sh.repairBody), sh.repairCost)}${attrs}</div></div><div class="row"><button class="btn ghost" type="button" data-act="leave">出る</button><button class="btn" type="button" data-act="buy" ${pk && can(cost) ? '' : 'disabled'}>購入</button></div>`, false);
 }
 const findEvent = id => DATA.events.find(e => e.id === id) || DATA.transit.find(e => e.id === id);
 // エリアの間の中継(0.19.0): 本体の回復と、そのエリア固有のイベント
@@ -2763,6 +2785,8 @@ function applyEcon(){
   for(const [k, c0] of Object.entries(CARDS0)){
     CARDS[k] = DATA.classCard(JSON.parse(JSON.stringify(c0)), C.cards[k]);
   }
+  // 属性付きのカードは、キャラの数値を当てた元のカードから作り直す
+  for(const k of Object.keys(CARDS)) if(k.includes('@')) DATA.regAttrCard(CARDS, k);
 }
 /* ---------- debug ---------- */
 // 調整用: 遭遇・デッキ・パーツ・数値を選んで、ランの外で1戦だけ戦う。設定は端末ごとに覚える
@@ -2772,7 +2796,7 @@ const DBG_PRESET = {
   heavy: () => ['slash','slash','slash','wall','wall','blow','emp','backflow','guard','scan','parry'],
   control: () => ['hack','hack','backflow','timebomb','timebomb','parry','crackshot','crackshot','jab','guard','scan','scan'],
   charge: () => ['capacitor','capacitor','coil','coil','arc','arc','storm','storm','cell','jab','guard','slash'],
-  all: () => Object.keys(CARDS).filter(k => !CARDS[k].junk),
+  all: () => Object.keys(CARDS).filter(k => !CARDS[k].junk && !CARDS[k].attr),
   empty: () => [],
 };
 const DBG_PRESET_NAME = {start:'最初', light:'軽い', heavy:'重い', control:'制御', charge:'充電', all:'全種1枚', empty:'空'};
@@ -2816,7 +2840,7 @@ function showDebugDeck(){
   UI.dbgView = 'deck';
   const cnt = {}; for(const k of DBG.deck) cnt[k] = (cnt[k] || 0) + 1;
   const presets = Object.keys(DBG_PRESET).map(k => `<button type="button" data-act="dbgPreset" data-arg="${k}">${DBG_PRESET_NAME[k]}</button>`).join('');
-  const cards = Object.keys(CARDS).filter(k => !CARDS[k].junk).sort((a, c) => CARDS[a].cost - CARDS[c].cost).map(k => `<div class="dcard"><i>${CARDS[k].cost}</i><span>${CARDS[k].name}</span><button type="button" data-act="dbgCard" data-arg="${k}:-1">−</button><b class="${cnt[k] ? '' : 'z'}">${cnt[k] || 0}</b><button type="button" data-act="dbgCard" data-arg="${k}:1">+</button></div>`).join('');
+  const cards = Object.keys(CARDS).filter(k => !CARDS[k].junk && !CARDS[k].attr).sort((a, c) => CARDS[a].cost - CARDS[c].cost).map(k => `<div class="dcard"><i>${CARDS[k].cost}</i><span>${CARDS[k].name}</span><button type="button" data-act="dbgCard" data-arg="${k}:-1">−</button><b class="${cnt[k] ? '' : 'z'}">${cnt[k] || 0}</b><button type="button" data-act="dbgCard" data-arg="${k}:1">+</button></div>`).join('');
   const extra = EN.partCards({parts: Object.fromEntries(SLOTS.map(p => [p.id, {id: DBG.parts[p.id]}]))});
   showOv(`<h2>デッキ ${DBG.deck.length}枚${extra.length ? ` <span style="color:var(--dim);font-size:11px;font-weight:400">+パーツ ${extra.map(k => CARDS[k].name).join('・')}</span>` : ''}</h2>
     <div class="seg">${presets}</div><div class="dbg-grid">${cards}</div>
@@ -2948,7 +2972,7 @@ function act(a, arg, el){
     case 'pick': {
       UI.pick = UI.pick === arg ? null : arg;
       const v = el.dataset.view;
-      ({learn:showLearn, rest:showRest, defrag:showDefrag, shop:showShop, event:showEventRoom, part:showPartOffer})[v]();
+      ({learn:showLearn, rest:showRest, defrag:showDefrag, shop:showShop, event:showEventRoom, part:showPartOffer, attach:showAttach})[v]();
       break;
     }
     case 'learn': if(UI.pick){ S.run.deck.push(UI.pick); afterLearn(); } break;
@@ -2961,6 +2985,8 @@ function act(a, arg, el){
       if(UI.pick === 'repair'){ S.run.body = Math.min(S.run.bodyMax, S.run.body + 15); for(const p of SLOTS) S.run.parts[p.id].damaged = false; completeRoom(); }
       else if(UI.pick === 'defrag'){ UI.pick = null; UI.back = 'rest'; showDefrag(); }
       break;
+    case 'backAttach': UI.pick = null; hideOv(); showShop(); break;
+    case 'attach': { const k = UI.pick, a = UI.attachA, run = S.run; if(!k || !a || run.scrap < DATA.attrRule.price) break; const i = run.deck.indexOf(k); if(i < 0) break; const key = k + '@' + a; DATA.regAttrCard(CARDS, key); run.deck[i] = key; run.scrap -= DATA.attrRule.price; UI.attrOffers[UI.attachI] = null; UI.pick = null; hideOv(); showShop(); break; }
     case 'backDefrag': UI.pick = null; if(UI.back === 'shop') showShop(); else if(UI.back === 'event') showEventRoom(); else { UI.pick = 'defrag'; showRest(); } break;
     case 'del': if(UI.pick){ const i = S.run.deck.indexOf(UI.pick); if(i >= 0) S.run.deck.splice(i, 1); UI.pick = null; if(UI.back === 'shop'){ S.run.scrap -= DATA.shop.defrag; showShop(); } else completeRoom(); } break;
     case 'buy': {
@@ -2968,6 +2994,7 @@ function act(a, arg, el){
       if(pk[0] === 'c'){ const i = +pk.slice(1), k = UI.offers[i]; if(!k || run.scrap < price(k)) break; run.scrap -= price(k); run.deck.push(k); UI.offers[i] = null; UI.pick = null; showShop(); }
       else if(pk === 'repair'){ if(run.scrap < sh.repairCost) break; run.scrap -= sh.repairCost; run.body = Math.min(run.bodyMax, run.body + sh.repairBody); for(const p of SLOTS) run.parts[p.id].damaged = false; UI.pick = null; showShop(); }
       else if(pk === 'defrag'){ if(run.scrap < sh.defrag) break; UI.pick = null; UI.back = 'shop'; showDefrag(); }
+      else if(pk[0] === 'a'){ const i = +pk.slice(1), a = UI.attrOffers[i]; if(!a || run.scrap < DATA.attrRule.price) break; UI.attachA = a; UI.attachI = i; UI.pick = null; showAttach(); }
       break;
     }
     case 'leave': completeRoom(); break;

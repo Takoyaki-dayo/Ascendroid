@@ -28,7 +28,7 @@ function parseCSV(src){
 }
 const read = f => parseCSV(fs.readFileSync(path.join(DIR, f), 'utf8'));
 
-const T = {cards:{}, keywords:[], parts:{}, foes:{}, events:{}, lines:{rules:[], room:{}}, terms:{}};
+const T = {cards:{}, keywords:[], parts:{}, foes:{}, events:{}, lines:{rules:[], room:{}}, terms:{}, attrs:{}};
 for(const r of read('cards.csv')) T.cards[r['キー']] = {name:r['名前'], text:r['テキスト']};
 for(const r of read('keywords.csv')) T.keywords.push({key:r['キー'], name:r['名前'], desc:r['説明']});
 for(const r of read('parts.csv')) T.parts[r['キー']] = {name:r['名前'], text:r['テキスト']};
@@ -42,6 +42,8 @@ for(const r of read('lines.csv')){
   rule.text.push(t);
 }
 for(const r of read('terms.csv')) T.terms[r['キー']] = r['名前'];
+// 属性(0.28.0): 名前はカード名の頭に付く。テキストが空なら数値から作る(data/attrs.js の attrText)
+if(fs.existsSync(path.join(DIR, 'attrs.csv'))) for(const r of read('attrs.csv')) T.attrs[r['キー']] = {name:r['名前'], text:r['テキスト']};
 
 // data/*.js に流し込む処理(生成するファイルにそのまま入る)
 function apply(D, T){
@@ -54,6 +56,7 @@ function apply(D, T){
   D.keywords = {}; D.kwName = {};
   for(const w of T.keywords){ D.keywords[w.name] = w.desc; D.kwName[w.key] = w.name; }
   for(const k in T.parts) if(D.parts[k]) Object.assign(D.parts[k], T.parts[k]);
+  for(const k in (T.attrs || {})) if(D.attrs && D.attrs[k]) Object.assign(D.attrs[k], T.attrs[k]);
   for(const [id, n] of Object.entries(T.foes)){
     const [k, where, i] = id.split('.'), f = D.foes[k]; if(!f) continue;
     if(!where) f.name = n;
@@ -75,4 +78,4 @@ window.DATA = window.DATA || {};
 (${apply.toString()})(DATA, ${JSON.stringify(T, null, 1)});
 `;
 fs.writeFileSync(path.join(ROOT, 'data', 'text.js'), out);
-console.log(`data/text.js: カード${Object.keys(T.cards).length} キーワード${T.keywords.length} パーツ${Object.keys(T.parts).length} 敵${Object.keys(T.foes).length} イベント${Object.keys(T.events).length} セリフ${T.lines.rules.length}条件 用語${Object.keys(T.terms).length}`);
+console.log(`data/text.js: カード${Object.keys(T.cards).length} 属性${Object.keys(T.attrs).length} キーワード${T.keywords.length} パーツ${Object.keys(T.parts).length} 敵${Object.keys(T.foes).length} イベント${Object.keys(T.events).length} セリフ${T.lines.rules.length}条件 用語${Object.keys(T.terms).length}`);

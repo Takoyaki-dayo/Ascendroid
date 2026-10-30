@@ -36,8 +36,11 @@ function wbApply(p){
     if(c === null){ if(CARDS0[k]) CARDS0[k].cut = true; continue; }
     CARDS0[k] = JSON.parse(JSON.stringify(c));
   }
+  // 属性(0.28.0): 工房の属性 {key: 定義 | null(消す)}。attrTest は「最初のデッキにこの属性付きで入れるカード」
+  for(const [k, a] of Object.entries(p.attrs || {})){ if(a === null) delete DATA.attrs[k]; else DATA.attrs[k] = JSON.parse(JSON.stringify(a)); }
   if(Array.isArray(p.startDeck) && p.startDeck.length) DATA.startDeck = p.startDeck.filter(k => CARDS0[k] && !CARDS0[k].cut);
   applyEcon();
+  for(const t of p.attrTest || []) if(CARDS[t.card] && DATA.attrs[t.attr] && DATA.attrOk(CARDS[t.card], t.attr)){ const key = t.card + '@' + t.attr; DATA.regAttrCard(CARDS, key); DATA.startDeck.push(key); }
   if(DBG) DBG.deck = DBG.deck.filter(k => CARDS[k] && !CARDS[k].cut);
   return true;
 }

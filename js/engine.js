@@ -199,6 +199,22 @@ function decayBlock(b){
   else if(bd.type === 'mul') b.block = Math.floor(b.block * bd.v);
   else if(bd.type === 'life' && b.T >= b.blockExp) b.block = 0;
 }
+// 属性(0.28.0、data/attrs.js): カードに付いた属性の定義
+const attrOf = c => c && c.attr && D.attrs && D.attrs[c.attr] ? D.attrs[c.attr] : null;
+// 属性の効果。e・uid は当たった(狙った)敵とユニット(無ければ自分への効果だけ)。n はそのヒットのダメージ(もう1回当たる用)
+function attrFx(st, A, e, uid, ev, n){
+  const b = st.b, f = A.fx || {}, live = e && e.alive && uid && e.units[uid] && !e.units[uid].broken;
+  if(f.crack && live){ e.units[uid].crack += f.crack; ev.push({kind:'crack', e:e.i, unit:uid, n:f.crack}); }
+  if(f.delay && e && e.alive){ const v = delayFoe(e, f.delay); ev.push({kind:'delay', e:e.i, n:v, anger:pasN(e, 'punctual')}); }
+  if(f.gain){ b.charge = (b.charge || 0) + f.gain; ev.push({kind:'charge', n:f.gain}); }
+  if(f.block){ gainBlock(b, f.block); ev.push({kind:'block', n:f.block}); }
+  if(f.draw){ const m = drawN(b, f.draw); ev.push({kind:'draw', n:m}); }
+  if(f.again && live && n != null) hitFoe(st, e, n, ev, uid);
+}
+// ヒットごとの属性を付けて当てる
+function hitA(st, c, e, n, ev, uid){ hitFoe(st, e, n, ev, uid); const A = attrOf(c); if(A && A.on === 'hit') attrFx(st, A, e, uid, ev, n); }
+// 決まった量の充電を消費するカード(spend.n)は、充電が足りないと使えない
+const spendShort = (b, c) => !!(c && c.spend && c.spend.n && (b.charge || 0) < c.spend.n);
 function applyCard(st, k, ti){
   const c = D.cards[k], b = st.b, ev = [];
   const T = parseT(ti);
@@ -207,13 +223,15 @@ function applyCard(st, k, ti){
   const uidOf = e => !c.all && T.uid && e.units[T.uid] && !e.units[T.uid].broken ? T.uid : defaultUid(e);
   if(c.dmg){
     const n = dmgOf(st, c);
-    for(const e of targets) for(const k of (c.all ? liveUids(e) : [uidOf(e)])) for(let h = 0; h < (c.dmg.x || 1); h++){ if(!e.alive || e.units[k].broken) break; hitFoe(st, e, n, ev, k); }
+    for(const e of targets) for(const k of (c.all ? liveUids(e) : [uidOf(e)])) for(let h = 0; h < (c.dmg.x || 1); h++){ if(!e.alive || e.units[k].broken) break; hitA(st, c, e, n, ev, k); }
   }
   // 充電: spend は貯めた充電をすべて消費し、1につき dmg / block。gain は充電を得る(消費の後)
+  // spend.n(0.28.0): 決まった量 n を消費し、dmg / block はその合計(1あたりではない)。足りなければ使えない(spendShort)
   if(c.spend){
-    const n = b.charge || 0; b.charge = 0; ev.push({kind:'spend', n});
-    if(n > 0 && c.spend.dmg){ const d = dmgOf(st, c, {t:c.spend.dmg.t, n:c.spend.dmg.n * n}); for(const e of targets) for(const k of (c.all ? liveUids(e) : [uidOf(e)])) if(e.alive && !e.units[k].broken) hitFoe(st, e, d, ev, k); }
-    if(n > 0 && c.spend.block){ const m = c.spend.block * n + fx(st, 'dur', 'block'); gainBlock(b, m); ev.push({kind:'block', n:m}); }
+    const fixed = !!c.spend.n, n = fixed ? Math.min(c.spend.n, b.charge || 0) : (b.charge || 0); b.charge = (b.charge || 0) - n; ev.push({kind:'spend', n});
+    const mul = fixed ? (n >= c.spend.n ? 1 : 0) : n;
+    if(mul > 0 && c.spend.dmg){ const d = dmgOf(st, c, {t:c.spend.dmg.t, n:c.spend.dmg.n * mul}); for(const e of targets) for(const k of (c.all ? liveUids(e) : [uidOf(e)])) if(e.alive && !e.units[k].broken) hitA(st, c, e, d, ev, k); }
+    if(mul > 0 && c.spend.block){ const m = c.spend.block * mul + fx(st, 'dur', 'block'); gainBlock(b, m); ev.push({kind:'block', n:m}); }
   }
   if(c.gain){ b.charge = (b.charge || 0) + c.gain; ev.push({kind:'charge', n:c.gain}); }
   if(c.crack) for(const e of targets) if(e.alive){ const k = uidOf(e); e.units[k].crack += c.crack; ev.push({kind:'crack', e:e.i, unit:k, n:c.crack}); }
@@ -224,13 +242,16 @@ function applyCard(st, k, ti){
   if(c.draw){ const n = drawN(b, c.draw); if(c.borrow) b.drawIn += c.draw * RULE.draw; ev.push({kind:'draw', n, borrow: !!c.borrow}); }
   // 0.17.0: スウィフトはディレイに統一(パーツの効果も敵へのディレイ)
   if(c.cost === 0){ const s = fx(st, 'mob', 'zeroDelay'); if(s) for(const e of b.foes) if(e.alive){ const v = delayFoe(e, s); ev.push({kind:'delay', e:e.i, n:v, anger:pasN(e, 'punctual')}); } }
+  // 発動したときの属性: 全体のカードは敵ごと、単体は狙った敵、狙わないカードは自分への効果だけ
+  const A = attrOf(c);
+  if(A && A.on === 'cast'){ if(targets.length) for(const e of (c.all ? targets : targets.slice(0, 1))) attrFx(st, A, e, uidOf(e), ev); else attrFx(st, A, null, null, ev); }
   return ev;
 }
 function fireTimer(st, t){
   const b = st.b, c = D.cards[t.k], ev = [];
   let e = b.foes[t.e];
   if(!e || !e.alive) e = b.foes.find(f => f.alive);
-  if(e) hitFoe(st, e, dmgOf(st, c, c.timer.dmg), ev, t.unit);
+  if(e) hitA(st, c, e, dmgOf(st, c, c.timer.dmg), ev, e === b.foes[t.e] ? t.unit : defaultUid(e));
   return ev;
 }
 // 敵の攻撃1回。extra は連携の上乗せ
@@ -354,6 +375,9 @@ function* spendGen(st, cost, k, ti, noInt){
     if(left === 0){
       out.completeAt = out.elapsed;
       if(c){
+        // JUST のときの属性(0.28.0): このサイクルに行動する敵それぞれに効く。効果はカードの効果と一緒に出す
+        const jev = [], JA = attrOf(c);
+        if(real && JA && JA.on === 'just') for(const e of b.foes) if(e.alive && e.r <= 0) attrFx(st, JA, e, actorUid(e, cur(e)), jev);
         if(real) for(const e of b.foes){
           if(e.alive && e.r <= 0 && cur(e).ch && !e.chain){
             const nm = cur(e).n, jp = actorUid(e, cur(e)); advance(e);
@@ -364,6 +388,7 @@ function* spendGen(st, cost, k, ti, noInt){
         }
         if(c.parry && real) b.parryNow = true;
         const ev = applyCard(st, k, ti);
+        if(jev.length) ev.unshift(...jev);
         b.cast = null;
         yield {type:'card', ev};
         if(st.run.body <= 0){ out.dead = true; b.parryNow = false; return out; }
@@ -451,7 +476,10 @@ function boundary(st, when){
   ev.eject = ej;
   return ev;
 }
+// 属性付きのカード(「元@属性」)を D.cards に登録する。登録できない(属性が無くなった)ものはデッキから外す
+function regDeck(run){ if(!D.regAttrCard) return; run.deck = run.deck.filter(k => D.regAttrCard(D.cards, k)); }
 function newBattle(run, encKey){
+  regDeck(run);
   const E = D.encounters[encKey];
   const st = {run, b:null};
   const parts = {};
@@ -479,6 +507,7 @@ function actions(st){
   const b = st.b, out = [], seen = new Set();
   b.hand.forEach((cd, i) => {
     const c = D.cards[cd.k];
+    if(spendShort(b, c)) return;
     // ユニットが2つ以上ある敵は、ユニットごとに狙いを分ける
     const ts = c.tgt ? b.foes.filter(e => e.alive).flatMap(e => liveUids(e).length > 1 ? liveUids(e).map(k => e.i + '.' + k) : [e.i]) : [null];
     for(const t of ts){ const key = cd.k + '|' + t; if(seen.has(key)) continue; seen.add(key); out.push({type:'card', i, k:cd.k, t}); }
@@ -619,7 +648,7 @@ function nextNodes(run){
 
 const API = {RULE, makeFoe, defaultUid, liveUids, actorUid, parseT, gap, reloadCost, rngFrom, setRandom, shuffle, pick, clone, cur, advance, partOf, fx, partCards, battleDeck, partMax, dmgOf, blockOf,
   drawOne, drawN, upcoming, arrivals, applyCard, enemyAct, spendGen, runGen, newBattle, actions, actionCost, beginAction, endAction, doAction,
-  newRun, nextArea, delayFoe, lootBack, fledAll, pasN, genMap, nextNodes, reachAfter, scaledFoe, alertLevel, addAlert, alertGain, encFor, poolIndex};
+  newRun, nextArea, delayFoe, lootBack, fledAll, pasN, attrOf, spendShort, regDeck, genMap, nextNodes, reachAfter, scaledFoe, alertLevel, addAlert, alertGain, encFor, poolIndex};
 root.ENGINE = API;
 if(typeof module !== 'undefined') module.exports = API;
 })(typeof window !== 'undefined' ? window : globalThis);

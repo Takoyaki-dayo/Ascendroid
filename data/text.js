@@ -11,6 +11,7 @@ window.DATA = window.DATA || {};
   D.keywords = {}; D.kwName = {};
   for(const w of T.keywords){ D.keywords[w.name] = w.desc; D.kwName[w.key] = w.name; }
   for(const k in T.parts) if(D.parts[k]) Object.assign(D.parts[k], T.parts[k]);
+  for(const k in (T.attrs || {})) if(D.attrs && D.attrs[k]) Object.assign(D.attrs[k], T.attrs[k]);
   for(const [id, n] of Object.entries(T.foes)){
     const [k, where, i] = id.split('.'), f = D.foes[k]; if(!f) continue;
     if(!where) f.name = n;
@@ -648,6 +649,7 @@ window.DATA = window.DATA || {};
   "ui.pas.loot": "盗んだスクラップは、撃破すると取り戻せる。",
   "ui.pas.hoard": "飲み込んだカードは、撃破すると捨て札に戻る。",
   "ui.pas.floor": "行動のコストが{n}未満にならない。",
+  "ui.attr.none": "この属性を付けられるカードがデッキに無い。",
   "ui.win.fled": "{name}に逃げられた。",
   "ui.win.loot": "取り戻した{n}",
   "ui.stname.haste": "加速",
@@ -697,5 +699,6 @@ window.DATA = window.DATA || {};
   "ui.alert.poolUp": "出てくる敵が入れ替わった",
   "ui.duct.text": "点検用の狭い通路。工場の目がここまでは届かない。",
   "ui.alert.gauge": "警戒"
- }
+ },
+ "attrs": {}
 });

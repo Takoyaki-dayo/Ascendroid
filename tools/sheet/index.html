@@ -90,6 +90,7 @@ td .k{display:block;font-family:var(--f-mono);font-size:10.5px;color:var(--dim);
 .newkey input{flex:1;min-width:0;border:1px solid var(--line);border-radius:5px;padding:5px 8px;background:var(--panel);font-family:var(--f-mono)}
 /* 送る */
 .send{border-top:1px solid var(--line);padding:10px 14px;display:flex;flex-direction:column;gap:8px;background:var(--panel);border-radius:0 0 10px 10px}
+.bi .one{overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .bis{display:flex;flex-direction:column;gap:8px}
 .bi{display:flex;flex-direction:column;gap:3px;padding:6px 0;border-bottom:1px solid var(--line)} .bi>b,.bi>a b{font-size:13px} .bi .badge{align-self:flex-start}
 .diff{display:flex;flex-direction:column;gap:3px;max-height:140px;overflow:auto}
@@ -474,11 +475,44 @@ function bulkCards(){
   return bulkKeys().map(k => {
     const w = WBDRAFT[k] || (S.wb && S.wb.key === k && S.wb.dirty ? S.wb : null), card = w ? w.card : WB[k].card;
     const base = D.cards[k] ? wbBase(k) : null;
-    return {key:k, w, card, isNew:!base, changes: base ? diff(base, card).filter(c => c.path !== 'text') : []};
+    const rar = w ? (w.rarity || '') : (WB[k].rarity || ''), idea = w ? (w.idea || '') : (WB[k].idea || '');
+    const changes = base ? diff(base, card).filter(c => c.path !== 'text' || c.to !== show(genText(card))) : [];
+    if(base && rar !== wbBaseRarity(k)) changes.push({path:'レア度', from:RARITY[wbBaseRarity(k)] || '—', to:RARITY[rar] || '—'});
+    return {key:k, w, card, isNew:!base, changes, idea};
   });
 }
-function bulkCount(){ return bulkKeys().length + bulkEdits().length; }
+// 送り済みでまだ対応していないもの(まとめて相談に含めていないもの)。まとめて相談に入れると、その相談の中で一緒に答える
+function bulkOpenReqs(){
+  const inBatch = new Set(REQ.filter(r => r.type === 'batch' && (r.status === 'open' || r.status === 'discuss')).flatMap(r => r.refs || []));
+  return REQ.filter(r => r.type !== 'batch' && (r.status === 'open' || r.status === 'discuss') && !inBatch.has(r.id)).sort((a, b) => (a.at || '').localeCompare(b.at || ''));
+}
+function bulkReviewCards(){
+  const inBatch = new Set(REQ.filter(r => r.type === 'batch' && (r.status === 'open' || r.status === 'discuss')).flatMap(r => (r.cards || []).map(c => c.key)));
+  const mine = new Set(bulkKeys());
+  return Object.entries(WB).filter(([k, d]) => d.status === 'review' && !mine.has(k) && !inBatch.has(k)).map(([k, d]) => ({key:k, card:d.card, idea:d.idea || ''}));
+}
+function bulkCount(){ return bulkKeys().length + bulkEdits().length + bulkOpenReqs().length + bulkReviewCards().length; }
+// 送っていない編集は端末に保存しておく(ページの更新や読み込み直しで消えないように)
+const KEEP_KEY = 'asc.sheet.unsent';
+function keepUnsent(){
+  clearTimeout(keepUnsent.t);
+  keepUnsent.t = setTimeout(() => {
+    const wb = Object.assign({}, WBDRAFT); if(S.wb && S.wb.dirty) wb[S.wb.key] = S.wb;
+    const e = Object.assign({}, EDRAFT);
+    if(S.draft && KBY[S.kind] && !KBY[S.kind].wb && S.kind !== 'requests' && eDirty(S.kind, S.draft, S.comment)) e[S.kind + '|' + (S.draft.isNew ? '+' : S.draft.key)] = {kind:S.kind, draft:S.draft, comment:S.comment, json:S.json, jsonText:S.jsonText};
+    try{ localStorage.setItem(KEEP_KEY, JSON.stringify({wb, e, text:S.bulkText || ''})); }catch(_){}
+  }, 300);
+}
+function restoreUnsent(){
+  try{
+    const o = JSON.parse(localStorage.getItem(KEEP_KEY) || 'null'); if(!o) return;
+    for(const [k, w] of Object.entries(o.wb || {})) if(w && w.card) WBDRAFT[k] = Object.assign(w, {dirty:true});
+    for(const [k, v] of Object.entries(o.e || {})) if(v && v.draft && KBY[v.kind] && (v.draft.isNew || KBY[v.kind].items().some(x => x.key === v.draft.key))) EDRAFT[k] = v;
+    S.bulkText = o.text || '';
+  }catch(_){}
+}
 function bulkLabel(){
+  keepUnsent();
   const b = $('#bulkBtn'); if(!b) return;
   const n = bulkCount();
   b.disabled = !DB;
@@ -488,13 +522,18 @@ function bulkLabel(){
 const dlHTML = ch => ch.length ? `<div class="diff">${ch.map(c => `<div class="dl"><span class="p" title="${esc(c.path)}">${esc(c.path)}</span><span class="v"><s>${esc(c.from)}</s> → <b>${esc(c.to)}</b></span></div>`).join('')}</div>` : '';
 function bulkHTML(){
   const cs = bulkCards(), es = bulkEdits();
-  const cards = cs.map(c => `<div class="bi"><b>${esc(c.card.name || c.key)}</b>${c.isNew ? '<span class="badge new">新規</span>' : ''}${c.w ? '<span class="badge w-review">未保存</span>' : ''}${dlHTML(c.changes) || (c.isNew ? `<div class="note">${fillText(c.card)}</div>` : '<div class="note">数値の変更なし</div>')}</div>`).join('');
+  const os = bulkOpenReqs(), rc = bulkReviewCards();
+  const cards = cs.map(c => `<div class="bi"><b>${esc(c.card.name || c.key)}</b>${c.isNew ? '<span class="badge new">新規</span>' : ''}${c.w ? '<span class="badge w-review">未保存</span>' : ''}${dlHTML(c.changes) || (c.isNew ? `<div class="note">${fillText(c.card)}</div>` : c.idea ? '' : '<div class="note">本体から変えていない</div>')}${c.idea ? `<div class="cm">${esc(c.idea)}</div>` : ''}</div>`).join('');
+  const oneLine = r => r.kind === 'general' ? '' : r.changes && r.changes.length ? r.changes.map(c => `${c.path}: ${c.to}`).join(' / ') : '';
+  const sent = os.map(r => `<div class="bi"><b>${r.kind === 'general' ? '全体' : esc(KBY[r.kind] ? KBY[r.kind].label : r.kind)}${r.label ? ' · ' + esc(r.label) : ''}</b>${oneLine(r) ? `<div class="note one">${esc(oneLine(r))}</div>` : ''}${r.comment ? `<div class="cm one">${esc(r.comment)}</div>` : ''}${(r.thread || []).length ? `<div class="note">やりとり ${r.thread.length}</div>` : ''}</div>`).join('')
+    + rc.map(c => `<div class="bi"><b>カード · ${esc(c.card.name || c.key)}</b><span class="badge w-review">添削待ち</span>${c.idea ? `<div class="cm one">${esc(c.idea)}</div>` : ''}</div>`).join('');
   const edits = es.map(e => { const d = reqDoc(e.kind, e.draft, e.comment); return `<div class="bi"><b>${esc(KBY[e.kind].label)} · ${esc(d.label)}</b>${d.type === 'new' ? '<span class="badge new">追加</span>' : ''}${dlHTML(d.changes)}${d.comment ? `<div class="cm">${esc(d.comment)}</div>` : ''}</div>`; }).join('');
-  return `<div class="side-h"><div><h2>まとめて相談</h2><span class="k">カード ${cs.length}・そのほか ${es.length}</span></div><button class="btn quiet x" type="button" id="closeSide">閉じる</button></div>
+  return `<div class="side-h"><div><h2>まとめて相談</h2><span class="k">未送信: カード ${cs.length}・そのほか ${es.length} / 送り済み ${os.length + rc.length}</span></div><button class="btn quiet x" type="button" id="closeSide">閉じる</button></div>
   <div class="side-b">
     ${cs.length ? `<div class="grp"><h3>カード(添削待ちにする)</h3>${cards}</div>` : ''}
     ${es.length ? `<div class="grp"><h3>敵・パーツなどの変更</h3>${edits}</div>` : ''}
-    ${!cs.length && !es.length ? '<div class="note">送っていない変更はありません。下に相談だけ書いて送ることもできます。</div>' : ''}
+    ${os.length || rc.length ? `<div class="grp"><h3>送り済みで対応待ち(${os.length + rc.length}件・一緒に相談する)</h3>${sent}</div>` : ''}
+    ${!cs.length && !es.length && !os.length && !rc.length ? '<div class="note">相談するものはありません。下に相談だけ書いて送ることもできます。</div>' : ''}
     <div class="grp"><h3>全体への相談・質問</h3><textarea id="bulkText" class="wtext" placeholder="例: 序盤が単調な気がする。この変更で手応えが出るか見てほしい">${esc(S.bulkText || '')}</textarea></div>
   </div>
   <div class="send"><div class="row btns"><button class="btn" type="button" id="bulkSend"${DB ? '' : ' disabled'}>まとめて送る</button></div></div>`;
@@ -502,7 +541,8 @@ function bulkHTML(){
 async function bulkSend(){
   if(!DB) return;
   const cs = bulkCards(), es = bulkEdits().filter(e => !(e.draft.isNew && !e.draft.key.trim())), text = (S.bulkText || '').trim();
-  if(!cs.length && !es.length && !text) return;
+  const os = bulkOpenReqs(), rc = bulkReviewCards();
+  if(!cs.length && !es.length && !os.length && !rc.length && !text) return;
   const btn = $('#bulkSend'); if(btn) btn.disabled = true;
   const now = new Date().toISOString();
   try{
@@ -511,7 +551,8 @@ async function bulkSend(){
       else await DB.doc('cards/' + c.key).update({status:'review', at:now});
     }
     const items = es.map(e => JSON.parse(JSON.stringify(reqDoc(e.kind, e.draft, e.comment), (k, v) => k === 'at' || k === 'status' || k === 'thread' ? undefined : v)));
-    const doc = {at:now, kind:'batch', key:'', label:`カード${cs.length}・そのほか${es.length}`, type:'batch', cards:cs.map(c => ({key:c.key, name:c.card.name || c.key, isNew:c.isNew, changes:c.changes})), items, changes:[], comment:text, status:'open', thread:[]};
+    const cards = cs.map(c => ({key:c.key, name:c.card.name || c.key, isNew:c.isNew, changes:c.changes})).concat(rc.map(c => ({key:c.key, name:c.card.name || c.key, isNew:!D.cards[c.key], changes:[]})));
+    const doc = {at:now, kind:'batch', key:'', label:`カード${cards.length}・変更${items.length}・依頼${os.length}`, type:'batch', cards, items, refs:os.map(r => r.id), changes:[], comment:text, status:'open', thread:[]};
     await DB.collection('requests').add(doc);
     for(const e of es){
       delete EDRAFT[e.kind + '|' + (e.draft.isNew ? '+' : e.draft.key)];
@@ -672,7 +713,8 @@ function reqHTML(r, withItem){
 function batchBody(r){
   const cs = (r.cards || []).map(c => `<div class="bi"><a data-goto="cards|${esc(c.key)}"><b>カード · ${esc(c.name)}</b></a>${c.isNew ? '<span class="badge new">新規</span>' : ''}${dlHTML(c.changes || [])}</div>`).join('');
   const is = (r.items || []).map(d => `<div class="bi"><a data-goto="${esc(d.kind)}|${esc(d.key || '')}"><b>${esc(KBY[d.kind] ? KBY[d.kind].label : d.kind)} · ${esc(d.label || d.key)}</b></a>${d.type === 'new' ? '<span class="badge new">追加</span>' : ''}${dlHTML(d.changes || [])}${d.comment ? `<div class="cm">${esc(d.comment)}</div>` : ''}</div>`).join('');
-  return cs || is ? `<div class="bis">${cs}${is}</div>` : '';
+  const rs = (r.refs || []).map(id => REQ.find(x => x.id === id)).filter(Boolean).map(x => `<div class="bi"><b>${x.kind === 'general' ? '全体' : esc(KBY[x.kind] ? KBY[x.kind].label : x.kind)}${x.label ? ' · ' + esc(x.label) : ''}</b><span class="badge ${esc(x.status)}">${STATUS[x.status] || x.status}</span>${x.comment ? `<div class="cm one">${esc(x.comment)}</div>` : ''}</div>`).join('');
+  return cs || is || rs ? `<div class="bis">${cs}${is}${rs ? `<div class="note">一緒に相談する依頼 ${(r.refs || []).length}件</div>${rs}` : ''}</div>` : '';
 }
 function renderReqPane(){
   const f = S.reqFilter, rs = REQ.filter(r => f === 'all' || (f === 'active' ? r.status === 'open' || r.status === 'discuss' : r.status === f)).sort((a, b) => (b.at || '').localeCompare(a.at || ''));
@@ -792,7 +834,7 @@ const later = () => refreshDyn();
 document.addEventListener('input', e => {
   const t = e.target;
   if(t.id === 'q'){ S.q = t.value; renderList(); return; }
-  if(t.id === 'bulkText'){ S.bulkText = t.value; return; }
+  if(t.id === 'bulkText'){ S.bulkText = t.value; keepUnsent(); return; }
   if(t.id === 'w_reply' && S.wb){ S.wb.reply = t.value; return; }
   if(t.dataset && t.dataset.wb && S.wb){ const was = S.wb.dirty, r = wbInput(t.dataset.wb, t); S.wb.dirty = true; if(r === 'full') renderSide(); else wbRefresh(); if(!was){ bulkLabel(); if(innerWidth > 820) renderList(); } return; }
   if(t.id === 'comment'){ S.comment = t.value; refreshDyn(); return; }
@@ -843,6 +885,8 @@ function requestRender(side){
 }
 /* ---------- 共有データベース(依頼) ---------- */
 $('#ver').textContent = META.version ? `ゲーム ${META.version}${META.commit ? ' · ' + META.commit : ''}` : '';
+restoreUnsent();
+document.addEventListener('input', () => keepUnsent());
 renderAll();
 (async () => {
   const use = window.claude && window.claude.use;

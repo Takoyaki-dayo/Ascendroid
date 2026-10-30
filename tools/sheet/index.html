@@ -39,6 +39,10 @@ header h1{font-size:16px;margin:0;letter-spacing:.04em;font-weight:700}
 .tab:hover{background:var(--raised)}
 .tab.on{background:var(--cy-soft);color:var(--cy)}
 .tab .n{font-family:var(--f-num);font-size:11px;color:var(--foe);font-weight:700}
+.tab .n.rp{color:#fff;background:var(--just);border-radius:9px;padding:0 6px;line-height:16px}
+.badge.rp{background:var(--just);color:#fff;margin-left:4px}
+tr.row.hl td:first-child{box-shadow:inset 3px 0 0 var(--just)} tr.row.hl td{background:var(--just-soft)}
+.req.hl{border-color:var(--just);box-shadow:0 0 0 1px var(--just) inset}
 main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(360px,460px);gap:16px;padding-block:12px}
 .listwrap{min-width:0;display:flex;flex-direction:column;gap:8px;min-height:0}
 .tools{display:flex;gap:8px;align-items:center}
@@ -289,6 +293,13 @@ const S = {kind:'cards', sel:null, q:'', draft:null, json:false, jsonText:'', js
 let DB = null, REQ = [], dbState = 'wait';
 const openCount = (kind, key) => REQ.filter(r => r.kind === kind && r.key === key && (r.status === 'open' || r.status === 'discuss')).length;
 const kindOpen = kind => REQ.filter(r => r.kind === kind && (r.status === 'open' || r.status === 'discuss')).length;
+// Claude の返事にまだ答えていないもの(やりとりの最後が Claude)。一覧・タブ・依頼で目立たせる
+const lastWho = t => t && t.length ? t[t.length - 1].who : '';
+const needsMe = r => (r.status === 'open' || r.status === 'discuss') && lastWho(r.thread) === 'claude';
+const cardNeedsMe = d => !!d && d.status !== 'merged' && d.status !== 'cut' && lastWho(d.thread) === 'claude';
+const kindReplies = kind => kind === 'cards' ? Object.values(WB).filter(cardNeedsMe).length : REQ.filter(r => needsMe(r) && (r.kind === kind || (r.type === 'batch' && kind === 'requests'))).length;
+const itemReplies = (kind, key) => REQ.filter(r => needsMe(r) && r.kind === kind && r.key === key).length;
+const allReplies = () => REQ.filter(needsMe).length + Object.values(WB).filter(cardNeedsMe).length;
 function curItems(){ return KBY[S.kind].items(); }
 function curItem(){ return S.sel ? curItems().find(it => it.key === S.sel) : null; }
 
@@ -360,7 +371,7 @@ function wbListHTML(){
   return `<div class="wbbar">${fl}<span class="sp"></span><span class="note">1サイクルあたり(標準パーツ込み)。<b class="up">水色</b>は初期カードより強い、<b class="dn">赤</b>は弱い</span></div>
   <table class="wbt"><thead><tr><th>レア度</th><th>コスト</th><th>名前</th><th>種類</th><th>効果(K-7)</th><th>1サイクルあたり</th><th>状態</th></tr></thead><tbody>${rows.map(r => {
     const th = r.doc && r.doc.thread ? r.doc.thread.length : 0, d = cnt(r.key);
-    return `<tr class="row${S.sel === r.key ? ' sel' : ''}${r.status === 'cut' ? ' cut' : ''}" data-key="${esc(r.key)}" tabindex="0"><td><span class="rar r-${r.rarity || 'none'}">${RARITY[r.rarity] || '—'}</span></td><td class="num">${r.card.cost}</td>
+    return `<tr class="row${S.sel === r.key ? ' sel' : ''}${r.status === 'cut' ? ' cut' : ''}${cardNeedsMe(r.doc) ? ' hl' : ''}" data-key="${esc(r.key)}" tabindex="0"><td><span class="rar r-${r.rarity || 'none'}">${RARITY[r.rarity] || '—'}</span></td><td class="num">${r.card.cost}</td>
       <td class="nm">${esc(r.card.name || '(名前なし)')}${d ? `<span class="badge new" title="最初のデッキの枚数">×${d}</span>` : ''}${wbUnsaved(r.key) ? '<span class="badge w-review" title="保存していない変更がある">未保存</span>' : ''}<span class="k">${esc(r.key)}${r.isNew ? ' · 新規' : ''}</span></td><td style="white-space:nowrap">${wbType(r.card)}</td><td class="tx">${fillText(r.card)}</td><td class="effc">${effHTML(r.card)}</td>
       <td>${wbStatusBadge(r.status)}${th ? ` <span class="note">💬${th}</span>` : ''}</td></tr>`; }).join('')}</tbody></table>`;
 }
@@ -602,8 +613,8 @@ addEventListener('message', e => { if(e.data && e.data.type === 'asc-ready' && !
 /* ---------- 描く ---------- */
 function renderTabs(){ bulkLabel();
   const all = REQ.filter(r => r.status === 'open' || r.status === 'discuss').length;
-  $('#tabs').innerHTML = KINDS.map(k => { const n = k.wb ? Object.values(WB).filter(d => d.status === 'reviewed').length : kindOpen(k.id); return `<button class="tab${S.kind === k.id ? ' on' : ''}" type="button" data-tab="${k.id}">${k.label}${n ? `<span class="n">${n}</span>` : ''}</button>`; }).join('')
-    + `<button class="tab${S.kind === 'requests' ? ' on' : ''}" type="button" data-tab="requests">依頼${all ? `<span class="n">${all}</span>` : ''}</button>`;
+  $('#tabs').innerHTML = KINDS.map(k => { const rp = kindReplies(k.id), n = k.wb ? 0 : kindOpen(k.id); return `<button class="tab${S.kind === k.id ? ' on' : ''}${rp ? ' hl' : ''}" type="button" data-tab="${k.id}">${k.label}${rp ? `<span class="n rp" title="Claude の返事">${rp}</span>` : n ? `<span class="n">${n}</span>` : ''}</button>`; }).join('')
+    + (() => { const rp = REQ.filter(needsMe).length; return `<button class="tab${S.kind === 'requests' ? ' on' : ''}${rp ? ' hl' : ''}" type="button" data-tab="requests">依頼${rp ? `<span class="n rp" title="Claude の返事">${rp}</span>` : all ? `<span class="n">${all}</span>` : ''}</button>`; })();
 }
 function renderList(){
   const req = S.kind === 'requests';
@@ -614,7 +625,7 @@ function renderList(){
   if(wbm){ $('#tbl').innerHTML = wbListHTML(); return; }
   const K = KBY[S.kind], q = S.q.trim().toLowerCase();
   const items = curItems().filter(it => !q || (it.name || '').toLowerCase().includes(q) || it.key.toLowerCase().includes(q));
-  $('#tbl').innerHTML = `<table><thead><tr>${K.head.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${items.map(it => { const cs = K.cells(it).slice(); if(eUnsent(S.kind, it.key)) cs[0] = cs[0].replace(/<\/td>$/, '<span class="badge w-review" title="送っていない変更がある">未送信</span></td>'); return `<tr class="row${S.sel === it.key ? ' sel' : ''}" data-key="${esc(it.key)}" tabindex="0">${cs.join('')}</tr>`; }).join('')}</tbody></table>`;
+  $('#tbl').innerHTML = `<table><thead><tr>${K.head.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${items.map(it => { const cs = K.cells(it).slice(); const rp = itemReplies(S.kind, it.key); if(rp) cs[0] = cs[0].replace(/<\/td>$/, '<span class="badge rp" title="Claude の返事がある">返事</span></td>'); if(eUnsent(S.kind, it.key)) cs[0] = cs[0].replace(/<\/td>$/, '<span class="badge w-review" title="送っていない変更がある">未送信</span></td>'); return `<tr class="row${S.sel === it.key ? ' sel' : ''}${rp ? ' hl' : ''}" data-key="${esc(it.key)}" tabindex="0">${cs.join('')}</tr>`; }).join('')}</tbody></table>`;
 }
 function fieldHTML(p, v, orig){
   const last = p.split('.').pop(), chg = JSON.stringify(v) !== JSON.stringify(getPath(orig, p)), id = 'f-' + p.replace(/[^\w]/g, '_');
@@ -703,11 +714,11 @@ function reqHTML(r, withItem){
   const item = withItem ? (r.kind === 'general' ? '<span class="t">全体</span>' : r.kind === 'batch' ? `<span class="t">まとめて相談 · ${esc(r.label || '')}</span>` : `<a data-goto="${esc(r.kind)}|${esc(r.key || '')}">${esc(K ? K.label : r.kind)}${r.label ? ' · ' + esc(r.label) : ''}</a>`) : '';
   const ch = (r.changes || []).map(c => `<div class="dl"><span class="p" title="${esc(c.path)}">${esc(c.path)}</span><span class="v"><s>${esc(c.from)}</s> → <b>${esc(c.to)}</b></span></div>`).join('');
   const thread = (r.thread || []).map(m => `<div class="msg ${m.who === 'claude' ? 'claude' : 'user'}"><span class="w">${m.who === 'claude' ? 'Claude' : 'あなた'} · ${fmt(m.at)}</span>${esc(m.text)}</div>`).join('');
-  return `<div class="req ${esc(r.status)}" data-req="${esc(r.id)}">
+  return `<div class="req ${esc(r.status)}${needsMe(r) ? ' hl' : ''}" data-req="${esc(r.id)}">
     <div class="req-h"><span class="badge ${esc(r.status)}">${STATUS[r.status] || r.status}</span>${r.type === 'new' ? '<span class="badge new">追加</span>' : r.type === 'note' ? '<span class="badge dropped">相談</span>' : ''}${item}<span class="d">${fmt(r.at)}${r.version ? ' · ' + esc(r.version) : ''}</span></div>
     ${r.type === 'batch' ? batchBody(r) : ''}${ch ? `<div class="diff">${ch}</div>` : ''}${r.type === 'new' && r.obj ? `<div class="note">キー ${esc(r.key)}: <code>${esc(JSON.stringify(r.obj)).slice(0, 300)}</code></div>` : ''}
     ${r.comment ? `<div class="cm">${esc(r.comment)}</div>` : ''}${thread}
-    ${r.status === 'done' || r.status === 'dropped' ? '' : `<div class="reply"><input type="text" data-reply="${esc(r.id)}" placeholder="返信" aria-label="返信"><button class="btn quiet" type="button" data-send-reply="${esc(r.id)}">返信</button><button class="btn quiet" type="button" data-drop="${esc(r.id)}">取り下げ</button></div>`}
+    ${r.status === 'done' || r.status === 'dropped' ? '' : `${needsMe(r) ? `<div class="reply"><button class="btn" type="button" data-agree="${esc(r.id)}">その案で</button><span class="note">違うときは下に返信</span></div>` : ''}<div class="reply"><input type="text" data-reply="${esc(r.id)}" placeholder="返信" aria-label="返信"><button class="btn quiet" type="button" data-send-reply="${esc(r.id)}">返信</button><button class="btn quiet" type="button" data-drop="${esc(r.id)}">取り下げ</button></div>`}
   </div>`;
 }
 function batchBody(r){
@@ -717,8 +728,9 @@ function batchBody(r){
   return cs || is || rs ? `<div class="bis">${cs}${is}${rs ? `<div class="note">一緒に相談する依頼 ${(r.refs || []).length}件</div>${rs}` : ''}</div>` : '';
 }
 function renderReqPane(){
-  const f = S.reqFilter, rs = REQ.filter(r => f === 'all' || (f === 'active' ? r.status === 'open' || r.status === 'discuss' : r.status === f)).sort((a, b) => (b.at || '').localeCompare(a.at || ''));
-  const fl = [['active', '対応待ち'], ['done', '反映済み'], ['all', 'すべて']].map(([k, n]) => `<button type="button" class="btn ${S.reqFilter === k ? '' : 'quiet'}" data-rf="${k}">${n}</button>`).join('');
+  const f = S.reqFilter, rs = REQ.filter(r => f === 'all' || (f === 'reply' ? needsMe(r) : f === 'active' ? r.status === 'open' || r.status === 'discuss' : r.status === f)).sort((a, b) => (needsMe(b) - needsMe(a)) || (b.at || '').localeCompare(a.at || ''));
+  const nr = REQ.filter(needsMe).length;
+  const fl = [['reply', `Claude の返事${nr ? ' ' + nr : ''}`], ['active', '対応待ち'], ['done', '反映済み'], ['all', 'すべて']].map(([k, n]) => `<button type="button" class="btn ${S.reqFilter === k ? '' : 'quiet'}" data-rf="${k}">${n}</button>`).join('');
   const general = `<div class="req"><div class="req-h"><span class="t">項目によらない依頼・相談</span></div><textarea id="generalText" placeholder="例: 新しいアーキタイプ「侵食」を作りたい。カード案は…" style="width:100%;min-height:60px;border:1px solid var(--line);border-radius:6px;padding:6px 8px;background:var(--panel)"></textarea><div class="reply"><span class="sp" style="flex:1"></span><button class="btn" type="button" id="sendGeneral"${DB ? '' : ' disabled'}>送る</button></div></div>`;
   return `<div class="reqs"><div class="filters">${fl}</div>${general}${rs.length ? rs.map(r => reqHTML(r, true)).join('') : `<div class="note">${dbState === 'wait' ? '読み込み中…' : dbState === 'off' ? 'この表示では依頼を読めません。' : 'まだ依頼はありません。'}</div>`}</div>`;
 }
@@ -776,6 +788,11 @@ async function sendGeneral(){
   catch(e){ toast('送れませんでした。もう一度試してください'); }
   renderAll();
 }
+// 「その案で」: Claude の案で進めてよい、と返して対応待ちに戻す
+async function agree(id){
+  const r = REQ.find(x => x.id === id); if(!r || !DB) return;
+  try{ await DB.doc('requests/' + id).update({thread:[...(r.thread || []), {who:'user', text:'その案で', at:new Date().toISOString()}], status:'open'}); toast('返しました'); }catch(e){ toast('送れませんでした'); }
+}
 async function reply(id){
   const r = REQ.find(x => x.id === id), inp = document.querySelector(`[data-reply="${CSS.escape(id)}"]`); if(!r || !inp || !DB) return;
   const t = inp.value.trim(); if(!t) return;
@@ -814,12 +831,13 @@ document.addEventListener('click', e => {
   const rf = t.closest('[data-rf]'); if(rf){ S.reqFilter = rf.dataset.rf; renderList(); return; }
   const go = t.closest('[data-goto]'); if(go){ const [k, key] = go.dataset.goto.split('|'); if(KBY[k]){ eStash(); S.kind = k; S.draft = null; renderAll(); if(key) selectItem(key); } return; }
   const sr = t.closest('[data-send-reply]'); if(sr){ reply(sr.dataset.sendReply); return; }
+  const ag = t.closest('[data-agree]'); if(ag){ agree(ag.dataset.agree); return; }
   const dr = t.closest('[data-drop]'); if(dr){ drop(dr.dataset.drop); return; }
   if(t.closest('#sendBtn')){ send(); return; }
   if(t.closest('#sendGeneral')){ sendGeneral(); return; }
   if(t.closest('#resetDraft')){ const it = curItem(); if(it){ startDraft(it); renderSide(); } return; }
-  if(t.closest('#closeSide')){ if(S.bulkOpen){ S.bulkOpen = false; renderAll(); return; } S.mobileOpen = false; S.wbDeckOpen = false; renderSide(); if(KBY[S.kind].wb) renderList(); return; }
-  if(t.closest('#addBtn') && KBY[S.kind].wb){ S.bulkOpen = false; wbStash(); const k = 'n' + Date.now().toString(36); S.sel = k; S.wbDeckOpen = false; wbStart(k); S.mobileOpen = true; renderAll(); setTimeout(() => { const n = $('#w_name'); if(n) n.focus(); }, 50); return; }
+  if(t.closest('#closeSide')){ if(S.bulkOpen){ S.bulkOpen = false; renderAll(); return; } S.mobileOpen = false; S.wbDeckOpen = false; renderSide(); if(KBY[S.kind] && KBY[S.kind].wb) renderList(); return; }
+  if(t.closest('#addBtn') && KBY[S.kind] && KBY[S.kind].wb){ S.bulkOpen = false; wbStash(); const k = 'n' + Date.now().toString(36); S.sel = k; S.wbDeckOpen = false; wbStart(k); S.mobileOpen = true; renderAll(); setTimeout(() => { const n = $('#w_name'); if(n) n.focus(); }, 50); return; }
   if(t.closest('#addBtn')){ S.bulkOpen = false; eStash(); const it = curItem(); S.draft = {isNew:true, key:'', obj:it ? clone(it.obj) : {}}; S.sel = null; S.json = true; S.jsonText = JSON.stringify(S.draft.obj, null, 2); S.jsonErr = ''; S.comment = ''; S.mobileOpen = true; renderAll(); return; }
 });
 document.addEventListener('keydown', e => { if(e.key === 'Enter'){ const row = e.target.closest && e.target.closest('tr.row'); if(row) selectItem(row.dataset.key); } });
@@ -899,7 +917,7 @@ renderAll();
     WB = {}; for(const d of s.docs) WB[d.id] = d.data(); wbState = 'on';
     const changed = !cur || JSON.stringify(WB[cur] || null) !== before;
     if(changed && S.wb && !S.wb.dirty && WB[cur]){ const rp = S.wb.reply; wbStart(cur); S.wb.reply = rp; }
-    requestRender(changed && KBY[S.kind].wb);
+    requestRender(changed && !!(KBY[S.kind] && KBY[S.kind].wb));
   }, () => { wbState = 'off'; });
   DB.doc('config/deck').onSnapshot(d => { WBDECK = d.exists ? d.data() : null; requestRender(S.wbDeckOpen && !S.wbDeckDraft); }, () => {});
   DB.collection('requests').onSnapshot(s => { REQ = s.docs.map(d => Object.assign({id:d.id}, d.data())); dbState = 'on'; if(busy()){ S.pending = true; renderTabs(); refreshDyn(); } else renderAll(); },

@@ -12,6 +12,8 @@ claude.ai のアーティファクトとして公開している: https://claude
 
 ## 依頼を反映する手順(Claude)
 
+Claude の返事は依頼(や工房のカード)の thread に1件ずつ書く。やりとりの最後が Claude で、まだ対応中(open/discuss、カードは merged/cut 以外)のものは、ページで紫に目立つ(タブの数字・一覧の「返事」・依頼の「Claude の返事」の絞り込み)。ユーザーが「その案で」を押すと thread に「その案で」が入り status が open に戻る(= Claude の案で反映してよい)
+
 まとめて相談(type:'batch')の形: `{at, kind:'batch', label, type:'batch', cards:[{key, name, isNew, changes}], items:[{kind, key, label, type, changes, obj?, comment}], refs:[依頼のid], comment, status, thread}`。refs の依頼もこの相談の中で答え、反映したらそれぞれの依頼の status も更新する。cards の中身は工房の `cards/<key>`(添削待ち)を読む。items は1件ずつの依頼と同じ形。返事は batch の thread に1つにまとめて書き、全体の相談(comment)にも答える
 
 

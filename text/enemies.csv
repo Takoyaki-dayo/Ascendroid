@@ -52,6 +52,7 @@ scanner.pat.2,連射,行動3
 accel,暴走機,名前
 accel.pat.0,突進,行動1
 accel.pat.1,蹴撃,行動2
+accel.passive.0,最短周期,パッシブ1
 twin,双腕作業機,名前
 twin.unit.core,胴体,ユニットの名前
 twin.unit.armL,左腕,ユニットの名前
@@ -78,6 +79,7 @@ squad.pat.2,盾突撃,行動3
 squad.pat.3,制圧射撃,行動4
 squad.pat.4,制圧射撃,行動5
 squad.passive.0,統率,パッシブ1
+squad.passive.1,最短周期,パッシブ2
 swarm,ドローン群,名前
 swarm.unit.d1,子機1,ユニットの名前
 swarm.unit.d2,子機2,ユニットの名前
@@ -141,7 +143,7 @@ welder.pat.0,挟み込み,行動1
 welder.pat.1,溶断,行動2
 welder.pat.2,再溶接,行動3
 welder.pat.3,溶断,行動4
-welder.say.start,壊れてるな。直してやる。,ひとこと: 戦闘の始め
+welder.say.start,壊れているな。直してやろう。,ひとこと: 戦闘の始め
 welder.say.pat:2,よし、直った。,ひとこと: 行動3のとき
 hound,猟犬,名前
 hound.unit.h1,一頭目,ユニットの名前

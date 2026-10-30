@@ -15,7 +15,6 @@ DATA.cards = {
   jab:      {cost:1, tgt:true, dmg:{t:'melee', n:4}},
   guard:    {cost:1, block:5},
   hack:     {cost:1, tgt:true, delay:2},
-  overclock:{cost:1, tgt:true, delay:1, draw:1},
   reload:   {cost:1, draw:2},
   timebomb: {cost:1, tgt:true, timer:{t:4, dmg:{t:'ranged', n:12}}},
   rapid:    {cost:2, tgt:true, dmg:{t:'melee', n:2, x:2}},
@@ -32,7 +31,6 @@ DATA.cards = {
   capacitor:{cost:1, gain:4},
   arc:      {cost:2, tgt:true, dmg:{t:'melee', n:4}, gain:2},
   coil:     {cost:0, gain:2, draw:1},
-  discharge:{cost:3, tgt:true, spend:{dmg:{t:'ranged', n:6}}},
   storm:    {cost:4, all:true, spend:{dmg:{t:'ranged', n:3}}},
   cell:     {cost:1, spend:{block:4}},
   // 敵のノイズ注入で山札に混ざる。何もせず、使うと消える(ショップや学習には出ない)
@@ -43,4 +41,4 @@ DATA.cards = {
 DATA.startDeck = ['jab','jab','jab','jab','guard','guard','guard','guard','slash','hack'];
 
 // 珍しいカード(イベントの報酬)
-DATA.rareCards = ['blow','parry','timebomb','emp','overclock','scatter'];
+DATA.rareCards = ['blow','parry','timebomb','emp','scatter'];

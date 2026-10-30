@@ -66,7 +66,9 @@ function advance(e){
 }
 // 加速した敵と、統率が効いている敵は、行動の間隔が縮む(最短2)
 const cmdN = e => (e.pas || []).reduce((s, p) => s + (p.k === 'command' && e.units[p.unit] && !e.units[p.unit].broken ? p.n : 0), 0);
-const gap = (e, dl) => { const r = (e.haste || 0) + cmdN(e); return r ? Math.max(Math.min(dl, 2), dl - r) : dl; };
+// 加速・統率で縮んだ間隔。下限はパッシブ floor(0.27.0。無ければ1)。もとの間隔が下限より短ければそのまま
+const floorN = e => (e.pas || []).reduce((m, p) => p.k === 'floor' ? Math.max(m, p.n) : m, 1);
+const gap = (e, dl) => { const r = (e.haste || 0) + cmdN(e); return r ? Math.max(Math.min(dl, floorN(e)), dl - r) : dl; };
 // ユニットの小道具
 const coreUid = e => e.uids.find(k => e.units[k].core) || null;
 const liveUids = e => e.uids.filter(k => !e.units[k].broken);

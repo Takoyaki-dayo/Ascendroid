@@ -22,7 +22,7 @@
 //     pt(0.18.2): 絵を持たないユニットの、本体の絵の中の在りか(絵の viewBox の座標)。印を置いてバーと線で結び、押すとそのユニットを狙う
 //   passives: パッシブ [{k, ...}](js/engine.js の先頭に一覧)。反応(react)と段階変化(phase)も画面ではパッシブとして見せる
 //   broke: {ユニット: pat} そのユニットが破壊されると行動の並びが変わる
-//   haste 加速(これ以後、行動の間隔が縮む。最短2) / zone:{at, len, d, p} 危険域(at サイクル後から len サイクル、こちらがカードを使い終えると p に d)
+//   haste 加速(これ以後、行動の間隔が縮む。下限はパッシブ floor、無ければ1) / zone:{at, len, d, p} 危険域(at サイクル後から len サイクル、こちらがカードを使い終えると p に d)
 //   react: 反応する。コスト min 以上のカードを使い始めると、1サイクル後に撃つ {min, d, p}
 //   sync: 連携する。連携を持つ敵が同じサイクルに攻撃すると、それぞれダメージ+sync
 //   pool: 倒したときの学習で出るカード候補
@@ -36,7 +36,7 @@ DATA.foes = {
     pat:[{d:8, dl:6, p:'calc', wt:2}, {d:4, hits:2, dl:5, p:'out', wt:1}, {d:0, dl:5, crack:1, wt:1}], pool:['jab','rapid','guard','flick','capacitor','discharge']},
   scout:    {kind:'scout', hp:74, start:2, ai:'rand',
     pat:[{d:3, dl:3, p:'out', wt:2}, {d:3, hits:3, dl:5, p:'mob', wt:1}, {d:7, dl:5, p:'out', wind:{w:2, poise:6}, rec:2, wt:1}],
-    pool:['jab','flick','overclock','reload','coil','arc']},
+    pool:['jab','flick','reload','coil','arc']},
   turret:   {kind:'turret', hp:66, start:7, react:{min:4, d:4, p:'arm'},
     pat:[{d:7, dl:8, p:'dur'}, {d:0, dl:4, armor:8}], pool:['wall','parry','emp','cell']},
   exec:     {kind:'exec', hp:86, start:5,
@@ -44,7 +44,7 @@ DATA.foes = {
     phase:{at:0.5, pat:[{d:7, dl:5, p:'out'}, {d:20, dl:7, p:'dur', ch:true, wind:{w:3, poise:12}, rec:3}]},
     pool:['slash','blow','crackshot','wall']},
   hacker:   {kind:'hacker', hp:81, start:6,
-    pat:[{kind:'delay', v:4, dl:7}, {d:13, dl:5, p:'calc', counter:{w:5, d:5}}, {d:0, dl:5, noise:2}], pool:['hack','backflow','overclock','timebomb','scan']},
+    pat:[{kind:'delay', v:4, dl:7}, {d:13, dl:5, p:'calc', counter:{w:5, d:5}}, {d:0, dl:5, noise:2}], pool:['hack','backflow','timebomb','scan']},
   heavyExec:{kind:'exec', hp:115, start:5,
     pat:[{d:12, dl:5, p:'out'}, {d:8, hits:2, dl:6, p:'mob'}, {d:34, dl:7, p:'dur', ch:true, wind:{w:3, poise:14}, rec:3}],
     phase:{at:0.5, pat:[{d:0, dl:4, buff:2}, {d:12, dl:5, p:'out'}, {d:34, dl:7, p:'dur', ch:true, wind:{w:3, poise:14}, rec:3}]},
@@ -53,12 +53,13 @@ DATA.foes = {
     pat:[{d:12, dl:7, p:'dur'}, {d:0, dl:4, armor:10}], pool:['parry','emp','wall','timebomb','storm']},
   hackerE:  {kind:'hacker', hp:118, start:5,
     pat:[{kind:'delay', v:4, dl:6}, {d:14, dl:5, p:'calc', counter:{w:5, d:6}}, {d:0, dl:5, noise:3}, {d:24, dl:7, p:'calc', ch:true, wind:{w:3, poise:12}, rec:3}],
-    pool:['hack','backflow','overclock','timebomb','scan']},
+    pool:['hack','backflow','timebomb','scan']},
   // 0.16.0〜: 危険域・加速。0.17.0〜: ユニットが複数ある敵(行動の列は1本、耐久と状態はユニットごと)
   scanner:  {kind:'drone', hp:75, start:3,
     pat:[{d:4, dl:5, p:'calc'}, {d:0, dl:4, zone:{at:3, len:3, d:5, p:'out'}}, {d:3, hits:2, dl:5, p:'mob'}], pool:['scan','crackshot','timebomb','hack']},
   accel:    {kind:'scout', hp:86, start:6,
-    pat:[{d:7, dl:7, p:'out', haste:1}, {d:6, dl:7, p:'mob', haste:1}], pool:['blow','slash','overclock','flick']},
+    passives:[{k:'floor', n:2}],
+    pat:[{d:7, dl:7, p:'out', haste:1}, {d:6, dl:7, p:'mob', haste:1}], pool:['blow','slash','flick']},
   twin:     {kind:'twin', start:4, look:{s:1.2, at:[0, -6]},
     units:{core:{hp:78, vital:true, core:true, icon:'core', at:[0, 56], pt:[30, 32]}, armL:{hp:43, icon:'arm', at:[-104, -14], pt:[8, 34]}, armR:{hp:43, icon:'arm', at:[104, -14], pt:[52, 34]}},
     pat:[{by:'armL', d:7, dl:5, p:'out', wind:{w:2, poise:8}}, {by:'armR', d:4, hits:2, dl:4, p:'arm'}, {by:'armL', d:0, dl:4, guard:{w:3, s:8}}, {by:'armR', d:6, dl:5, p:'dur', rec:2}],
@@ -70,7 +71,7 @@ DATA.foes = {
   // 統率: 隊長が健在な間、行動の間隔-1。隊長を先に落とすと遅くなる
   squad:    {kind:null, start:4,
     units:{lead:{hp:14, vital:true, icon:'lead', spr:'leader', s:.8, at:[96, -22]}, gunner:{hp:13, vital:true, icon:'gun', spr:'trooper', s:.8, at:[-8, -10]}, shield:{hp:16, vital:true, icon:'shield', spr:'shieldman', s:.85, at:[-112, 0], armor:6}},
-    passives:[{k:'command', unit:'lead', n:1}],
+    passives:[{k:'command', unit:'lead', n:1}, {k:'floor', n:2}],
     pat:[{by:'lead', d:0, dl:5, buff:1}, {by:'gunner', d:6, dl:4, p:'calc'}, {by:'shield', d:7, dl:5, p:'out', guard:{w:3, s:8}}, {by:'gunner', d:6, dl:4, p:'mob'}, {by:'gunner', d:6, dl:4, p:'arm'}],
     pool:['scatter','emp','crackshot','rapid']},
   // 群体: 子機が破壊されるたび、残りの攻撃力+1
@@ -95,7 +96,7 @@ DATA.foes = {
   // 工程管理機: 4サイクルごとに必ず動く。ディレイが効かず、遅らせようとすると怒る(増幅)
   clock:    {kind:'clock', hp:80, start:4, passives:[{k:'punctual', n:1}],
     pat:[{d:5, dl:4, p:'calc'}, {d:5, dl:4, p:'arm'}, {d:5, dl:4, p:'mob'}, {d:16, dl:4, p:'dur', ch:true}],
-    pool:['parry','overclock','rapid','crackshot']},
+    pool:['parry','rapid','crackshot']},
   // 溶接機: 壊した腕を直してしまう。直す行動は体勢で止められる
   welder:   {kind:'welder', start:4, look:{s:1.15, at:[0, -6]},
     units:{core:{hp:72, vital:true, core:true, icon:'core', at:[0, 58], pt:[32, 32]}, torch:{hp:26, icon:'arm', at:[-112, -34], pt:[6, 30]}, clamp:{hp:30, icon:'arm', at:[-108, 30], pt:[12, 49]}},

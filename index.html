@@ -1175,7 +1175,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 <script src="data/text.js"></script>
 <script src="js/engine.js"></script>
 <script>
-const APP_VERSION = '0.26.1';
+const APP_VERSION = '0.27.0';
 const $ = s => document.querySelector(s);
 const EN = ENGINE, RULE = EN.RULE;
 const VIEW = RULE.view, NOW = 170, PX = 34, xs = c => NOW + c * PX, STRIP_Y = 150, SWIFT_VIS = 3;
@@ -1254,6 +1254,7 @@ const IC = {
   dur:'<svg viewBox="0 0 12 12"><path d="M2 2H10L9 10H3Z" stroke="currentColor" stroke-width="1.3" fill="none"/></svg>',
   mob:'<svg viewBox="0 0 12 12"><path d="M4 1V7L2 11M8 1V7L10 11" stroke="currentColor" stroke-width="1.4" fill="none"/></svg>',
 };
+IC.armor = IC.block; // 0.27.0: 敵の装甲はブロックにまとめた(名前とアイコン。仕組みは今のまま)
 const SPR = {
   drone:'<svg width="90" height="100" viewBox="0 -4 60 66" aria-hidden="true"><path d="M8 16h44" stroke="#4d6578" stroke-width="2"/><path d="M30 16v6" stroke="#4d6578" stroke-width="2"/><circle cx="30" cy="34" r="13" fill="#152130" stroke="#4d6578" stroke-width="1.2"/><circle cx="25" cy="34" r="4" fill="#ff4d6a" opacity=".8"/><path d="M22 46l-4 8M38 46l4 8" stroke="#4d6578" stroke-width="2"/></svg>',
   link:'<svg width="90" height="100" viewBox="0 -4 60 66" aria-hidden="true"><path d="M10 14h40" stroke="#4d6578" stroke-width="2"/><path d="M30 14v6M44 6v8" stroke="#4d6578" stroke-width="2"/><circle cx="44" cy="5" r="2.5" fill="#ff4d6a" opacity=".8"/><rect x="18" y="22" width="24" height="22" rx="7" fill="#152130" stroke="#4d6578" stroke-width="1.2"/><circle cx="25" cy="33" r="3.5" fill="#ff4d6a" opacity=".8"/><path d="M22 44l-3 10M38 44l3 10" stroke="#4d6578" stroke-width="2"/></svg>',
@@ -1510,7 +1511,7 @@ function passives(e){
   for(const k of Object.keys(f.broke || {})) out.push({id: 'broke-' + k, name: nm['broke.' + k] || '', k: 'broke', p: {unit: k}, on: !!e.units[k] && !e.units[k].broken});
   return out;
 }
-const PAS_IC = {command: IC.pt_lead, frenzy: IC.frenzy, react: IC.eye, phase: IC.phase, broke: IC.phase, punctual: IC.clock, pursuit: IC.haste, loot: IC.scrap, hoard: IC.eat};
+const PAS_IC = {command: IC.pt_lead, frenzy: IC.frenzy, react: IC.eye, phase: IC.phase, broke: IC.phase, punctual: IC.clock, pursuit: IC.haste, loot: IC.scrap, hoard: IC.eat, floor: IC.clock};
 function pasText(e, x){
   const un = k => e.units[k] ? e.units[k].name : k;
   if(x.k === 'command') return fillUi('pas.command', {unit: un(x.p.unit), n: x.p.n});
@@ -1518,7 +1519,7 @@ function pasText(e, x){
   if(x.k === 'react') return fillUi('pas.react', {min: x.p.min, part: SLOT_BY[x.p.p].fn, d: x.p.d + (e.str || 0)});
   if(x.k === 'phase') return fillUi('pas.phase', {at: Math.round(x.p.at * 100)});
   if(x.k === 'broke') return fillUi('pas.broke', {unit: un(x.p.unit)});
-  if(['punctual', 'pursuit', 'loot', 'hoard'].includes(x.k)) return fillUi('pas.' + x.k, {n: x.p.n || 1});
+  if(['punctual', 'pursuit', 'loot', 'hoard', 'floor'].includes(x.k)) return fillUi('pas.' + x.k, {n: x.p.n || 1});
   return '';
 }
 // 画面の小さな札: ユニットの状態(クラック・装甲・隙)と、敵全体の状態(増幅・加速・パッシブ)
@@ -2769,8 +2770,8 @@ const DBG_PRESET = {
   start: () => DATA.startDeck.slice(),
   light: () => ['jab','jab','jab','rapid','rapid','flick','flick','guard','guard','hack','reload','timebomb','scan'],
   heavy: () => ['slash','slash','slash','wall','wall','blow','emp','backflow','guard','scan','parry'],
-  control: () => ['hack','hack','backflow','timebomb','timebomb','parry','crackshot','crackshot','jab','guard','scan','overclock'],
-  charge: () => ['capacitor','capacitor','coil','coil','arc','arc','discharge','discharge','storm','cell','jab','guard','slash'],
+  control: () => ['hack','hack','backflow','timebomb','timebomb','parry','crackshot','crackshot','jab','guard','scan','scan'],
+  charge: () => ['capacitor','capacitor','coil','coil','arc','arc','storm','storm','cell','jab','guard','slash'],
   all: () => Object.keys(CARDS).filter(k => !CARDS[k].junk),
   empty: () => [],
 };
@@ -2880,9 +2881,9 @@ function showRules(first){
     <li>時間はカードを使ったときだけ進む。カード左上の数字が、かかるサイクル。0は即時。</li>
     ${!RULE.econ ? `<li>手札は3サイクルごとに1枚届く(最大${RULE.handMax}枚)。届く時刻はタイムラインの下の段。軽いカードを続けると手札が減り、重いカードの間に手札がたまる。</li>`
       : RULE.econ.type === 'turn' ? `<li>${RULE.econ.len}サイクルごとに区切り(点線)。区切りで手札を捨てて${RULE.econ.hand}枚引き、ブロックも消える。右下の上段は区切りまで待つ。</li>`
-      : `<li>手札は自動では届かない。好きなときに右下のリフレッシュ(${RULE.econ.r}サイクル)で、手札を全部捨てて${RULE.econ.hand}枚引く。リフレッシュを始めるとブロックをすべて失う。</li>`}
+      : `<li>手札は自動では届かない。好きなときに右下のリフレッシュ(${RULE.econ.r}サイクル)で、手札を全部捨てて${RULE.econ.hand}枚引く。リフレッシュ中もブロックは残り、新しい手札が来るとすべて失う。</li>`}
     <li>奥の画面に敵の行動の予定が流れてくる。数字はダメージ、下の印は狙う部位。紫の丸は不安定な行動、砂時計は自分へのディレイ。</li>
-    <li>カードが発動する前に攻撃を受けると中断。ブロックで全部防ぐか、菱形のあるカード(アトミック)なら中断されない。不安定な行動と同じサイクルに発動すると、JUSTでブレイクする(行動が止まる)。</li>
+    <li>カードが発動する前に攻撃を受けるとブレイクされる。ブロックで全部防ぐか、菱形のあるカード(アトミック)ならブレイクされない。不安定な行動と同じサイクルに発動すると、JUSTでブレイクする(行動が止まる)。</li>
     <li>目の印の敵は、重いカードを使い始めると撃ってくる。鎖の印の敵は、仲間と同時に攻撃すると強くなる。</li>
     <li>予定の下の帯は、その間にカードが発動したときに効く。<b>体勢</b>は一度に数字以上のダメージでブレイク。<b>防壁</b>は数字までダメージを防がれる。<b>反撃</b>は攻撃するたびに撃ち返される。<b>隙</b>はダメージ1.5倍。</li>
     ${!RULE.econ ? `<li>右下は手札の入れ替え(枚数ぶんのサイクル)${RULE.freeWait ? 'と、1サイクルの待機' : '。手札がないときは1サイクルの待機'}。</li>` : RULE.freeWait || RULE.econ.type === 'turn' ? '<li>右下の下段は1サイクルの待機。</li>' : ''}

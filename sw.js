@@ -1,6 +1,6 @@
 // Ascendroid サービスワーカー
 // 更新するときは VERSION をアプリのバージョン(index.html の APP_VERSION)と同じ値にする
-const VERSION = '0.24.0';
+const VERSION = '0.25.0';
 const CACHE = 'tower-' + VERSION;
 const CORE = [
   './',
@@ -16,6 +16,10 @@ const CORE = [
   'icons/icon-192.png',
   'icons/icon-512.png',
   'icons/maskable-512.png',
+  'studio/',
+  'studio/index.html',
+  'studio/gh-db.js',
+  'studio/manifest.webmanifest',
 ];
 
 self.addEventListener('install', e => {
@@ -35,18 +39,20 @@ self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET') return;
 
-  // ページ本体: ネット優先(更新をすぐ反映)、圏外ならキャッシュ
+  const url = new URL(req.url);
+  // ページ本体(ゲームと studio/ の工房): ネット優先(更新をすぐ反映)、圏外ならキャッシュ。? 以降は無視して同じページとしてしまう
   if (req.mode === 'navigate') {
+    const key = url.origin + url.pathname;
     e.respondWith(
       fetch(req)
-        .then(res => { const copy = res.clone(); caches.open(CACHE).then(c => c.put('index.html', copy)); return res; })
-        .catch(() => caches.match('index.html'))
+        .then(res => { if (res && res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(key, copy)); } return res; })
+        .catch(() => caches.match(key).then(hit => hit || caches.match(url.pathname.includes('/studio/') ? 'studio/index.html' : 'index.html')))
     );
     return;
   }
 
   // 同じサイトのファイル(データ・エンジンなど): ネット優先。ページと版がずれないように、圏外のときだけキャッシュ
-  if (new URL(req.url).origin === location.origin) {
+  if (url.origin === location.origin) {
     e.respondWith(
       fetch(req, {cache:'no-cache'})
         .then(res => { if (res && res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(req, copy)); } return res; })
@@ -55,7 +61,8 @@ self.addEventListener('fetch', e => {
     return;
   }
 
-  // ほかのサイト(フォント等): キャッシュ優先、裏で取り直す
+  // フォントだけ: キャッシュ優先、裏で取り直す。ほかのサイト(工房が読み書きする GitHub など)には触らない
+  if (!/^fonts\.(googleapis|gstatic)\.com$/.test(url.hostname)) return;
   e.respondWith(
     caches.match(req).then(hit => {
       const net = fetch(req).then(res => {

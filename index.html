@@ -1175,7 +1175,9 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 <script src="data/text.js"></script>
 <script src="js/engine.js"></script>
 <script>
-const APP_VERSION = '0.24.0';
+const APP_VERSION = '0.25.0';
+// カード工房の試遊(studio/ から index.html?wb=… で開く): 工房のカードを当て、セーブも本体と分ける
+const WB_MODE = /[?&]wb=/.test(location.search);
 const $ = s => document.querySelector(s);
 const EN = ENGINE, RULE = EN.RULE;
 const VIEW = RULE.view, NOW = 170, PX = 34, xs = c => NOW + c * PX, STRIP_Y = 150, SWIFT_VIS = 3;
@@ -2181,12 +2183,12 @@ async function execute(){
 /* ---------- run & map ---------- */
 const AREA = () => DATA.areas[(S && S.run && S.run.area) || 0];
 /* ---------- 保存(0.19.0): 部屋に入るたび・地図に戻るたびに自動で保存。戦闘の途中でやめると、つづきからはその戦闘のはじめから ---------- */
-const SAVE_KEY = 'asc.save';
+const SAVE_KEY = WB_MODE ? 'asc.save.wb' : 'asc.save';
 function saveRun(pending){
   if(!S || !S.run || S.run.debug || (UI.node && UI.node.debug)) return;
   try{ localStorage.setItem(SAVE_KEY, JSON.stringify({v:1, run:S.run, pending:pending || null, cls:clsKey(), at:Date.now()})); }catch(e){}
 }
-function loadSave(){ try{ const o = JSON.parse(localStorage.getItem(SAVE_KEY)); return o && o.v === 1 && o.run && o.run.map ? o : null; }catch(e){ return null; } }
+function loadSave(){ try{ const o = JSON.parse(localStorage.getItem(SAVE_KEY)); if(o && o.run && Array.isArray(o.run.deck)) o.run.deck = o.run.deck.filter(k => CARDS[k] && !CARDS[k].cut); return o && o.v === 1 && o.run && o.run.map ? o : null; }catch(e){ return null; } }
 function clearSave(){ try{ localStorage.removeItem(SAVE_KEY); }catch(e){} }
 function resumeRun(){
   const o = loadSave(); if(!o){ showTitle(); return; }
@@ -2222,7 +2224,7 @@ function showTitle(){
         <div class="tt-sub"><button class="tt-s" type="button" data-act="rules">遊び方</button><button class="tt-s" type="button" data-act="fs">全画面</button><button class="tt-s" type="button" data-act="debug">デバッグ</button><button class="tt-s" type="button" data-act="reload">再読み込み</button></div>
       </div>
     </div>
-    <span class="tt-ver">${APP_VERSION}</span>`;
+    <span class="tt-ver">${WB_MODE ? '試遊 · ' : ''}${APP_VERSION}</span>`;
   ts.hidden = false; if(fresh) enter(ts);
   if(!conf) UI.titleConfirm = false;
 }
@@ -2404,7 +2406,7 @@ function onLose(){
 const LEARN_BIAS = 1.3;
 function learnOptions(n){
   const near = new Set(ENC[UI.node.enc].foes.flatMap(k => FOES[k].pool || []));
-  const pool = Object.keys(CARDS).filter(k => !CARDS[k].junk && !['charge','scatter'].includes(k)).map(k => ({k, w: near.has(k) ? LEARN_BIAS : 1}));
+  const pool = Object.keys(CARDS).filter(k => !CARDS[k].junk && !CARDS[k].cut && !['charge','scatter'].includes(k)).map(k => ({k, w: near.has(k) ? LEARN_BIAS : 1}));
   const out = [];
   while(out.length < n && pool.length){
     let x = Math.random() * pool.reduce((a, c) => a + c.w, 0), i = 0;
@@ -2473,7 +2475,7 @@ function showShop(){
   const sh = DATA.shop, run = S.run;
   const nk = UI.node ? nodeKey(UI.node) + '@' + run.area : '';
   if(!UI.offers && run.shop && run.shop.at === nk) UI.offers = run.shop.offers;
-  if(!UI.offers){ const pool = Object.keys(CARDS).filter(k => !['charge','scatter'].includes(k) && !CARDS[k].junk); UI.offers = EN.shuffle(pool).slice(0, sh.offers); }
+  if(!UI.offers){ const pool = Object.keys(CARDS).filter(k => !['charge','scatter'].includes(k) && !CARDS[k].junk && !CARDS[k].cut); UI.offers = EN.shuffle(pool).slice(0, sh.offers); }
   run.shop = {at: nk, offers: UI.offers};
   const pk = UI.pick, can = c => run.scrap >= c;
   const offers = UI.offers.map((k, i) => k ? `<div class="sitem"><button class="card static${pk === 'c' + i ? ' picked' : ''}${can(price(k)) ? '' : ' off'}" type="button" data-act="pick" data-arg="c${i}" data-view="shop">${cardInner(k, null)}</button><span class="price${can(price(k)) ? '' : ' no'}"><span class="ic">${IC.scrap}</span>${price(k)}</span></div>` : '<div class="sitem sold"></div>').join('');
@@ -2771,7 +2773,7 @@ const DBG_PRESET = {
   heavy: () => ['slash','slash','slash','wall','wall','blow','emp','backflow','guard','scan','parry'],
   control: () => ['hack','hack','backflow','timebomb','timebomb','parry','crackshot','crackshot','jab','guard','scan','overclock'],
   charge: () => ['capacitor','capacitor','coil','coil','arc','arc','discharge','discharge','storm','cell','jab','guard','slash'],
-  all: () => Object.keys(CARDS).filter(k => !CARDS[k].junk),
+  all: () => Object.keys(CARDS).filter(k => !CARDS[k].junk && !CARDS[k].cut),
   empty: () => [],
 };
 const DBG_PRESET_NAME = {start:'最初', light:'軽い', heavy:'重い', control:'制御', charge:'充電', all:'全種1枚', empty:'空'};
@@ -2815,7 +2817,7 @@ function showDebugDeck(){
   UI.dbgView = 'deck';
   const cnt = {}; for(const k of DBG.deck) cnt[k] = (cnt[k] || 0) + 1;
   const presets = Object.keys(DBG_PRESET).map(k => `<button type="button" data-act="dbgPreset" data-arg="${k}">${DBG_PRESET_NAME[k]}</button>`).join('');
-  const cards = Object.keys(CARDS).filter(k => !CARDS[k].junk).sort((a, c) => CARDS[a].cost - CARDS[c].cost).map(k => `<div class="dcard"><i>${CARDS[k].cost}</i><span>${CARDS[k].name}</span><button type="button" data-act="dbgCard" data-arg="${k}:-1">−</button><b class="${cnt[k] ? '' : 'z'}">${cnt[k] || 0}</b><button type="button" data-act="dbgCard" data-arg="${k}:1">+</button></div>`).join('');
+  const cards = Object.keys(CARDS).filter(k => !CARDS[k].junk && !CARDS[k].cut).sort((a, c) => CARDS[a].cost - CARDS[c].cost).map(k => `<div class="dcard"><i>${CARDS[k].cost}</i><span>${CARDS[k].name}</span><button type="button" data-act="dbgCard" data-arg="${k}:-1">−</button><b class="${cnt[k] ? '' : 'z'}">${cnt[k] || 0}</b><button type="button" data-act="dbgCard" data-arg="${k}:1">+</button></div>`).join('');
   const extra = EN.partCards({parts: Object.fromEntries(SLOTS.map(p => [p.id, {id: DBG.parts[p.id]}]))});
   showOv(`<h2>デッキ ${DBG.deck.length}枚${extra.length ? ` <span style="color:var(--dim);font-size:11px;font-weight:400">+パーツ ${extra.map(k => CARDS[k].name).join('・')}</span>` : ''}</h2>
     <div class="seg">${presets}</div><div class="dbg-grid">${cards}</div>
@@ -3048,6 +3050,28 @@ for(const el of [$('#wrap'), stage]) el.addEventListener('scroll', () => { el.sc
 fit();
 buildStatic();
 dbgLoad(); applyEcon();
+/* ---------- カード工房の試遊 ---------- */
+// 工房のカード {key: card | null(削る)} を CARDS0 に当てる。工房の数値は K-7 で効く値なので、キャラ別の上書きは消す
+// 工房は localStorage の asc.wb に入れてから開き、開いた後は postMessage でも送ってくる
+let WB_AT = 0;
+function wbApply(p){
+  if(!WB_MODE || !p || p.type !== 'asc-cards' || p.at === WB_AT) return false;
+  WB_AT = p.at;
+  for(const [k, c] of Object.entries(p.cards || {})){
+    for(const C of Object.values(CLS)) if(C.cards) delete C.cards[k];
+    if(c === null){ if(CARDS0[k]) CARDS0[k].cut = true; continue; }
+    CARDS0[k] = JSON.parse(JSON.stringify(c));
+  }
+  if(Array.isArray(p.startDeck) && p.startDeck.length) DATA.startDeck = p.startDeck.filter(k => CARDS0[k] && !CARDS0[k].cut);
+  applyEcon();
+  if(DBG) DBG.deck = DBG.deck.filter(k => CARDS[k] && !CARDS[k].cut);
+  return true;
+}
+if(WB_MODE){
+  try{ wbApply(JSON.parse(localStorage.getItem('asc.wb') || 'null')); }catch(e){}
+  addEventListener('message', e => { if(e.origin === location.origin && e.data && e.data.type === 'asc-cards') wbApply(e.data); });
+  try{ if(parent !== window) parent.postMessage({type:'asc-ready'}, location.origin); }catch(e){}
+}
 showTitle();
 </script>
 <script>

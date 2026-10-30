@@ -1,5 +1,16 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Ascendroid カード工房</title>
-<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="theme-color" content="#0a0f15">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="工房">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="../icons/icon-192.png">
+<link rel="apple-touch-icon" href="../icons/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Chakra+Petch:wght@500;600;700&display=swap">
@@ -24,7 +35,7 @@ main.wide{grid-template-columns:minmax(0,1fr)}
 main.wide .side{display:none}
 html,body{height:100%}
 body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:13px;line-height:1.5;margin:0;
-  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));padding-block:0}
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));padding-top:env(safe-area-inset-top, 0px);padding-bottom:0}
 button,input,textarea,select{font:inherit;color:inherit}
 button{cursor:pointer}
 :focus-visible{outline:2px solid var(--cy);outline-offset:2px}
@@ -153,13 +164,40 @@ tr.row.cut td{opacity:.45} tr.row.cut td.nm{text-decoration:line-through}
   .wbt th:nth-child(4),.wbt td:nth-child(4){display:none}
 }
 @media (min-width:821px){ .side-h .x{display:none} }
+/* 横向きのスマホなど、高さが足りないとき: 見出しを1行にして、編集欄に高さを回す */
+@media (max-height:520px){
+  header{flex-wrap:nowrap;gap:10px;padding-block:6px 5px}
+  header h1{font-size:13px;white-space:nowrap} .ver{display:none}
+  .tabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none} .tabs::-webkit-scrollbar{display:none}
+  .tab{padding:4px 8px;white-space:nowrap}
+  main{padding-block:6px;gap:10px;grid-template-columns:minmax(0,1fr) minmax(320px,420px)}
+  .tools .btn{padding:4px 10px}
+  .wbbar{padding:5px 8px} .wbbar .note{display:none}
+  .side-h{padding:7px 12px} .side-h h2{font-size:14px}
+  .send{padding:6px 10px!important;gap:6px!important} .send .btn{padding:4px 10px}
+  .cardpv{padding:6px 10px;gap:3px}
+  .send{flex-direction:row;flex-wrap:wrap;align-items:center} .send>.row{flex:1 1 auto}
+  .play{padding:4px max(8px, env(safe-area-inset-right, 0px)) 4px max(8px, env(safe-area-inset-left, 0px))}
+  .play-h{padding-bottom:4px} .play-h .note{display:none} .play-h .btn{padding:3px 10px;font-size:12px}
+  .play-f iframe{max-width:calc((100vh - 36px) * 844 / 390)}
+}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+/* GitHub とのつながり */
+.conn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:2px 10px 2px 8px;font-size:12px;color:var(--fg2)}
+.conn i{width:8px;height:8px;border-radius:50%;background:var(--dim)} .conn.ok i{background:var(--ok)} .conn.sync i{background:var(--cy)} .conn.err i{background:var(--foe)}
+.setup{display:flex;flex-direction:column;gap:10px} .setup ol{margin:0;padding-left:1.4em;color:var(--fg2)} .setup li{margin:2px 0}
+.setup input{width:100%;border:1px solid var(--line);border-radius:6px;padding:7px 9px;background:var(--panel);font-family:var(--f-mono);font-size:12px}
+.setup .err{color:var(--foe)}
 </style>
+</head>
+<body>
 
 <div class="app">
   <header>
     <h1>Ascendroid カード工房</h1>
     <span class="ver" id="ver"></span>
+    <button class="conn" type="button" id="connBtn"><i></i><span>つなぐ</span></button>
+    <button class="btn quiet sm" type="button" id="installBtn" hidden>インストール</button>
     <nav class="tabs" id="tabs"></nav>
   </header>
   <main>
@@ -173,17 +211,17 @@ tr.row.cut td{opacity:.45} tr.row.cut td.nm{text-decoration:line-through}
 <div class="toast" id="toast"></div>
 <div class="play" id="play" hidden><div class="play-h"><b>試遊</b><span class="note" id="playInfo"></span><span class="sp"></span><button class="btn quiet" type="button" id="playReload">読み直す</button><button class="btn" type="button" id="playClose">閉じる</button></div><div class="play-f"><iframe id="playFrame" title="試遊版" allow="fullscreen"></iframe></div></div>
 
-<script src="data/parts.js"></script>
-<script src="data/cards.js"></script>
-<script src="data/enemies.js"></script>
-<script src="data/map.js"></script>
-<script src="data/classes.js"></script>
-<script src="data/text.js"></script>
-<script src="meta.js"></script>
+<script src="../data/parts.js"></script>
+<script src="../data/cards.js"></script>
+<script src="../data/enemies.js"></script>
+<script src="../data/map.js"></script>
+<script src="../data/classes.js"></script>
+<script src="../data/text.js"></script>
+<script src="gh-db.js"></script>
 <script>
 'use strict';
-// データ台帳: ゲームの data/*.js をそのまま読み、一覧にする。編集は依頼(requests)として共有データベースに送り、Claude がリポジトリに反映する
-const D = window.DATA, META = window.SHEET_META || {};
+// カード工房とデータ台帳: ゲームの data/*.js をそのまま読み、一覧にする。工房のカードと依頼は GitHub の workbench ブランチの db.json に入り(gh-db.js)、Claude が読んで添削・反映する
+const D = window.DATA;
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;'})[c]);
 const clone = o => o === undefined ? undefined : JSON.parse(JSON.stringify(o));
@@ -394,7 +432,7 @@ function wbRefresh(){
   const c = S.wb.card;
   const pv = $('#wbpv'); if(pv) pv.innerHTML = `<div class="cf"><span class="cc">${c.cost}</span><b>${esc(c.name || '(名前なし)')}</b><span class="ct">${wbType(c)}</span><span class="rar r-${S.wb.rarity || 'none'}">${RARITY[S.wb.rarity] || '—'}</span></div><div class="cft">${fillText(c) || '<span class="note">効果がありません</span>'}</div><div class="cfe">${effHTML(c, true)}</div>`;
   const au = $('#w_auto'); if(au) au.textContent = genText(c) || '(効果がありません)';
-  const inf = $('#wbinfo'); if(inf) inf.textContent = !DB ? 'この表示では保存できません(サインインして開いてください)' : S.wb.dirty ? '保存していない変更があります' : '';
+  const inf = $('#wbinfo'); if(inf) inf.textContent = !DB ? 'GitHub につなぐと保存できます(右上の「つなぐ」)' : S.wb.dirty ? '保存していない変更があります' : '';
   for(const id of ['wbSave', 'wbReview']){ const b = $('#' + id); if(b) b.disabled = !DB || !(c.name || '').trim(); }
 }
 // 欄の値を card に入れる
@@ -460,7 +498,7 @@ function wbPayload(){
 function openPlay(){
   const p = wbPayload();
   try{ localStorage.setItem('asc.wb', JSON.stringify(p)); }catch(_){}
-  $('#play').hidden = false; $('#playFrame').src = 'play/index.html?wb=' + p.at;
+  $('#play').hidden = false; $('#playFrame').src = '../index.html?wb=' + p.at;
   $('#playInfo').textContent = `工房のカード ${Object.values(p.cards).filter(Boolean).length}枚・削る ${Object.values(p.cards).filter(x => !x).length}枚・最初のデッキ ${p.startDeck.length}枚`;
 }
 addEventListener('message', e => { if(e.data && e.data.type === 'asc-ready' && !$('#play').hidden){ try{ e.source.postMessage(wbPayload(), '*'); }catch(_){} } });
@@ -500,6 +538,7 @@ function renderSide(){
   if(S.kind === 'requests'){ side.innerHTML = `<div class="empty">依頼の一覧は左にあります。項目を選ぶと、その項目の依頼も見られます。</div>`; side.hidden = innerWidth <= 820; return; }
   const it = curItem(), K = KBY[S.kind];
   side.hidden = innerWidth <= 820 && !S.mobileOpen;
+  if(S.setup){ side.hidden = innerWidth <= 820 && !S.mobileOpen; side.innerHTML = setupHTML(); return; }
   if(K.wb){ side.innerHTML = wbSideHTML(); wbRefresh(); return; }
   if(!it && !(S.draft && S.draft.isNew)){
     side.innerHTML = `<div class="empty">一覧から項目を選ぶと、ここで数値や文を書き換えられます。書き換えたら、下にコメントを添えて「送る」で依頼になります。数値を変えずにコメントだけ送れば相談になります。</div>`;
@@ -541,7 +580,7 @@ function refreshDyn(){
   const jm = $('#jsonmsg'); if(jm) jm.innerHTML = S.jsonErr ? `<div class="err">${esc(S.jsonErr)}</div>` : '<div class="note">欄にない項目を足すときや、行動を増やすときはこちら。</div>';
   const ch = S.draft.isNew ? [] : diff(orig, o);
   const db = $('#diffbox'); if(db){ db.innerHTML = ch.map(c => `<div class="dl"><span class="p" title="${esc(c.path)}">${esc(c.path)}</span><span class="v"><s>${esc(c.from)}</s> → <b>${esc(c.to)}</b></span></div>`).join(''); db.hidden = !ch.length; }
-  const si = $('#sendinfo'); if(si) si.textContent = dbState === 'off' ? 'この表示では送れません(サインインして開いてください)' : ch.length ? `変更 ${ch.length} か所` : S.draft.isNew ? '新しい項目' : '';
+  const si = $('#sendinfo'); if(si) si.textContent = dbState === 'off' ? 'GitHub につなぐと送れます(右上の「つなぐ」)' : ch.length ? `変更 ${ch.length} か所` : S.draft.isNew ? '新しい項目' : '';
   const rs = $('#resetDraft'); if(rs) rs.hidden = !ch.length;
   const sb = $('#sendBtn'); if(sb) sb.disabled = !(DB && !S.jsonErr && (S.draft.isNew ? S.draft.key.trim() : (ch.length || S.comment.trim())));
   if(!S.json) document.querySelectorAll('#sideb .fld').forEach(f => { const inp = f.querySelector('[data-path]'); if(!inp) return; const p = inp.dataset.path; f.classList.toggle('chg', JSON.stringify(getPath(o, p)) !== JSON.stringify(getPath(orig, p))); });
@@ -564,13 +603,14 @@ function renderReqPane(){
   const f = S.reqFilter, rs = REQ.filter(r => f === 'all' || (f === 'active' ? r.status === 'open' || r.status === 'discuss' : r.status === f)).sort((a, b) => (b.at || '').localeCompare(a.at || ''));
   const fl = [['active', '対応待ち'], ['done', '反映済み'], ['all', 'すべて']].map(([k, n]) => `<button type="button" class="btn ${S.reqFilter === k ? '' : 'quiet'}" data-rf="${k}">${n}</button>`).join('');
   const general = `<div class="req"><div class="req-h"><span class="t">項目によらない依頼・相談</span></div><textarea id="generalText" placeholder="例: 新しいアーキタイプ「侵食」を作りたい。カード案は…" style="width:100%;min-height:60px;border:1px solid var(--line);border-radius:6px;padding:6px 8px;background:var(--panel)"></textarea><div class="reply"><span class="sp" style="flex:1"></span><button class="btn" type="button" id="sendGeneral"${DB ? '' : ' disabled'}>送る</button></div></div>`;
-  return `<div class="reqs"><div class="filters">${fl}</div>${general}${rs.length ? rs.map(r => reqHTML(r, true)).join('') : `<div class="note">${dbState === 'wait' ? '読み込み中…' : dbState === 'off' ? 'この表示では依頼を読めません。' : 'まだ依頼はありません。'}</div>`}</div>`;
+  return `<div class="reqs"><div class="filters">${fl}</div>${general}${rs.length ? rs.map(r => reqHTML(r, true)).join('') : `<div class="note">${dbState === 'wait' ? '読み込み中…' : dbState === 'off' ? 'GitHub につなぐと依頼を読めます(右上の「つなぐ」)。' : 'まだ依頼はありません。'}</div>`}</div>`;
 }
 function renderAll(){ document.querySelector('main').classList.toggle('wide', S.kind === 'requests'); renderTabs(); renderList(); renderSide(); }
 
 /* ---------- 編集 ---------- */
 function startDraft(it){ S.draft = {isNew:false, key:it.key, obj:clone(it.obj)}; S.json = false; S.jsonErr = ''; S.comment = ''; }
 function selectItem(key){
+  S.setup = false;
   if(KBY[S.kind] && KBY[S.kind].wb){ if(S.wb && S.wb.dirty && S.wb.key !== key && !confirm('保存していない変更があります。捨てて移りますか?')) return; S.sel = key; S.wbDeckOpen = false; wbStart(key); S.mobileOpen = true; renderAll(); return; }
   const it = curItems().find(x => x.key === key); if(!it) return;
   if(S.draft && !S.draft.isNew && S.draft.key === key){ S.mobileOpen = true; renderAll(); return; }
@@ -613,7 +653,7 @@ async function drop(id){
 /* ---------- 入力 ---------- */
 document.addEventListener('click', e => {
   const t = e.target;
-  const tab = t.closest('[data-tab]'); if(tab){ S.kind = tab.dataset.tab; S.sel = null; S.draft = null; S.wb = null; S.wbDeckOpen = false; S.mobileOpen = false; S.q = ''; $('#q').value = ''; renderAll(); return; }
+  const tab = t.closest('[data-tab]'); if(tab){ S.setup = false; S.kind = tab.dataset.tab; S.sel = null; S.draft = null; S.wb = null; S.wbDeckOpen = false; S.mobileOpen = false; S.q = ''; $('#q').value = ''; renderAll(); return; }
   // カード工房
   const wf = t.closest('[data-wbf]'); if(wf){ S.wbFilter = wf.dataset.wbf; renderList(); return; }
   const wt = t.closest('[data-wbtext]'); if(wt && S.wb){ S.wb.custom = wt.dataset.wbtext === 'custom'; if(S.wb.custom && !S.wb.card.text) S.wb.card.text = genText(S.wb.card); S.wb.dirty = true; renderSide(); return; }
@@ -624,7 +664,7 @@ document.addEventListener('click', e => {
   if(t.closest('#wbCut')){ wbStatus(WB[S.wb.key].status === 'cut' ? 'draft' : 'cut'); return; }
   if(t.closest('#wbRevert')){ wbRevert(); return; }
   if(t.closest('#wbReply')){ wbReply(); return; }
-  if(t.closest('#deckBtn')){ S.wbDeckOpen = true; S.wbDeckDraft = null; S.sel = null; S.wb = null; S.mobileOpen = true; renderAll(); return; }
+  if(t.closest('#deckBtn')){ S.setup = false; S.wbDeckOpen = true; S.wbDeckDraft = null; S.sel = null; S.wb = null; S.mobileOpen = true; renderAll(); return; }
   if(t.closest('#deckSave')){ (async () => { try{ await DB.doc('config/deck').set({startDeck:S.wbDeckDraft, at:new Date().toISOString()}); S.wbDeckDraft = null; toast('保存しました'); renderAll(); }catch(e){ toast('保存できませんでした'); } })(); return; }
   if(t.closest('#deckReset')){ S.wbDeckDraft = D.startDeck.slice(); renderSide(); return; }
   if(t.closest('#playBtn')){ openPlay(); return; }
@@ -639,8 +679,12 @@ document.addEventListener('click', e => {
   if(t.closest('#sendBtn')){ send(); return; }
   if(t.closest('#sendGeneral')){ sendGeneral(); return; }
   if(t.closest('#resetDraft')){ const it = curItem(); if(it){ startDraft(it); renderSide(); } return; }
-  if(t.closest('#closeSide')){ S.mobileOpen = false; S.wbDeckOpen = false; renderSide(); return; }
-  if(t.closest('#addBtn') && KBY[S.kind].wb){ if(S.wb && S.wb.dirty && !confirm('保存していない変更があります。捨てて新しく作りますか?')) return; const k = 'n' + Date.now().toString(36); S.sel = k; S.wbDeckOpen = false; wbStart(k); S.mobileOpen = true; renderAll(); setTimeout(() => { const n = $('#w_name'); if(n) n.focus(); }, 50); return; }
+  if(t.closest('#closeSide')){ S.mobileOpen = false; S.wbDeckOpen = false; S.setup = false; renderSide(); return; }
+  if(t.closest('#connBtn')){ if(window.claude) return; S.setup = true; S.mobileOpen = true; renderSide(); return; }
+  if(t.closest('#installBtn')){ if(installEv){ installEv.prompt(); installEv = null; $('#installBtn').hidden = true; } return; }
+  if(t.closest('#ghSave')){ const v = ($('#ghToken').value || '').trim(); if(!v) return; (async () => { if(await connect(v)){ GHDB.token(v); S.setup = false; S.mobileOpen = false; toast('つながりました'); } renderAll(); })(); return; }
+  if(t.closest('#ghForget')){ if(!confirm('この端末からトークンを消しますか?')) return; GHDB.token(null); location.reload(); return; }
+  if(t.closest('#addBtn') && KBY[S.kind].wb){ S.setup = false; if(S.wb && S.wb.dirty && !confirm('保存していない変更があります。捨てて新しく作りますか?')) return; const k = 'n' + Date.now().toString(36); S.sel = k; S.wbDeckOpen = false; wbStart(k); S.mobileOpen = true; renderAll(); setTimeout(() => { const n = $('#w_name'); if(n) n.focus(); }, 50); return; }
   if(t.closest('#addBtn')){ const it = curItem(); S.draft = {isNew:true, key:'', obj:it ? clone(it.obj) : {}}; S.sel = null; S.json = true; S.jsonText = JSON.stringify(S.draft.obj, null, 2); S.jsonErr = ''; S.comment = ''; S.mobileOpen = true; renderAll(); return; }
 });
 document.addEventListener('keydown', e => { if(e.key === 'Enter'){ const row = e.target.closest && e.target.closest('tr.row'); if(row) selectItem(row.dataset.key); } });
@@ -677,17 +721,57 @@ addEventListener('resize', () => { const side = $('#side'); if(S.kind === 'reque
 const typing = () => { const a = document.activeElement; return !!a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) && a.id !== 'q'; };
 document.addEventListener('focusout', () => setTimeout(() => { if(S.pending && !typing()){ S.pending = false; renderAll(); } }, 400));
 /* ---------- 共有データベース(依頼) ---------- */
-$('#ver').textContent = META.version ? `ゲーム ${META.version}${META.commit ? ' · ' + META.commit : ''}` : '';
+fetch('../sw.js', {cache:'no-cache'}).then(r => r.text()).then(t => { const m = t.match(/VERSION = '([^']+)'/); if(m) $('#ver').textContent = 'ゲーム ' + m[1]; }).catch(() => {});
 renderAll();
-(async () => {
-  const use = window.claude && window.claude.use;
-  DB = use ? await window.claude.use('db') : null;
-  if(!DB){ dbState = 'off'; renderAll(); return; }
+// つながり: claude.ai のアーティファクトなら claude の db、それ以外(GitHub Pages・インストールしたアプリ)は GitHub の db.json
+let GH = null, ghState = 'none', ghErr = '';
+function connLabel(){
+  const b = $('#connBtn'); if(!b) return;
+  const st = window.claude ? 'ok' : ghState;
+  b.className = 'conn ' + st;
+  b.querySelector('span').textContent = window.claude ? 'claude.ai' : ghState === 'none' ? 'つなぐ' : ghState === 'err' ? 'つながらない' : ghState === 'sync' ? '同期中…' : ghState === 'off' ? '圏外' : 'GitHub';
+}
+function setupHTML(){
+  const has = !!GHDB.token();
+  return `<div class="side-h"><div><h2>GitHub につなぐ</h2><div class="k">工房のカードと依頼は GitHub の workbench ブランチに保存し、Claude がそこを読む</div></div><button class="btn quiet x" type="button" id="closeSide">閉じる</button></div>
+  <div class="side-b"><div class="setup">
+    ${GH ? '<div class="note">つながっています。</div>' : ''}
+    <ol><li>GitHub の Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token</li><li>Repository access で Only select repositories → Ascendroid だけを選ぶ</li><li>Permissions → Repository permissions の Contents を Read and write にする</li><li>できたトークンを下に貼る(この端末にだけ保存される)</li></ol>
+    <input id="ghToken" type="password" autocomplete="off" placeholder="github_pat_…">
+    ${ghErr ? `<div class="err">${esc(ghErr)}</div>` : ''}
+    <div style="display:flex;gap:8px"><button class="btn" type="button" id="ghSave">つなぐ</button>${has ? '<button class="btn quiet" type="button" id="ghForget">この端末から外す</button>' : ''}</div>
+  </div></div>`;
+}
+async function connect(token){
+  ghErr = ''; ghState = 'sync'; connLabel();
+  const g = GHDB.make(token, st => { ghState = st; connLabel(); });
+  try{ await g.check(); }catch(e){ ghState = 'err'; ghErr = e.status === 401 ? 'トークンが使えません(期限切れか、貼り間違い)' : e.status === 404 || e.status === 403 ? 'リポジトリに入れません(Repository access と Contents の権限を確かめてください)' : 'つながりませんでした(圏外かもしれません)'; connLabel(); return false; }
+  GH = g; DB = g; ghState = 'ok'; connLabel(); subscribe(); return true;
+}
+function subscribe(){
   // 入力中(キーボードが開いている間)は描き直さず、入力を離れてから描き直す
   // カード工房: 保存したカードと最初のデッキ
   DB.collection('cards').onSnapshot(s => { WB = {}; for(const d of s.docs) WB[d.id] = d.data(); wbState = 'on'; if(S.wb && !S.wb.dirty && WB[S.wb.key]){ const rp = S.wb.reply; wbStart(S.wb.key); S.wb.reply = rp; } if(typing()){ S.pending = true; renderTabs(); } else renderAll(); }, () => { wbState = 'off'; });
   DB.doc('config/deck').onSnapshot(d => { WBDECK = d.exists ? d.data() : null; if(!typing()) renderAll(); }, () => {});
   DB.collection('requests').onSnapshot(s => { REQ = s.docs.map(d => Object.assign({id:d.id}, d.data())); dbState = 'on'; if(typing()){ S.pending = true; renderTabs(); refreshDyn(); } else renderAll(); },
     () => { dbState = 'off'; DB = null; renderAll(); });
+}
+(async () => {
+  connLabel();
+  if(window.claude && window.claude.use){
+    DB = await window.claude.use('db');
+    if(!DB){ dbState = 'off'; renderAll(); return; }
+    subscribe(); return;
+  }
+  const tk = GHDB.token();
+  if(!tk){ dbState = 'off'; renderAll(); S.setup = true; S.mobileOpen = true; renderSide(); return; }
+  if(!(await connect(tk))){ dbState = 'off'; renderAll(); }
 })();
+// インストール(Chrome・Edge)。iPhone は共有 → ホーム画面に追加
+let installEv = null;
+addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEv = e; $('#installBtn').hidden = false; });
+addEventListener('appinstalled', () => { $('#installBtn').hidden = true; });
+if('serviceWorker' in navigator && !window.claude) addEventListener('load', () => navigator.serviceWorker.register('../sw.js'));
 </script>
+</body>
+</html>

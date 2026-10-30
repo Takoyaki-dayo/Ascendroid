@@ -174,11 +174,12 @@ tr.row.cut td{opacity:.45} tr.row.cut td.nm{text-decoration:line-through}
   <header>
     <h1>Ascendroid カード工房</h1>
     <span class="ver" id="ver"></span>
+    <button class="btn ghost sm" id="bulkBtn" type="button" disabled>まとめて添削に出す</button>
     <nav class="tabs" id="tabs"></nav>
   </header>
   <main>
     <section class="listwrap" id="listwrap">
-      <div class="tools"><input id="q" type="search" placeholder="名前・キーで絞り込む" aria-label="絞り込み"><button class="btn ghost" id="addBtn" type="button">＋ 追加</button><button class="btn quiet" id="deckBtn" type="button" hidden>最初のデッキ</button><button class="btn ghost" id="bulkBtn" type="button" hidden>まとめて添削に出す</button><button class="btn" id="playBtn" type="button" hidden>試遊</button></div>
+      <div class="tools"><input id="q" type="search" placeholder="名前・キーで絞り込む" aria-label="絞り込み"><button class="btn ghost" id="addBtn" type="button">＋ 追加</button><button class="btn quiet" id="deckBtn" type="button" hidden>最初のデッキ</button><button class="btn" id="playBtn" type="button" hidden>試遊</button></div>
       <div class="tbl" id="tbl"></div>
     </section>
     <aside class="side" id="side"></aside>
@@ -460,17 +461,23 @@ function bulkKeys(){
   for(const [k, d] of Object.entries(WB)) if(d.status === 'draft') ks.add(k);
   return [...ks];
 }
+// カード以外: 取っておいた未送信の編集と、いま開いている項目の編集
+function bulkEdits(){
+  const out = Object.values(EDRAFT).slice();
+  if(S.draft && KBY[S.kind] && !KBY[S.kind].wb && S.kind !== 'requests' && !EDRAFT[S.kind + '|' + (S.draft.isNew ? '+' : S.draft.key)] && eDirty(S.kind, S.draft, S.comment)) out.push({kind:S.kind, draft:S.draft, comment:S.comment, cur:true});
+  return out;
+}
 function bulkLabel(){
   const b = $('#bulkBtn'); if(!b) return;
-  const n = bulkKeys().length, wbm = !!KBY[S.kind].wb;
-  b.hidden = !wbm; b.disabled = !n || !DB;
+  const n = bulkKeys().length + bulkEdits().length;
+  b.disabled = !n || !DB;
   if(S.bulkArm && !n) S.bulkArm = false;
-  b.className = 'btn ' + (S.bulkArm ? '' : 'ghost');
-  b.textContent = S.bulkArm ? `もう一度押すと ${n}枚を出す` : `まとめて添削に出す${n ? ' ' + n : ''}`;
+  b.className = 'btn sm ' + (S.bulkArm ? '' : 'ghost');
+  b.textContent = S.bulkArm ? `もう一度押すと ${n}件を出す` : `まとめて添削に出す${n ? ' ' + n : ''}`;
 }
 async function wbBulk(){
   if(!DB) return;
-  const ks = bulkKeys(); if(!ks.length) return;
+  const ks = bulkKeys(), es = bulkEdits(); if(!ks.length && !es.length) return;
   if(!S.bulkArm){ S.bulkArm = true; bulkLabel(); clearTimeout(wbBulk.t); wbBulk.t = setTimeout(() => { S.bulkArm = false; bulkLabel(); }, 4000); return; }
   S.bulkArm = false; clearTimeout(wbBulk.t);
   let ok = 0, ng = 0;
@@ -482,7 +489,16 @@ async function wbBulk(){
       ok++;
     }catch(e){ ng++; }
   }
-  toast(ng ? `${ok}枚を出しました(${ng}枚は出せませんでした)` : `${ok}枚を添削に出しました`);
+  for(const e of es){
+    try{
+      if(e.draft.isNew && !e.draft.key.trim()) continue;
+      await DB.collection('requests').add(reqDoc(e.kind, e.draft, e.comment));
+      delete EDRAFT[e.kind + '|' + (e.draft.isNew ? '+' : e.draft.key)];
+      if(e.cur || (S.kind === e.kind && S.draft === e.draft)){ S.comment = ''; if(e.draft.isNew){ S.draft = null; S.sel = null; } else { const it = curItem(); if(it) startDraft(it); } }
+      ok++;
+    }catch(err){ ng++; }
+  }
+  toast(ng ? `${ok}件を出しました(${ng}件は出せませんでした)` : `${ok}件を添削に出しました`);
   renderAll();
 }
 async function wbSave(status){
@@ -536,7 +552,7 @@ function renderList(){
   if(wbm){ $('#tbl').innerHTML = wbListHTML(); return; }
   const K = KBY[S.kind], q = S.q.trim().toLowerCase();
   const items = curItems().filter(it => !q || (it.name || '').toLowerCase().includes(q) || it.key.toLowerCase().includes(q));
-  $('#tbl').innerHTML = `<table><thead><tr>${K.head.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${items.map(it => `<tr class="row${S.sel === it.key ? ' sel' : ''}" data-key="${esc(it.key)}" tabindex="0">${K.cells(it).join('')}</tr>`).join('')}</tbody></table>`;
+  $('#tbl').innerHTML = `<table><thead><tr>${K.head.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${items.map(it => { const cs = K.cells(it).slice(); if(eUnsent(S.kind, it.key)) cs[0] = cs[0].replace(/<\/td>$/, '<span class="badge w-review" title="送っていない変更がある">未送信</span></td>'); return `<tr class="row${S.sel === it.key ? ' sel' : ''}" data-key="${esc(it.key)}" tabindex="0">${cs.join('')}</tr>`; }).join('')}</tbody></table>`;
 }
 function fieldHTML(p, v, orig){
   const last = p.split('.').pop(), chg = JSON.stringify(v) !== JSON.stringify(getPath(orig, p)), id = 'f-' + p.replace(/[^\w]/g, '_');
@@ -604,6 +620,7 @@ function renderSide0(){
 }
 // 入力のたびに、描き直さずに変わるところだけ更新する(描き直すとスマホのキーボードが閉じる)
 function refreshDyn(){
+  bulkLabel();
   if(KBY[S.kind] && KBY[S.kind].wb){ wbRefresh(); return; }
   if(!S.draft || S.kind === 'requests') return;
   const K = KBY[S.kind], it = curItem(), orig = S.draft.isNew ? {} : (it ? it.obj : {}), o = S.draft.obj;
@@ -639,25 +656,45 @@ function renderReqPane(){
 function renderAll(){ document.querySelector('main').classList.toggle('wide', S.kind === 'requests'); renderTabs(); renderList(); renderSide(); }
 
 /* ---------- 編集 ---------- */
+// カード以外の未送信の編集: 別の項目・タブに移っても取っておく(キーは「種類|キー」、新規は「種類|+」)
+const EDRAFT = {};
+function eDirty(kind, d, comment){
+  if(!d) return false;
+  if(d.isNew) return !!(d.key && d.key.trim());
+  const it = KBY[kind].items().find(x => x.key === d.key);
+  return !!it && (diff(it.obj, d.obj).length > 0 || !!(comment || '').trim());
+}
+function eStash(){
+  if(!S.draft || !KBY[S.kind] || KBY[S.kind].wb || S.kind === 'requests') return;
+  const id = S.kind + '|' + (S.draft.isNew ? '+' : S.draft.key);
+  if(eDirty(S.kind, S.draft, S.comment)) EDRAFT[id] = {kind:S.kind, draft:S.draft, comment:S.comment, json:S.json, jsonText:S.jsonText};
+  else delete EDRAFT[id];
+}
+const eUnsent = (kind, key) => !!EDRAFT[kind + '|' + key] || (S.kind === kind && S.draft && !S.draft.isNew && S.draft.key === key && eDirty(kind, S.draft, S.comment));
+// 依頼の文書(カード以外の1項目ぶん)
+function reqDoc(kind, d, comment){
+  const now = new Date().toISOString();
+  if(d.isNew){ const key = d.key.trim(); return {at:now, kind, key, label:(d.obj && (d.obj.name || d.obj.title)) || key, type:'new', obj:d.obj, changes:[], comment:(comment || '').trim(), status:'open', thread:[]}; }
+  const it = KBY[kind].items().find(x => x.key === d.key), ch = diff(it.obj, d.obj);
+  return {at:now, kind, key:it.key, label:it.name || it.key, type:ch.length ? 'edit' : 'note', changes:ch, comment:(comment || '').trim(), status:'open', thread:[]};
+}
 function startDraft(it){ S.draft = {isNew:false, key:it.key, obj:clone(it.obj)}; S.json = false; S.jsonErr = ''; S.comment = ''; }
 function selectItem(key){
   if(KBY[S.kind] && KBY[S.kind].wb){ if(!(S.wb && S.wb.key === key)) wbOpen(key); S.sel = key; S.wbDeckOpen = false; S.revertArm = null; S.mobileOpen = true; renderAll(); return; }
   const it = curItems().find(x => x.key === key); if(!it) return;
   if(S.draft && !S.draft.isNew && S.draft.key === key){ S.mobileOpen = true; renderAll(); return; }
-  S.sel = key; startDraft(it); S.mobileOpen = true; renderAll();
+  eStash();
+  S.sel = key; const st = EDRAFT[S.kind + '|' + key];
+  if(st){ S.draft = st.draft; S.comment = st.comment; S.json = st.json; S.jsonText = st.jsonText; S.jsonErr = ''; delete EDRAFT[S.kind + '|' + key]; } else startDraft(it);
+  S.mobileOpen = true; renderAll();
 }
 function toast(t){ const el = $('#toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('on'), 1600); }
 async function send(){
   if(!DB) return;
-  const K = KBY[S.kind], it = curItem(), now = new Date().toISOString();
-  let doc;
-  if(S.draft.isNew){
-    const key = S.draft.key.trim(); if(!key) return;
-    doc = {at:now, kind:S.kind, key, label:(S.draft.obj && (S.draft.obj.name || S.draft.obj.title)) || key, type:'new', obj:S.draft.obj, changes:[], comment:S.comment.trim(), status:'open', thread:[]};
-  } else {
-    const ch = diff(it.obj, S.draft.obj);
-    doc = {at:now, kind:S.kind, key:it.key, label:it.name || it.key, type:ch.length ? 'edit' : 'note', changes:ch, comment:S.comment.trim(), status:'open', thread:[]};
-  }
+  const it = curItem();
+  if(S.draft.isNew && !S.draft.key.trim()) return;
+  const doc = reqDoc(S.kind, S.draft, S.comment);
+  delete EDRAFT[S.kind + '|' + (S.draft.isNew ? '+' : S.draft.key)];
   const btn = $('#sendBtn'); if(btn) btn.disabled = true;
   try{ await DB.collection('requests').add(doc); S.comment = ''; if(S.draft.isNew){ S.draft = null; S.sel = null; } else startDraft(it); toast('送りました'); }
   catch(e){ toast(e && e.code === 'quota_exceeded' ? '保存できる件数の上限です' : '送れませんでした。もう一度試してください'); }
@@ -683,7 +720,7 @@ async function drop(id){
 /* ---------- 入力 ---------- */
 document.addEventListener('click', e => {
   const t = e.target;
-  const tab = t.closest('[data-tab]'); if(tab){ wbStash(); S.kind = tab.dataset.tab; S.sel = null; S.draft = null; S.wb = null; S.wbDeckOpen = false; S.mobileOpen = false; S.q = ''; $('#q').value = ''; renderAll(); return; }
+  const tab = t.closest('[data-tab]'); if(tab){ wbStash(); eStash(); S.kind = tab.dataset.tab; S.sel = null; S.draft = null; S.wb = null; S.wbDeckOpen = false; S.mobileOpen = false; S.q = ''; $('#q').value = ''; renderAll(); return; }
   // カード工房
   const wf = t.closest('[data-wbf]'); if(wf){ S.wbFilter = wf.dataset.wbf; renderList(); return; }
   const wt = t.closest('[data-wbtext]'); if(wt && S.wb){ S.wb.custom = wt.dataset.wbtext === 'custom'; if(S.wb.custom && !S.wb.card.text) S.wb.card.text = genText(S.wb.card); S.wb.dirty = true; renderSide(); return; }
@@ -704,7 +741,7 @@ document.addEventListener('click', e => {
   const row = t.closest('tr.row'); if(row){ selectItem(row.dataset.key); return; }
   const md = t.closest('[data-mode]'); if(md){ setMode(md.dataset.mode === 'json'); return; }
   const rf = t.closest('[data-rf]'); if(rf){ S.reqFilter = rf.dataset.rf; renderList(); return; }
-  const go = t.closest('[data-goto]'); if(go){ const [k, key] = go.dataset.goto.split('|'); if(KBY[k]){ S.kind = k; S.draft = null; renderAll(); if(key) selectItem(key); } return; }
+  const go = t.closest('[data-goto]'); if(go){ const [k, key] = go.dataset.goto.split('|'); if(KBY[k]){ eStash(); S.kind = k; S.draft = null; renderAll(); if(key) selectItem(key); } return; }
   const sr = t.closest('[data-send-reply]'); if(sr){ reply(sr.dataset.sendReply); return; }
   const dr = t.closest('[data-drop]'); if(dr){ drop(dr.dataset.drop); return; }
   if(t.closest('#sendBtn')){ send(); return; }
@@ -712,7 +749,7 @@ document.addEventListener('click', e => {
   if(t.closest('#resetDraft')){ const it = curItem(); if(it){ startDraft(it); renderSide(); } return; }
   if(t.closest('#closeSide')){ S.mobileOpen = false; S.wbDeckOpen = false; renderSide(); if(KBY[S.kind].wb) renderList(); return; }
   if(t.closest('#addBtn') && KBY[S.kind].wb){ wbStash(); const k = 'n' + Date.now().toString(36); S.sel = k; S.wbDeckOpen = false; wbStart(k); S.mobileOpen = true; renderAll(); setTimeout(() => { const n = $('#w_name'); if(n) n.focus(); }, 50); return; }
-  if(t.closest('#addBtn')){ const it = curItem(); S.draft = {isNew:true, key:'', obj:it ? clone(it.obj) : {}}; S.sel = null; S.json = true; S.jsonText = JSON.stringify(S.draft.obj, null, 2); S.jsonErr = ''; S.comment = ''; S.mobileOpen = true; renderAll(); return; }
+  if(t.closest('#addBtn')){ eStash(); const it = curItem(); S.draft = {isNew:true, key:'', obj:it ? clone(it.obj) : {}}; S.sel = null; S.json = true; S.jsonText = JSON.stringify(S.draft.obj, null, 2); S.jsonErr = ''; S.comment = ''; S.mobileOpen = true; renderAll(); return; }
 });
 document.addEventListener('keydown', e => { if(e.key === 'Enter'){ const row = e.target.closest && e.target.closest('tr.row'); if(row) selectItem(row.dataset.key); } });
 function setMode(json){

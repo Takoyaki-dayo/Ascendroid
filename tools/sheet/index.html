@@ -321,7 +321,7 @@ const ACT_X = [['wind', '体勢', [['w', '窓'], ['poise', '一撃']]], ['guard'
 const actAttrs = (a, o) => [a.steal ? `スクラップを${a.steal}盗む` : '', a.eat ? `手札を${a.eat}枚飲み込む` : '', a.rebuild ? `ユニットを耐久${a.rebuild}で直す` : '', a.flee ? '逃げる' : '', a.hits > 1 ? `${a.hits}回` : '',
   a.wind ? `体勢${a.wind.w}/${a.wind.poise}` : '', a.guard ? `防壁${a.guard.w}/${a.guard.s}` : '', a.counter ? `反撃${a.counter.w}/${a.counter.d}` : '', a.rec ? `隙${a.rec}` : '', a.buff ? `増幅+${a.buff}${a.all ? '(全員)' : ''}` : '',
   a.armor ? `ブロック+${a.armor}` : '', a.heal ? `修復${a.heal}` : '', a.crack ? `こちらにクラック+${a.crack}` : '', a.noise ? `ノイズ${a.noise}枚` : '', a.haste ? `加速${a.haste}` : '',
-  a.zone ? `射界(${a.zone.at}後から${a.zone.len}、${a.zone.d}→${SLOT[a.zone.p] || ''})` : '', a.summon ? `増援` : ''].filter(Boolean);
+  a.zone ? `射界(${a.zone.at}後から${a.zone.len}、${a.zone.d}→${SLOT[a.zone.p] || ''})` : '', a.summon ? `増援` : '', ...(a.free || [])].filter(Boolean);
 const actWho = (a, o) => a.by && o.units && o.units[a.by] ? (o.units[a.by].name || a.by) : '';
 // 行動のタイル(ゲームのタイムラインに近い見た目)。押すとその行動の欄を開く
 function actTile(a, o, base){
@@ -356,8 +356,9 @@ function actHTML(base, a, o, orig, units, i, n){
   h += fIn(base + '.dl', o, orig, '次まで') + (a.hits != null ? fIn(base + '.hits', o, orig, '回数') : '') + (o.ai === 'rand' ? fIn(base + '.wt', o, orig, '重み') : '') + fIn(base + '.ch', o, orig, '不安定', 'bool') + '</div>';
   const xs = ACT_X.filter(([k]) => a[k] != null && !(k === 'v' && a.kind === 'delay') && k !== 'wt');
   if(xs.length) h += `<div class="ar ax">${xs.map(([k, lab, sub]) => `<span class="xg"><i>${lab}</i>${sub && typeof a[k] === 'object' ? sub.map(([sk, sl]) => fIn(`${base}.${k}.${sk}`, o, orig, sl, sk === 'p' ? 'part' : 'num')).join('') : fIn(`${base}.${k}`, o, orig, '値', typeof a[k] === 'boolean' ? 'bool' : 'num')}<button type="button" class="ib del" data-fx="delx" data-base="${esc(base)}" data-x="${k}" title="外す">✕</button></span>`).join('')}</div>`;
-  const add = ACT_X.filter(([k]) => a[k] == null && k !== 'v' && k !== 'wt');
-  h += `<div class="ar af"><select data-addx="${esc(base)}"><option value="">＋属性を足す</option>${a.hits == null ? '<option value="hits">回数(多段)</option>' : ''}${add.map(([k, lab]) => `<option value="${k}">${lab}</option>`).join('')}</select></div>`;
+  // 自由記述の効果(0.38.3): a.free = [文…]。仕組みは Claude が依頼を見て作る
+  h += (a.free || []).map((t, j) => `<div class="ar ur">${fIn(`${base}.free.${j}`, o, orig, '効果(文)', 'str')}<button type="button" class="ib del" data-fx="delfree" data-base="${esc(base)}" data-x="${j}" title="消す">✕</button></div>`).join('');
+  h += `<div class="ar af"><label class="ff fw"><span>この攻撃に効果を足す(文で書く。Claude が仕組みにする)</span><input type="text" data-axfor="${esc(base)}" placeholder="例: 当たると、手札をランダムに1枚捨てさせる。"></label><button type="button" class="btn quiet sm" data-axadd="${esc(base)}">＋効果を足す</button></div>`;
   return h + '</div>';
 }
 // 版の切り替え(0.38.0): 敵の警戒版・パーツの強化版を「全体の姿」のまま編集する。変わった欄だけを wary[i] / up[i] に書く
@@ -434,6 +435,7 @@ function foeOp(fx, base, x){
   if(fx === 'delpas'){ const j = +base; o.passives.splice(j, 1); const nm = o.pname || {}, np = {}; for(const [k, v] of Object.entries(nm)){ if(/^\d+$/.test(k)){ if(+k < j) np[k] = v; else if(+k > j) np[+k - 1] = v; } else np[k] = v; } o.pname = np; return; }
   const ps = base.split('.'), i = +ps[ps.length - 1], A = arrOf(base), P = pre(base);
   if(fx === 'delx'){ delete A[i][x]; return; }
+  if(fx === 'delfree'){ A[i].free.splice(+x, 1); if(!A[i].free.length) delete A[i].free; return; }
   if(fx === 'up' && i > 0){ [A[i - 1], A[i]] = [A[i], A[i - 1]]; sayRemap(o, P, k => k === i ? i - 1 : k === i - 1 ? i : k); S.foeOpen = base.replace(/\d+$/, i - 1); }
   if(fx === 'down' && i < A.length - 1){ [A[i + 1], A[i]] = [A[i], A[i + 1]]; sayRemap(o, P, k => k === i ? i + 1 : k === i + 1 ? i : k); S.foeOpen = base.replace(/\d+$/, i + 1); }
   if(fx === 'dup'){ A.splice(i + 1, 0, clone(A[i])); sayRemap(o, P, k => k > i ? k + 1 : k); S.foeOpen = base.replace(/\d+$/, i + 1); }
@@ -1263,6 +1265,8 @@ document.addEventListener('click', e => {
   const va = t.closest('[data-vadd]'); if(va && S.draft && VAR[S.kind]){ vvSync(); vvOpen(VAR[S.kind].add(S.draft.obj)); renderSide(); later(); return; }
   const vd = t.closest('[data-vdel]'); if(vd && S.draft && S.draft.vv != null){ VAR[S.kind].del(S.draft.obj, S.draft.vv); vvOpen(null); renderSide(); later(); return; }
   // 敵のページ: 学習で出やすいカードを押して入れ外し
+  // 敵の行動に自由記述の効果を足す(0.38.3)
+  const ax = t.closest('[data-axadd]'); if(ax && S.draft){ const b = ax.dataset.axadd, inp = document.querySelector(`[data-axfor="${CSS.escape(b)}"]`), tx = inp ? inp.value.trim() : ''; if(!tx){ toast('効果を書いてください'); return; } const a = getPath(edObj(), b); if(a){ a.free = (a.free || []).concat(tx); } vvSync(); renderSide(); later(); return; }
   // 敵のパッシブを自由記述で足す(0.38.2): {k:'free', text} と名前(pname)。仕組みは Claude が依頼を見て作る
   const pa = t.closest('[data-pasadd]'); if(pa && S.draft){ const nm = ($('#pasNewName') || {}).value || '', tx = ($('#pasNewText') || {}).value || ''; if(!nm.trim() && !tx.trim()){ toast('名前か効果を書いてください'); return; } const o = edObj(); o.passives = (o.passives || []).slice(); o.passives.push({k:'free', text:tx.trim()}); (o.pname = Object.assign({}, o.pname))[o.passives.length - 1] = nm.trim(); vvSync(); renderSide(); later(); return; }
   const pl = t.closest('[data-pool]'); if(pl && S.draft){ const k = pl.dataset.pool, a = (edObj().pool = (edObj().pool || []).slice()), i = a.indexOf(k); if(i >= 0) a.splice(i, 1); else a.push(k); renderSide(); later(); return; }

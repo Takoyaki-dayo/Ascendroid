@@ -275,8 +275,9 @@ const KINDS = [
   {id:'cards', label:'カード工房', wb:true, items:() => wbRows().map(r => ({key:r.key, name:r.card.name, obj:r.card})), head:[], cells:() => []},
   {id:'attrs', label:'属性', ab:true, items:() => abRows().map(r => ({key:r.key, name:r.attr.name, obj:r.attr})), head:[], cells:() => []},
   // 敵(0.28.0): 出るところ(appear。エリアと警戒度。変えたいときは書き換えて送る)と、パッシブの中身を上に出す
-  {id:'foes', label:'敵', items:() => Object.entries(D.foes).map(([k, f]) => ({key:k, name:f.name, obj:Object.assign({appear:foeAppear(k)}, clone(f), {say:foeSay(f)})})),
-    head:['名前', '耐久', '行動', '出るところ'], cells:it => [nmCell(it), `<td class="hpc">${String(unitHp(it.obj)).split('・').map(esc).join('<br>')}</td>`, `<td class="tx">${esc(it.obj.pat.map(a => a.n).join(' → '))}</td>`, `<td>${appearChips(it.obj.appear)}</td>`],
+  // 0.38.4: 敵はカードと同じく保存の形(foes/<key> に保存し、そこでやりとり。添削・確定を選ぶ)。obj は保存したもの、base は本体
+  {id:'foes', label:'敵', doc:'foes', items:() => Object.entries(D.foes).map(([k, f]) => { const base = Object.assign({appear:foeAppear(k)}, clone(f), {say:foeSay(f)}); return {key:k, name:(FD[k] && FD[k].foe && FD[k].foe.name) || f.name, base, obj:FD[k] && FD[k].foe ? clone(FD[k].foe) : base, doc:FD[k] || null}; }),
+    head:['名前', '耐久', '行動', '出るところ', '状態'], cells:it => [nmCell(it), `<td class="hpc">${String(unitHp(it.obj)).split('・').map(esc).join('<br>')}</td>`, `<td class="tx">${esc(it.obj.pat.map(a => a.n).join(' → '))}</td>`, `<td>${appearChips(it.obj.appear)}</td>`, `<td>${it.doc ? wbStatusBadge(it.doc.status) + ((it.doc.thread || []).length ? ` <span class="note">💬${it.doc.thread.length}</span>` : '') : ''}</td>`],
     preview:o => foeCard(o), form:(o, orig) => foeForm(o, orig)},
   // セリフ(0.33.0): 自機(K-7)の独り言だけ。場面ごとに1項目(text/lines.csv)。敵のひとことは敵のページの「ひとこと」で(text/enemies.csv の 敵.say.*)
   {id:'lines', label:'セリフ', items:() => lineItems(), head:['場面', '重み', 'セリフ'], cells:it => [nmCell(it), `<td class="num">${it.obj.weight}</td>`, `<td class="tx">${it.obj.lines.length ? it.obj.lines.map(esc).join('<br>') : '<span class="note">(無し)</span>'}</td>`],
@@ -484,7 +485,7 @@ function lineItems(){
   for(const [rk, nm] of Object.entries(LROOM)) out.push({key:`room.${rk}`, name:`部屋の独り言・${nm}`, obj:{weight:((D.lines && D.lines.roomW) || {})[rk] || 1, lines:((D.lines && D.lines.room) || {})[rk] ? D.lines.room[rk].slice() : []}});
   return out;
 }
-function nmCell(it){ const n = openCount(S.kind, it.key); return `<td class="nm">${esc(it.name || it.key)}${n ? ` <span class="badge open">${n}</span>` : ''}<span class="k">${esc(it.key)}</span></td>`; }
+function nmCell(it){ const n = openCount(S.kind, it.key) + (it.doc && cardNeedsMe(it.doc) ? 1 : 0); return `<td class="nm">${esc(it.name || it.key)}${n ? ` <span class="badge open">${n}</span>` : ''}<span class="k">${esc(it.key)}</span></td>`; }
 
 /* ---------- 項目を平らにする(編集の欄と、差分) ---------- */
 const isPrimArr = a => Array.isArray(a) && a.every(v => v === null || typeof v !== 'object');
@@ -535,9 +536,9 @@ const lastWho = t => t && t.length ? t[t.length - 1].who : '';
 const needsMe = r => (r.status === 'open' || r.status === 'discuss') && lastWho(r.thread) === 'claude';
 // 工房のカード・属性は「添削済み」のときだけ(確定・作業中・添削待ち・削るにしたら、返信しなくても消える)
 const cardNeedsMe = d => !!d && d.status === 'reviewed' && lastWho(d.thread) === 'claude';
-const kindReplies = kind => kind === 'cards' ? Object.values(WB).filter(cardNeedsMe).length : kind === 'attrs' ? Object.values(AB).filter(cardNeedsMe).length : REQ.filter(r => needsMe(r) && (r.kind === kind || (r.type === 'batch' && kind === 'requests'))).length;
+const kindReplies = kind => kind === 'cards' ? Object.values(WB).filter(cardNeedsMe).length : kind === 'attrs' ? Object.values(AB).filter(cardNeedsMe).length : (kind === 'foes' ? Object.values(FD).filter(cardNeedsMe).length : 0) + REQ.filter(r => needsMe(r) && (r.kind === kind || (r.type === 'batch' && kind === 'requests'))).length;
 const itemReplies = (kind, key) => REQ.filter(r => needsMe(r) && r.kind === kind && r.key === key).length;
-const allReplies = () => REQ.filter(needsMe).length + Object.values(WB).filter(cardNeedsMe).length + Object.values(AB).filter(cardNeedsMe).length;
+const allReplies = () => REQ.filter(needsMe).length + Object.values(WB).filter(cardNeedsMe).length + Object.values(AB).filter(cardNeedsMe).length + Object.values(FD).filter(cardNeedsMe).length;
 function curItems(){ return KBY[S.kind].items(); }
 function curItem(){ return S.sel ? curItems().find(it => it.key === S.sel) : null; }
 
@@ -874,6 +875,8 @@ async function bulkSend(){
   }
   for(const e of es){
     try{
+      // 保存の形の種類(敵)は、依頼ではなく文書を添削待ちで保存する
+      if(KBY[e.kind].doc && !e.draft.isNew){ const it = KBY[e.kind].items().find(x => x.key === e.draft.key), prev = it && it.doc; await DB.doc(KBY[e.kind].doc + '/' + e.draft.key).set({key:e.draft.key, foe:clone(e.draft.obj), idea:(e.comment || '').trim(), status:'review', thread:(prev && prev.thread) || [], at:now}); delete EDRAFT[e.kind + '|' + e.draft.key]; ok++; continue; }
       await DB.collection('requests').add(reqDoc(e.kind, e.draft, e.comment));
       delete EDRAFT[e.kind + '|' + (e.draft.isNew ? '+' : e.draft.key)];
       if(e.cur || (S.kind === e.kind && S.draft === e.draft)){ S.comment = ''; if(e.draft.isNew){ S.draft = null; S.sel = null; } else { const it = curItem(); if(it) startDraft(it); } }
@@ -913,7 +916,10 @@ function wbPayload(){
   for(const [k, d] of Object.entries(WB)){ if(d.status === 'cut'){ cards[k] = null; continue; } const c = clone(d.card); if(!c.text) c.text = genText(c); cards[k] = c; }
   // レア度(0.32.0): 工房で付けたレア度を試遊の出やすさに使う
   const rarity = {}; for(const [k, d] of Object.entries(WB)) if(d.rarity) rarity[k] = d.rarity;
-  return Object.assign({type:'asc-cards', cards, rarity, startDeck: wbDeck(), at: Date.now()}, abPayload());
+  // 0.38.4: 保存した敵(削るものを除く)。工房だけの欄(出るところ・空のひとこと・自由記述)は外す
+  const foes = {};
+  for(const [k, d] of Object.entries(FD)){ if(!d.foe || d.status === 'cut') continue; const f = clone(d.foe); delete f.appear; if(f.say){ for(const s of Object.keys(f.say)){ const v = [].concat(f.say[s] || []).filter(Boolean); if(v.length) f.say[s] = v.length > 1 ? v : v[0]; else delete f.say[s]; } } if(f.passives) f.passives = f.passives.filter(p => p.k !== 'free'); foes[k] = f; }
+  return Object.assign({type:'asc-cards', cards, rarity, foes, startDeck: wbDeck(), at: Date.now()}, abPayload());
 }
 function openPlay(){
   const p = wbPayload();
@@ -1106,7 +1112,7 @@ function renderSide0(){
     side.innerHTML = `<div class="empty">一覧から項目を選ぶと、ここで数値や文を書き換えられます。書き換えたら、下にコメントを添えて「送る」で依頼になります。数値を変えずにコメントだけ送れば相談になります。</div>`;
     return;
   }
-  const orig0 = S.draft.isNew ? {} : it.obj, vv = S.draft.vv != null && VAR[S.kind] ? S.draft.vv : null;
+  const orig0 = S.draft.isNew ? {} : (it.base || it.obj), vv = S.draft.vv != null && VAR[S.kind] ? S.draft.vv : null;
   const o = vv != null ? S.draft.vvObj : S.draft.obj, orig = vv != null ? VAR[S.kind].make(orig0, vv) : orig0;
   let body = '';
   if(K.preview) body += `<div class="preview" id="pv"></div>`;
@@ -1126,6 +1132,7 @@ function renderSide0(){
     if(rs.length) body += `<div class="grp"><h3>この項目の依頼</h3><div class="reqs">${rs.map(r => reqHTML(r, false)).join('')}</div></div>`;
   }
   const title = S.draft.isNew ? `${K.label}を追加` : esc(it.name || it.key);
+  if(K.doc && !S.draft.isNew){ side.innerHTML = docSideHTML(K, it, title, body); refreshDyn(); return; }
   side.innerHTML = `<div class="side-h"><div><h2>${title}</h2>${S.draft.isNew ? '' : `<span class="k">${esc(S.kind)} · ${esc(it.key)}</span>`}</div><button class="btn quiet x" type="button" id="closeSide">閉じる</button></div>
     <div class="side-b" id="sideb">${body}</div>
     <div class="send">
@@ -1142,7 +1149,8 @@ function refreshDyn(){
   bulkLabel();
   if(KBY[S.kind] && KBY[S.kind].wb){ wbRefresh(); return; }
   if(!S.draft || S.kind === 'requests') return;
-  const K = KBY[S.kind], it = curItem(), orig = S.draft.isNew ? {} : (it ? it.obj : {}), o = S.draft.obj;
+  const K = KBY[S.kind], it = curItem(), orig = S.draft.isNew ? {} : (it ? (it.base || it.obj) : {}), o = S.draft.obj;
+  if(K.doc && !S.draft.isNew){ docRefresh(K, it, orig); }
   const vo = edObj(), vorig = S.draft.vv != null && VAR[S.kind] ? VAR[S.kind].make(orig, S.draft.vv) : orig;
   const pv = $('#pv'); if(pv) pv.innerHTML = vo && typeof vo === 'object' ? K.preview(vo) : '';
   const jm = $('#jsonmsg'); if(jm) jm.innerHTML = S.jsonErr ? `<div class="err">${esc(S.jsonErr)}</div>` : '<div class="note">欄にない項目を足すときや、行動を増やすときはこちら。</div>';
@@ -1189,6 +1197,7 @@ function eDirty(kind, d, comment){
   if(!d) return false;
   if(d.isNew) return !!(d.key && d.key.trim());
   const it = KBY[kind].items().find(x => x.key === d.key);
+  if(it && KBY[kind].doc) return diff(it.obj, d.obj).length > 0 || (comment || '') !== ((it.doc && it.doc.idea) || '');
   return !!it && (diff(it.obj, d.obj).length > 0 || !!(comment || '').trim());
 }
 function eStash(){
@@ -1205,7 +1214,53 @@ function reqDoc(kind, d, comment){
   const it = KBY[kind].items().find(x => x.key === d.key), ch = diff(it.obj, d.obj);
   return {at:now, kind, key:it.key, label:it.name || it.key, type:ch.length ? 'edit' : 'note', changes:ch, comment:(comment || '').trim(), status:'open', thread:[]};
 }
-function startDraft(it){ S.draft = {isNew:false, key:it.key, obj:clone(it.obj)}; S.json = false; S.jsonErr = ''; S.comment = ''; }
+function startDraft(it){ S.draft = {isNew:false, key:it.key, obj:clone(it.obj)}; S.json = false; S.jsonErr = ''; S.comment = (it.doc && it.doc.idea) || ''; S.docReply = ''; S.revertArm = null; }
+/* ---------- 保存の形(0.38.4、敵): カードと同じく、変更は文書(foes/<key>)に保存し、そこにやりとりを書く。添削に出す・確定にするを選ぶ ----------
+   foes/<key> {key, foe:編集した全体の姿, idea:メモ, status:draft|review|reviewed|ok|merged|cut, thread:[{who, text, at}], at} */
+let FD = {};
+const DOCS = () => ({foes:FD});
+function docSideHTML(K, it, title, body){
+  const d = it.doc, st = d ? d.status : 'base';
+  const thread = (d && d.thread || []).map(m => `<div class="msg ${m.who === 'claude' ? 'claude' : 'user'}"><span class="w">${m.who === 'claude' ? 'Claude' : 'あなた'} · ${fmt(m.at)}</span>${esc(m.text)}</div>`).join('');
+  return `<div class="side-h"><div><h2>${title}</h2><span class="k">${esc(S.kind)} · ${esc(it.key)} ${wbStatusBadge(st)} <span class="badge w-review" id="docinfo" hidden>未保存</span></span></div><button class="btn quiet x" type="button" id="closeSide">閉じる</button></div>
+    <div class="side-b" id="sideb">${body}
+      <div class="grp"><h3>やりたいこと・メモ</h3><textarea id="comment" class="wtext" placeholder="狙い、迷っている点、まだ作れない効果など">${esc(S.comment)}</textarea></div>
+      ${d ? `<div class="grp"><h3>添削のやりとり</h3>${thread || '<div class="note">まだありません。「添削に出す」で Claude が見ます。</div>'}<div class="reply"><input id="doc_reply" type="text" placeholder="返信・質問" value="${esc(S.docReply || '')}"><button class="btn quiet" type="button" id="docReply">送る</button></div></div>` : ''}
+    </div>
+    <div class="send">
+      <div class="diff" id="diffbox"></div>
+      <div class="row btns"><span class="sp" id="sendinfo"></span>
+        ${d ? `<button class="btn ${S.revertArm === it.key ? '' : 'quiet'}" type="button" id="docRevert" title="工房での変更を消して本体の値に戻す">${S.revertArm === it.key ? 'もう一度押すと戻す(やりとりも消える)' : '本体に戻す'}</button>` : ''}
+        <button class="btn quiet" type="button" id="docSave">保存</button><button class="btn" type="button" id="docReview">${st === 'review' ? '添削待ち' : '添削に出す'}</button></div>
+      ${d && (st === 'reviewed' || st === 'review' || st === 'draft') ? '<div class="row btns"><button class="btn ghost" type="button" id="docOk">確定にする(本体への反映を頼む)</button></div>' : ''}
+    </div>`;
+}
+// 保存していない変更があるか(保存したもの、無ければ本体と比べる)
+function docDirty(it){ return !!it && (JSON.stringify(S.draft.obj) !== JSON.stringify(it.obj) || (S.comment || '') !== ((it.doc && it.doc.idea) || '')); }
+function docRefresh(K, it, orig){
+  const inf = $('#docinfo'); if(inf) inf.hidden = !docDirty(it);
+  for(const id of ['docSave', 'docReview']){ const b = $('#' + id); if(b) b.disabled = !DB; }
+}
+function docPayload(kind, key, obj){ const o = clone(obj); return o; }
+async function docSave(status){
+  const K = KBY[S.kind], it = curItem(); if(!DB || !K || !K.doc || !it) return;
+  vvSync();
+  const prev = it.doc, now = new Date().toISOString();
+  const st = status || (prev && !['base', 'merged', 'reviewed'].includes(prev.status) ? prev.status : 'draft');
+  const doc = {key:it.key, [K.doc === 'foes' ? 'foe' : 'obj']:docPayload(S.kind, it.key, S.draft.obj), idea:(S.comment || '').trim(), status:st, thread:(prev && prev.thread) || [], at:now};
+  try{ await DB.doc(K.doc + '/' + it.key).set(doc); delete EDRAFT[S.kind + '|' + it.key]; toast(status === 'review' ? '添削に出しました' : status === 'ok' ? '確定にしました' : '保存しました'); }
+  catch(e){ toast(e && e.code === 'quota_exceeded' ? '保存できる量の上限です' : '保存できませんでした'); }
+}
+async function docReply(){
+  const K = KBY[S.kind], it = curItem(), inp = $('#doc_reply'); if(!DB || !K || !K.doc || !it || !it.doc || !inp) return; const t = inp.value.trim(); if(!t) return;
+  try{ await DB.doc(K.doc + '/' + it.key).update({thread:[...(it.doc.thread || []), {who:'user', text:t, at:new Date().toISOString()}], status: it.doc.status === 'reviewed' ? 'review' : it.doc.status}); S.docReply = ''; toast('送りました'); }catch(e){ toast('送れませんでした'); }
+}
+async function docRevert(){
+  const K = KBY[S.kind], it = curItem(); if(!DB || !K || !K.doc || !it || !it.doc) return;
+  if(S.revertArm !== it.key){ S.revertArm = it.key; renderSide(); return; }
+  S.revertArm = null;
+  try{ await DB.doc(K.doc + '/' + it.key).delete(); delete DOCS()[S.kind][it.key]; delete EDRAFT[S.kind + '|' + it.key]; startDraft(curItem()); toast('本体の値に戻しました'); renderAll(); }catch(e){ toast('戻せませんでした'); }
+}
 function selectItem(key){
   S.bulkOpen = false;
   if(KBY[S.kind] && KBY[S.kind].ab){ if(!(S.ab && S.ab.key === key)) abOpen(key); S.sel = key; S.mobileOpen = true; renderAll(); return; }
@@ -1298,6 +1353,11 @@ document.addEventListener('click', e => {
   const ag = t.closest('[data-agree]'); if(ag){ agree(ag.dataset.agree); return; }
   const dr = t.closest('[data-drop]'); if(dr){ drop(dr.dataset.drop); return; }
   if(t.closest('#sendBtn')){ send(); return; }
+  if(t.closest('#docSave')){ docSave(); return; }
+  if(t.closest('#docReview')){ docSave('review'); return; }
+  if(t.closest('#docOk')){ docSave('ok'); return; }
+  if(t.closest('#docReply')){ docReply(); return; }
+  if(t.closest('#docRevert')){ docRevert(); return; }
   if(t.closest('#sendGeneral')){ sendGeneral(); return; }
   if(t.closest('#resetDraft')){ const it = curItem(); if(it){ startDraft(it); renderSide(); } return; }
   if(t.closest('#closeSide')){ if(S.bulkOpen){ S.bulkOpen = false; renderAll(); return; } S.mobileOpen = false; S.wbDeckOpen = false; renderSide(); if(KBY[S.kind] && KBY[S.kind].wb) renderList(); return; }
@@ -1327,6 +1387,7 @@ document.addEventListener('input', e => {
   if(t.id === 'bulkText'){ S.bulkText = t.value; keepUnsent(); return; }
   if(t.id === 'w_reply' && S.wb){ S.wb.reply = t.value; return; }
   if(t.id === 'a_reply' && S.ab){ S.ab.reply = t.value; return; }
+  if(t.id === 'doc_reply'){ S.docReply = t.value; return; }
   // 敵のページ: パッシブを足す(数は0から)
   if(t.dataset && t.dataset.addpas && S.draft && t.value){ const o = edObj(); (o.passives = (o.passives || []).slice()).push(t.value === 'command' ? {k:'command', unit:Object.keys(o.units || {})[0] || '', n:0} : ['loot', 'hoard'].includes(t.value) ? {k:t.value} : {k:t.value, n:0}); vvSync(); renderSide(); later(); return; }
   if(t.dataset && t.dataset.vat && S.draft && S.draft.vv != null){ const v = Math.max(1, Math.min(10, Math.round(+t.value) || 1)); S.draft.obj.wary[S.draft.vv].at = v; later(); return; }
@@ -1409,6 +1470,15 @@ renderAll();
     const changed = !cur || JSON.stringify(AB[cur] || null) !== before;
     if(changed && S.ab && !S.ab.dirty && AB[cur]){ const rp = S.ab.reply; abStart(cur); S.ab.reply = rp; }
     requestRender(changed && !!(KBY[S.kind] && KBY[S.kind].ab));
+  }, () => {});
+  DB.collection('foes').onSnapshot(s => {
+    const k = S.kind === 'foes' && S.draft && !S.draft.isNew ? S.draft.key : null, before = k ? JSON.stringify(FD[k] || null) : '';
+    const prevIt = k ? KBY.foes.items().find(x => x.key === k) : null, clean = !!prevIt && !docDirty(prevIt);
+    FD = {}; for(const d of s.docs) FD[d.id] = d.data();
+    const changed = !k || JSON.stringify(FD[k] || null) !== before;
+    // 開いている敵の文書が変わったら、保存していない変更がなければ保存したものから編集し直す(返信の書きかけと開いている版は残す)
+    if(changed && k && clean){ const it = KBY.foes.items().find(x => x.key === k); if(it){ const rp = S.docReply, vv = S.draft.vv, fo = S.foeOpen; startDraft(it); S.docReply = rp; S.foeOpen = fo; if(vv != null && VAR.foes.tabs(S.draft.obj).some(t => t.i === vv)) vvOpen(vv); S.foeOpen = fo; } }
+    requestRender(changed && S.kind === 'foes');
   }, () => {});
   DB.doc('config/deck').onSnapshot(d => { WBDECK = d.exists ? d.data() : null; requestRender(S.wbDeckOpen && !S.wbDeckDraft); }, () => {});
   DB.collection('requests').onSnapshot(s => { REQ = s.docs.map(d => Object.assign({id:d.id}, d.data())); dbState = 'on'; if(busy()){ S.pending = true; renderTabs(); refreshDyn(); } else renderAll(); },

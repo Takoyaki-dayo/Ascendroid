@@ -1,6 +1,6 @@
 // Ascendroid サービスワーカー
 // 更新するときは VERSION をアプリのバージョン(index.html の APP_VERSION)と同じ値にする
-const VERSION = '0.38.3';
+const VERSION = '0.38.4';
 const CACHE = 'tower-' + VERSION;
 const CORE = [
   './',

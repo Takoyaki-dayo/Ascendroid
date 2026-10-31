@@ -212,7 +212,10 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 .chd{display:flex;align-items:center;gap:4px;height:26px;padding:0 5px;flex:none}
 .cost{width:18px;height:18px;flex:none;border:1.5px solid var(--cy);border-radius:9px;background:var(--bg);color:var(--cy);font-family:var(--f-num);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center}
 .cname{font-size:10.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
-.cname.ca{color:#c9b3ff} /* 属性付きのカードの名前(0.28.0) */
+/* カードの名前(0.36.2): 枠に収まるよう文字の大きさを名前の長さで決める(nameHTML)。属性の部分は小さく紫で上の段、カードの名前の色はそのまま */
+.cname.stk{display:flex;flex-direction:column;justify-content:center;line-height:1.08}
+.cname .cna{color:#b98cff;font-weight:700;overflow:hidden;text-overflow:ellipsis}
+.cname .cnb{overflow:hidden;text-overflow:ellipsis}
 .cart{position:relative;display:block;height:60px;flex:none;margin:0 4px;border-radius:4px;background:repeating-linear-gradient(135deg,#17222e 0 6px,#131c27 6px 12px)}
 .atom{position:absolute;left:6px;top:7px;width:7px;height:7px;background:var(--fg);transform:rotate(45deg)}
 .cval{position:absolute;right:5px;top:4px;display:flex;align-items:center;gap:3px;padding:1px 4px;border-radius:4px;background:rgba(10,15,21,.75)}
@@ -1207,7 +1210,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 <script src="data/text.js"></script>
 <script src="js/engine.js"></script>
 <script>
-const APP_VERSION = '0.36.1';
+const APP_VERSION = '0.36.2';
 const $ = s => document.querySelector(s);
 const EN = ENGINE, RULE = EN.RULE;
 const VIEW = RULE.view, NOW = 170, PX = 34, xs = c => NOW + c * PX, STRIP_Y = 150, SWIFT_VIS = 3;
@@ -1399,9 +1402,17 @@ function cardText(k, st, refs){
   h = h.replace(/\u0001/g, '<br>');
   return h.replace(/\u0000(\w+)\u0000/g, (m, key) => refs ? `<button type="button" class="${KW_CLS[key] || 'kw'} ref" data-act="ref" data-arg="kw:${key}">${DATA.kwName[key]}</button>` : `<span class="${KW_CLS[key] || 'kw'}">${DATA.kwName[key]}</span>`);
 }
+// カードの名前(0.36.2): 名前の欄の幅(px)に収まる文字の大きさ。全角は1字、半角は0.6字として数える(太字の幅の分だけ少し余らせる)
+const NAME_W = 59, emW = s => [...String(s)].reduce((w, ch) => w + (/[\x20-\x7e]/.test(ch) ? 0.6 : 1), 0);
+const fitPx = (s, max, min) => Math.max(min, Math.min(max, Math.floor(NAME_W / Math.max(1, emW(s)) * 10) / 10));
+function nameHTML(c){
+  const an = c.attr ? (c.attrName || '') : '', bn = an ? (c.baseName || c.name.slice(an.length)) : c.name;
+  const b = `<span class="cnb" style="font-size:${fitPx(bn, 10.5, 7)}px">${bn}</span>`;
+  return `<span class="cname${an ? ' stk' : ''}${c.upgraded ? ' cu' : ''}">${an ? `<span class="cna" style="font-size:${fitPx(an, 8, 6)}px">${an}</span>` : ''}${b}</span>`;
+}
 function cardInner(k, st, count, refs, cd){
   const c = CARDS[k], co = cd ? EN.costOf(cd) : c.cost, dc = co - c.cost;
-  return `<i class="ck" data-ck="${k}" data-rar="${DATA.rarityOf(k)}" hidden></i><span class="chd"><span class="cost${co === 0 ? ' zero' : ''}${dc > 0 ? ' cup' : dc < 0 ? ' cdn' : ''}">${co}</span><span class="cname${c.attr ? ' ca' : ''}${c.upgraded ? ' cu' : ''}">${c.name}</span></span><span class="cart t-${cardType(c)}"><span class="cwm">${IC[cardType(c)]}</span>${c.atomic ? '<i class="atom"></i>' : ''}<span class="cval"><span class="ic">${IC[cardType(c)]}</span><b>${cardVal(k, st)}</b></span></span><span class="ctx${((CARDS[k].text || '') + (CARDS[k].attrText || '')).replace(/\{\w+\}/g, '00').length > 22 ? ' long' : ''}">${cardText(k, st, refs)}</span>${count > 1 ? `<span class="cnt">×${count}</span>` : ''}`;
+  return `<i class="ck" data-ck="${k}" data-rar="${DATA.rarityOf(k)}" hidden></i><span class="chd"><span class="cost${co === 0 ? ' zero' : ''}${dc > 0 ? ' cup' : dc < 0 ? ' cdn' : ''}">${co}</span>${nameHTML(c)}</span><span class="cart t-${cardType(c)}"><span class="cwm">${IC[cardType(c)]}</span>${c.atomic ? '<i class="atom"></i>' : ''}<span class="cval"><span class="ic">${IC[cardType(c)]}</span><b>${cardVal(k, st)}</b></span></span><span class="ctx${((CARDS[k].text || '') + (CARDS[k].attrText || '')).replace(/\{\w+\}/g, '00').length > 22 ? ' long' : ''}">${cardText(k, st, refs)}</span>${count > 1 ? `<span class="cnt">×${count}</span>` : ''}`;
 }
 // 長押しで説明を出すキーワード: カードの文に出てくるもの
 function cardKw(k){

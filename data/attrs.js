@@ -60,7 +60,7 @@ DATA.attrText = a => {
 // 属性付きのカードの定義を作る。c は元のカード(キャラの数値を当てたもの)
 DATA.attrCard = (c, a) => {
   const A = DATA.attrs[a], o = JSON.parse(JSON.stringify(c));
-  o.attr = a; o.name = (A && A.name || '') + (c.name || ''); o.attrText = DATA.attrText(a);
+  o.attr = a; o.name = (A && A.name || '') + (c.name || ''); o.attrName = (A && A.name) || ''; o.baseName = c.name || ''; o.attrText = DATA.attrText(a);
   const f = (A && A.fx) || {};
   if(f.exile) o.exile = true;
   if(A && A.on === 'mod'){

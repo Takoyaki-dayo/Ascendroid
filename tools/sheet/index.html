@@ -475,7 +475,7 @@ function diff(a, b){
   return out;
 }
 // 欄の名前
-const LB = {up:'強化', rep:'くり返す回数', rarity:'レア度', heavyRanged:'4コスト以上の遠隔+', drawShift:'効果で引いたカードのコスト±', partDamage:'部位を損傷', rerollParts:'全パーツを付け替え', instant:'インスタント(使い始めに捨てる)', dotCut:'侵食を減らす(回数/威力)', needDot:'対象の侵食がこれ未満だと使えない', justBreak:'JUST: 敵の行動をブレイク', justWeak:'JUST: 虚弱', selfCrack:'自分にクラック', amp:'増幅(この戦闘の間)', selfDmg:'自分にダメージ', say:'ひとこと(空なら言わない)', lines:'セリフ', weight:'重み(選ばれやすさ)', order:'順番', dot:'侵食(回数/威力)', ward:'防壁(サイクル数/量)', exile:'廃棄', breakNext:'次の行動をブレイク', discard:'選んで捨てる枚数', grow:'戦闘中に増えるダメージ', scrapBreak:'破壊でスクラップ', wary:'警戒版', patAdd:'足す行動', cost:'コスト', name:'名前', text:'効果文', tgt:'単体を狙う', all:'全体', dmg:'ダメージ', n:'名前・値', t:'種類', x:'回数', block:'ブロック', delay:'ディレイ', crack:'クラック', draw:'引く枚数',
+const LB = {up:'強化', rep:'くり返す回数', rarity:'レア度', heavyRanged:'4コスト以上の遠隔+', drawShift:'効果で引いたカードのコスト±', partDamage:'部位を損傷', rerollParts:'全パーツを付け替え', instant:'インスタント(使い始めに捨てる)', dotCut:'侵食を減らす(回数/威力)', needDot:'対象の侵食の回数がこれ未満だと使えない', needDotP:'対象の侵食の威力がこれ未満だと使えない', justBreak:'JUST: 敵の行動をブレイク', justWeak:'JUST: 虚弱', selfCrack:'自分にクラック', amp:'増幅(この戦闘の間)', selfDmg:'自分にダメージ', say:'ひとこと(空なら言わない)', lines:'セリフ', weight:'重み(選ばれやすさ)', order:'順番', dot:'侵食(回数/威力)', ward:'防壁(サイクル数/量)', exile:'廃棄', breakNext:'次の行動をブレイク', discard:'選んで捨てる枚数', grow:'戦闘中に増えるダメージ', scrapBreak:'破壊でスクラップ', wary:'警戒版', patAdd:'足す行動', cost:'コスト', name:'名前', text:'効果文', tgt:'単体を狙う', all:'全体', dmg:'ダメージ', n:'名前・値', t:'種類', x:'回数', block:'ブロック', delay:'ディレイ', crack:'クラック', draw:'引く枚数',
   timer:'遅れて効く', atomic:'アトミック', parry:'受け流し', gain:'充電を得る', spend:'充電を消費', per:'充電1あたり', junk:'ノイズ', k7:'K-7 の数値',
   hp:'耐久', start:'最初の行動まで', kind:'見た目', ai:'行動の選び方', pat:'行動', phase:'耐久が減った後', at:'条件・位置', d:'ダメージ', dl:'コスト', p:'狙う部位', ch:'不安定',
   appear:'出るところ', wind:'体勢', w:'窓', poise:'ブレイクに要る一撃', guard:'防壁', s:'量・大きさ', counter:'反撃', rec:'隙', buff:'増幅', hits:'回数', armor:'装甲', heal:'修復', noise:'ノイズ', haste:'加速', zone:'危険域',
@@ -530,7 +530,7 @@ const FOLDS = {
   def:{title:'守り・手札', sum:c => [c.block != null && c.block !== '' ? 'ブロック' + c.block : '', c.ward ? `防壁${c.ward.w}/${c.ward.s}` : '', c.draw ? c.draw + '枚引く' : '', c.discard ? (c.instant ? 'インスタント・' : '') + c.discard + '枚選んで捨てる' : '']},
   timer:{title:'時限', sum:c => [c.timer ? `${c.timer.t}サイクル後に${c.timer.dmg.n}` : '']},
   charge:{title:'充電', sum:c => [c.gain ? '得る' + c.gain : '', c.spend ? (c.spend.n ? c.spend.n + '消費' : 'すべて消費') : '']},
-  dot:{title:'侵食', sum:c => [c.dot ? `${c.dot.n || 0}/${c.dot.p || 0}` : '', c.dotCut ? `−${c.dotCut.n || 0}/${c.dotCut.p || 0}` : '', c.needDot ? `回数${c.needDot}以上で使える` : '']},
+  dot:{title:'侵食', sum:c => [c.dot ? `${c.dot.n || 0}/${c.dot.p || 0}` : '', c.dotCut ? `−${c.dotCut.n || 0}/${c.dotCut.p || 0}` : '', c.needDot ? `回数${c.needDot}以上で使える` : '', c.needDotP ? `威力${c.needDotP}以上で使える` : '']},
   trait:{title:'性質', sum:c => [c.atomic ? 'アトミック' : '', c.parry ? '受け流し' : '', c.exile ? '廃棄' : '']},
   up:{title:'強化', sum:c => [c.up ? Object.entries(c.up).map(([k, v]) => (LB[k] || k) + ':' + (v && typeof v === 'object' ? Object.values(v).filter(x => typeof x === 'number').join('/') : v)).join(' ') : '']},
   etc:{title:'特殊', sum:c => [c.justBreak ? 'JUST:ブレイク' : '', c.justWeak ? 'JUST:虚弱' + c.justWeak : '', c.breakNext ? '次の行動をブレイク' : '', c.grow ? '戦闘中+' + c.grow : '', c.scrapBreak ? '破壊でスクラップ' + c.scrapBreak : '', c.amp && c.amp.n ? (TNAME[c.amp.t] || '') + '増幅' + c.amp.n : '', c.selfCrack ? '自分にクラック' + c.selfCrack : '', c.selfDmg ? 'HPを' + c.selfDmg + '失う' : '']},
@@ -655,7 +655,7 @@ function wbSideHTML(){
       ${sp ? numIn('w_per', c.spend.dmg ? c.spend.dmg.n : c.spend.block, sp[0] === 'f' ? (sp === 'fdmg' ? 'ダメージ(合計)' : 'ブロック(合計)') : '充電1あたり') + (c.spend.dmg ? `<div class="fld"><label for="w_spt">種類</label>${sel('w_spt', c.spend.dmg.t, [['ranged', '遠隔'], ['melee', '近接']])}</div>` : '') : ''}`)}
     ${fold('dot', `
       ${numIn('w_dotn', c.dot ? c.dot.n : '', '回数')}${numIn('w_dotp', c.dot ? c.dot.p : '', '威力')}
-      ${numIn('w_cutn', c.dotCut ? c.dotCut.n : '', '対象の侵食を減らす: 回数')}${numIn('w_cutp', c.dotCut ? c.dotCut.p : '', '対象の侵食を減らす: 威力')}${numIn('w_needdot', c.needDot, '対象の侵食の回数がこれ未満だと使えない')}
+      ${numIn('w_cutn', c.dotCut ? c.dotCut.n : '', '対象の侵食を減らす: 回数')}${numIn('w_cutp', c.dotCut ? c.dotCut.p : '', '対象の侵食を減らす: 威力')}${numIn('w_needdot', c.needDot, '対象の侵食の回数がこれ未満だと使えない')}${numIn('w_needdotp', c.needDotP, '対象の侵食の威力がこれ未満だと使えない')}
       <div class="note">与えたユニットの侵食に足される(合算)。毎サイクル威力分のダメージ、回数が1減り、0で消える</div>`)}
     ${fold('trait', `
       <div class="fld"><label>性質</label><span class="chks"><label><input type="checkbox" data-wb="w_atomic"${c.atomic ? ' checked' : ''}> アトミック</label><label><input type="checkbox" data-wb="w_parry"${c.parry ? ' checked' : ''}> 受け流し(JUST)</label><label><input type="checkbox" data-wb="w_exile"${c.exile ? ' checked' : ''}> 廃棄(使うとこの戦闘の間戻らない)</label></span></div>`)}
@@ -724,6 +724,7 @@ function wbInput(id, el){
     case 'w_instant': if(el.checked) c.instant = true; else delete c.instant; break;
     case 'w_cutn': case 'w_cutp': { const d = c.dotCut || {n:0, p:0}; d[id === 'w_cutn' ? 'n' : 'p'] = num() || 0; if(!d.n && !d.p) delete c.dotCut; else c.dotCut = d; break; }
     case 'w_needdot': setN('needDot', num()); break;
+    case 'w_needdotp': setN('needDotP', num()); break;
     case 'w_jbrk': if(el.checked) c.justBreak = true; else delete c.justBreak; break;
     case 'w_jweak': setN('justWeak', num()); break;
     case 'w_ampt': if(el.value) c.amp = {t:el.value, n:(c.amp && c.amp.n) || 0}; else delete c.amp; return 'full';

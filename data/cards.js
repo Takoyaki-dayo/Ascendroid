@@ -9,7 +9,7 @@
 // atomic: アトミック(中断されない)
 // (0.29.0〜0.33.0) dot:{n:回数, p:威力} 侵食(0.29 の持続)を与える / selfCrack: 自分にクラック / amp:{t, n} 自機の増幅(この戦闘の間) / selfDmg: 自分にダメージ(本体に直接)
 //   / ward:{w, s} 防壁(w サイクルの間、合計 s までのダメージを防ぐ) / exile: 使うと廃棄(この戦闘の間戻らない)
-//   (0.35.0) instant: インスタント(discard を使い始めたときに行う) / dotCut:{n, p} 対象の侵食を減らす / needDot: 対象の侵食の回数がこれ未満だと使えない
+//   (0.35.0) instant: インスタント(discard を使い始めたときに行う) / dotCut:{n, p} 対象の侵食を減らす / needDot・needDotP: 対象の侵食の回数・威力がこれ未満だと使えない(needDotP は 0.36.3)
 //   justBreak・justWeak: JUST のとき、その敵の行動をブレイクする・虚弱を与える(虚弱: 敵の攻撃のダメージ−、0未満にならない)
 //   breakNext: 対象の敵の次の行動をブレイク / discard: 使い終えた後、手札を選んで捨てる枚数 / grow: この戦闘の間、同じカードのダメージ+ / scrapBreak: このカードでユニットを破壊したときのスクラップ
 // gain: 充電を得る / spend: 充電をすべて消費し、1につき {dmg:{t, n}} のダメージ、または block のブロック(アーキタイプ「充電」)
@@ -48,7 +48,7 @@ DATA.cards = {
   // 0.35.0: 工房で作られたカード(名前はユーザー)
   crush:    {cost:3, tgt:true, dmg:{t:'melee', n:12}, dot:{n:1, p:4}},
   parallel: {cost:1, block:12, selfDmg:4},
-  phack:    {cost:2, tgt:true, dotCut:{n:4, p:0}, dot:{n:0, p:3}, needDot:4, up:{rep:2}},
+  phack:    {cost:2, tgt:true, dotCut:{n:0, p:4}, dot:{n:3, p:0}, needDotP:4, up:{rep:2}}, // 0.36.3: 威力を4減らして回数を3増やす(0.35.0 は逆だった)
   careful:  {cost:2, tgt:true, dmg:{t:'melee', n:7}, block:5},
   foresight:{cost:3, tgt:true, justBreak:true, justWeak:1},
   // 0.36.0

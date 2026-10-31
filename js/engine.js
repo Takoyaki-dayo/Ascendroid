@@ -268,9 +268,9 @@ const baseKey = k => String(k).split('@')[0].replace(/\+$/, '');
 const growOf = (b, k) => (b && b.grow && k) ? (b.grow[baseKey(k)] || 0) : 0;
 // 決まった量の充電を消費するカード(spend.n)は、充電が足りないと使えない
 const spendShort = (b, c) => !!(c && c.spend && c.spend.n && (b.charge || 0) < c.spend.n);
-// 対象の侵食の回数が足りないと使えない(0.35.0、needDot)。uid が無ければ、どれか1つのユニットが足りていればよい
-const dotShort = (b, c, e, uid) => { if(!c || !c.needDot) return false; const ok = k => e && e.alive && e.units[k] && !e.units[k].broken && e.units[k].dot && e.units[k].dot.n >= c.needDot; return uid ? !ok(uid) : !(e && liveUids(e).some(ok)); };
-const needShort = (b, c) => !!(c && c.needDot && !b.foes.some(e => !dotShort(b, c, e)));
+// 対象の侵食の回数(needDot)・威力(needDotP、0.36.3)が足りないと使えない。uid が無ければ、どれか1つのユニットが足りていればよい
+const dotShort = (b, c, e, uid) => { if(!c || !(c.needDot || c.needDotP)) return false; const ok = k => { const u = e && e.alive && e.units[k]; return !!(u && !u.broken && u.dot && u.dot.n >= (c.needDot || 0) && u.dot.p >= (c.needDotP || 0)); }; return uid ? !ok(uid) : !(e && liveUids(e).some(ok)); };
+const needShort = (b, c) => !!(c && (c.needDot || c.needDotP) && !b.foes.some(e => !dotShort(b, c, e)));
 function applyCard(st, k, ti){
   const c = D.cards[k], b = st.b, ev = [];
   const T = parseT(ti);
@@ -297,9 +297,9 @@ function applyCard(st, k, ti){
   if(c.gain){ b.charge = (b.charge || 0) + c.gain; ev.push({kind:'charge', n:c.gain}); }
   if(c.crack) for(const e of targets) if(e.alive){ const k = uidOf(e); e.units[k].crack += c.crack; ev.push({kind:'crack', e:e.i, unit:k, n:c.crack}); }
   // 侵食を減らす(0.35.0、dotCut:{n, p})。回数が0以下になると消える
-  // rep(0.36.0、パラレルハックの強化): 減らして与えるのを rep 回。2回目からは対象の侵食の回数が needDot 以上のときだけ
+  // rep(0.36.0、パラレルハックの強化): 減らして与えるのを rep 回。2回目からは対象の侵食が needDot・needDotP を満たすときだけ
   for(let r = 0; r < (c.rep || 1); r++){
-  if(r > 0 && c.needDot && targets.every(e => dotShort(b, c, e, c.all ? null : uidOf(e)))) break;
+  if(r > 0 && (c.needDot || c.needDotP) && targets.every(e => dotShort(b, c, e, c.all ? null : uidOf(e)))) break;
   if(c.dotCut) for(const e of targets) if(e.alive) for(const k of (c.all ? liveUids(e) : [uidOf(e)])){ const u = e.units[k]; if(!u.dot) continue; u.dot.n -= c.dotCut.n || 0; u.dot.p = Math.max(0, u.dot.p - (c.dotCut.p || 0)); if(u.dot.n <= 0) delete u.dot; ev.push({kind:'dotCut', e:e.i, unit:k, n:c.dotCut.n || 0, p:c.dotCut.p || 0}); }
   if(c.dot) for(const e of targets) if(e.alive) for(const k of (c.all ? liveUids(e) : [uidOf(e)])){ addDot(e.units[k], c.dot.n, c.dot.p); ev.push({kind:'dotAdd', e:e.i, unit:k, n:c.dot.n || 0, p:c.dot.p || 0}); }
   }

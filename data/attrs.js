@@ -16,7 +16,13 @@ window.DATA = window.DATA || {};
 DATA.attrs = {
   // 0.35.0: 工房で確定した属性(名前と文は text/attrs.csv)
   gnaw:  {on:'hit', fx:{dotp:1}},
-  regen: {on:'cast', fx:{heal:2}},
+  regen: {on:'cast', fx:{heal:1}},
+  // 0.37.0: 工房の属性をすべて反映
+  rend:   {on:'break', fx:{crack:1}},
+  blast:  {on:'cast', fx:{exile:1, all:18}},
+  opt:    {on:'cast', fx:{draw:1}},
+  strong: {on:'mod', fx:{dmgUp:1}},
+  steady: {on:'mod', fx:{atomic:1}},
 };
 // 手に入れ方: battle 通常の戦闘の報酬で、候補1枚ごとに属性が付く確率 / elite エリートの報酬は必ず付く / shop ショップに並ぶ属性の数と値段
 DATA.attrRule = {battle:0.2, elite:1, shop:1, price:40};
@@ -82,5 +88,5 @@ DATA.regAttrCard = (cards, k) => {
   return true;
 };
 // 属性のレア度(0.36.0、工房のレア度)。書いていない属性はコモン。報酬で属性を付けるときは、レア度を引いてからその中で選ぶ
-DATA.attrRarity = {gnaw:'common', regen:'uncommon'};
+DATA.attrRarity = {gnaw:'rare', regen:'uncommon', rend:'uncommon', blast:'uncommon', opt:'uncommon', strong:'common', steady:'common'};
 DATA.attrRarityOf = a => DATA.attrRarity[a] || 'common';

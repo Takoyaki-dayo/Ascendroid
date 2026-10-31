@@ -848,6 +848,26 @@ window.DATA = window.DATA || {};
   "regen": {
    "name": "再生する",
    "text": "耐久値を{heal}回復する。"
+  },
+  "rend": {
+   "name": "断裂する",
+   "text": ""
+  },
+  "blast": {
+   "name": "爆発する",
+   "text": "廃棄。全ての敵ユニットに{all}ダメージを与える。"
+  },
+  "opt": {
+   "name": "最適化された",
+   "text": "カードを{draw}枚引く。"
+  },
+  "strong": {
+   "name": "強力な",
+   "text": "このカードのダメージを{dmgUp}増加させる。"
+  },
+  "steady": {
+   "name": "不動の",
+   "text": "アトミック。"
   }
  }
 });

@@ -12,6 +12,8 @@
 //     startBlock / startHand  戦闘開始時に得る / startDelay 戦闘開始時、敵にディレイ
 //     delayedDelay  自分がディレイされたとき、その敵にディレイ
 //     zeroDelay  コスト0のカードを使うと、敵にディレイ
+//     heavyRanged コスト4以上の遠隔に足す(0.36.0)
+//     drawShift  カードの効果で引いたカードのコストを、1枚ごとに半々で+1か−1(0未満にならない。手札にある間だけ。0.36.0)
 //     cards      デッキに加えるカード(デフラグで消せない)
 // startParts: 最初に付いているパーツ
 window.DATA = window.DATA || {};
@@ -38,7 +40,14 @@ DATA.parts = {
   mob_std:   {slot:'mob',  max:6,  fx:{startDelay:2}},
   mob_feed:  {slot:'mob',  max:6,  fx:{startHand:2}},
   mob_dash:  {slot:'mob',  max:5,  fx:{zeroDelay:1}},
+  // 0.36.0: 工房で文で作ったパーツ(名前はユーザー)
+  arm_sharp: {slot:'arm',  max:6,  fx:{heavyRanged:5}},
+  mob_basil: {slot:'mob',  max:6,  fx:{drawShift:1}},
 };
 DATA.startParts = {calc:'calc_std', arm:'arm_rail', out:'out_std', dur:'dur_std', mob:'mob_std'};
+// パーツのレア度(0.36.0): starter 最初のパーツ(鹵獲・イベントに出ない) / common / uncommon / rare。書いていないパーツはコモン
+// 鹵獲・イベントでパーツを出すときは、DATA.rarityRule.part の重みでレア度を引いてから、その中で選ぶ
+DATA.partRarity = {calc_std:'starter', arm_rail:'starter', out_std:'starter', dur_std:'starter', mob_std:'starter'};
+DATA.partRarityOf = id => DATA.partRarity[id] || 'common';
 // 本体耐久の最大値
 DATA.bodyMax = 50;

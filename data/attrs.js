@@ -71,10 +71,16 @@ DATA.attrCard = (c, a) => {
   return o;
 };
 // キー k(「元@属性」)のカードを cards に登録する。登録できなければ false
+// 0.36.0: 強化したカード(「元+」「元+@属性」)もここで登録する(強化の後に属性)
 DATA.regAttrCard = (cards, k) => {
-  const [base, a] = DATA.attrSplit(k);
+  const [b0, a] = DATA.attrSplit(k), up = b0.endsWith('+'), base = up ? b0.slice(0, -1) : b0;
+  if(!cards[base] || cards[base].upgraded) return false;
+  if(up) cards[b0] = DATA.upCard(cards[base], base);
   if(!a) return !!cards[k];
-  if(!cards[base] || !DATA.attrs[a]) return false;
-  cards[k] = DATA.attrCard(cards[base], a);
+  if(!DATA.attrs[a]) return false;
+  cards[k] = DATA.attrCard(cards[b0], a);
   return true;
 };
+// 属性のレア度(0.36.0、工房のレア度)。書いていない属性はコモン。報酬で属性を付けるときは、レア度を引いてからその中で選ぶ
+DATA.attrRarity = {gnaw:'common', regen:'uncommon'};
+DATA.attrRarityOf = a => DATA.attrRarity[a] || 'common';

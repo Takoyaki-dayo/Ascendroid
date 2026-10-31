@@ -25,6 +25,7 @@
 // events: イベント。fx の中身
 //   body 本体の増減 / scrap スクラップ / card 'rare' で珍しいカード1枚 / repair 損傷を修復
 //   part 'random' でパーツの候補を出す / defrag カードを1枚消す / alert 警戒のゲージの増減
+//   partDamage ランダムな部位を n か所損傷させる / rerollParts すべての部位のパーツをランダムに付け替える(パーツのレア度の重みで。0.36.0)
 window.DATA = window.DATA || {};
 DATA.areas = [
   {id:'a1', rooms:8, transfers:[2, 4, 6], last:'rest', fill:{battle:8, elite:3, event:3, shop:2, rest:1, duct:1}, scale:{hp:1, d:1}, boss:'boss',
@@ -47,7 +48,8 @@ DATA.rooms = {
   battle:{}, elite:{}, rest:{}, shop:{}, event:{}, duct:{}, boss:{},
 };
 DATA.alert = {max:10, per:4, gain:{battle:2, elite:3, boss:3, duct:-3}, enemy:{hp:0.02, d:0.015}, scrap:0.1, learnAt:5, partAt:8};
-DATA.rewards = {scrapStart:20, battle:12, elite:25};
+// restHeal: 整備で必ず回復する量(0.36.0。部位の損傷も直す) / boss: ボスを倒したときの報酬(回復と、属性付きのレアのカードを cards 枚から1枚。仮の値)
+DATA.rewards = {scrapStart:20, battle:12, elite:25, restHeal:15, boss:{heal:15, cards:3}};
 DATA.shop = {price:{0:18, 1:18, 2:26, 3:30, 4:36, 6:44}, defrag:30, repairCost:25, repairBody:12, offers:3};
 DATA.events = [
   {id:'terminal',
@@ -58,4 +60,9 @@ DATA.events = [
     choices:[{fx:{part:'random'}}, {fx:{defrag:true}}]},
   {id:'cache',
     choices:[{fx:{scrap:40, alert:3}}, {fx:{scrap:10}}]},
+  // 0.36.0: 工房で文で作ったイベント(タイトル・文はユーザー)
+  {id:'plea',
+    choices:[{fx:{body:-15, partDamage:1, scrap:25}}, {fx:{}}]},
+  {id:'overhaul',
+    choices:[{fx:{rerollParts:true}}, {fx:{}}]},
 ];

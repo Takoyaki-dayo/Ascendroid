@@ -278,8 +278,8 @@ const KINDS = [
   // セリフ(0.33.0): 自機(K-7)の独り言だけ。場面ごとに1項目(text/lines.csv)。敵のひとことは敵のページの「ひとこと」で(text/enemies.csv の 敵.say.*)
   {id:'lines', label:'セリフ', items:() => lineItems(), head:['場面', '重み', 'セリフ'], cells:it => [nmCell(it), `<td class="num">${it.obj.weight}</td>`, `<td class="tx">${it.obj.lines.length ? it.obj.lines.map(esc).join('<br>') : '<span class="note">(無し)</span>'}</td>`],
     preview:o => `<div class="note">${esc(LHINT)}</div>`},
-  {id:'parts', label:'パーツ', tmpl:() => ({name:'', slot:'calc', max:0, text:'', fx:{}}), items:() => Object.entries(D.parts).map(([k, p]) => ({key:k, name:p.name, obj:clone(p)})),
-    head:['部位', '名前', '耐久', '効果'], cells:it => [`<td>${esc(SLOT[it.obj.slot])}</td>`, nmCell(it), `<td class="num">${it.obj.max}</td>`, `<td class="tx">${esc(it.obj.text)}</td>`],
+  {id:'parts', label:'パーツ', tmpl:() => ({name:'', slot:'calc', max:0, rarity:'common', text:'', fx:{}}), items:() => Object.entries(D.parts).map(([k, p]) => ({key:k, name:p.name, obj:Object.assign(clone(p), {rarity:D.partRarityOf(k)})})),
+    head:['部位', '名前', 'レア度', '耐久', '効果'], cells:it => [`<td>${esc(SLOT[it.obj.slot])}</td>`, nmCell(it), `<td><span class="rar r-${esc(it.obj.rarity)}">${esc(RARITY[it.obj.rarity] || '')}</span></td>`, `<td class="num">${it.obj.max}</td>`, `<td class="tx">${esc(it.obj.text)}</td>`],
     preview:o => `<b>${esc(o.name)}</b>(${esc(SLOT[o.slot])}・耐久${o.max})<br>${esc(o.text)}`},
   {id:'keywords', label:'キーワード', items:() => Object.entries(D.kwName).map(([k, n]) => ({key:k, name:n, obj:{name:n, desc:D.keywords[n]}})),
     head:['名前', '説明'], cells:it => [nmCell(it), `<td class="tx">${esc(it.obj.desc)}</td>`]},
@@ -368,7 +368,7 @@ function foeForm(o, orig){
   h += g('段階変化', o.phase ? `<div class="ar">${fIn('phase.at', o, orig, '耐久の割合(0.5 = 50%未満で)')}<button type="button" class="btn quiet sm" data-fx="delphase">段階変化をやめる</button></div>` + pats(o.phase.pat, 'phase.pat') : `<div class="ar"><button type="button" class="btn quiet sm" data-fx="addphase">＋段階変化を足す</button></div>`, !!o.phase);
   h += g('ユニット', (o.units ? Object.entries(o.units).map(([k, u]) => `<div class="ar ur">${fIn(`units.${k}.name`, o, orig, '名前', 'str')}${fIn(`units.${k}.hp`, o, orig, '耐久')}${fIn(`units.${k}.armor`, o, orig, 'ブロック')}${fIn(`units.${k}.vital`, o, orig, '急所', 'bool')}${fIn(`units.${k}.core`, o, orig, '核', 'bool')}<button type="button" class="ib del" data-fx="delunit" data-base="${esc(k)}" title="消す">✕</button></div>`).join('') : '<div class="note">ユニットは1つ(耐久は「基本」)</div>') + `<div class="ar"><button type="button" class="btn quiet sm" data-fx="addunit">＋ユニットを足す</button></div>`, true, o.units ? `${units.length}つ` : '1つ');
   if(o.react) h += g('反応', `<div class="note">コスト「最小」以上のカードを使い始めると、1サイクル後に撃つ</div><div class="ar">${fIn('react.min', o, orig, '最小コスト')}${fIn('react.d', o, orig, 'ダメージ')}${fIn('react.p', o, orig, '部位', 'part')}</div>`);
-  const pas = o.passives || [], PK = Object.keys(D.ui).filter(k => k.startsWith('pas.') && !['pas.react', 'pas.phase', 'pas.broke'].includes(k)).map(k => k.slice(4));
+  const pas = o.passives || [], PK = Object.keys(D.ui).filter(k => k.startsWith('pas.') && !['pas.react', 'pas.phase', 'pas.broke', 'pas.punctual0'].includes(k)).map(k => k.slice(4));
   h += g('パッシブ', pas.map((p, j) => `<div class="ar ur">${fIn(`pname.${j}`, o, orig, '名前', 'str')}${p.n != null ? fIn(`passives.${j}.n`, o, orig, '数') : ''}${p.unit != null ? fIn(`passives.${j}.unit`, o, orig, 'ユニット', 'unit', units) : ''}<button type="button" class="ib del" data-fx="delpas" data-base="${j}" title="消す">✕</button><div class="note pt">${esc(pasText(p, o))}</div></div>`).join('') +
     `<div class="ar af"><select data-addpas="1"><option value="">＋パッシブを足す</option>${PK.map(k => `<option value="${k}">${esc((D.ui['pas.' + k] || k).replace(/\{\w+\}/g, '◯').slice(0, 26))}</option>`).join('')}</select></div>`, true, `${pas.length}つ`);
   h += g('ひとこと', Object.keys(o.say || {}).map(k => `<div class="ar">${fIn(`say.${k}`, o, orig, SAYW(k, o), 'lines')}</div>`).join('') + '<div class="note">1行に1つ。複数あれば毎回どれか1つ。空なら言わない</div>', false, `${Object.values(o.say || {}).reduce((a, v) => a + [].concat(v || []).length, 0)}つ`);
@@ -475,7 +475,7 @@ function diff(a, b){
   return out;
 }
 // 欄の名前
-const LB = {instant:'インスタント(使い始めに捨てる)', dotCut:'侵食を減らす(回数/威力)', needDot:'対象の侵食がこれ未満だと使えない', justBreak:'JUST: 敵の行動をブレイク', justWeak:'JUST: 虚弱', selfCrack:'自分にクラック', amp:'増幅(この戦闘の間)', selfDmg:'自分にダメージ', say:'ひとこと(空なら言わない)', lines:'セリフ', weight:'重み(選ばれやすさ)', order:'順番', dot:'侵食(回数/威力)', ward:'防壁(サイクル数/量)', exile:'廃棄', breakNext:'次の行動をブレイク', discard:'選んで捨てる枚数', grow:'戦闘中に増えるダメージ', scrapBreak:'破壊でスクラップ', wary:'警戒版', patAdd:'足す行動', cost:'コスト', name:'名前', text:'効果文', tgt:'単体を狙う', all:'全体', dmg:'ダメージ', n:'名前・値', t:'種類', x:'回数', block:'ブロック', delay:'ディレイ', crack:'クラック', draw:'引く枚数',
+const LB = {up:'強化', rep:'くり返す回数', rarity:'レア度', heavyRanged:'4コスト以上の遠隔+', drawShift:'効果で引いたカードのコスト±', partDamage:'部位を損傷', rerollParts:'全パーツを付け替え', instant:'インスタント(使い始めに捨てる)', dotCut:'侵食を減らす(回数/威力)', needDot:'対象の侵食がこれ未満だと使えない', justBreak:'JUST: 敵の行動をブレイク', justWeak:'JUST: 虚弱', selfCrack:'自分にクラック', amp:'増幅(この戦闘の間)', selfDmg:'自分にダメージ', say:'ひとこと(空なら言わない)', lines:'セリフ', weight:'重み(選ばれやすさ)', order:'順番', dot:'侵食(回数/威力)', ward:'防壁(サイクル数/量)', exile:'廃棄', breakNext:'次の行動をブレイク', discard:'選んで捨てる枚数', grow:'戦闘中に増えるダメージ', scrapBreak:'破壊でスクラップ', wary:'警戒版', patAdd:'足す行動', cost:'コスト', name:'名前', text:'効果文', tgt:'単体を狙う', all:'全体', dmg:'ダメージ', n:'名前・値', t:'種類', x:'回数', block:'ブロック', delay:'ディレイ', crack:'クラック', draw:'引く枚数',
   timer:'遅れて効く', atomic:'アトミック', parry:'受け流し', gain:'充電を得る', spend:'充電を消費', per:'充電1あたり', junk:'ノイズ', k7:'K-7 の数値',
   hp:'耐久', start:'最初の行動まで', kind:'見た目', ai:'行動の選び方', pat:'行動', phase:'耐久が減った後', at:'条件・位置', d:'ダメージ', dl:'コスト', p:'狙う部位', ch:'不安定',
   appear:'出るところ', wind:'体勢', w:'窓', poise:'ブレイクに要る一撃', guard:'防壁', s:'量・大きさ', counter:'反撃', rec:'隙', buff:'増幅', hits:'回数', armor:'装甲', heal:'修復', noise:'ノイズ', haste:'加速', zone:'危険域',
@@ -532,6 +532,7 @@ const FOLDS = {
   charge:{title:'充電', sum:c => [c.gain ? '得る' + c.gain : '', c.spend ? (c.spend.n ? c.spend.n + '消費' : 'すべて消費') : '']},
   dot:{title:'侵食', sum:c => [c.dot ? `${c.dot.n || 0}/${c.dot.p || 0}` : '', c.dotCut ? `−${c.dotCut.n || 0}/${c.dotCut.p || 0}` : '', c.needDot ? `回数${c.needDot}以上で使える` : '']},
   trait:{title:'性質', sum:c => [c.atomic ? 'アトミック' : '', c.parry ? '受け流し' : '', c.exile ? '廃棄' : '']},
+  up:{title:'強化', sum:c => [c.up ? Object.entries(c.up).map(([k, v]) => (LB[k] || k) + ':' + (v && typeof v === 'object' ? Object.values(v).filter(x => typeof x === 'number').join('/') : v)).join(' ') : '']},
   etc:{title:'特殊', sum:c => [c.justBreak ? 'JUST:ブレイク' : '', c.justWeak ? 'JUST:虚弱' + c.justWeak : '', c.breakNext ? '次の行動をブレイク' : '', c.grow ? '戦闘中+' + c.grow : '', c.scrapBreak ? '破壊でスクラップ' + c.scrapBreak : '', c.amp && c.amp.n ? (TNAME[c.amp.t] || '') + '増幅' + c.amp.n : '', c.selfCrack ? '自分にクラック' + c.selfCrack : '', c.selfDmg ? 'HPを' + c.selfDmg + '失う' : '']},
 };
 const foldSum = (g, c) => FOLDS[g].sum(c).filter(Boolean).join('・');
@@ -543,7 +544,7 @@ function wbStash(){ if(S.wb && S.wb.dirty) WBDRAFT[S.wb.key] = S.wb; }
 function wbOpen(key){ wbStash(); if(WBDRAFT[key]){ S.wb = WBDRAFT[key]; delete WBDRAFT[key]; } else wbStart(key); }
 const wbUnsaved = k => !!WBDRAFT[k] || !!(S.wb && S.wb.key === k && S.wb.dirty);
 function wbRows(){
-  const keys = new Set([...Object.keys(D.cards).filter(k => !D.cards[k].junk), ...Object.keys(WB), ...Object.keys(WBDRAFT)]);
+  const keys = new Set([...Object.keys(D.cards).filter(k => !D.cards[k].junk && !D.cards[k].upgraded && !D.cards[k].attr), ...Object.keys(WB), ...Object.keys(WBDRAFT)]);
   return [...keys].map(k => { const d = WB[k], dr = WBDRAFT[k]; const card = dr ? dr.card : d ? d.card : wbBase(k); return {key:k, doc:d || null, card, rarity: dr ? (dr.rarity || '') : d ? (d.rarity || '') : wbBaseRarity(k), status: d ? d.status : 'base', isNew: !D.cards[k]}; })
     .sort((a, b) => (a.card.cost - b.card.cost) || RORDER.indexOf(a.rarity) - RORDER.indexOf(b.rarity) || (a.card.name || '').localeCompare(b.card.name || '', 'ja'));
 }
@@ -577,7 +578,7 @@ function genText(c){
   if(c.exile) out.push('廃棄。');
   return out.join('');
 }
-const cardVals = c => ({dmg: c.dmg && c.dmg.n, x: c.dmg && c.dmg.x, block: c.block, delay: c.delay, crack: c.crack, draw: c.draw, t: c.timer && c.timer.t, tdmg: c.timer && c.timer.dmg && c.timer.dmg.n, gain: c.gain, per: c.spend ? (c.spend.dmg ? c.spend.dmg.n : c.spend.block) : null, sn: c.spend && c.spend.n, sv: c.spend && c.spend.n ? (c.spend.dmg ? c.spend.dmg.n : c.spend.block) : null, dn: c.dot ? c.dot.n || 0 : null, dp: c.dot ? c.dot.p || 0 : null, discard: c.discard, grow: c.grow, scrap: c.scrapBreak, ww: c.ward && c.ward.w, ws: c.ward && c.ward.s, sc: c.selfCrack, amp: c.amp && c.amp.n, sd: c.selfDmg, cn: c.dotCut ? c.dotCut.n || 0 : null, cp: c.dotCut ? c.dotCut.p || 0 : null, wk: c.justWeak});
+const cardVals = c => ({dmg: c.dmg && c.dmg.n, x: c.dmg && c.dmg.x, block: c.block, delay: c.delay, crack: c.crack, draw: c.draw, t: c.timer && c.timer.t, tdmg: c.timer && c.timer.dmg && c.timer.dmg.n, gain: c.gain, per: c.spend ? (c.spend.dmg ? c.spend.dmg.n : c.spend.block) : null, sn: c.spend && c.spend.n, sv: c.spend && c.spend.n ? (c.spend.dmg ? c.spend.dmg.n : c.spend.block) : null, dn: c.dot ? c.dot.n || 0 : null, dp: c.dot ? c.dot.p || 0 : null, discard: c.discard, grow: c.grow, scrap: c.scrapBreak, ww: c.ward && c.ward.w, ws: c.ward && c.ward.s, sc: c.selfCrack, amp: c.amp && c.amp.n, sd: c.selfDmg, cn: c.dotCut ? c.dotCut.n || 0 : null, cp: c.dotCut ? c.dotCut.p || 0 : null, wk: c.justWeak, rep: c.rep});
 function fillText(c){ const v = cardVals(c), t = c.text || genText(c); return esc(t).replace(/\{(\w+)\}/g, (m, n) => v[n] != null ? `<b>${esc(v[n])}</b>` : m).replace(/\n/g, '<br>'); }
 const wbType = c => c.dmg ? TNAME[c.dmg.t] : c.timer ? TNAME[c.timer.dmg.t] : c.spend && c.spend.dmg ? TNAME[c.spend.dmg.t] : '—';
 // 1サイクルあたりの強さ(標準パーツの補正 +2 込み)。全体・充電の消費は別に書く
@@ -665,6 +666,9 @@ function wbSideHTML(){
       <div class="fld"><label for="w_ampt">増幅(この戦闘の間)</label>${sel('w_ampt', c.amp ? c.amp.t : '', [['', 'なし'], ['melee', '近接'], ['ranged', '遠隔']])}</div>
       ${c.amp ? numIn('w_ampn', c.amp.n, '増幅の値') : ''}
       ${numIn('w_selfc', c.selfCrack, '自分にクラック(得る)')}${numIn('w_selfd', c.selfDmg, 'HPを失う(本体に直接。ブロックで防げない)')}`)}
+    ${fold('up', `
+      <div class="note">空の欄は自動(ダメージ・ブロックなどの主な数値×1.3、切り上げ)。強化した後: <span id="w_uptx"></span></div>
+      ${numIn('w_upcost', c.up && c.up.cost, '強化後のコスト')}${c.dmg ? numIn('w_updn', c.up && c.up.dmg && c.up.dmg.n, '強化後のダメージ') + numIn('w_updx', c.up && c.up.dmg && c.up.dmg.x, '強化後の回数') : ''}${numIn('w_upblk', c.up && c.up.block, '強化後のブロック')}${c.amp ? numIn('w_upamp', c.up && c.up.amp && c.up.amp.n, '強化後の増幅') : ''}${numIn('w_uprep', c.up && c.up.rep, '効果をくり返す回数')}`)}
     <div class="grp"><h3>効果文</h3>
       <div class="mode"><button type="button" data-wbtext="auto" class="${w.custom ? '' : 'on'}">欄から作る</button><button type="button" data-wbtext="custom" class="${w.custom ? 'on' : ''}">自分で書く</button></div>
       ${w.custom ? `<textarea id="w_text" data-wb="w_text" class="wtext" placeholder="{dmg} などの差し込みが使えます">${esc(c.text || genText(c))}</textarea><div class="note">差し込み: {dmg} ダメージ / {x} 回数 / {block} / {delay} / {crack} / {draw} / {t} {tdmg} 遅れて効く / {gain} / {per} 充電1あたり / {dn} {dp} 侵食の回数・威力 / {sc} 自分にクラック / {amp} 増幅 / {sd} HPを失う / {ww} {ws} 防壁 / {discard} / {grow} / {scrap} / {cn} {cp} 侵食を減らす / {wk} 虚弱 / 改行で行を分ける</div>` : `<div class="note" id="w_auto"></div>`}
@@ -682,6 +686,7 @@ function wbRefresh(){
   const c = S.wb.card;
   const pv = $('#wbpv'); if(pv) pv.innerHTML = `<div class="cf"><span class="cc">${c.cost}</span><b>${esc(c.name || '(名前なし)')}</b><span class="ct">${wbType(c)}</span><span class="rar r-${S.wb.rarity || 'none'}">${RARITY[S.wb.rarity] || '—'}</span></div><div class="cft">${fillText(c) || '<span class="note">効果がありません</span>'}</div><div class="cfe">${effHTML(c, true)}</div>`;
   const au = $('#w_auto'); if(au) au.textContent = genText(c) || '(効果がありません)';
+  const ut = $('#w_uptx'); if(ut && D.upCard){ const u = D.upCard(c, S.wb.key); ut.innerHTML = `<b>${esc(u.name)}</b> ${u.cost}コスト ${fillText(u)}`; }
   for(const d of document.querySelectorAll('details[data-fold]')){ const g = d.querySelector('.gs'), t = foldSum(d.dataset.fold, c); if(g){ g.textContent = t || '使っていない'; g.classList.toggle('off', !t); } }
   const inf = $('#wbinfo'); if(inf){ inf.hidden = !(S.wb.dirty || !DB); inf.textContent = DB ? '未保存' : '保存できない表示'; }
   for(const id of ['wbSave', 'wbReview']){ const b = $('#' + id); if(b) b.disabled = !DB || !(c.name || '').trim(); }
@@ -714,6 +719,8 @@ function wbInput(id, el){
     case 'w_dotn': case 'w_dotp': { const d = c.dot || {n:0, p:0}; d[id === 'w_dotn' ? 'n' : 'p'] = num() || 0; if(!d.n && !d.p) delete c.dot; else c.dot = d; break; }
     case 'w_ww': case 'w_ws': { const d = c.ward || {w:0, s:0}; d[id === 'w_ww' ? 'w' : 's'] = num() || 0; if(!d.w && !d.s) delete c.ward; else c.ward = d; break; }
     case 'w_discard': setN('discard', num()); if(!c.discard) delete c.instant; return 'full';
+    case 'w_upcost': case 'w_upblk': case 'w_uprep': { const f = {w_upcost:'cost', w_upblk:'block', w_uprep:'rep'}[id], v = num(), u = c.up || {}; if(v === undefined) delete u[f]; else u[f] = v; if(Object.keys(u).length) c.up = u; else delete c.up; return 'full'; }
+    case 'w_updn': case 'w_updx': case 'w_upamp': { const [g, f] = {w_updn:['dmg', 'n'], w_updx:['dmg', 'x'], w_upamp:['amp', 'n']}[id], v = num(), u = c.up || {}; const o = Object.assign({}, u[g] || {}); if(v === undefined) delete o[f]; else o[f] = v; if(Object.keys(o).length) u[g] = o; else delete u[g]; if(Object.keys(u).length) c.up = u; else delete c.up; return 'full'; }
     case 'w_instant': if(el.checked) c.instant = true; else delete c.instant; break;
     case 'w_cutn': case 'w_cutp': { const d = c.dotCut || {n:0, p:0}; d[id === 'w_cutn' ? 'n' : 'p'] = num() || 0; if(!d.n && !d.p) delete c.dotCut; else c.dotCut = d; break; }
     case 'w_needdot': setN('needDot', num()); break;
@@ -884,7 +891,7 @@ const AFX = [['crack', 'クラック(当たった・狙ったユニットに)'],
 function abBase(k){ const a = D.attrs[k]; return a ? {name:a.name || '', on:a.on, fx:clone(a.fx || {}), text:a.text || ''} : null; }
 function abRows(){
   const keys = new Set([...Object.keys(D.attrs || {}), ...Object.keys(AB), ...Object.keys(ABDRAFT), ...(S.ab ? [S.ab.key] : [])]);
-  return [...keys].map(k => { const d = AB[k], dr = ABDRAFT[k] || (S.ab && S.ab.key === k && (S.ab.dirty || S.ab.isNew) ? S.ab : null); return {key:k, doc:d || null, attr: dr ? dr.attr : d ? d.attr : abBase(k), test: dr ? dr.test : d ? (d.test || []) : [], status: d ? d.status : 'base', isNew: !(D.attrs || {})[k]}; })
+  return [...keys].map(k => { const d = AB[k], dr = ABDRAFT[k] || (S.ab && S.ab.key === k && (S.ab.dirty || S.ab.isNew) ? S.ab : null); return {key:k, doc:d || null, attr: dr ? dr.attr : d ? d.attr : abBase(k), rarity: dr ? (dr.rarity || '') : d && d.rarity != null ? d.rarity : (D.attrs || {})[k] ? D.attrRarityOf(k) : '', test: dr ? dr.test : d ? (d.test || []) : [], status: d ? d.status : 'base', isNew: !(D.attrs || {})[k]}; })
     .filter(r => r.attr).sort((a, b) => (a.attr.name || '').localeCompare(b.attr.name || '', 'ja'));
 }
 // 属性の定義 a を仮に置いて、本体の決まり(attrOk・attrText)で調べる
@@ -903,8 +910,8 @@ function abListHTML(){
 }
 function abStart(key){
   const r = abRows().find(x => x.key === key);
-  if(r) S.ab = {key, isNew:r.isNew, attr:clone(r.attr), idea:(r.doc && r.doc.idea) || '', test:(r.test || []).slice(), custom: !!r.attr.text, dirty:false, reply:''};
-  else S.ab = {key, isNew:true, attr:{name:'', on:'hit', fx:{}, text:''}, idea:'', test:[], custom:false, dirty:true, reply:''};
+  if(r) S.ab = {key, isNew:r.isNew, attr:clone(r.attr), rarity:r.rarity || '', idea:(r.doc && r.doc.idea) || '', test:(r.test || []).slice(), custom: !!r.attr.text, dirty:false, reply:''};
+  else S.ab = {key, isNew:true, attr:{name:'', on:'hit', fx:{}, text:''}, rarity:'', idea:'', test:[], custom:false, dirty:true, reply:''};
 }
 function abOpen(key){ if(S.ab && S.ab.dirty) ABDRAFT[S.ab.key] = S.ab; if(ABDRAFT[key]){ S.ab = ABDRAFT[key]; delete ABDRAFT[key]; } else abStart(key); }
 function abPreview(){
@@ -925,6 +932,7 @@ function abSideHTML(){
     <div class="grp"><h3>基本</h3>
       <div class="fld"><label for="a_name">名前(頭に付く)</label><input id="a_name" data-ab="a_name" type="text" value="${esc(a.name)}" placeholder="例: 〇〇された"></div>
       <div class="fld"><label for="a_on">いつ働くか</label>${sel('a_on', a.on, Object.entries(AON))}</div>
+      <div class="fld"><label for="a_rar">レア度</label>${sel('a_rar', w.rarity || '', Object.entries(RARITY).filter(([k]) => k !== 'starter'))}</div>
     </div>
     <div class="grp"><h3>効果</h3>
       ${AFX.map(([k, n]) => num('a_' + k, f[k], n)).join('')}
@@ -950,6 +958,7 @@ function abSideHTML(){
 function abInput(id, el){
   const w = S.ab, a = w.attr, f = a.fx = a.fx || {}, num = () => el.value === '' ? 0 : Math.max(0, Math.round(Number(el.value)));
   if(id === 'a_name'){ a.name = el.value; return 'part'; }
+  if(id === 'a_rar'){ w.rarity = el.value; return 'part'; }
   if(id === 'a_on'){ a.on = el.value; if(a.on !== 'hit') delete f.again; if(a.on !== 'mod'){ delete f.atomic; delete f.dmgUp; } return 'full'; }
   if(id === 'a_again'){ if(el.checked) f.again = true; else delete f.again; return 'full'; }
   if(id === 'a_exile' || id === 'a_atomic'){ const k = id.slice(2); if(el.checked) f[k] = 1; else delete f[k]; return 'full'; }
@@ -970,7 +979,7 @@ async function abSave(status){
   if(!DB || !S.ab) return;
   const w = S.ab, prev = AB[w.key], a = clone(w.attr);
   if(!w.custom) a.text = '';
-  const doc = {key:w.key, attr:a, idea:w.idea || '', test:w.test.slice(), status: status || (prev && prev.status !== 'base' && prev.status !== 'merged' && prev.status !== 'reviewed' ? prev.status : 'draft'), thread:(prev && prev.thread) || [], at:new Date().toISOString()};
+  const doc = {key:w.key, attr:a, rarity:w.rarity || '', idea:w.idea || '', test:w.test.slice(), status: status || (prev && prev.status !== 'base' && prev.status !== 'merged' && prev.status !== 'reviewed' ? prev.status : 'draft'), thread:(prev && prev.thread) || [], at:new Date().toISOString()};
   try{ await DB.doc('attrs/' + w.key).set(doc); w.dirty = false; delete ABDRAFT[w.key]; toast(status === 'review' ? '添削に出しました' : status === 'ok' ? '確定にしました' : '保存しました'); }
   catch(e){ toast('保存できませんでした'); }
 }
@@ -1018,7 +1027,8 @@ function fieldHTML(p, v, orig){
   else if(typeof v === 'number') input = `<input id="${id}" type="number" step="any" data-path="${esc(p)}" data-t="num" value="${v}">`;
   else if(last === 'p' && typeof v === 'string' && SLOT[v]) input = `<select id="${id}" data-path="${esc(p)}" data-t="str">${Object.entries(SLOT).map(([k, n]) => `<option value="${k}"${k === v ? ' selected' : ''}>${n}</option>`).join('')}</select>`;
   else if(last === 't' && (v === 'melee' || v === 'ranged')) input = `<select id="${id}" data-path="${esc(p)}" data-t="str">${Object.entries(TNAME).map(([k, n]) => `<option value="${k}"${k === v ? ' selected' : ''}>${n}</option>`).join('')}</select>`;
-  else if(typeof v === 'string') input = v.length > 22 ? `<textarea id="${id}" data-path="${esc(p)}" data-t="str">${esc(v)}</textarea>` : `<input id="${id}" type="text" data-path="${esc(p)}" data-t="str" value="${esc(v)}">`;
+  else if(last === 'rarity' && typeof v === 'string') input = `<select id="${id}" data-path="${esc(p)}" data-t="str">${Object.entries(RARITY).filter(([k]) => k).map(([k, n]) => `<option value="${k}"${k === v ? ' selected' : ''}>${n}</option>`).join('')}</select>`;
+  else if(typeof v === 'string') input = v.length > 22 || last === 'sub' || v.includes('\n') ? `<textarea id="${id}" data-path="${esc(p)}" data-t="str">${esc(v)}</textarea>` : `<input id="${id}" type="text" data-path="${esc(p)}" data-t="str" value="${esc(v)}">`;
   else if(last === 'lines' && isPrimArr(v)) input = `<textarea id="${id}" data-path="${esc(p)}" data-t="lines" rows="${Math.max(2, v.length + 1)}" placeholder="1行に1つ">${esc(v.join('\n'))}</textarea>`;
   else if(isPrimArr(v)) input = `<input id="${id}" type="text" data-path="${esc(p)}" data-t="arr" value="${esc(v.join(', '))}">`;
   else input = `<input id="${id}" type="text" data-path="${esc(p)}" data-t="json" value="${esc(JSON.stringify(v))}">`;

@@ -338,6 +338,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 #handCnt.full{color:var(--foe2)}
 #shaker.selfview #handCnt{opacity:0}
 .cost.zero{border-style:dashed}
+.cost.cup{border-color:var(--foe2);color:var(--foe2)} .cost.cdn{border-color:#7ee08a;color:#7ee08a} .cname.cu{color:#9be7a6}
 .st.trait{color:var(--foe2);opacity:.75}
 .st.trait.on{opacity:1;filter:drop-shadow(0 0 4px rgba(255,77,106,.8))}
 .pile.flash{border-color:var(--cy)}
@@ -678,6 +679,10 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 #ov2{position:absolute;inset:0;background:rgba(5,9,14,.6);display:flex;align-items:center;justify-content:center;z-index:55;padding:12px}
 #ovbox2{max-width:520px;border-color:var(--cy-dim);box-shadow:0 12px 40px rgba(0,0,0,.5)}
 .swap{display:flex;align-items:stretch;gap:10px;margin:4px 0 14px}
+/* 全パーツの付け替え(0.36.0、イベント): 部位ごとに 前 → 後 */
+.rrl{display:flex;flex-direction:column;gap:5px;margin:2px 0 12px}
+.rr{display:grid;grid-template-columns:18px auto 14px auto 1fr;align-items:center;gap:8px;padding:5px 10px;border:1px solid var(--line);border-radius:4px;background:#0d151e;font-size:12px}
+.rr .ic{color:var(--cy)} .rr s{color:var(--fg2);text-decoration-color:rgba(255,255,255,.35)} .rr b{color:var(--fg)} .rr-ar{color:var(--cy)} .rr-t{color:var(--fg2);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sw-p{flex:1;border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:6px}
 .sw-p:last-child{border:1.5px solid var(--cy)}
 .sw-p b{font-size:13px} .sw-p>span{color:var(--dim);font-size:10.5px}
@@ -1202,7 +1207,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 <script src="data/text.js"></script>
 <script src="js/engine.js"></script>
 <script>
-const APP_VERSION = '0.35.0';
+const APP_VERSION = '0.36.0';
 const $ = s => document.querySelector(s);
 const EN = ENGINE, RULE = EN.RULE;
 const VIEW = RULE.view, NOW = 170, PX = 34, xs = c => NOW + c * PX, STRIP_Y = 150, SWIFT_VIS = 3;
@@ -1380,7 +1385,7 @@ function cardVals(c, st, k){
   return {dmg: c.dmg ? vDmg(st, c) + growV(st, k) : '', discard: c.discard || '', grow: c.grow || '', scrap: c.scrapBreak || '', ww: c.ward ? c.ward.w : '', ws: c.ward ? c.ward.s : '', x: c.dmg && c.dmg.x || '', block: c.block != null ? vBlock(st, c) : '', delay: c.delay || '', swift: c.swift || '',
     crack: c.crack || '', draw: c.draw || '', t: c.timer ? c.timer.t : '', tdmg: c.timer ? vDmg(st, c, c.timer.dmg) : '',
     gain: c.gain || '', per: c.spend ? (c.spend.dmg ? c.spend.dmg.n : c.spend.block) : '',
-    sn: c.spend && c.spend.n || '', sv: c.spend && c.spend.n ? spendVal(st, c) : '', dn: c.dot ? c.dot.n || 0 : '', dp: c.dot ? c.dot.p || 0 : '', sc: c.selfCrack || '', amp: c.amp ? c.amp.n : '', sd: c.selfDmg || '', cn: c.dotCut ? c.dotCut.n || 0 : '', cp: c.dotCut ? c.dotCut.p || 0 : '', wk: c.justWeak || ''};
+    sn: c.spend && c.spend.n || '', sv: c.spend && c.spend.n ? spendVal(st, c) : '', dn: c.dot ? c.dot.n || 0 : '', dp: c.dot ? c.dot.p || 0 : '', sc: c.selfCrack || '', amp: c.amp ? c.amp.n : '', sd: c.selfDmg || '', cn: c.dotCut ? c.dotCut.n || 0 : '', cp: c.dotCut ? c.dotCut.p || 0 : '', wk: c.justWeak || '', rep: c.rep || ''};
 }
 const KW_CLS = {crack:'kw-f', atomic:'kwp', just:'kw-j'};
 const kwList = () => Object.entries(DATA.kwName).sort((a, b) => b[1].length - a[1].length);
@@ -1394,9 +1399,9 @@ function cardText(k, st, refs){
   h = h.replace(/\u0001/g, '<br>');
   return h.replace(/\u0000(\w+)\u0000/g, (m, key) => refs ? `<button type="button" class="${KW_CLS[key] || 'kw'} ref" data-act="ref" data-arg="kw:${key}">${DATA.kwName[key]}</button>` : `<span class="${KW_CLS[key] || 'kw'}">${DATA.kwName[key]}</span>`);
 }
-function cardInner(k, st, count, refs){
-  const c = CARDS[k];
-  return `<i class="ck" data-ck="${k}" data-rar="${DATA.rarityOf(k)}" hidden></i><span class="chd"><span class="cost${c.cost === 0 ? ' zero' : ''}">${c.cost}</span><span class="cname${c.attr ? ' ca' : ''}">${c.name}</span></span><span class="cart t-${cardType(c)}"><span class="cwm">${IC[cardType(c)]}</span>${c.atomic ? '<i class="atom"></i>' : ''}<span class="cval"><span class="ic">${IC[cardType(c)]}</span><b>${cardVal(k, st)}</b></span></span><span class="ctx${((CARDS[k].text || '') + (CARDS[k].attrText || '')).replace(/\{\w+\}/g, '00').length > 22 ? ' long' : ''}">${cardText(k, st, refs)}</span>${count > 1 ? `<span class="cnt">×${count}</span>` : ''}`;
+function cardInner(k, st, count, refs, cd){
+  const c = CARDS[k], co = cd ? EN.costOf(cd) : c.cost, dc = co - c.cost;
+  return `<i class="ck" data-ck="${k}" data-rar="${DATA.rarityOf(k)}" hidden></i><span class="chd"><span class="cost${co === 0 ? ' zero' : ''}${dc > 0 ? ' cup' : dc < 0 ? ' cdn' : ''}">${co}</span><span class="cname${c.attr ? ' ca' : ''}${c.upgraded ? ' cu' : ''}">${c.name}</span></span><span class="cart t-${cardType(c)}"><span class="cwm">${IC[cardType(c)]}</span>${c.atomic ? '<i class="atom"></i>' : ''}<span class="cval"><span class="ic">${IC[cardType(c)]}</span><b>${cardVal(k, st)}</b></span></span><span class="ctx${((CARDS[k].text || '') + (CARDS[k].attrText || '')).replace(/\{\w+\}/g, '00').length > 22 ? ' long' : ''}">${cardText(k, st, refs)}</span>${count > 1 ? `<span class="cnt">×${count}</span>` : ''}`;
 }
 // 長押しで説明を出すキーワード: カードの文に出てくるもの
 function cardKw(k){
@@ -1560,7 +1565,7 @@ function passives(e){
   for(const k of Object.keys(f.broke || {})) out.push({id: 'broke-' + k, name: nm['broke.' + k] || '', k: 'broke', p: {unit: k}, on: !!e.units[k] && !e.units[k].broken});
   return out;
 }
-const PAS_IC = {command: IC.pt_lead, frenzy: IC.frenzy, react: IC.eye, phase: IC.phase, broke: IC.phase, punctual: IC.clock, pursuit: IC.haste, loot: IC.scrap, hoard: IC.eat, floor: IC.clock};
+const PAS_IC = {command: IC.pt_lead, frenzy: IC.frenzy, react: IC.eye, phase: IC.phase, broke: IC.phase, punctual: IC.clock, recover: IC.haste, pursuit: IC.haste, loot: IC.scrap, hoard: IC.eat, floor: IC.clock};
 function pasText(e, x){
   const un = k => e.units[k] ? e.units[k].name : k;
   if(x.k === 'command') return fillUi('pas.command', {unit: un(x.p.unit), n: x.p.n});
@@ -1569,7 +1574,7 @@ function pasText(e, x){
   if(x.k === 'phase') return fillUi('pas.phase', {at: Math.round(x.p.at * 100)});
   if(x.k === 'broke') return fillUi('pas.broke', {unit: un(x.p.unit)});
   if(x.k === 'punctual' && x.p.n === 0) return fillUi('pas.punctual0', {});
-  if(['punctual', 'pursuit', 'loot', 'hoard', 'floor'].includes(x.k)) return fillUi('pas.' + x.k, {n: x.p.n || 1});
+  if(['punctual', 'pursuit', 'loot', 'hoard', 'floor', 'recover'].includes(x.k)) return fillUi('pas.' + x.k, {n: x.p.n || 1});
   return '';
 }
 // 画面の小さな札: ユニットの状態(クラック・装甲・隙)と、敵全体の状態(増幅・加速・パッシブ)
@@ -1854,7 +1859,7 @@ function renderHand(){
       $('#hand').appendChild(el); cardEls.set(cd.id, el); fresh = true;
     }
     el.dataset.i = i; el.disabled = busy; el.classList.toggle('off', EN.spendShort(b, CARDS[cd.k]) || EN.needShort(b, CARDS[cd.k])); el.classList.toggle('pk', !!PICK && PICK.ids.includes(cd.id));
-    const html = cardInner(cd.k, S);
+    const html = cardInner(cd.k, S, 0, false, cd);
     if(el._h !== html){ el.innerHTML = html; el._h = html; }
     el.classList.toggle('sel', i === selI);
     const place = () => {
@@ -2459,6 +2464,7 @@ function findNode(k){ const m = S.run.map; if(k === 'boss') return m.boss; const
 function enterRoom(n){
   UI.node = n; UI.mapSel = null;
   if(n.type === 'battle') EN.encFor(S.run, n);
+  if(n.type === 'rest') restHeal(n);
   saveRun(nodeKey(n));
   if(n.type === 'battle' || n.type === 'elite' || n.type === 'boss') startBattle(n);
   else if(n.type === 'rest'){ UI.pick = null; showRest(); }
@@ -2514,10 +2520,10 @@ function onLose(){
 // (同じアーキタイプを作るために同じ敵とばかり戦う、を避けるため。地図にも敵は出さない)
 const LEARN_BIAS = 1.3;
 // レア度(0.32.0): 報酬・ショップに出せるカード(初期のカード・パーツのカード・ノイズ・属性付きは除く)
-const offerPool = () => Object.keys(CARDS).filter(k => !CARDS[k].junk && !CARDS[k].attr && !CARDS[k].cut && !['charge','scatter'].includes(k) && DATA.rarityOf(k) !== 'starter');
+const offerPool = () => Object.keys(CARDS).filter(k => !CARDS[k].junk && !CARDS[k].attr && !CARDS[k].upgraded && !CARDS[k].cut && !['charge','scatter'].includes(k) && DATA.rarityOf(k) !== 'starter');
 // レア度を1つ引く。kind は battle / elite / shop。報酬(battle・elite)は救済(rareOff)を使い、更新する
 function rollRarity(kind){
-  const R = DATA.rarityRule, w = Object.assign({}, R[kind] || R.battle), run = S.run, pity = kind !== 'shop';
+  const R = DATA.rarityRule, w = Object.assign({}, R[kind] || R.battle), run = S.run, pity = kind === 'battle' || kind === 'elite';
   if(pity){ if(run.rareOff == null) run.rareOff = R.pity.start; w.rare = Math.max(0, w.rare + run.rareOff); w.common = Math.max(0, w.common - Math.max(0, run.rareOff)); }
   let x = Math.random() * (w.common + w.uncommon + w.rare), r = 'common';
   if((x -= w.common) >= 0) r = (x -= w.uncommon) >= 0 ? 'rare' : 'uncommon';
@@ -2548,26 +2554,39 @@ function learnOptions(n){
 }
 // 属性: カード k に付けられる属性 / 1つ選んで付けたカードのキー(付けられなければそのまま)
 const attrsFor = k => Object.keys(DATA.attrs).filter(a => DATA.attrOk(CARDS[k], a));
-function withAttr(k){ const as = attrsFor(k); if(!as.length) return k; const key = k + '@' + EN.pick(as); DATA.regAttrCard(CARDS, key); return key; }
+// 属性のレア度(0.36.0): レア度を引いてから、そのレア度の中で選ぶ(無ければ残りから)
+function pickByRarity(list, rarOf, kind){ if(!list.length) return null; const r = rollRarity(kind); const pool = list.filter(x => rarOf(x) === r); return EN.pick(pool.length ? pool : list); }
+function withAttr(k){ const as = attrsFor(k); if(!as.length) return k; const key = k + '@' + pickByRarity(as, DATA.attrRarityOf, 'attr'); DATA.regAttrCard(CARDS, key); return key; }
 function afterWin(){
   const n = UI.node;
-  if(n.type === 'boss'){ completeRoom(); return; }
+  // ボスの報酬(0.36.0): 本体の回復と、属性付きのレアのカードから1枚(最後のエリアのボスは踏破へ)
+  if(n.type === 'boss'){
+    if(S.run.area + 1 >= DATA.areas.length){ completeRoom(); return; }
+    const R = DATA.rewards.boss, run = S.run, v = Math.min(R.heal, run.bodyMax - run.body); run.body += v; UI.bossHealed = v;
+    const rare = EN.shuffle(offerPool().filter(k => DATA.rarityOf(k) === 'rare')).slice(0, R.cards);
+    UI.learnOpts = rare.map(k => { const as = attrsFor(k); if(!as.length) return k; const key = k + '@' + pickByRarity(as, DATA.attrRarityOf, 'attr'); DATA.regAttrCard(CARDS, key); return key; });
+    UI.pick = null; UI.after = 'map'; showLearn(); return;
+  }
   UI.learnOpts = learnOptions(3 + (alLv() >= DATA.alert.learnAt ? 1 : 0)); UI.pick = null;
   UI.after = n.type === 'elite' ? 'part' : 'map';
   if(UI.learnOpts.length) showLearn(); else afterLearn();
 }
 function afterLearn(){
-  UI.pick = null; UI.learnOpts = [];
+  UI.pick = null; UI.learnOpts = []; UI.bossHealed = null;
   if(UI.after === 'part'){ UI.partOpts = randomParts(2 + (alLv() >= DATA.alert.partAt ? 1 : 0)); UI.back = 'map'; showPartOffer(); }
   else completeRoom();
 }
 function showLearn(){
   const pk = UI.pick;
-  showOv(`<h2>学習</h2><div class="cards">${UI.learnOpts.map(k => `<button class="card static${pk === k ? ' picked' : ''}" type="button" data-act="pick" data-arg="${k}" data-view="learn">${cardInner(k, null)}</button>`).join('')}</div><div class="row"><button class="btn ghost" type="button" data-act="skipLearn">取り込まない</button><button class="btn" type="button" data-act="learn" ${pk ? '' : 'disabled'}>決定</button></div>`);
+  const bh = UI.bossHealed != null ? `<p class="rs-heal"><span class="ic">${IC.core}</span>${DATA.ui['transit.heal'].replace('{n}', UI.bossHealed)}</p>` : '';
+  showOv(`<h2>学習</h2>${bh}<div class="cards">${UI.learnOpts.map(k => `<button class="card static${pk === k ? ' picked' : ''}" type="button" data-act="pick" data-arg="${k}" data-view="learn">${cardInner(k, null)}</button>`).join('')}</div><div class="row"><button class="btn ghost" type="button" data-act="skipLearn">取り込まない</button><button class="btn" type="button" data-act="learn" ${pk ? '' : 'disabled'}>決定</button></div>`);
 }
+// パーツの候補(0.36.0): 1つごとにレア度を引いてから、そのレア度の中で選ぶ。最初のパーツ(starter)は出ない
+const partPool = () => Object.keys(PARTDEF).filter(id => DATA.partRarityOf(id) !== 'starter');
 function randomParts(n){
-  const eq = new Set(Object.values(S.run.parts).map(p => p.id));
-  return EN.shuffle(Object.keys(PARTDEF).filter(id => !eq.has(id))).slice(0, n);
+  const eq = new Set(Object.values(S.run.parts).map(p => p.id)), out = [];
+  for(let j = 0; j < n; j++){ const x = pickByRarity(partPool().filter(id => !eq.has(id) && !out.includes(id)), DATA.partRarityOf, 'part'); if(x) out.push(x); }
+  return out;
 }
 function showPartOffer(){
   const pk = UI.pick;
@@ -2595,9 +2614,21 @@ function showDuct(){
   const g = EN.alertGain('duct');
   showRoom('duct', `<h2>${DATA.rooms.duct.name}</h2><p class="rs-text">${DATA.ui['duct.text']}</p><p class="rs-heal al"><span class="ic">${IC.alert}</span>${DATA.ui['alert.gauge']} ${g < 0 ? '−' + -g : '+' + g}</p><div class="row"><button class="btn" type="button" data-act="leave">進む</button></div>`, true);
 }
+// 整備(0.36.0): 入ると必ず本体が回復し、部位の損傷が直る(同じ部屋で2回は回復しない)。そのあと強化かデフラグを選ぶ
+function restHeal(n){
+  const run = S.run, id = nodeKey(n) + '@' + run.area;
+  if(run.restAt !== id){ const v = Math.min(DATA.rewards.restHeal, run.bodyMax - run.body); run.body += v; for(const p of SLOTS) run.parts[p.id].damaged = false; run.restAt = id; run.restHealed = v; }
+  UI.restHealed = run.restHealed || 0;
+}
 function showRest(){
-  const pk = UI.pick;
-  showRoom('rest', `<h2>整備</h2><div class="rs-opts"><button class="opt${pk === 'repair' ? ' picked' : ''}" type="button" data-act="pick" data-arg="repair" data-view="rest"><span class="ic">${IC.repair}</span><b>修理</b><span>${DATA.ui.repair.replace('{n}', 15)}</span></button><button class="opt${pk === 'defrag' ? ' picked' : ''}" type="button" data-act="pick" data-arg="defrag" data-view="rest"><span class="ic">${IC.defrag}</span><b>デフラグ</b><span>${DATA.ui.defrag}</span></button></div><div class="row"><button class="btn" type="button" data-act="rest" ${pk ? '' : 'disabled'}>決定</button></div>`, rsUnit());
+  const pk = UI.pick, opt = (id, ic, name, sub) => `<button class="opt${pk === id ? ' picked' : ''}" type="button" data-act="pick" data-arg="${id}" data-view="rest"><span class="ic">${IC[ic]}</span><b>${name}</b><span>${sub}</span></button>`;
+  showRoom('rest', `<h2>整備</h2><p class="rs-heal"><span class="ic">${IC.core}</span>${fillUi('rest.heal', {n: UI.restHealed || 0})}</p><div class="rs-opts">${opt('upgrade', 'str', '強化', DATA.ui.upgrade)}${opt('defrag', 'defrag', 'デフラグ', DATA.ui.defrag)}</div><div class="row"><button class="btn ghost" type="button" data-act="leave">何もしない</button><button class="btn" type="button" data-act="rest" ${pk ? '' : 'disabled'}>決定</button></div>`, rsUnit());
+}
+// 強化するカードを選ぶ(0.36.0)。押したカードは強化した後の姿で見せる
+function showUpgrade(){
+  const counts = groupDeck(S.run.deck), pk = UI.pick;
+  const ks = Object.keys(counts).filter(k => DATA.canUp(CARDS, k) && DATA.regAttrCard(CARDS, DATA.upKey(k)));
+  showOv(`<h2>強化するカードを選択</h2><div class="cards">${ks.map(k => `<button class="card static${pk === k ? ' picked' : ''}" type="button" data-act="pick" data-arg="${k}" data-view="up">${cardInner(pk === k ? DATA.upKey(k) : k, null, counts[k])}</button>`).join('')}</div><div class="row"><button class="btn ghost" type="button" data-act="backUp">戻る</button><span class="sp"></span><button class="btn" type="button" data-act="doUp" ${pk ? '' : 'disabled'}>決定</button></div>`);
 }
 function groupDeck(list){ const counts = {}; for(const k of list) counts[k] = (counts[k] || 0) + 1; return counts; }
 function showDefrag(){
@@ -2618,7 +2649,7 @@ function showShop(){
   if(!UI.offers) UI.offers = rarityPick(sh.offers, 'shop', null);
   // 属性(0.28.0): 属性だけを買って、デッキのカードに付ける
   if(!UI.attrOffers && run.shop && run.shop.at === nk && run.shop.attrs) UI.attrOffers = run.shop.attrs;
-  if(!UI.attrOffers) UI.attrOffers = EN.shuffle(Object.keys(DATA.attrs)).slice(0, DATA.attrRule.shop);
+  if(!UI.attrOffers){ const all = Object.keys(DATA.attrs), out = []; for(let j = 0; j < DATA.attrRule.shop && out.length < all.length; j++) out.push(pickByRarity(all.filter(a => !out.includes(a)), DATA.attrRarityOf, 'attr')); UI.attrOffers = out; }
   run.shop = {at: nk, offers: UI.offers, attrs: UI.attrOffers};
   const pk = UI.pick, can = c => run.scrap >= c;
   const offers = UI.offers.map((k, i) => k ? `<div class="sitem"><button class="card static${pk === 'c' + i ? ' picked' : ''}${can(price(k)) ? '' : ' off'}" type="button" data-act="pick" data-arg="c${i}" data-view="shop">${cardInner(k, null)}</button><span class="price${can(price(k)) ? '' : ' no'}"><span class="ic">${IC.scrap}</span>${price(k)}</span></div>` : '<div class="sitem sold"></div>').join('');
@@ -2638,7 +2669,7 @@ function startTransit(){
 function showEventRoom(){
   const ev = findEvent(UI.eventId), pk = UI.pick, tr = UI.node && UI.node.type === 'transit';
   const heal = tr && UI.healed ? `<p class="rs-heal"><span class="ic">${IC.core}</span>${DATA.ui['transit.heal'].replace('{n}', UI.healed)}</p>` : '';
-  showRoom(tr ? 'transit' : 'event', `<h2>${ev.title}</h2><p class="rs-text">${ev.text}</p>${heal}<div class="rs-opts">${ev.choices.map((c, i) => `<button class="opt${pk === String(i) ? ' picked' : ''}" type="button" data-act="pick" data-arg="${i}" data-view="event"><b>${c.label}</b><span>${c.sub}</span></button>`).join('')}</div><div class="row"><button class="btn" type="button" data-act="choose" ${pk != null ? '' : 'disabled'}>決定</button></div>`, tr ? rsUnit() : true);
+  showRoom(tr ? 'transit' : 'event', `<h2>${ev.title}</h2><p class="rs-text">${ev.text}</p>${heal}<div class="rs-opts">${ev.choices.map((c, i) => `<button class="opt${pk === String(i) ? ' picked' : ''}" type="button" data-act="pick" data-arg="${i}" data-view="event"><b>${c.label}</b><span>${String(c.sub || '').replace(/\n/g, '<br>')}</span></button>`).join('')}</div><div class="row"><button class="btn" type="button" data-act="choose" ${pk != null ? '' : 'disabled'}>決定</button></div>`, tr ? rsUnit() : true);
 }
 function applyEvent(fx){
   const run = S.run;
@@ -2646,6 +2677,9 @@ function applyEvent(fx){
   if(fx.scrap) run.scrap += fx.scrap;
   if(fx.alert){ const pb = EN.poolIndex(run); if(EN.addAlert(run, fx.alert) > 0){ UI.alertUp = true; if(EN.poolIndex(run) > pb) UI.poolUp = true; } }
   if(fx.repair) for(const p of SLOTS) run.parts[p.id].damaged = false;
+  // 0.36.0: ランダムな部位を損傷させる / すべての部位のパーツを付け替える(損傷は直る)
+  if(fx.partDamage) for(let j = 0; j < fx.partDamage; j++){ const ok = SLOTS.filter(p => !run.parts[p.id].damaged); if(ok.length) run.parts[EN.pick(ok).id].damaged = true; }
+  if(fx.rerollParts){ const was = SLOTS.map(p => run.parts[p.id].id); for(const p of SLOTS){ const id = pickByRarity(partPool().filter(x => PARTDEF[x].slot === p.id && x !== run.parts[p.id].id), DATA.partRarityOf, 'part'); if(id) run.parts[p.id] = {id, damaged:false}; } UI.pick = null; showOv(`<h2>${DATA.ui['overhaul.title']}</h2><div class="rrl">${SLOTS.map((p, j) => { const d = PARTDEF[run.parts[p.id].id]; return `<div class="rr"><span class="ic">${IC[p.id]}</span><s>${PARTDEF[was[j]].name}</s><span class="rr-ar">→</span><b>${d.name}</b><span class="rr-t">${d.text}</span></div>`; }).join('')}</div><div class="row"><button class="btn" type="button" data-act="done">次へ</button></div>`); return; }
   if(fx.card){ const k = EN.pick(offerPool().filter(x => DATA.rarityOf(x) === 'rare')); run.deck.push(k); UI.pick = null; showOv(`<h2>取り込んだ</h2><div class="cards"><div class="card static">${cardInner(k, null)}</div></div><div class="row"><button class="btn" type="button" data-act="done">次へ</button></div>`); return; }
   if(fx.part){ UI.partOpts = randomParts(2); UI.pick = null; UI.back = 'map'; showPartOffer(); return; }
   if(fx.defrag){ UI.pick = null; UI.back = 'event'; showDefrag(); return; }
@@ -2912,7 +2946,7 @@ function applyEcon(){
     CARDS[k] = DATA.classCard(JSON.parse(JSON.stringify(c0)), C.cards[k]);
   }
   // 属性付きのカードは、キャラの数値を当てた元のカードから作り直す
-  for(const k of Object.keys(CARDS)) if(k.includes('@')) DATA.regAttrCard(CARDS, k);
+  for(const k of Object.keys(CARDS)) if(/[@+]/.test(k)) DATA.regAttrCard(CARDS, k);
 }
 /* ---------- debug ---------- */
 // 調整用: 遭遇・デッキ・パーツ・数値を選んで、ランの外で1戦だけ戦う。設定は端末ごとに覚える
@@ -3099,7 +3133,7 @@ function act(a, arg, el){
     case 'pick': {
       UI.pick = UI.pick === arg ? null : arg;
       const v = el.dataset.view;
-      ({learn:showLearn, rest:showRest, defrag:showDefrag, shop:showShop, event:showEventRoom, part:showPartOffer, attach:showAttach})[v]();
+      ({learn:showLearn, rest:showRest, defrag:showDefrag, shop:showShop, event:showEventRoom, part:showPartOffer, attach:showAttach, up:showUpgrade})[v]();
       break;
     }
     case 'learn': if(UI.pick){ S.run.deck.push(UI.pick); afterLearn(); } break;
@@ -3109,7 +3143,7 @@ function act(a, arg, el){
     case 'swapGo': if(UI.pick){ const d = PARTDEF[UI.pick]; S.run.parts[d.slot] = {id:UI.pick, damaged:false}; UI.pick = null; completeRoom(); } break;
     case 'skipPart': UI.pick = null; completeRoom(); break;
     case 'rest':
-      if(UI.pick === 'repair'){ S.run.body = Math.min(S.run.bodyMax, S.run.body + 15); for(const p of SLOTS) S.run.parts[p.id].damaged = false; completeRoom(); }
+      if(UI.pick === 'upgrade'){ UI.pick = null; showUpgrade(); }
       else if(UI.pick === 'defrag'){ UI.pick = null; UI.back = 'rest'; showDefrag(); }
       break;
     case 'backAttach': UI.pick = null; hideOv(); showShop(); break;
@@ -3125,6 +3159,8 @@ function act(a, arg, el){
       break;
     }
     case 'leave': completeRoom(); break;
+    case 'backUp': UI.pick = 'upgrade'; hideOv(); showRest(); break;
+    case 'doUp': if(UI.pick){ const i = S.run.deck.indexOf(UI.pick), nk = DATA.upKey(UI.pick); if(i >= 0 && DATA.regAttrCard(CARDS, nk)) S.run.deck[i] = nk; UI.pick = null; completeRoom(); } break;
     case 'choose': { if(UI.pick == null) break; const ev = findEvent(UI.eventId); const fx = ev.choices[+UI.pick].fx; UI.pick = null; applyEvent(fx); break; }
     case 'done': completeRoom(); break;
   }

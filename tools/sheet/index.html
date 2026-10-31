@@ -343,7 +343,7 @@ function foeCard(o){
   return `<div class="fcard"><div class="fch"><b>${esc(o.name || '(名前なし)')}</b><span class="note">最初の行動まで ${o.start ?? '?'}</span></div><div class="uhps">${hp}</div>
     ${patStrip(o, o.pat, 'pat')}${o.phase ? `<div class="note">耐久${Math.round((o.phase.at || 0) * 100)}%未満で:</div>${patStrip(o, o.phase.pat, 'phase.pat')}` : ''}${pas ? `<div class="fpas">${pas}</div>` : ''}</div>`;
 }
-const pasText = (p, o) => (D.ui['pas.' + (p.k === 'punctual' && p.n === 0 ? 'punctual0' : p.k)] || p.k).replace(/\{(\w+)\}/g, (m, n) => n === 'unit' ? (o.units && o.units[p.unit] ? o.units[p.unit].name : p.unit || '?') : n in p ? p[n] : m);
+const pasText = (p, o) => p.k === 'free' ? (p.text || '') : (D.ui['pas.' + (p.k === 'punctual' && p.n === 0 ? 'punctual0' : p.k)] || p.k).replace(/\{(\w+)\}/g, (m, n) => n === 'unit' ? (o.units && o.units[p.unit] ? o.units[p.unit].name : p.unit || '?') : n in p ? p[n] : m);
 // 1つの行動の欄(開いているときだけ)。上の行は要約と並べ替えのボタン
 function actHTML(base, a, o, orig, units, i, n){
   const open = S.foeOpen === base, sum = [a.kind === 'delay' ? `自分にディレイ${a.v || 0}` : a.d > 0 ? `${a.d}${a.hits > 1 ? '×' + a.hits : ''}→${SLOT[a.p] || ''}` : '', ...actAttrs(a, o).filter(t => !/^\d+回$/.test(t))].filter(Boolean).join(' ');
@@ -400,8 +400,8 @@ function foeForm(o, orig){
   h += g('ユニット', (o.units ? Object.entries(o.units).map(([k, u]) => `<div class="ar ur">${fIn(`units.${k}.name`, o, orig, '名前', 'str')}${fIn(`units.${k}.hp`, o, orig, '耐久')}${fIn(`units.${k}.armor`, o, orig, 'ブロック')}${fIn(`units.${k}.vital`, o, orig, '急所', 'bool')}${fIn(`units.${k}.core`, o, orig, '核', 'bool')}<button type="button" class="ib del" data-fx="delunit" data-base="${esc(k)}" title="消す">✕</button></div>`).join('') : '<div class="note">ユニットは1つ(耐久は「基本」)</div>') + `<div class="ar"><button type="button" class="btn quiet sm" data-fx="addunit">＋ユニットを足す</button></div>`, true, o.units ? `${units.length}つ` : '1つ');
   if(o.react) h += g('反応', `<div class="note">コスト「最小」以上のカードを使い始めると、1サイクル後に撃つ</div><div class="ar">${fIn('react.min', o, orig, '最小コスト')}${fIn('react.d', o, orig, 'ダメージ')}${fIn('react.p', o, orig, '部位', 'part')}</div>`);
   const pas = o.passives || [], PK = Object.keys(D.ui).filter(k => k.startsWith('pas.') && !['pas.react', 'pas.phase', 'pas.broke', 'pas.punctual0'].includes(k)).map(k => k.slice(4));
-  h += g('パッシブ', pas.map((p, j) => `<div class="ar ur">${fIn(`pname.${j}`, o, orig, '名前', 'str')}${p.n != null ? fIn(`passives.${j}.n`, o, orig, '数') : ''}${p.unit != null ? fIn(`passives.${j}.unit`, o, orig, 'ユニット', 'unit', units) : ''}<button type="button" class="ib del" data-fx="delpas" data-base="${j}" title="消す">✕</button><div class="note pt">${esc(pasText(p, o))}</div></div>`).join('') +
-    `<div class="ar af"><select data-addpas="1"><option value="">＋パッシブを足す</option>${PK.map(k => `<option value="${k}">${esc((D.ui['pas.' + k] || k).replace(/\{\w+\}/g, '◯').slice(0, 26))}</option>`).join('')}</select></div>`, true, `${pas.length}つ`);
+  h += g('パッシブ', pas.map((p, j) => `<div class="ar ur">${fIn(`pname.${j}`, o, orig, '名前', 'str')}${p.k === 'free' ? fIn(`passives.${j}.text`, o, orig, '効果(文)', 'str') : ''}${p.n != null ? fIn(`passives.${j}.n`, o, orig, '数') : ''}${p.unit != null ? fIn(`passives.${j}.unit`, o, orig, 'ユニット', 'unit', units) : ''}<button type="button" class="ib del" data-fx="delpas" data-base="${j}" title="消す">✕</button><div class="note pt">${esc(pasText(p, o))}</div></div>`).join('') +
+    `<div class="pasnew"><div class="note">新しいパッシブは名前と効果を文で書く(Claude が仕組みにする)</div><div class="ar"><label class="ff fw"><span>名前</span><input type="text" id="pasNewName" placeholder="例: 立て直し"></label></div><div class="ar"><label class="ff fw"><span>効果</span><textarea id="pasNewText" rows="2" placeholder="例: 行動がブレイクされたとき、次の行動が2サイクル早まる。"></textarea></label></div><div class="ar"><button type="button" class="btn quiet sm" data-pasadd="1">＋パッシブを足す</button></div></div>`, true, `${pas.length}つ`);
   if(!(S.draft && S.draft.vv != null)) h += g('ひとこと', Object.keys(o.say || {}).map(k => `<div class="ar">${fIn(`say.${k}`, o, orig, SAYW(k, o), 'lines')}</div>`).join('') + '<div class="note">1行に1つ。複数あれば毎回どれか1つ。空なら言わない</div>', false, `${Object.values(o.say || {}).reduce((a, v) => a + [].concat(v || []).length, 0)}つ`);
   const pool = o.pool || [], cand = Object.keys(D.cards).filter(k => !D.cards[k].junk && (D.rarity || {})[k] !== 'starter' || pool.includes(k));
   if(!(S.draft && S.draft.vv != null)) h += g('学習で出やすいカード', `<div class="chips">${cand.map(k => `<button type="button" class="chip${pool.includes(k) ? ' on' : ''}" data-pool="${esc(k)}">${esc(D.cards[k].name || k)}</button>`).join('')}</div>`, false, pool.map(k => (D.cards[k] || {}).name || k).join('・'));
@@ -454,7 +454,7 @@ function foeAppear(fk){
   return out;
 }
 function foePreview(o){
-  const nm = o.pname || {}, ps = (o.passives || []).map((p, j) => { const t = (D.ui['pas.' + (p.k === 'punctual' && p.n === 0 ? 'punctual0' : p.k)] || '').replace(/\{(\w+)\}/g, (m, n) => n === 'unit' ? (o.units && o.units[p.unit] ? o.units[p.unit].name : p.unit) : n in p ? p[n] : n === 'n' ? 1 : m); return `<div><b>${esc(nm[j] || p.k)}</b> ${esc(t)}</div>`; });
+  const nm = o.pname || {}, ps = (o.passives || []).map((p, j) => { const t = p.k === 'free' ? (p.text || '') : (D.ui['pas.' + (p.k === 'punctual' && p.n === 0 ? 'punctual0' : p.k)] || '').replace(/\{(\w+)\}/g, (m, n) => n === 'unit' ? (o.units && o.units[p.unit] ? o.units[p.unit].name : p.unit) : n in p ? p[n] : n === 'n' ? 1 : m); return `<div><b>${esc(nm[j] || p.k)}</b> ${esc(t)}</div>`; });
   if(o.phase) ps.push(`<div><b>${esc(nm.phase || '段階変化')}</b> 耐久${Math.round(o.phase.at * 100)}%未満で行動が変わる</div>`);
   return `<b>${esc(o.name || '')}</b> <span class="note">${esc((o.appear || []).join('、') || '出ない')}</span>${ps.length ? `<div style="margin-top:4px">${ps.join('')}</div>` : '<div class="note">パッシブなし</div>'}`;
 }
@@ -1263,6 +1263,8 @@ document.addEventListener('click', e => {
   const va = t.closest('[data-vadd]'); if(va && S.draft && VAR[S.kind]){ vvSync(); vvOpen(VAR[S.kind].add(S.draft.obj)); renderSide(); later(); return; }
   const vd = t.closest('[data-vdel]'); if(vd && S.draft && S.draft.vv != null){ VAR[S.kind].del(S.draft.obj, S.draft.vv); vvOpen(null); renderSide(); later(); return; }
   // 敵のページ: 学習で出やすいカードを押して入れ外し
+  // 敵のパッシブを自由記述で足す(0.38.2): {k:'free', text} と名前(pname)。仕組みは Claude が依頼を見て作る
+  const pa = t.closest('[data-pasadd]'); if(pa && S.draft){ const nm = ($('#pasNewName') || {}).value || '', tx = ($('#pasNewText') || {}).value || ''; if(!nm.trim() && !tx.trim()){ toast('名前か効果を書いてください'); return; } const o = edObj(); o.passives = (o.passives || []).slice(); o.passives.push({k:'free', text:tx.trim()}); (o.pname = Object.assign({}, o.pname))[o.passives.length - 1] = nm.trim(); vvSync(); renderSide(); later(); return; }
   const pl = t.closest('[data-pool]'); if(pl && S.draft){ const k = pl.dataset.pool, a = (edObj().pool = (edObj().pool || []).slice()), i = a.indexOf(k); if(i >= 0) a.splice(i, 1); else a.push(k); renderSide(); later(); return; }
   // カード工房
   const wf = t.closest('[data-wbf]'); if(wf){ S.wbFilter = wf.dataset.wbf; renderList(); return; }

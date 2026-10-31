@@ -7,10 +7,17 @@
 //   fx: crack 当たった(狙った)ユニットにクラック / delay 対象の敵にディレイ / gain 充電を得る / block ブロックを得る / draw カードを引く
 //       again もう1回当たる(on:'hit' のときだけ。2回目には属性は働かない)
 //       dotn・dotp 侵食(持続)の回数・威力を与える / heal 本体の耐久を回復する(0.33.0)
+//       all 敵のすべてのユニットにダメージ / exile このカードを廃棄にする(0.35.0)
+//   on:'mod' カードそのものを変える(0.35.0): dmgUp ダメージの値(複数回なら1回あたり)+ / atomic アトミックにする
+//       mod の文はカードには足さない(数値に入っているため)。atomic だけは文の頭に属性の文を付ける
 // 付けられるかは「働くかどうか」だけで決まる(attrOk): ヒットごとはダメージを与えるカードだけ、クラック・ディレイは狙う相手のいるカードだけ、など
-// 具体的な属性はまだ入れていない(0.28.0 は仕組みだけ)。カード工房の「属性」タブで作り、試遊で試せる
+// 属性はカード工房の「属性」タブで作り、試遊で試せる。確定したものをここに入れる(0.35.0 から)
 window.DATA = window.DATA || {};
-DATA.attrs = {};
+DATA.attrs = {
+  // 0.35.0: 工房で確定した属性(名前と文は text/attrs.csv)
+  gnaw:  {on:'hit', fx:{dotp:1}},
+  regen: {on:'cast', fx:{heal:2}},
+};
 // 手に入れ方: battle 通常の戦闘の報酬で、候補1枚ごとに属性が付く確率 / elite エリートの報酬は必ず付く / shop ショップに並ぶ属性の数と値段
 DATA.attrRule = {battle:0.2, elite:1, shop:1, price:40};
 
@@ -22,6 +29,10 @@ DATA.attrOk = (c, a) => {
   if(A.on === 'hit' && !hits) return false;
   if(A.on === 'break' && !hits && !c.breakNext) return false;
   if(f.again && A.on !== 'hit') return false;
+  if(f.exile && c.exile) return false;
+  if(f.atomic && c.atomic) return false;
+  if(f.dmgUp && !hits) return false;
+  if((f.dmgUp || f.atomic) && A.on !== 'mod') return false;
   if((f.crack || f.delay || f.dotn || f.dotp) && A.on !== 'hit' && A.on !== 'break' && !aim) return false;
   return Object.values(f).some(v => v);
 };
@@ -38,6 +49,10 @@ DATA.attrText = a => {
   if(f.again) out.push('もう1回当たる');
   if(f.dotn || f.dotp) out.push(`侵食${f.dotn || 0}/${f.dotp || 0}を与える`);
   if(f.heal) out.push(`耐久を${f.heal}回復する`);
+  if(f.exile) out.unshift('廃棄');
+  if(f.all) out.push(`敵のすべてのユニットに${f.all}ダメージを与える`);
+  if(f.atomic) out.push('アトミック');
+  if(f.dmgUp) out.push(`このカードのダメージを${f.dmgUp}増加させる`);
   if(!out.length) return '';
   const head = A.on === 'hit' ? 'ヒットごとに、' : A.on === 'just' ? 'JUST：' : A.on === 'break' ? 'ブレイクしたとき、' : '';
   return head + out.join('。') + '。';
@@ -46,6 +61,13 @@ DATA.attrText = a => {
 DATA.attrCard = (c, a) => {
   const A = DATA.attrs[a], o = JSON.parse(JSON.stringify(c));
   o.attr = a; o.name = (A && A.name || '') + (c.name || ''); o.attrText = DATA.attrText(a);
+  const f = (A && A.fx) || {};
+  if(f.exile) o.exile = true;
+  if(A && A.on === 'mod'){
+    o.attrText = '';
+    if(f.dmgUp) for(const d of [o.dmg, o.timer && o.timer.dmg, o.spend && o.spend.dmg]) if(d) d.n += f.dmgUp;
+    if(f.atomic){ o.atomic = true; o.text = DATA.attrText(a) + (o.text || ''); }
+  }
   return o;
 };
 // キー k(「元@属性」)のカードを cards に登録する。登録できなければ false

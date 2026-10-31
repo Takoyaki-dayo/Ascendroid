@@ -21,7 +21,7 @@ const RULE = {draw:3, handStart:5, handMax:7, view:18, freeWait:true, blockDecay
 // パッシブ(0.18.0): 敵ごとの常に働く性質。passives:[{k, ...}]
 //   command {unit, n}  統率: unit が破壊されていない間、行動の間隔(コスト)-n(最短2)
 //   frenzy {n}         ユニットが破壊されるたび、攻撃力+n
-//   punctual {n}       定刻(0.23.0): ディレイを受けない。ディレイを与えられるたび、代わりに増幅+n
+//   punctual {n}       定刻(0.23.0): ディレイを受けない。ディレイを与えられるたび、代わりに増幅+n(0.35.0: n:0 なら増幅は得ない)
 //   pursuit {n}        追跡(0.23.0): こちらが手札を入れ替えるか待機するたび、次の行動が n サイクル早まる(最短1)
 //   loot / hoard       見せるだけ。盗んだスクラップ(steal)・飲み込んだカード(eat)は撃破すると戻る
 
@@ -209,7 +209,7 @@ const attrOf = c => c && c.attr && D.attrs && D.attrs[c.attr] ? D.attrs[c.attr] 
 function attrFx(st, A, e, uid, ev, n){
   const b = st.b, f = A.fx || {}, live = e && e.alive && uid && e.units[uid] && !e.units[uid].broken;
   if(f.crack && live){ e.units[uid].crack += f.crack; ev.push({kind:'crack', e:e.i, unit:uid, n:f.crack}); }
-  if(f.delay && e && e.alive){ const v = delayFoe(e, f.delay); ev.push({kind:'delay', e:e.i, n:v, anger:pasN(e, 'punctual')}); }
+  if(f.delay && e && e.alive){ const v = delayFoe(e, f.delay); ev.push({kind:'delay', e:e.i, n:v, anger:punctGain(e)}); }
   if(f.gain){ b.charge = (b.charge || 0) + f.gain; ev.push({kind:'charge', n:f.gain}); }
   if(f.block){ gainBlock(b, f.block); ev.push({kind:'block', n:f.block}); }
   if(f.draw){ const m = drawN(b, f.draw); ev.push({kind:'draw', n:m}); }
@@ -217,6 +217,8 @@ function attrFx(st, A, e, uid, ev, n){
   // 0.33.0: 侵食(持続)を与える / 本体の耐久を回復する
   if((f.dotn || f.dotp) && live){ addDot(e.units[uid], f.dotn || 0, f.dotp || 0); ev.push({kind:'dotAdd', e:e.i, unit:uid, n:f.dotn || 0, p:f.dotp || 0}); }
   if(f.heal){ const r = st.run, v = Math.min(f.heal, r.bodyMax - r.body); r.body += v; ev.push({kind:'heal', n:v}); }
+  // 0.35.0: 敵のすべてのユニットにダメージ(all。ヒット。クラック・隙は効くが、パーツ・増幅の補正は無い)。狙った敵ごとに呼ばれるので、その敵だけ
+  if(f.all){ for(const t of (e ? [e] : b.foes)) for(const k of liveUids(t)) if(t.alive && !t.units[k].broken) hitFoe(st, t, f.all, ev, k); }
 }
 // ブレイクしたときの属性(0.33.0、on:'break'): このカード(時限を含む)で敵の行動をブレイクしたとき、その敵ごとに1回
 function breakAttr(st, c, ev, extra){
@@ -250,6 +252,9 @@ function cardHitsFoe(b, c, e, ti){
 const growOf = (b, k) => (b && b.grow && k) ? (b.grow[String(k).split('@')[0]] || 0) : 0;
 // 決まった量の充電を消費するカード(spend.n)は、充電が足りないと使えない
 const spendShort = (b, c) => !!(c && c.spend && c.spend.n && (b.charge || 0) < c.spend.n);
+// 対象の侵食の回数が足りないと使えない(0.35.0、needDot)。uid が無ければ、どれか1つのユニットが足りていればよい
+const dotShort = (b, c, e, uid) => { if(!c || !c.needDot) return false; const ok = k => e && e.alive && e.units[k] && !e.units[k].broken && e.units[k].dot && e.units[k].dot.n >= c.needDot; return uid ? !ok(uid) : !(e && liveUids(e).some(ok)); };
+const needShort = (b, c) => !!(c && c.needDot && !b.foes.some(e => !dotShort(b, c, e)));
 function applyCard(st, k, ti){
   const c = D.cards[k], b = st.b, ev = [];
   const T = parseT(ti);
@@ -275,20 +280,22 @@ function applyCard(st, k, ti){
   if(c.grow){ b.grow = b.grow || {}; b.grow[base] = (b.grow[base] || 0) + c.grow; ev.push({kind:'grow', k:base, n:c.grow}); }
   if(c.gain){ b.charge = (b.charge || 0) + c.gain; ev.push({kind:'charge', n:c.gain}); }
   if(c.crack) for(const e of targets) if(e.alive){ const k = uidOf(e); e.units[k].crack += c.crack; ev.push({kind:'crack', e:e.i, unit:k, n:c.crack}); }
+  // 侵食を減らす(0.35.0、dotCut:{n, p})。回数が0以下になると消える
+  if(c.dotCut) for(const e of targets) if(e.alive) for(const k of (c.all ? liveUids(e) : [uidOf(e)])){ const u = e.units[k]; if(!u.dot) continue; u.dot.n -= c.dotCut.n || 0; u.dot.p = Math.max(0, u.dot.p - (c.dotCut.p || 0)); if(u.dot.n <= 0) delete u.dot; ev.push({kind:'dotCut', e:e.i, unit:k, n:c.dotCut.n || 0, p:c.dotCut.p || 0}); }
   if(c.dot) for(const e of targets) if(e.alive) for(const k of (c.all ? liveUids(e) : [uidOf(e)])){ addDot(e.units[k], c.dot.n, c.dot.p); ev.push({kind:'dotAdd', e:e.i, unit:k, n:c.dot.n || 0, p:c.dot.p || 0}); }
-  if(c.delay) for(const e of targets) if(e.alive){ const v = delayFoe(e, c.delay); ev.push({kind:'delay', e:e.i, n:v, anger:pasN(e, 'punctual')}); }
+  if(c.delay) for(const e of targets) if(e.alive){ const v = delayFoe(e, c.delay); ev.push({kind:'delay', e:e.i, n:v, anger:punctGain(e)}); }
   if(c.block){ const n = blockOf(st, c); gainBlock(b, n); ev.push({kind:'block', n}); }
   // 防壁(0.30.0、ward:{w, s}): w サイクルの間、合計 s までのダメージを防ぐ
   if(c.ward){ (b.wards = b.wards || []).push({left:c.ward.w, s:c.ward.s, id:b.uid++}); ev.push({kind:'ward', n:c.ward.s, w:c.ward.w}); }
   // 次の敵の行動をブレイクする(0.30.0、breakNext): 対象の敵の次の行動を飛ばす
   if(c.breakNext) for(const e of targets) if(e.alive){ const nm = cur(e).n; advance(e); b.breaks = (b.breaks || 0) + 1; ev.push({kind:'break', e:e.i, name:nm}); }
   // 手札を選んで捨てる(0.30.0、discard): カードを使い終えた後、手札から選ぶ(actions が選ぶ行動だけになる)
-  if(c.discard) b.chooseNext = {kind:'discard', n:c.discard};
+  if(c.discard && !c.instant) b.chooseNext = {kind:'discard', n:c.discard};
   if(c.swift){ b.swift += c.swift; ev.push({kind:'swift', n:c.swift}); }
   if(c.timer && targets[0]){ b.timers.push({id:b.uid++, left:c.timer.t, k, e:targets[0].i, unit:uidOf(targets[0])}); ev.push({kind:'timerSet', e:targets[0].i, t:c.timer.t}); }
   if(c.draw){ const n = drawN(b, c.draw); if(c.borrow) b.drawIn += c.draw * RULE.draw; ev.push({kind:'draw', n, borrow: !!c.borrow}); }
   // 0.17.0: スウィフトはディレイに統一(パーツの効果も敵へのディレイ)
-  if(c.cost === 0){ const s = fx(st, 'mob', 'zeroDelay'); if(s) for(const e of b.foes) if(e.alive){ const v = delayFoe(e, s); ev.push({kind:'delay', e:e.i, n:v, anger:pasN(e, 'punctual')}); } }
+  if(c.cost === 0){ const s = fx(st, 'mob', 'zeroDelay'); if(s) for(const e of b.foes) if(e.alive){ const v = delayFoe(e, s); ev.push({kind:'delay', e:e.i, n:v, anger:punctGain(e)}); } }
   // 0.33.0: 自分にクラック(selfCrack) / 自機の増幅(amp:{t, n}) / 自分にダメージ(selfDmg、本体に直接。ブロックでは防げない)
   if(c.selfCrack){ b.crack = (b.crack || 0) + c.selfCrack; ev.push({kind:'selfCrack', n:c.selfCrack}); }
   if(c.amp && c.amp.n){ (b.amp = b.amp || {})[c.amp.t] = (b.amp[c.amp.t] || 0) + c.amp.n; ev.push({kind:'amp', t:c.amp.t, n:c.amp.n}); }
@@ -310,8 +317,10 @@ function fireTimer(st, t){
 function timerBreakAttr(st, t, ev){ const c = D.cards[t.k]; if(c) breakAttr(st, c, ev);
 }
 // 敵の攻撃1回。extra は連携の上乗せ
+// 敵の攻撃の上乗せ: 増幅 − 虚弱(0.35.0)。攻撃の威力は0未満にならない(strike で切る)
+const foeStr = e => (e.str || 0) - (e.weak || 0);
 function strike(st, e, a, extra, noParry){
-  const b = st.b, raw = a.d + (extra || 0) + (b.crack || 0);
+  const b = st.b, raw = Math.max(0, a.d + (extra || 0)) + (b.crack || 0);
   if(b.parryNow && !noParry){ const ev = []; hurtFoe(b, e, raw, ev, actorUid(e, a.by ? a : cur(e))); return {kind:'parried', name:a.n, raw, ev}; }
   // 防壁(0.30.0): 期限付きの守り。古いものから先に受ける。残りをブロックが受ける
   let wd = 0; for(const w of b.wards || []){ const x = Math.min(w.s, raw - wd); w.s -= x; wd += x; if(wd >= raw) break; }
@@ -330,14 +339,16 @@ function strike(st, e, a, extra, noParry){
 // 敵の列が1本になってディレイが強すぎたため。重ねがけを止める
 // 定刻の敵(passive punctual)はディレイを受けず、代わりに増幅を得る。戦闘開始時のディレイ(free)では何も起きない
 const pasN = (e, k) => (e.pas || []).reduce((s, p) => s + (p.k === k ? (p.n || 1) : 0), 0);
+// 定刻(0.35.0): ディレイを受けないのは n に関係なく。n は代わりに得る増幅(0 なら得ない。書いていなければ 1)
+const hasPunct = e => (e.pas || []).some(p => p.k === 'punctual');
+const punctGain = e => (e.pas || []).reduce((s, p) => s + (p.k === 'punctual' ? (p.n == null ? 1 : p.n) : 0), 0);
 function delayFoe(e, v, free){
-  const pn = pasN(e, 'punctual');
-  if(pn){ if(!free && v > 0){ e.str = (e.str || 0) + pn; e.anger = (e.anger || 0) + 1; } return 0; }
+  if(hasPunct(e)){ const pn = punctGain(e); if(!free && v > 0 && pn){ e.str = (e.str || 0) + pn; e.anger = (e.anger || 0) + 1; } return 0; }
   const a = Math.max(0, v - (e.resist || 0)); e.r += a; if(!free) e.resist = (e.resist || 0) + 1; return a;
 }
 function enemyAct(st, e, extra){ e.resist = 0;
   const a = cur(e), mv = (e.phased ? 'phase:' : 'pat:') + e.idx;
-  const res = a.kind === 'delay' ? {kind:'delay', name:a.n, v:a.v} : a.d > 0 ? strike(st, e, a, (extra || 0) + (e.str || 0)) : {kind:'move', name:a.n};
+  const res = a.kind === 'delay' ? {kind:'delay', name:a.n, v:a.v} : a.d > 0 ? strike(st, e, a, (extra || 0) + foeStr(e)) : {kind:'move', name:a.n};
   res.by = actorUid(e, a); res.mv = mv;
   // 多段: 残りを1サイクルおきに撃つ
   if(a.hits > 1 && !e.chain){ e.chain = a.hits - 1; e.r = 1; e.sh = 0; res.chainLeft = e.chain; return res; }
@@ -352,7 +363,7 @@ function enemyAct(st, e, extra){ e.resist = 0;
   if(a.armor){ ap.armor += a.armor; res.armor = a.armor; }                // 装甲を重ねる(行動したユニットに。消えない)
   if(a.heal){ const hp = !ap.broken ? ap : e.units[defaultUid(e)]; const h = Math.min(a.heal, hp.max - hp.hp); hp.hp += h; syncHp(e); res.heal = h; } // 修復(破壊されたユニットは戻らない)
   if(a.haste){ e.haste = (e.haste || 0) + a.haste; res.haste = a.haste; }                // 加速: 以後の間隔が縮む
-  if(a.zone){ b.zones.push({id:b.uid++, from:a.zone.at, to:a.zone.at + a.zone.len - 1, d:a.zone.d + (e.str || 0), p:a.zone.p, e:e.i, n:a.n}); res.zone = a.zone; } // 危険域
+  if(a.zone){ b.zones.push({id:b.uid++, from:a.zone.at, to:a.zone.at + a.zone.len - 1, d:Math.max(0, a.zone.d + foeStr(e)), p:a.zone.p, e:e.i, n:a.n}); res.zone = a.zone; } // 危険域
   const ac = a.crack || a.mark; // こちらにクラック(受ける攻撃すべて+)。mark は 0.14 までの名前(実験の古い敵のデータ用)
   if(ac){ b.crack = (b.crack || 0) + ac; res.crack = ac; }
   if(a.noise){ for(let i = 0; i < a.noise; i++){ const at = Math.floor(rand() * (b.draw.length + 1)); b.draw.splice(at, 0, {k:'noise', id:b.uid++}); } res.noise = a.noise; } // ノイズ注入
@@ -448,6 +459,12 @@ function* spendGen(st, cost, k, ti, noInt){
         // JUST のときの属性(0.28.0): このサイクルに行動する敵それぞれに効く。効果はカードの効果と一緒に出す
         const jev = [], JA = attrOf(c);
         if(real && JA && JA.on === 'just') for(const e of b.foes) if(e.alive && e.r <= 0) attrFx(st, JA, e, actorUid(e, cur(e)), jev);
+        // JUST の効果(0.35.0、見切り): このサイクルに行動する敵の行動をブレイクする(justBreak)/ 虚弱を与える(justWeak)
+        if(real && (c.justBreak || c.justWeak)) for(const e of b.foes){
+          if(!e.alive || e.r > 0 || !(c.all || (c.tgt && parseT(ti).i === e.i))) continue;
+          if(c.justWeak){ e.weak = (e.weak || 0) + c.justWeak; jev.push({kind:'weak', e:e.i, n:c.justWeak}); }
+          if(c.justBreak){ const nm = cur(e).n; advance(e); b.breaks = (b.breaks || 0) + 1; out.justs.push({i:e.i, name:nm}); (b.justBroke = b.justBroke || []).push(e.i); yield {type:'just', e:e.i, crack:0, delay:0}; }
+        }
         if(real) for(const e of b.foes){
           // 不安定(0.31.0): カードでダメージを与えるときだけ(防御のカードや持続ではブレイクしない)
           if(e.alive && e.r <= 0 && cur(e).ch && !e.chain && cardHitsFoe(b, c, e, ti)){
@@ -484,7 +501,7 @@ function* spendGen(st, cost, k, ti, noInt){
       for(const kind of acts){
         if(!e.alive) break;
         let res;
-        if(kind === 'react'){ res = Object.assign(strike(st, e, e.react, 0), {react:true}); if(res.kind === 'hit') afterHit(b); }
+        if(kind === 'react'){ res = Object.assign(strike(st, e, e.react, foeStr(e)), {react:true}); if(res.kind === 'hit') afterHit(b); }
         else res = enemyAct(st, e, e.sync && syncN >= 2 ? e.sync : 0);
         if(res.kind === 'delay' && b.cast){
           left += res.v; b.cast.left = left; res.applied = true;
@@ -518,7 +535,8 @@ function waryFoe(key, lv){
   const f = Object.assign({}, D.foes[key]);
   for(const [k, v] of Object.entries(t)){
     if(k === 'at') continue;
-    if(k === 'passives') f.passives = (f.passives || []).concat(v);
+    // パッシブは足す。同じ種類(同じユニット)のパッシブがあれば置き換える(0.35.0)
+    if(k === 'passives') f.passives = (f.passives || []).filter(p => !v.some(q => q.k === p.k && (q.unit || null) === (p.unit || null))).concat(v);
     else if(k === 'patAdd') f.pat = f.pat.concat(v);
     else f[k] = v;
   }
@@ -601,9 +619,9 @@ function actions(st){
   if(b.choose) return b.hand.map((cd, i) => ({type:'choose', i, k:cd.k}));
   b.hand.forEach((cd, i) => {
     const c = D.cards[cd.k];
-    if(spendShort(b, c)) return;
+    if(spendShort(b, c) || needShort(b, c)) return;
     // ユニットが2つ以上ある敵は、ユニットごとに狙いを分ける
-    const ts = c.tgt ? b.foes.filter(e => e.alive).flatMap(e => liveUids(e).length > 1 ? liveUids(e).map(k => e.i + '.' + k) : [e.i]) : [null];
+    const ts = c.tgt ? b.foes.filter(e => e.alive).flatMap(e => liveUids(e).length > 1 ? liveUids(e).filter(k => !dotShort(b, c, e, k)).map(k => e.i + '.' + k) : [e.i]) : [null];
     for(const t of ts){ const key = cd.k + '|' + t; if(seen.has(key)) continue; seen.add(key); out.push({type:'card', i, k:cd.k, t}); }
   });
   const ec = econ();
@@ -634,7 +652,16 @@ function beginAction(st, a){
 }
 function beginAction0(st, a){
   const b = st.b;
-  if(a.type === 'card'){ const cd = b.hand.splice(a.i, 1)[0]; return {card:cd, cost:D.cards[cd.k].cost, k:cd.k, t:a.t, n:0}; }
+  if(a.type === 'card'){
+    const cd = b.hand.splice(a.i, 1)[0], c = D.cards[cd.k], p = {card:cd, cost:c.cost, k:cd.k, t:a.t, n:0};
+    // インスタント(0.35.0): 使い始めたときに手札を選んで捨てる。a.pick は捨てるカードの id(無ければ前から)
+    if(c.instant && c.discard){
+      const n = Math.min(c.discard, b.hand.length), ids = (a.pick || []).filter(id => b.hand.some(h => h.id === id)).slice(0, n);
+      for(const h of b.hand) if(ids.length < n && !ids.includes(h.id)) ids.push(h.id);
+      p.discarded = ids.map(id => b.hand.find(h => h.id === id)); b.hand = b.hand.filter(h => !ids.includes(h.id)); b.disc.push(...p.discarded);
+    }
+    return p;
+  }
   // 手札を選ぶ(0.30.0): 時間は使わない。discard は捨て札へ、exile は廃棄へ
   if(a.type === 'choose'){
     const ch = b.choose, cd = b.hand.splice(a.i, 1)[0];
@@ -753,7 +780,7 @@ function nextNodes(run){
 
 const API = {RULE, makeFoe, defaultUid, liveUids, actorUid, parseT, gap, reloadCost, rngFrom, setRandom, shuffle, pick, clone, cur, advance, partOf, fx, partCards, battleDeck, partMax, dmgOf, blockOf,
   drawOne, drawN, upcoming, arrivals, applyCard, enemyAct, spendGen, runGen, newBattle, actions, actionCost, beginAction, endAction, doAction,
-  newRun, nextArea, delayFoe, addDot, tickDots, growOf, waryTier, lootBack, fledAll, pasN, attrOf, spendShort, regDeck, genMap, nextNodes, reachAfter, scaledFoe, alertLevel, addAlert, alertGain, encFor, poolIndex};
+  newRun, nextArea, delayFoe, addDot, tickDots, growOf, waryTier, lootBack, fledAll, pasN, attrOf, spendShort, dotShort, needShort, foeStr, regDeck, genMap, nextNodes, reachAfter, scaledFoe, alertLevel, addAlert, alertGain, encFor, poolIndex};
 root.ENGINE = API;
 if(typeof module !== 'undefined') module.exports = API;
 })(typeof window !== 'undefined' ? window : globalThis);

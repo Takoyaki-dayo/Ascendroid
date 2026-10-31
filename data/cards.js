@@ -9,6 +9,8 @@
 // atomic: アトミック(中断されない)
 // (0.29.0〜0.33.0) dot:{n:回数, p:威力} 侵食(0.29 の持続)を与える / selfCrack: 自分にクラック / amp:{t, n} 自機の増幅(この戦闘の間) / selfDmg: 自分にダメージ(本体に直接)
 //   / ward:{w, s} 防壁(w サイクルの間、合計 s までのダメージを防ぐ) / exile: 使うと廃棄(この戦闘の間戻らない)
+//   (0.35.0) instant: インスタント(discard を使い始めたときに行う) / dotCut:{n, p} 対象の侵食を減らす / needDot: 対象の侵食の回数がこれ未満だと使えない
+//   justBreak・justWeak: JUST のとき、その敵の行動をブレイクする・虚弱を与える(虚弱: 敵の攻撃のダメージ−、0未満にならない)
 //   breakNext: 対象の敵の次の行動をブレイク / discard: 使い終えた後、手札を選んで捨てる枚数 / grow: この戦闘の間、同じカードのダメージ+ / scrapBreak: このカードでユニットを破壊したときのスクラップ
 // gain: 充電を得る / spend: 充電をすべて消費し、1につき {dmg:{t, n}} のダメージ、または block のブロック(アーキタイプ「充電」)
 window.DATA = window.DATA || {};
@@ -28,34 +30,40 @@ DATA.cards = {
   backflow: {cost:3, all:true, delay:6},
   scatter:  {cost:3, all:true, dmg:{t:'ranged', n:4}},
   charge:   {cost:4, tgt:true, atomic:true, dmg:{t:'ranged', n:10}},
-  emp:      {cost:4, all:true, dmg:{t:'ranged', n:5}},
+  emp:      {cost:3, all:true, dmg:{t:'ranged', n:9}},
   blow:     {cost:6, tgt:true, dmg:{t:'ranged', n:20}},
   // 充電(貯めて消費する)
   capacitor:{cost:1, gain:4},
   arc:      {cost:2, tgt:true, dmg:{t:'melee', n:4}, gain:2},
   coil:     {cost:1, gain:2, draw:1},
   storm:    {cost:4, all:true, spend:{n:3, dmg:{t:'ranged', n:16}}},
-  cell:     {cost:1, spend:{block:4}},
+  cell:     {cost:1, spend:{n:2, block:7}},
   // 0.31.0: 工房で作られたカード(名前はユーザー)
   dismantle:{cost:4, tgt:true, dmg:{t:'melee', n:15}, scrapBreak:6},
   tempest:  {cost:3, all:true, dmg:{t:'ranged', n:1, x:7}},
   paradox:  {cost:0, tgt:true, selfCrack:3, breakNext:true, exile:true},
   iterate:  {cost:1, tgt:true, dmg:{t:'melee', n:0, x:2}, grow:1},
   triple:   {cost:3, tgt:true, dmg:{t:'melee', n:6, x:3}},
-  dispose:  {cost:2, tgt:true, dmg:{t:'melee', n:15}, discard:1},
+  dispose:  {cost:2, tgt:true, dmg:{t:'melee', n:15}, discard:1, instant:true},
+  // 0.35.0: 工房で作られたカード(名前はユーザー)
+  crush:    {cost:3, tgt:true, dmg:{t:'melee', n:12}, dot:{n:1, p:4}},
+  parallel: {cost:1, block:12, selfDmg:4},
+  phack:    {cost:2, tgt:true, dotCut:{n:4, p:0}, dot:{n:0, p:3}, needDot:4},
+  careful:  {cost:2, tgt:true, dmg:{t:'melee', n:7}, block:5},
+  foresight:{cost:3, tgt:true, justBreak:true, justWeak:1},
   // 敵のノイズ注入で山札に混ざる。何もせず、使うと消える(ショップや学習には出ない)
   noise:    {cost:1, junk:true},
 };
 
-// 最初のデッキ(0.21.1 で基本カードだけ+遅延ハック1枚に。方向はカードの入手で決まる)。パーツが加えるカードは別(武装の《電磁投射》2枚が足される)
+// 最初のデッキ(0.21.1 で基本カードだけ+遅延ハック1枚に。方向はカードの入手で決まる)。パーツが加えるカードは別(武装の《電磁投射》1枚が足される。0.35.0 で2枚から1枚)
 DATA.startDeck = ['jab','jab','jab','jab','guard','guard','guard','guard','slash','hack'];
 
 // 珍しいカード(イベントの報酬)
 // レア度(0.32.0、工房のレア度): starter 初期(報酬・ショップに出ない) / common / uncommon / rare。書いていないカードはコモン
 DATA.rarity = {
   jab:'starter', guard:'starter', slash:'starter',
-  flick:'common', capacitor:'common', coil:'common', iterate:'common', rapid:'common', crackshot:'common', wall:'common', arc:'common', dispose:'common', backflow:'common', storm:'common', scatter:'common', charge:'common',
-  hack:'uncommon', reload:'uncommon', timebomb:'uncommon', cell:'uncommon', triple:'uncommon', dismantle:'uncommon',
+  flick:'common', capacitor:'common', coil:'common', iterate:'common', rapid:'common', crackshot:'common', wall:'common', arc:'common', dispose:'common', parallel:'common', careful:'common', foresight:'common', backflow:'common', storm:'common', scatter:'common', charge:'common',
+  hack:'uncommon', reload:'uncommon', timebomb:'uncommon', cell:'uncommon', triple:'uncommon', dismantle:'uncommon', crush:'uncommon', phack:'uncommon',
   scan:'rare', paradox:'rare', parry:'rare', tempest:'rare', blow:'rare', emp:'rare',
 };
 // 出やすさ(StS にならう): 報酬の1枚ごとにレア度を引いてから、そのレア度の中で選ぶ。rare は run.rareOff(はじめ pity.start)を足した値

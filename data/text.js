@@ -113,7 +113,7 @@ window.DATA = window.DATA || {};
   },
   "cell": {
    "name": "電磁障壁",
-   "text": "充電をすべて消費し、1につき{per}ブロックを得る。"
+   "text": "充電{sn}を消費し、{sv}ブロックを得る。"
   },
   "noise": {
    "name": "ノイズ",
@@ -129,7 +129,7 @@ window.DATA = window.DATA || {};
   },
   "paradox": {
    "name": "論理破綻",
-   "text": "クラック{sc}を得る。次の敵の行動をブレイクする。これを廃棄する。"
+   "text": "クラック{sc}を得る。次の敵の行動をブレイクする。廃棄。"
   },
   "iterate": {
    "name": "パターン反復",
@@ -141,7 +141,27 @@ window.DATA = window.DATA || {};
   },
   "dispose": {
    "name": "処理",
-   "text": "{dmg}ダメージを与える。手札を{discard}枚選んで捨てる。"
+   "text": "〈インスタント〉手札を{discard}枚選んで捨てる。\n{dmg}ダメージを与える。"
+  },
+  "crush": {
+   "name": "圧壊",
+   "text": "{dmg}ダメージを与える。侵食{dn}/{dp}を与える。"
+  },
+  "parallel": {
+   "name": "並列構築",
+   "text": "HPを{sd}失う。{block}ブロックを得る。"
+  },
+  "phack": {
+   "name": "パラレルハック",
+   "text": "対象の侵食を{cn}/{cp}減少させる。侵食{dn}/{dp}を付与。"
+  },
+  "careful": {
+   "name": "慎重な一撃",
+   "text": "{dmg}ダメージを与える。{block}ブロックを得る。"
+  },
+  "foresight": {
+   "name": "見切り",
+   "text": "〈JUST〉敵の行動をブレイク。虚弱{wk}を付与する。"
   }
  },
  "keywords": [
@@ -174,6 +194,11 @@ window.DATA = window.DATA || {};
    "key": "exile",
    "name": "廃棄",
    "desc": "この戦闘の間、山札にも捨て札にも戻らない。"
+  },
+  {
+   "key": "instant",
+   "name": "インスタント",
+   "desc": "その行の効果が、カードを使ったとき即座に発生する。"
   },
   {
    "key": "atomic",
@@ -236,6 +261,11 @@ window.DATA = window.DATA || {};
    "desc": "攻撃で与えるダメージが数値分増加する。"
   },
   {
+   "key": "weak",
+   "name": "虚弱",
+   "desc": "攻撃で与えるダメージが数値分減少する。"
+  },
+  {
    "key": "haste",
    "name": "加速",
    "desc": "行動のコストが数値分減少する。"
@@ -261,15 +291,15 @@ window.DATA = window.DATA || {};
   },
   "arm_rail": {
    "name": "〘CXR34レールガン〙",
-   "text": "遠隔ダメージ+1。デッキに《電磁投射》2枚を加える。"
+   "text": "遠隔ダメージ+1。デッキに《電磁投射》1枚を加える。"
   },
   "arm_scat": {
    "name": "〘散弾ポッド〙",
-   "text": "遠隔ダメージ+1。デッキに《散弾》2枚を加える。"
+   "text": "遠隔ダメージ+1。デッキに《散弾》1枚を加える。"
   },
   "arm_time": {
    "name": "〘時限投射機〙",
-   "text": "遠隔ダメージ+1。デッキに《時限弾》2枚を加える。"
+   "text": "遠隔ダメージ+1。デッキに《時限弾》1枚を加える。"
   },
   "out_std": {
    "name": "〘汎用マニピュレータ〙",
@@ -296,8 +326,8 @@ window.DATA = window.DATA || {};
    "text": "戦闘開始時、8ブロックを得る。"
   },
   "mob_std": {
-   "name": "〘デトロイト噴射機構〙",
-   "text": "戦闘開始時、敵にディレイ2を与える。ディレイを受けたとき、その敵にディレイ1を与える。"
+   "name": "〘エンジン始動システム〙",
+   "text": "戦闘開始時、敵にディレイ2を与える。"
   },
   "mob_feed": {
    "name": "〘給弾リンク〙",
@@ -479,7 +509,7 @@ window.DATA = window.DATA || {};
     },
     {
      "label": "立ち去る",
-     "sub": "何も起きない。"
+     "sub": ""
     }
    ]
   },
@@ -637,7 +667,7 @@ window.DATA = window.DATA || {};
     "配電区画。私にはわかんない。"
    ],
    "elite": [
-    "強そうな敵。心してかかろうか"
+    "強そうな敵。心してかかろうか？"
    ],
    "boss": [
     "呼吸を整えて。"
@@ -693,13 +723,15 @@ window.DATA = window.DATA || {};
   "ui.stname.crack": "クラック",
   "ui.stname.vuln": "隙",
   "ui.stname.dot": "侵食",
+  "ui.stname.weak": "虚弱",
   "ui.st.armor": "受けるダメージを{n}まで軽減し、軽減した分減少する。",
   "ui.st.str": "攻撃のダメージ+{n}。",
   "ui.st.crack": "受けるダメージ+{n}。",
   "ui.st.vuln": "あと{n}サイクル、受けるダメージが1.5倍。",
   "ui.st.dot": "あと{n}サイクル、毎サイクル{p}ダメージを受ける。",
-  "ui.choose.discard": "捨てるカードを選ぶ(あと{n}枚)",
-  "ui.choose.exile": "廃棄するカードを選ぶ(あと{n}枚)",
+  "ui.choose.discard": "捨てるカードを選択({k}/{n})",
+  "ui.choose.exile": "廃棄するカードを選択({k}/{n})",
+  "ui.choose.ok": "決定",
   "ui.st.none": "状態の変化はない。",
   "ui.mv.zone": "{at}サイクル後から{len}サイクルの間、こちらのタイムラインに射界を置く。その間にカードが発動すると{part}に{d}ダメージを受ける。",
   "ui.mv.haste": "加速{n}：これ以後、行動のコストが{n}減少する。",
@@ -708,6 +740,7 @@ window.DATA = window.DATA || {};
   "ui.mv.eat": "手札でいちばんコストの高いカードを{n}枚飲み込む。",
   "ui.mv.rebuild": "破壊されたユニットを1つ、耐久{n}で直す。なければ耐久を{h}回復する。",
   "ui.pas.punctual": "ディレイを受けない。ディレイを与えられるたび、代わりに増幅{n}を得る。",
+  "ui.pas.punctual0": "ディレイを受けない。",
   "ui.pas.pursuit": "こちらが手札を入れ替えるか待機するたび、次の行動が{n}サイクル早まる。",
   "ui.pas.loot": "盗んだスクラップは、撃破すると取り戻せる。",
   "ui.pas.hoard": "飲み込んだカードは、撃破すると捨て札に戻る。",
@@ -763,5 +796,14 @@ window.DATA = window.DATA || {};
   "ui.duct.text": "点検用の狭い通路。工場の目がここまでは届かない。",
   "ui.alert.gauge": "警戒"
  },
- "attrs": {}
+ "attrs": {
+  "gnaw": {
+   "name": "蝕む",
+   "text": ""
+  },
+  "regen": {
+   "name": "再生する",
+   "text": "耐久値を{heal}回復する。"
+  }
+ }
 });

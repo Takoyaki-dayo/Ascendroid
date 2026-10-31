@@ -192,7 +192,11 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 #handShade{position:absolute;left:0;top:170px;width:844px;height:220px;background:linear-gradient(180deg,rgba(10,15,21,0),rgba(10,15,21,.88) 40%);opacity:0;transition:opacity .2s;pointer-events:none}
 #handShade.on{opacity:1}
 /* 手札を選ぶ(0.30.0) */
-#chooseBar{position:absolute;left:300px;top:276px;z-index:30;padding:3px 10px;border:1px solid var(--cy);border-radius:4px;background:#0b2230;color:#bff2ff;font-size:12px;font-weight:700;pointer-events:none}
+#chooseBar{position:absolute;left:300px;top:226px;z-index:30;display:flex;align-items:center;gap:10px;padding:4px 4px 4px 12px;border:1px solid var(--cy);border-radius:4px;background:#0b2230;color:#bff2ff;font-size:12px;font-weight:700}
+#chooseBar button{font:inherit;padding:4px 14px;border-radius:3px;border:1px solid var(--cy);background:var(--cy);color:#04141c;cursor:pointer}
+#chooseBar button:disabled{background:transparent;color:#6c8fa0;border-color:#2a4656;cursor:default}
+#hand .card.pk{border:1.5px solid #ffcf5a;box-shadow:0 0 0 2px rgba(255,207,90,.25),0 10px 22px rgba(255,207,90,.2)}
+#hand .card.pk::after{content:"✓";position:absolute;right:5px;top:24px;width:16px;height:16px;border-radius:50%;background:#ffcf5a;color:#1a1305;font-size:11px;line-height:16px;text-align:center;font-weight:800}
 #hand.choosing .card{outline:1.5px dashed var(--cy);outline-offset:-3px}
 .st.ward{color:#bfe9ff;border-color:#5fc9ff;border-style:dashed} .st.ward i{font-style:normal;opacity:.75;font-size:.85em;margin-left:1px}
 .pile{position:absolute;left:8px;width:66px;height:36px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--fg2);display:flex;align-items:center;justify-content:center;gap:6px}
@@ -204,6 +208,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 .card.sel,.card.picked{border:1.5px solid var(--cy);box-shadow:0 10px 24px rgba(56,211,255,.28)}
 .card:disabled{cursor:default}
 .card.off{opacity:.35}
+.mk b.dn{color:#bff2ff} .mk .mdn{position:absolute;right:-5px;top:-6px;font-style:normal;font-size:9px;line-height:1;color:#04141c;background:var(--cy);border-radius:3px;padding:1px 2px}
 .chd{display:flex;align-items:center;gap:4px;height:26px;padding:0 5px;flex:none}
 .cost{width:18px;height:18px;flex:none;border:1.5px solid var(--cy);border-radius:9px;background:var(--bg);color:var(--cy);font-family:var(--f-num);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center}
 .cname{font-size:10.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
@@ -923,6 +928,10 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 /* カード: 絵の欄に種類の大きな印と色の気配。枠は上の縁に光 */
 .card{background:linear-gradient(180deg,#152230,#101923 60%,#0e161f);border-color:#27394c;box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
 .card::before{content:"";position:absolute;left:8px;right:8px;top:0;height:1px;background:linear-gradient(90deg,transparent,rgba(56,211,255,.45),transparent);pointer-events:none}
+/* レア度(0.35.0): 枠の色。アンコモンは青、レアは金。選んでいるときの枠(.sel)が勝つよう :where で軽くする */
+.card:where(:has(>.ck[data-rar="uncommon"])){border-color:#3d74a8}
+.card:where(:has(>.ck[data-rar="rare"])){border-color:#c79a3a;box-shadow:inset 0 1px 0 rgba(255,214,128,.14),0 0 10px rgba(232,180,74,.14)}
+.card:has(>.ck[data-rar="rare"])::before{background:linear-gradient(90deg,transparent,rgba(255,207,90,.6),transparent)}
 .cart{--tt:rgba(230,238,245,.07);overflow:hidden;background:radial-gradient(ellipse 70% 90% at 30% 70%,var(--tt),transparent 75%),repeating-linear-gradient(135deg,#17222e 0 6px,#131c27 6px 12px);box-shadow:inset 0 0 0 1px rgba(255,255,255,.03)}
 .cwm{position:absolute;left:4px;bottom:-8px;display:flex;color:#fff;opacity:.09;pointer-events:none}
 .cwm svg{width:52px;height:52px}
@@ -1193,7 +1202,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 <script src="data/text.js"></script>
 <script src="js/engine.js"></script>
 <script>
-const APP_VERSION = '0.34.1';
+const APP_VERSION = '0.35.0';
 const $ = s => document.querySelector(s);
 const EN = ENGINE, RULE = EN.RULE;
 const VIEW = RULE.view, NOW = 170, PX = 34, xs = c => NOW + c * PX, STRIP_Y = 150, SWIFT_VIS = 3;
@@ -1223,6 +1232,7 @@ const IC = {
   zone:'<svg viewBox="0 0 12 12"><rect x="1.5" y="2.5" width="9" height="7" rx="1" stroke="currentColor" stroke-width="1.3" fill="none"/><path d="M3 9L7 3M6 9L10 3" stroke="currentColor" stroke-width="1.1"/></svg>',
   armor:'<svg viewBox="0 0 12 12"><path d="M6 1L10.5 3.5V8.5L6 11L1.5 8.5V3.5Z" stroke="currentColor" stroke-width="1.3" fill="none"/><path d="M6 4L8 5.2V7.6L6 8.8L4 7.6V5.2Z" fill="currentColor"/></svg>',
   str:'<svg viewBox="0 0 12 12"><path d="M2 7L6 3L10 7M2 10.5L6 6.5L10 10.5" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>',
+  weak:'<svg viewBox="0 0 12 12"><path d="M2 5L6 9L10 5M2 1.5L6 5.5L10 1.5" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>',
   vuln:'<svg viewBox="0 0 12 12"><path d="M6 1V5M6 7V11M1 6H5M7 6H11" stroke="currentColor" stroke-width="1.4"/><circle cx="6" cy="6" r="1.2" fill="currentColor"/></svg>',
   charge:'<svg viewBox="0 0 12 12"><path d="M7 1L2.5 7H6L5 11L9.5 5H6Z" stroke="currentColor" stroke-width="1.2" fill="none" stroke-linejoin="round"/></svg>',
   frenzy:'<svg viewBox="0 0 12 12"><path d="M6 .8L7.2 4.8L11.2 6L7.2 7.2L6 11.2L4.8 7.2L.8 6L4.8 4.8Z" stroke="currentColor" stroke-width="1.1" fill="none" stroke-linejoin="round"/></svg>',
@@ -1311,7 +1321,7 @@ const markEls = new Map(), cardEls = new Map(), stripEls = new Map(), bandEls = 
 const partOf = slot => PARTDEF[S.run.parts[slot].id];
 
 /* ---------- preview ---------- */
-function selAction(){ return !sel ? null : sel.kind === 'card' ? {type:'card', i:sel.i, k:sel.k, t:sel.target} : {type:sel.kind}; }
+function selAction(){ return !sel ? null : sel.kind === 'card' ? {type:'card', i:sel.i, k:sel.k, t:sel.target, pick: PICK && PICK.a ? PICK.ids.slice() : undefined} : {type:sel.kind}; }
 function computePreview(){
   const a = selAction(); if(!a) return null;
   const cost = EN.actionCost(S, a);
@@ -1332,7 +1342,7 @@ function computePreview(){
 }
 
 /* ---------- cards ---------- */
-function cardType(c){ return c.junk ? 'junk' : c.timer ? 'timer' : c.parry ? 'parry' : c.dmg ? c.dmg.t : c.dot ? 'dot' : c.ward ? 'block' : c.amp ? c.amp.t : c.spend ? (c.spend.dmg ? c.spend.dmg.t : 'block') : c.block ? 'block' : c.gain ? 'charge' : c.delay ? 'delay' : c.swift ? 'swift' : c.draw ? 'draw' : 'crack'; }
+function cardType(c){ return c.junk ? 'junk' : c.timer ? 'timer' : c.parry || c.justBreak ? 'parry' : c.dmg ? c.dmg.t : c.dot ? 'dot' : c.ward ? 'block' : c.amp ? c.amp.t : c.spend ? (c.spend.dmg ? c.spend.dmg.t : 'block') : c.block ? 'block' : c.gain ? 'charge' : c.delay ? 'delay' : c.swift ? 'swift' : c.draw ? 'draw' : 'crack'; }
 const stv = st => st && st.b ? st : {run: S ? S.run : null, b: null};
 function vDmg(st, c, d){ return st && st.run ? EN.dmgOf(stv(st), c, d) : (d || c.dmg).n; }
 function vBlock(st, c){ return st && st.run ? EN.blockOf(stv(st), c) : c.block; }
@@ -1351,6 +1361,7 @@ function cardVal(k, st){
   if(c.timer) return vDmg(st, c, c.timer.dmg);
   if(c.spend) return spendVal(st, c);
   if(c.parry) return vBlock(st, c);
+  if(c.justBreak && !c.dmg) return '';
   if(c.dmg) return vDmg(st, c) + growV(st, k) + (c.dmg.x ? '×' + c.dmg.x : '');
   if(c.block) return vBlock(st, c);
   if(c.ward) return c.ward.w + '/' + c.ward.s;
@@ -1369,22 +1380,23 @@ function cardVals(c, st, k){
   return {dmg: c.dmg ? vDmg(st, c) + growV(st, k) : '', discard: c.discard || '', grow: c.grow || '', scrap: c.scrapBreak || '', ww: c.ward ? c.ward.w : '', ws: c.ward ? c.ward.s : '', x: c.dmg && c.dmg.x || '', block: c.block != null ? vBlock(st, c) : '', delay: c.delay || '', swift: c.swift || '',
     crack: c.crack || '', draw: c.draw || '', t: c.timer ? c.timer.t : '', tdmg: c.timer ? vDmg(st, c, c.timer.dmg) : '',
     gain: c.gain || '', per: c.spend ? (c.spend.dmg ? c.spend.dmg.n : c.spend.block) : '',
-    sn: c.spend && c.spend.n || '', sv: c.spend && c.spend.n ? spendVal(st, c) : '', dn: c.dot ? c.dot.n || 0 : '', dp: c.dot ? c.dot.p || 0 : '', sc: c.selfCrack || '', amp: c.amp ? c.amp.n : '', sd: c.selfDmg || ''};
+    sn: c.spend && c.spend.n || '', sv: c.spend && c.spend.n ? spendVal(st, c) : '', dn: c.dot ? c.dot.n || 0 : '', dp: c.dot ? c.dot.p || 0 : '', sc: c.selfCrack || '', amp: c.amp ? c.amp.n : '', sd: c.selfDmg || '', cn: c.dotCut ? c.dotCut.n || 0 : '', cp: c.dotCut ? c.dotCut.p || 0 : '', wk: c.justWeak || ''};
 }
 const KW_CLS = {crack:'kw-f', atomic:'kwp', just:'kw-j'};
 const kwList = () => Object.entries(DATA.kwName).sort((a, b) => b[1].length - a[1].length);
 // refs(0.34.0): 拡大表示ではキーワードとカード名(《》)を押すと説明を重ねる
 function cardText(k, st, refs){
   const c = CARDS[k], v = cardVals(c, st, k);
-  let h = (c.text || '').replace(/[&<>]/g, x => ({'&':'&amp;', '<':'&lt;', '>':'&gt;'})[x]).replace(/\{(\w+)\}/g, (m, n) => n in v ? `<b>${v[n]}</b>` : m);
+  let h = (c.text || '').replace(/[&<>]/g, x => ({'&':'&amp;', '<':'&lt;', '>':'&gt;'})[x]).replace(/\{(\w+)\}/g, (m, n) => n in v ? `<b>${v[n]}</b>` : m).replace(/\n/g, '\u0001');
   if(c.attrText) h += c.attrText.replace(/[&<>]/g, x => ({'&':'&amp;', '<':'&lt;', '>':'&gt;'})[x]).replace(/(\d+)/g, '<b>$1</b>');
   for(const [key, name] of kwList()) h = h.split(name).join(`\u0000${key}\u0000`);
   if(refs) h = h.replace(/《([^《》]+)》/g, (m, n) => { const ck = Object.keys(CARDS).find(x => CARDS[x].name === n); return ck ? `<button type="button" class="ref" data-act="ref" data-arg="card:${ck}">《${n}》</button>` : m; });
+  h = h.replace(/\u0001/g, '<br>');
   return h.replace(/\u0000(\w+)\u0000/g, (m, key) => refs ? `<button type="button" class="${KW_CLS[key] || 'kw'} ref" data-act="ref" data-arg="kw:${key}">${DATA.kwName[key]}</button>` : `<span class="${KW_CLS[key] || 'kw'}">${DATA.kwName[key]}</span>`);
 }
 function cardInner(k, st, count, refs){
   const c = CARDS[k];
-  return `<i class="ck" data-ck="${k}" hidden></i><span class="chd"><span class="cost${c.cost === 0 ? ' zero' : ''}">${c.cost}</span><span class="cname${c.attr ? ' ca' : ''}">${c.name}</span></span><span class="cart t-${cardType(c)}"><span class="cwm">${IC[cardType(c)]}</span>${c.atomic ? '<i class="atom"></i>' : ''}<span class="cval"><span class="ic">${IC[cardType(c)]}</span><b>${cardVal(k, st)}</b></span></span><span class="ctx${((CARDS[k].text || '') + (CARDS[k].attrText || '')).replace(/\{\w+\}/g, '00').length > 22 ? ' long' : ''}">${cardText(k, st, refs)}</span>${count > 1 ? `<span class="cnt">×${count}</span>` : ''}`;
+  return `<i class="ck" data-ck="${k}" data-rar="${DATA.rarityOf(k)}" hidden></i><span class="chd"><span class="cost${c.cost === 0 ? ' zero' : ''}">${c.cost}</span><span class="cname${c.attr ? ' ca' : ''}">${c.name}</span></span><span class="cart t-${cardType(c)}"><span class="cwm">${IC[cardType(c)]}</span>${c.atomic ? '<i class="atom"></i>' : ''}<span class="cval"><span class="ic">${IC[cardType(c)]}</span><b>${cardVal(k, st)}</b></span></span><span class="ctx${((CARDS[k].text || '') + (CARDS[k].attrText || '')).replace(/\{\w+\}/g, '00').length > 22 ? ' long' : ''}">${cardText(k, st, refs)}</span>${count > 1 ? `<span class="cnt">×${count}</span>` : ''}`;
 }
 // 長押しで説明を出すキーワード: カードの文に出てくるもの
 function cardKw(k){
@@ -1484,9 +1496,11 @@ function renderAll(){
   if(!S.b) return;
   $('#shaker').classList.toggle('executing', busy);
   renderMe(); renderParts(); renderRows(); renderFoes(); renderPreview(); renderMarks(); renderStrip(); renderHand(); renderSide();
-  const ch = S.b.choose, cb = $('#chooseBar');
-  if(cb){ cb.hidden = !ch || busy; if(ch) cb.innerHTML = fillUi('choose.' + ch.kind, {n: ch.n}); }
-  $('#hand').classList.toggle('choosing', !!ch && !busy);
+  // 手札を選ぶ(0.35.0): 使い終えた後に選ぶカード(b.choose)も、インスタントで使い始めに選ぶカードも同じ PICK で
+  if(S.b.choose && !PICK && !busy) PICK = {kind:S.b.choose.kind, n:S.b.choose.n, ids:[], a:null, cid:null};
+  const cb = $('#chooseBar');
+  if(cb){ cb.hidden = !PICK || busy; if(PICK && !busy){ const need = pickNeed(); cb.innerHTML = `<span>${fillUi('choose.' + PICK.kind, {k: PICK.ids.length, n: need})}</span><button type="button" data-act="pickOk"${PICK.ids.length < need ? ' disabled' : ''}>${DATA.ui['choose.ok']}</button>`; } }
+  $('#hand').classList.toggle('choosing', !!PICK && !busy);
 }
 function renderMe(){
   const body = S.run.body, after = PV ? PV.body : body, max = S.run.bodyMax;
@@ -1551,9 +1565,10 @@ function pasText(e, x){
   const un = k => e.units[k] ? e.units[k].name : k;
   if(x.k === 'command') return fillUi('pas.command', {unit: un(x.p.unit), n: x.p.n});
   if(x.k === 'frenzy') return fillUi('pas.frenzy', {n: x.p.n});
-  if(x.k === 'react') return fillUi('pas.react', {min: x.p.min, part: SLOT_BY[x.p.p].fn, d: x.p.d + (e.str || 0)});
+  if(x.k === 'react') return fillUi('pas.react', {min: x.p.min, part: SLOT_BY[x.p.p].fn, d: Math.max(0, x.p.d + EN.foeStr(e))});
   if(x.k === 'phase') return fillUi('pas.phase', {at: Math.round(x.p.at * 100)});
   if(x.k === 'broke') return fillUi('pas.broke', {unit: un(x.p.unit)});
+  if(x.k === 'punctual' && x.p.n === 0) return fillUi('pas.punctual0', {});
   if(['punctual', 'pursuit', 'loot', 'hoard', 'floor'].includes(x.k)) return fillUi('pas.' + x.k, {n: x.p.n || 1});
   return '';
 }
@@ -1581,6 +1596,7 @@ function laneHead(e){
   const m = (k, n, cls) => `<span class="st lhs ${cls}"><span class="ic">${IC[k]}</span><i>${DATA.ui['stname.' + k]}</i><b>${n}</b></span>`;
   let h = '';
   if(e.str) h += m('str', e.str, 'str');
+  if(e.weak) h += m('weak', e.weak, 'res');
   if(e.haste) h += m('haste', e.haste, 'str');
   if(e.resist && e.alive) h += m('resist', e.resist, 'res');
   let ps = '';
@@ -1594,6 +1610,7 @@ function laneHead(e){
 function foeSts(e){
   let s = '', ps = '';
   if(e.str) s += `<span class="st str"><span class="ic">${IC.str}</span>${e.str}</span>`;
+  if(e.weak) s += `<span class="st res" title="${DATA.kwName.weak}"><span class="ic">${IC.weak}</span>${e.weak}</span>`;
   if(e.haste) s += `<span class="st str"><span class="ic">${IC.haste}</span>${e.haste}</span>`;
   if(e.resist && e.alive) s += `<span class="st res" title="${DATA.kwName.resist}"><span class="ic">${IC.resist}</span>${e.resist}</span>`;
   for(const x of passives(e)){ if(x.k === 'phase' || x.k === 'broke') continue; const n = x.k === 'react' ? x.p.min : x.k === 'loot' ? (e.loot || '') : x.k === 'hoard' ? ((e.eaten || []).length || '') : ''; ps += `<span class="st trait${x.on ? '' : ' off'}${x.k === 'react' && PV && PV.react.has(e.i) ? ' on' : ''}"><span class="ic">${PAS_IC[x.k]}</span>${n}</span>`; }
@@ -1756,8 +1773,8 @@ function renderMarks(){
       }
       const by_ = multi && a.by && e.units[a.by] ? `<i class="mby">${pIcon(e.units[a.by])}</i>` : '';
       // 増幅・連携で上がった攻撃は、数字の右上に ▲ を付ける
-      const up = atk && ((e.str || 0) + (sy ? e.sync : 0)) > 0;
-      const html = by_ + (a.kind === 'delay' ? `<span class="ic">${IC.delay}</span><b>${a.v}</b>` : atk ? `<b${up ? ' class="up"' : ''}>${a.d + (e.str || 0) + (sy ? e.sync : 0)}</b>${up ? '<i class="mup">▲</i>' : ''}<span class="ic tp">${IC[a.p]}</span>` : moveIcon(a));
+      const up = atk && (EN.foeStr(e) + (sy ? e.sync : 0)) > 0, dn = atk && EN.foeStr(e) + (sy ? e.sync : 0) < 0;
+      const html = by_ + (a.kind === 'delay' ? `<span class="ic">${IC.delay}</span><b>${a.v}</b>` : atk ? `<b${up ? ' class="up"' : dn ? ' class="dn"' : ''}>${Math.max(0, a.d + EN.foeStr(e) + (sy ? e.sync : 0))}</b>${up ? '<i class="mup">▲</i>' : dn ? '<i class="mdn">▼</i>' : ''}<span class="ic tp">${IC[a.p]}</span>` : moveIcon(a));
       placeMark(key, xs(m.t) - (so ? 20 : 13), y, cls, html, {e:e.i, kind:'pat', a, t:m.t});
       lastT = Math.max(lastT, m.t);
       if(m.hit) continue;
@@ -1836,7 +1853,7 @@ function renderHand(){
       el.style.left = '20px'; el.style.top = '330px'; el.style.transform = 'scale(.3) rotate(-10deg)'; el.style.opacity = '0';
       $('#hand').appendChild(el); cardEls.set(cd.id, el); fresh = true;
     }
-    el.dataset.i = i; el.disabled = busy; el.classList.toggle('off', EN.spendShort(b, CARDS[cd.k]));
+    el.dataset.i = i; el.disabled = busy; el.classList.toggle('off', EN.spendShort(b, CARDS[cd.k]) || EN.needShort(b, CARDS[cd.k])); el.classList.toggle('pk', !!PICK && PICK.ids.includes(cd.id));
     const html = cardInner(cd.k, S);
     if(el._h !== html){ el.innerHTML = html; el._h = html; }
     el.classList.toggle('sel', i === selI);
@@ -1844,6 +1861,7 @@ function renderHand(){
       const ex = UI.view === 'hand';
       let left = handLayout(n, i, ex), top = ex ? 244 : CARD.low, tf = ex ? 'scale(1.22)' : 'none';
       if(i === selI){ top = ex ? 236 : CARD.up; tf = ex ? 'rotate(-2deg) scale(1.27)' : 'rotate(-2deg) scale(1.04)'; }
+      else if(PICK && PICK.ids.includes(cd.id)) top = (ex ? 244 : CARD.low) - 18;
       else if(selI >= 0){ left += i < selI ? -5 : 5; }
       el.style.left = left + 'px'; el.style.top = top + 'px'; el.style.transform = tf; el.style.opacity = '1';
       el.style.zIndex = i === selI ? 20 : 1 + i;
@@ -2025,6 +2043,8 @@ function cardFx(x){
     case 'crack': { const p = unitCenter(x.e, x.unit); floatAt(p.x + 30, p.y - 30, '+' + x.n, 'foe'); break; }
     case 'dotAdd': { const p = unitCenter(x.e, x.unit); floatAt(p.x + 30, p.y - 44, '+' + x.n + '/' + x.p, 'dot'); break; }
     case 'dot': pulse(unitSpr(x.e, x.unit), 'ehit', 200); break;
+    case 'dotCut': { const p = unitCenter(x.e, x.unit); floatAt(p.x + 30, p.y - 58, '−' + x.n + '/' + x.p, 'dot'); break; }
+    case 'weak': { const p = foeCenter(x.e); floatAt(p.x, p.y - 70, DATA.kwName.weak + ' ' + x.n, 'cy'); break; }
     case 'ward': floatAt(130, 250, DATA.kwName.guard + ' ' + x.w + '/' + x.n, 'cy'); break;
     case 'scrapGain': floatAt(170, 240, '+' + x.n, 'cy'); break;
     case 'amp': floatAt(150, 236, '▲' + x.n, 'cy'); break;
@@ -2111,16 +2131,37 @@ function interruptFx(){
 
 /* ---------- play ---------- */
 // 狙い: 前に狙った敵(とユニット)が生きていればそれ、なければおまかせ。ユニットが2つ以上ある敵は '番号.ユニット'
-function defaultTarget(){
+function defaultTarget(c){
   const b = S.b, tf = tFoe(lastTarget), tp = tUnit(lastTarget);
   const e = b.foes[tf] && b.foes[tf].alive ? b.foes[tf] : b.foes.find(f => f.alive); if(!e) return 0;
   if(EN.liveUids(e).length < 2) return e.i;
+  if(c && c.needDot){ const ok = EN.liveUids(e).filter(k => !EN.dotShort(b, c, e, k)); if(ok.length) return e.i + '.' + (ok.includes(tp) ? tp : ok[0]); }
   return e.i + '.' + (tp && e.units[tp] && !e.units[tp].broken ? tp : EN.defaultUid(e));
 }
 function recalc(){
   PV = computePreview(); renderAll();
   // 印や帯の中身を出しているなら、選んだカードに合わせて出し直す(使い終わりが重なるか)
   if(UI.mvKey){ const el = document.querySelector(`[data-mk="${UI.mvKey}"],[data-bk="${UI.mvKey}"]`); if(el) showMovePop(UI.mvKey, el); else hideMovePop(); }
+}
+// 手札を選ぶ(0.35.0、アプリ版ドミニオンのように): 押したカードに印を付け、決まった枚数そろうと「決定」が押せる
+// PICK = {kind, n, ids:選んだカードの id, a:インスタントのカードの行動(使い始めに捨てる)| null(使い終えた後に選ぶ), cid:使うカードの id}
+let PICK = null;
+const pickNeed = () => !PICK ? 0 : Math.min(PICK.n, S.b.hand.filter(h => h.id !== PICK.cid).length);
+function onPickCard(i){
+  const cd = S.b.hand[i]; if(!cd || !PICK) return;
+  if(cd.id === PICK.cid){ PICK = null; sel = null; PV = null; renderAll(); return; } // 使うカードをもう一度押すとやめる
+  const j = PICK.ids.indexOf(cd.id), need = pickNeed();
+  if(j >= 0) PICK.ids.splice(j, 1); else if(PICK.ids.length < need) PICK.ids.push(cd.id); else if(need === 1) PICK.ids = [cd.id];
+  if(PICK.a) PV = computePreview();
+  renderAll();
+}
+function pickOk(){
+  if(!PICK || busy || PICK.ids.length < pickNeed()) return;
+  const P = PICK;
+  if(P.a){ const a = Object.assign({}, selAction() || P.a, {pick: P.ids.slice()}); PICK = null; execute(a); return; }
+  PICK = null;
+  for(const id of P.ids){ const i = S.b.hand.findIndex(h => h.id === id); if(i >= 0 && S.b.choose) onChoose(i); }
+  renderAll();
 }
 // 手札を選ぶ(0.30.0): 処理などのカードの後。押したカードを捨てる(時間は使わない)
 function onChoose(i){
@@ -2129,19 +2170,19 @@ function onChoose(i){
   EN.beginAction(S, {type:'choose', i}); sel = null; PV = null; renderAll();
 }
 function onCard(i){
-  if(S.b.choose){ onChoose(i); return; }
+  if(PICK){ onPickCard(i); return; }
   const k = S.b.hand[i].k, c = CARDS[k];
-  if(EN.spendShort(S.b, c)) return; // 決まった量の充電が足りない
+  if(EN.spendShort(S.b, c) || EN.needShort(S.b, c)) return; // 決まった量の充電・対象の侵食が足りない
   if(sel && sel.kind === 'card' && sel.i === i){ execute(); return; }
-  sel = {kind:'card', i, k, target: c.tgt ? defaultTarget() : null}; recalc();
+  sel = {kind:'card', i, k, target: c.tgt ? defaultTarget(c) : null}; recalc();
 }
 function onWait(){
-  if(S.b.choose) return;
+  if(S.b.choose || PICK) return;
   if(sel && sel.kind === 'wait'){ execute(); return; }
   sel = {kind:'wait'}; recalc();
 }
 function onRedraw(){
-  if(S.b.choose) return;
+  if(S.b.choose || PICK) return;
   if(!RULE.econ && RULE.freeWait && !S.b.hand.length) return;
   const kind = rdKind();
   if(sel && sel.kind === kind){ execute(); return; }
@@ -2152,8 +2193,10 @@ function onFoe(i, uid){
   const e = S.b.foes[i]; if(!e || !e.alive) return;
   const multi = EN.liveUids(e).length > 1;
   if(uid && uid !== '*' && e.units[uid] && e.units[uid].broken) uid = null;
+  if(PICK) return;
   if(sel && sel.kind === 'card' && CARDS[sel.k].tgt){
     const t = !multi ? i : i + '.' + (uid && uid !== '*' ? uid : (tFoe(sel.target) === i && tUnit(sel.target)) || EN.defaultUid(e));
+    if(EN.dotShort(S.b, CARDS[sel.k], e, multi ? tUnit(t) : null)) return; // 侵食が足りないユニットは狙えない
     if(sel.target === t){ execute(); return; }
     sel.target = t; lastTarget = t; recalc(); return;
   }
@@ -2166,7 +2209,7 @@ function showMovePop(key, el){
   const e = S.b.foes[info.e]; if(!e) return;
   let title = '', by = '', lines = [];
   if(info.kind === 'pat'){ const a = info.a; title = a.n || ''; if(e.uids.length > 1){ const u = e.units[EN.actorUid(e, a)]; by = `<span class="mp-by"><span class="ic">${pIcon(u)}</span>${u.name}</span>`; } lines = moveLines(e, a); }
-  else if(info.kind === 'react'){ title = e.react.n || ''; lines = [fillUi('pas.react', {min: e.react.min, part: SLOT_BY[e.react.p].fn, d: e.react.d + (e.str || 0)})]; }
+  else if(info.kind === 'react'){ title = e.react.n || ''; lines = [fillUi('pas.react', {min: e.react.min, part: SLOT_BY[e.react.p].fn, d: Math.max(0, e.react.d + EN.foeStr(e))})]; }
   else if(info.kind === 'win'){ const a = info.a, W = a[info.w]; title = `${DATA.kwName[info.w]} ${info.val}`; lines = [fillUi('mv.' + info.w, info.w === 'wind' ? {w: W.w, poise: W.poise} : info.w === 'guard' ? {w: W.w, s: info.val} : {w: W.w, cd: W.d}), fillUi('band.before', {name: a.n, t: info.t})]; }
   else if(info.kind === 'rec'){ title = DATA.kwName.vuln; lines = [fillUi('mv.rec', {rec: info.a.rec}), fillUi('band.after', {name: info.a.n, t: info.t})]; }
   else if(info.kind === 'vulnNow'){ title = DATA.kwName.vuln; lines = [fillUi('st.vuln', {n: info.t1})]; if(e.uids.length > 1){ const u = e.units[info.uid]; by = `<span class="mp-by"><span class="ic">${pIcon(u)}</span>${u.name}</span>`; } }
@@ -2219,10 +2262,13 @@ async function showEvent(ev, k, ti){
     case 'interrupt': interruptFx(); renderAll(); await sleep(420); break;
   }
 }
-async function execute(){
-  const s = sel, b = S.b, a = selAction(); sel = null; PV = null; busy = true; UI.view = 'normal'; setPeek(false); hideMovePop();
+async function execute(pa){
+  // インスタントで手札を捨てるカード(0.35.0): 先に捨てるカードを選ぶ(ほかに手札があるときだけ)
+  if(!pa){ const a0 = selAction(), c0 = a0 && a0.type === 'card' && CARDS[a0.k]; if(c0 && c0.instant && c0.discard && S.b.hand.length > 1){ PICK = {kind:'discard', n:c0.discard, ids:[], a:a0, cid:S.b.hand[a0.i].id}; recalc(); return; } }
+  const s = sel, b = S.b, a = pa || selAction(); sel = null; PV = null; busy = true; UI.view = 'normal'; setPeek(false); hideMovePop();
   if(a.type === 'card'){
     if(a.t != null) lastTarget = a.t;
+    for(const id of a.pick || []){ const el = cardEls.get(id); cardEls.delete(id); flyCard(el, 20, 344); }
     const cd = b.hand[a.i], el = cardEls.get(cd.id); cardEls.delete(cd.id); flyCard(el, DROID.x - 48, DROID.y - 60);
     setTimeout(() => { const g = fxEl('cardghost', DROID.x, DROID.y - 50); setTimeout(() => g.remove(), 420); }, 180);
   } else if(a.type === 'swap' || a.type === 'reload'){
@@ -2432,7 +2478,7 @@ function completeRoom(){
   showMap();
 }
 function startBattle(n){
-  applyEcon();
+  applyEcon(); PICK = null;
   snapshot = JSON.stringify(S.run);
   S = EN.newBattle(S.run, n.enc);
   sel = null; PV = null; busy = false; lastTarget = 0; UI.view = 'normal'; UI.screen = 'battle'; closeFocus();
@@ -2650,7 +2696,7 @@ function renderRef(){
 const fillUi = (k, v) => (DATA.ui[k] || '').replace(/\{(\w+)\}/g, (m, n) => n in v ? `<b>${v[n]}</b>` : m);
 const FOCUS = {scale: 2.5, x: 655, y: 205};
 function moveLines(e, a){
-  const L = [], part = a.p ? SLOT_BY[a.p].fn : '', d = (a.d || 0) + (e.str || 0);
+  const L = [], part = a.p ? SLOT_BY[a.p].fn : '', d = Math.max(0, (a.d || 0) + EN.foeStr(e));
   if(a.kind === 'delay') L.push(fillUi('mv.delay', {v: a.v}));
   else if(a.d > 0) L.push(fillUi(a.hits > 1 ? 'mv.hits' : 'mv.atk', {part, d, hits: a.hits}));
   if(a.ch) L.push(fillUi('mv.charge', {}));
@@ -2663,7 +2709,7 @@ function moveLines(e, a){
   if(a.eat) L.push(fillUi('mv.eat', {n: a.eat}));
   if(a.rebuild) L.push(fillUi('mv.rebuild', {n: a.rebuild, h: Math.ceil(a.rebuild / 2)}));
   if(a.flee) L.push(fillUi('mv.flee', {}));
-  if(a.zone) L.push(fillUi('mv.zone', {at: a.zone.at, len: a.zone.len, d: a.zone.d + (e.str || 0), part: SLOT_BY[a.zone.p].fn}));
+  if(a.zone) L.push(fillUi('mv.zone', {at: a.zone.at, len: a.zone.len, d: Math.max(0, a.zone.d + EN.foeStr(e)), part: SLOT_BY[a.zone.p].fn}));
   if(a.haste) L.push(fillUi('mv.haste', {n: a.haste}));
   if(a.buff) L.push(fillUi(a.all ? 'mv.buffAll' : 'mv.buff', {buff: a.buff}));
   if(a.wind) L.push(fillUi('mv.wind', {w: a.wind.w, poise: a.wind.poise}));
@@ -2675,7 +2721,7 @@ function moveLines(e, a){
 }
 function moveGlyph(e, a){
   if(a.kind === 'delay') return `<span class="ic">${IC.delay}</span><b>${a.v}</b>`;
-  if(a.d > 0) return `<b>${a.d + (e.str || 0)}</b>${a.hits > 1 ? `<i>×${a.hits}</i>` : ''}`;
+  if(a.d > 0) return `<b>${Math.max(0, a.d + EN.foeStr(e))}</b>${a.hits > 1 ? `<i>×${a.hits}</i>` : ''}`;
   const ic = a.flee ? IC.flee : a.eat ? IC.eat : a.rebuild ? IC.rest : a.armor ? IC.armor : a.crack ? IC.crack : a.buff ? IC.str : a.noise ? IC.junk : a.zone ? IC.zone : a.haste ? IC.swift : a.guard ? IC.block : null;
   if(ic) return `<span class="ic big">${ic}</span>`;
   const g = a.heal ? '修' : a.summon ? '援' : '·';
@@ -2723,6 +2769,7 @@ function unitStates(p, k){
 function foeStates(e){
   const out = e.uids.length === 1 ? unitStates(e.units[e.uids[0]], e.uids[0]) : [];
   if(e.str) out.push({k:'str', id:'str', n:e.str, cls:'bad'});
+  if(e.weak) out.push({k:'weak', id:'weak', n:e.weak, cls:'good'});
   if(e.haste) out.push({k:'haste', id:'haste', n:e.haste, cls:'bad'});
   if(e.resist) out.push({k:'resist', id:'resist', n:e.resist, cls:'res'});
   return out;
@@ -3013,6 +3060,7 @@ function act(a, arg, el){
     case 'close': hideOv(); break;
     case 'foeMove': if(UI.focus){ UI.focus.sel = arg; renderFocus(); } break;
     case 'ref': pushRef(arg); break;
+    case 'pickOk': pickOk(); break;
     case 'refBack': popRef(); break;
     case 'refClose': popRef(true); break;
     case 'foeClose': closeFocus(); break;

@@ -31,7 +31,7 @@
 //   敵のひとこと(0.23.0): text/enemies.csv の 敵.say.start(戦闘の始め)・敵.say.pat:番号(その行動のとき)・敵.say.anger(定刻の敵がディレイを受けたとき)・敵.say.phase(段階変化したとき、0.33.0)。同じキーを並べると複数(どれか1つ)
 //   wary(0.30.0): 警戒版 [{at, ...}]。警戒度が at 以上の遭遇では、書いた欄で置き換えた形で出る(いちばん高い at を1つ)
 //     passives は足す、patAdd は行動の並びの最後に足す、それ以外(hp・start・pat・phase・react・units など)は置き換え。警戒版を持つ敵は警戒度の数値の上乗せを受けない
-//     例: wary:[{at:4, passives:[{k:'frenzy', n:1}]}, {at:7, patAdd:[{d:12, dl:6, p:'dur'}]}]
+//     passives は足す(同じ種類のパッシブは置き換える。0.35.0)。例: wary:[{at:4, passives:[{k:'frenzy', n:1}]}, {at:7, patAdd:[{d:12, dl:6, p:'dur'}]}]
 // encounters: 遭遇。敵は常に1体(0.15.0 から)。fam は系統。どの通常戦がどこで出るかは data/map.js の areas の pools(警戒度ごと)。elite / boss は特別な部屋
 window.DATA = window.DATA || {};
 DATA.foes = {
@@ -96,8 +96,8 @@ DATA.foes = {
   crusher:  {kind:'crusher', hp:82, start:4, passives:[{k:'hoard'}],
     pat:[{d:5, dl:4, p:'dur'}, {d:0, dl:5, eat:1, wind:{w:3, poise:10}}, {d:11, dl:5, p:'out', rec:2}],
     pool:['wall','blow','reload','backflow']},
-  // 工程管理機(名前はタイムキーピング): 4サイクルごとに必ず動く。ディレイが効かず、遅らせようとすると怒る(増幅)
-  clock:    {kind:'clock', hp:80, start:4, passives:[{k:'punctual', n:1}],
+  // 工程管理機(名前はタイムキーピング): 4サイクルごとに必ず動く。ディレイが効かない。警戒V以上では遅らせようとすると怒る(増幅。0.35.0)
+  clock:    {kind:'clock', hp:80, start:4, passives:[{k:'punctual', n:0}], wary:[{at:5, passives:[{k:'punctual', n:1}]}],
     pat:[{d:5, dl:4, p:'calc'}, {d:5, dl:4, p:'arm'}, {d:5, dl:4, p:'mob'}, {d:16, dl:4, p:'dur', ch:true}],
     pool:['parry','rapid','crackshot']},
   // 溶接機: 壊した腕を直してしまう。直す行動は体勢で止められる

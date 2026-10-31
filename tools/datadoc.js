@@ -37,7 +37,9 @@ const patAll = f => (CURF = f, '') + pat(f) + Object.entries(f.broke || {}).map(
 // パッシブ: 名前(text/enemies.csv の 敵.passive.*)と、文(text/terms.csv の ui.pas.*)。画面と同じく反応・段階変化も含める
 const fillT = (k, v) => (D.ui['pas.' + k] || '').replace(/\{(\w+)\}/g, (m, n) => n in v ? v[n] : m);
 const trait = f => { const nm = f.pname || {}, out = [];
-  (f.passives || []).forEach((p, j) => out.push(`${nm[j] || ''}: ${p.k === 'command' ? fillT('command', {unit: f.units[p.unit].name, n: p.n}) : p.k === 'frenzy' ? fillT('frenzy', {n: p.n}) : fillT(p.k, {n: p.n || 1})}`));
+  (f.passives || []).forEach((p, j) => out.push(`${nm[j] || ''}: ${p.k === 'command' ? fillT('command', {unit: f.units[p.unit].name, n: p.n}) : p.k === 'frenzy' ? fillT('frenzy', {n: p.n}) : p.k === 'punctual' && p.n === 0 ? fillT('punctual0', {}) : fillT(p.k, {n: p.n || 1})}`));
+  // 警戒版(0.30.0): パッシブを足す・置き換えるものだけ書く
+  for(const t of f.wary || []) for(const p of t.passives || []) out.push(`警戒${'I II III IV V VI VII VIII IX X'.split(' ')[t.at - 1] || t.at}以上: ${p.k === 'punctual' && p.n === 0 ? fillT('punctual0', {}) : fillT(p.k, {n: p.n || 1})}`);
   if(f.react) out.push(`${nm.react || f.react.n}: ${fillT('react', {min: f.react.min, part: SL[f.react.p].fn, d: f.react.d})}`);
   if(f.phase) out.push(`${nm.phase || ''}: ${fillT('phase', {at: Math.round(f.phase.at * 100)})}`);
   if(f.sync) out.push(`連携: 同じサイクルに攻撃すると+${f.sync}`);

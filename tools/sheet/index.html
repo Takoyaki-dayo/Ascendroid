@@ -78,6 +78,9 @@ td .k{display:block;font-family:var(--f-mono);font-size:10.5px;color:var(--dim);
 .mode{display:flex;gap:4px}
 .mode button{border:1px solid var(--line);background:var(--panel);border-radius:5px;padding:3px 10px;font-size:12px;color:var(--fg2)}
 .mode button.on{border-color:var(--cy);color:var(--cy);background:var(--cy-soft)}
+/* 版の切り替え(0.38.0): 通常 / 強化 / 警戒版 */
+.mode.vsw{flex-wrap:wrap;margin:0 0 8px} .mode.vsw button.add{border-style:dashed} .mode.vsw button:disabled{opacity:.4}
+.vhead{margin:0 0 8px;align-items:flex-end;gap:8px}
 .grp{display:flex;flex-direction:column;gap:5px}
 .grp h3{margin:4px 0 0;font-size:11.5px;color:var(--dim);font-weight:700;letter-spacing:.03em}
 /* 敵のページ(0.32.3) */
@@ -340,7 +343,7 @@ function foeCard(o){
   return `<div class="fcard"><div class="fch"><b>${esc(o.name || '(名前なし)')}</b><span class="note">最初の行動まで ${o.start ?? '?'}</span></div><div class="uhps">${hp}</div>
     ${patStrip(o, o.pat, 'pat')}${o.phase ? `<div class="note">耐久${Math.round((o.phase.at || 0) * 100)}%未満で:</div>${patStrip(o, o.phase.pat, 'phase.pat')}` : ''}${pas ? `<div class="fpas">${pas}</div>` : ''}</div>`;
 }
-const pasText = (p, o) => (D.ui['pas.' + p.k] || p.k).replace(/\{(\w+)\}/g, (m, n) => n === 'unit' ? (o.units && o.units[p.unit] ? o.units[p.unit].name : p.unit || '?') : n in p ? p[n] : m);
+const pasText = (p, o) => (D.ui['pas.' + (p.k === 'punctual' && p.n === 0 ? 'punctual0' : p.k)] || p.k).replace(/\{(\w+)\}/g, (m, n) => n === 'unit' ? (o.units && o.units[p.unit] ? o.units[p.unit].name : p.unit || '?') : n in p ? p[n] : m);
 // 1つの行動の欄(開いているときだけ)。上の行は要約と並べ替えのボタン
 function actHTML(base, a, o, orig, units, i, n){
   const open = S.foeOpen === base, sum = [a.kind === 'delay' ? `自分にディレイ${a.v || 0}` : a.d > 0 ? `${a.d}${a.hits > 1 ? '×' + a.hits : ''}→${SLOT[a.p] || ''}` : '', ...actAttrs(a, o).filter(t => !/^\d+回$/.test(t))].filter(Boolean).join(' ');
@@ -357,12 +360,40 @@ function actHTML(base, a, o, orig, units, i, n){
   h += `<div class="ar af"><select data-addx="${esc(base)}"><option value="">＋属性を足す</option>${a.hits == null ? '<option value="hits">回数(多段)</option>' : ''}${add.map(([k, lab]) => `<option value="${k}">${lab}</option>`).join('')}</select></div>`;
   return h + '</div>';
 }
+// 版の切り替え(0.38.0): 敵の警戒版・パーツの強化版を「全体の姿」のまま編集する。変わった欄だけを wary[i] / up[i] に書く
+// S.draft.vv = 開いている版の番号(null なら通常)、S.draft.vvObj = その版の全体の姿(欄の編集はこれに入り、vvSync で差分に戻す)
+const VAR = {
+  foes: {
+    skip: ['wary', 'appear', 'say', 'pool'],
+    tabs: o => (o.wary || []).map((t, i) => ({i, label: `警戒${ROMAN[(t.at || 1) - 1] || t.at}〜`})),
+    add: o => { const W = (o.wary = o.wary || []), at = Math.min(10, (W.length ? Math.max(...W.map(t => t.at || 1)) : 4) + 1); W.push({at}); return W.length - 1; },
+    del: (o, i) => { o.wary.splice(i, 1); if(!o.wary.length) delete o.wary; },
+    make(o, i){ const t = (o.wary || [])[i]; const V = clone(o); delete V.wary; if(!t) return V; for(const [k, v] of Object.entries(t)) if(k !== 'at' && k !== 'patAdd') V[k] = v === null ? undefined : clone(v); if(t.patAdd) V.pat = (V.pat || []).concat(clone(t.patAdd)); for(const k of Object.keys(V)) if(V[k] === undefined) delete V[k]; return V; },
+    store(o, i, V){ const base = clone(o); delete base.wary; const d = {at: o.wary[i].at}; for(const k of new Set([...Object.keys(V), ...Object.keys(base)])){ if(this.skip.includes(k)) continue; if(JSON.stringify(V[k]) !== JSON.stringify(base[k])) d[k] = V[k] === undefined ? null : clone(V[k]); } o.wary[i] = d; },
+    head: (o, i) => `<div class="ar vhead">${'<label class="ff"><span>この警戒度から</span><input type="number" min="1" max="10" data-vat="1" value="' + ((o.wary[i] || {}).at || '') + '"></label>'}<button type="button" class="btn quiet sm" data-vdel="1">この警戒版を消す</button></div><div class="note">警戒度がこの値以上の遭遇で、この姿で出る(いちばん高い段を1つ)。通常から変えた欄だけが警戒版として送られる。警戒版を持つ敵は、警戒度による耐久・攻撃の上乗せを受けない</div>`,
+  },
+  parts: {
+    skip: ['up', 'upText', 'rarity', 'name'],
+    tabs: o => [0, 1].map(i => ({i, label: '強化' + '+'.repeat(i + 1)})),
+    make(o, i){ const u = (o.up || [])[i]; const V = clone(o); delete V.up; delete V.upText; delete V.rarity; if(u) for(const [k, v] of Object.entries(u)) V[k] = clone(v); else V.max = (o.max || 0) + 2 * (i + 1); V.text = (u && u.text) || (o.upText || [])[i] || o.text; return V; },
+    store(o, i, V){ const base = clone(o); delete base.up; delete base.upText; delete base.rarity; const d = {}; for(const k of new Set([...Object.keys(V), ...Object.keys(base)])){ if(this.skip.includes(k)) continue; if(JSON.stringify(V[k]) !== JSON.stringify(base[k])) d[k] = V[k] === undefined ? null : clone(V[k]); } const U = (o.up = (o.up || []).slice()); while(U.length <= i) U.push({}); U[i] = d; },
+    head: (o, i) => `<div class="note">強化の段階${i + 1}(名前は「${esc(o.name || '')}${'+'.repeat(i + 1)}」)。段階は部位が持ち、鹵獲の「強化」で上がる。通常から変えた欄だけが強化版として送られる。何も変えなければ耐久+${2 * (i + 1)}だけ(仮の決まり)</div>`,
+  },
+};
+const edObj = () => S.draft && S.draft.vv != null && VAR[S.kind] ? S.draft.vvObj : S.draft && S.draft.obj;
+function vvSync(){ const d = S.draft; if(d && d.vv != null && VAR[S.kind]) VAR[S.kind].store(d.obj, d.vv, d.vvObj); }
+function vvOpen(i){ const d = S.draft; d.vv = i; d.vvObj = i == null ? null : VAR[S.kind].make(d.obj, i); S.foeOpen = null; }
+function vvBar(){
+  const V = VAR[S.kind], d = S.draft; if(!V || !d || S.json) return '';
+  const tabs = V.tabs(d.obj);
+  return `<div class="mode vsw"><button type="button" data-vv="" class="${d.vv == null ? 'on' : ''}">通常</button>${tabs.map(t => `<button type="button" data-vv="${t.i}" class="${d.vv === t.i ? 'on' : ''}">${esc(t.label)}</button>`).join('')}${V.add ? '<button type="button" data-vadd="1" class="add">＋警戒版</button>' : ''}</div>${d.vv != null ? V.head(d.obj, d.vv) : ''}`;
+}
 function foeForm(o, orig){
   const g = (t, body, open = true, note = '') => `<details class="grp fgrp"${open ? ' open' : ''}><summary>${t}${note ? `<span class="gs">${note}</span>` : ''}</summary>${body}</details>`;
   const units = o.units ? Object.entries(o.units).map(([k, u]) => [k, u.name || k]) : [];
   let h = '';
   h += g('基本', `<div class="ar">${fIn('name', o, orig, '名前', 'str')}${o.units ? '' : fIn('hp', o, orig, '耐久')}${fIn('start', o, orig, '最初の行動まで')}</div>
-    <div class="note">出るところ: ${appearChips(o.appear)}</div><div class="ar">${fIn('appear', o, orig, '出るところを変える(例: エリア1 警戒I〜II)', 'arr')}</div>`);
+    ${S.draft && S.draft.vv != null ? '' : `<div class="note">出るところ: ${appearChips(o.appear)}</div><div class="ar">${fIn('appear', o, orig, '出るところを変える(例: エリア1 警戒I〜II)', 'arr')}</div>`}`);
   const pats = (arr, prefix) => (arr || []).map((a, i) => actHTML(`${prefix}.${i}`, a, o, orig, units, i, arr.length)).join('') + `<div class="ar"><button type="button" class="btn quiet sm" data-fx="add" data-base="${prefix}">＋行動を足す</button></div>`;
   h += g('行動', `<div class="note">${o.ai === 'rand' ? '重みで選ぶ(同じ行動は3回続けない)' : '上から順に繰り返す'}。行を押すと開く。上の並びのタイルを押しても開く</div>` + pats(o.pat, 'pat'), true, `${(o.pat || []).length}つ`);
   h += g('段階変化', o.phase ? `<div class="ar">${fIn('phase.at', o, orig, '耐久の割合(0.5 = 50%未満で)')}<button type="button" class="btn quiet sm" data-fx="delphase">段階変化をやめる</button></div>` + pats(o.phase.pat, 'phase.pat') : `<div class="ar"><button type="button" class="btn quiet sm" data-fx="addphase">＋段階変化を足す</button></div>`, !!o.phase);
@@ -371,10 +402,10 @@ function foeForm(o, orig){
   const pas = o.passives || [], PK = Object.keys(D.ui).filter(k => k.startsWith('pas.') && !['pas.react', 'pas.phase', 'pas.broke', 'pas.punctual0'].includes(k)).map(k => k.slice(4));
   h += g('パッシブ', pas.map((p, j) => `<div class="ar ur">${fIn(`pname.${j}`, o, orig, '名前', 'str')}${p.n != null ? fIn(`passives.${j}.n`, o, orig, '数') : ''}${p.unit != null ? fIn(`passives.${j}.unit`, o, orig, 'ユニット', 'unit', units) : ''}<button type="button" class="ib del" data-fx="delpas" data-base="${j}" title="消す">✕</button><div class="note pt">${esc(pasText(p, o))}</div></div>`).join('') +
     `<div class="ar af"><select data-addpas="1"><option value="">＋パッシブを足す</option>${PK.map(k => `<option value="${k}">${esc((D.ui['pas.' + k] || k).replace(/\{\w+\}/g, '◯').slice(0, 26))}</option>`).join('')}</select></div>`, true, `${pas.length}つ`);
-  h += g('ひとこと', Object.keys(o.say || {}).map(k => `<div class="ar">${fIn(`say.${k}`, o, orig, SAYW(k, o), 'lines')}</div>`).join('') + '<div class="note">1行に1つ。複数あれば毎回どれか1つ。空なら言わない</div>', false, `${Object.values(o.say || {}).reduce((a, v) => a + [].concat(v || []).length, 0)}つ`);
+  if(!(S.draft && S.draft.vv != null)) h += g('ひとこと', Object.keys(o.say || {}).map(k => `<div class="ar">${fIn(`say.${k}`, o, orig, SAYW(k, o), 'lines')}</div>`).join('') + '<div class="note">1行に1つ。複数あれば毎回どれか1つ。空なら言わない</div>', false, `${Object.values(o.say || {}).reduce((a, v) => a + [].concat(v || []).length, 0)}つ`);
   const pool = o.pool || [], cand = Object.keys(D.cards).filter(k => !D.cards[k].junk && (D.rarity || {})[k] !== 'starter' || pool.includes(k));
-  h += g('学習で出やすいカード', `<div class="chips">${cand.map(k => `<button type="button" class="chip${pool.includes(k) ? ' on' : ''}" data-pool="${esc(k)}">${esc(D.cards[k].name || k)}</button>`).join('')}</div>`, false, pool.map(k => (D.cards[k] || {}).name || k).join('・'));
-  h += g('警戒版', o.wary ? `<div class="ar">${fieldHTML('wary', o.wary, orig)}</div>` : '<div class="note">まだない。JSON で wary:[{at:警戒度, ...}] を足す(書き方は README)</div>', false);
+  if(!(S.draft && S.draft.vv != null)) h += g('学習で出やすいカード', `<div class="chips">${cand.map(k => `<button type="button" class="chip${pool.includes(k) ? ' on' : ''}" data-pool="${esc(k)}">${esc(D.cards[k].name || k)}</button>`).join('')}</div>`, false, pool.map(k => (D.cards[k] || {}).name || k).join('・'));
+  if(S.draft && S.draft.vv == null) h += g('警戒版', `<div class="note">${(o.wary || []).length ? `${o.wary.map(t => `警戒${ROMAN[(t.at || 1) - 1] || t.at}〜: ${Object.keys(t).filter(k => k !== 'at').map(k => LB[k] || k).join('・') || '変更なし'}`).join(' ／ ')}。` : 'まだない。'}上の「＋警戒版」で足し、切り替えて全体の姿のまま編集する</div>`, false);
   const art = [];
   for(const k of ['kind', 'look', 'ai', 'sync', 'broke'].filter(k => o[k] != null)){ const f = flat({[k]: o[k]}); for(const p of Object.keys(f)) art.push(fieldHTML(p, f[p], orig)); }
   if(o.units) for(const k of Object.keys(o.units)){ const f = flat({units:{[k]:o.units[k]}}); for(const p of Object.keys(f)) if(!/\.(name|hp|armor|vital|core)$/.test(p)) art.push(fieldHTML(p, f[p], orig)); }
@@ -390,7 +421,7 @@ function sayRemap(o, prefix, map){
   o.say = Object.assign(keep, moved);
 }
 function foeOp(fx, base, x){
-  const o = S.draft.obj;
+  const o = edObj();
   const arrOf = b => b.startsWith('phase.pat') ? (o.phase.pat) : o.pat, pre = b => b.startsWith('phase.pat') ? 'phase' : 'pat';
   if(fx === 'add'){ const A = base === 'phase.pat' ? o.phase.pat : o.pat; A.push({n:'', d:0, p:'calc', dl:1}); sayRemap(o, base === 'phase.pat' ? 'phase' : 'pat', i => i); S.foeOpen = `${base}.${A.length - 1}`; return; }
   if(fx === 'addunit'){
@@ -423,7 +454,7 @@ function foeAppear(fk){
   return out;
 }
 function foePreview(o){
-  const nm = o.pname || {}, ps = (o.passives || []).map((p, j) => { const t = (D.ui['pas.' + p.k] || '').replace(/\{(\w+)\}/g, (m, n) => n === 'unit' ? (o.units && o.units[p.unit] ? o.units[p.unit].name : p.unit) : n in p ? p[n] : n === 'n' ? 1 : m); return `<div><b>${esc(nm[j] || p.k)}</b> ${esc(t)}</div>`; });
+  const nm = o.pname || {}, ps = (o.passives || []).map((p, j) => { const t = (D.ui['pas.' + (p.k === 'punctual' && p.n === 0 ? 'punctual0' : p.k)] || '').replace(/\{(\w+)\}/g, (m, n) => n === 'unit' ? (o.units && o.units[p.unit] ? o.units[p.unit].name : p.unit) : n in p ? p[n] : n === 'n' ? 1 : m); return `<div><b>${esc(nm[j] || p.k)}</b> ${esc(t)}</div>`; });
   if(o.phase) ps.push(`<div><b>${esc(nm.phase || '段階変化')}</b> 耐久${Math.round(o.phase.at * 100)}%未満で行動が変わる</div>`);
   return `<b>${esc(o.name || '')}</b> <span class="note">${esc((o.appear || []).join('、') || '出ない')}</span>${ps.length ? `<div style="margin-top:4px">${ps.join('')}</div>` : '<div class="note">パッシブなし</div>'}`;
 }
@@ -620,10 +651,20 @@ function wbStart(key){
   else S.wb = {key, isNew:true, card:{cost:1, name:'', text:''}, rarity:'common', idea:'', custom:false, dirty:true, reply:''};
 }
 const numIn = (id, v, lab, min = 0, max = 99) => `<div class="fld"><label for="${id}">${lab}</label><input id="${id}" data-wb="${id}" type="number" min="${min}" max="${max}" step="1" value="${v ?? ''}"></div>`;
+// カードの強化版(0.38.0): 上の切り替えで「強化(+)」にすると、同じ欄で強化した後の姿を編集する。変わった欄だけが card.up に入る
+// S.wb.view = 'base' | 'up'、S.wb.upEd = 強化した後の全体の姿(名前は元のまま。表示は+付き)
+function upEdOf(c, key){ const u = D.upCard(clone(c), key); delete u.upgraded; delete u.base; delete u.up; u.name = c.name; u.text = (c.up && c.up.text) || c.text; return u; }
+const wbEd = () => S.wb && S.wb.view === 'up' ? S.wb.upEd : S.wb && S.wb.card;
+function upSync(){
+  const w = S.wb; if(!w || w.view !== 'up') return;
+  const c = w.card, u = w.upEd, d = {};
+  for(const k of new Set([...Object.keys(u), ...Object.keys(c)])){ if(['name', 'up', 'upgraded', 'base'].includes(k)) continue; if(JSON.stringify(u[k]) !== JSON.stringify(c[k])) d[k] = u[k] === undefined ? null : clone(u[k]); }
+  if(Object.keys(d).length) c.up = d; else delete c.up;
+}
 function wbSideHTML(){
   if(S.wbDeckOpen) return wbDeckHTML();
   if(!S.wb) return `<div class="empty">一覧からカードを選ぶか、「＋新しいカード」で作ります。<br>数値は K-7 での値(パーツの補正の前)です。保存すると Claude が読めるようになり、「添削に出す」で見てもらえます。<br>右上の「試遊」で、保存したカードを入れた状態で遊べます。</div>`;
-  const w = S.wb, c = w.card, doc = WB[w.key], st = doc ? doc.status : 'base';
+  const w = S.wb, up = w.view === 'up', c = wbEd(), doc = WB[w.key], st = doc ? doc.status : 'base';
   const tg = c.all ? 'all' : c.tgt ? 'tgt' : 'none', dt = c.dmg ? c.dmg.t : '', sp = c.spend ? (c.spend.n ? 'f' : '') + (c.spend.dmg ? 'dmg' : 'block') : '', tm = !!c.timer;
   const sel = (id, v, opts) => `<select id="${id}" data-wb="${id}">${opts.map(([k, n]) => `<option value="${k}"${k === v ? ' selected' : ''}>${n}</option>`).join('')}</select>`;
   // 折りたためる組: 開閉を自分で変えたらそれを覚え、変えていなければカードが使っている組だけ開く
@@ -631,11 +672,13 @@ function wbSideHTML(){
   const thread = (doc && doc.thread || []).map(m => `<div class="msg ${m.who === 'claude' ? 'claude' : 'user'}"><span class="w">${m.who === 'claude' ? 'Claude' : 'あなた'} · ${fmt(m.at)}</span>${esc(m.text)}</div>`).join('');
   return `<div class="side-h"><div><h2>${esc(c.name || '(名前なし)')}</h2><span class="k">${esc(w.key)}${w.isNew ? ' · 新規' : ''} ${wbStatusBadge(st)} <span class="badge w-review" id="wbinfo"${w.dirty ? '' : ' hidden'}>未保存</span></span></div><button class="btn quiet x" type="button" id="closeSide">閉じる</button></div>
   <div class="side-b" id="sideb">
+    <div class="mode vsw"><button type="button" data-wbview="base" class="${up ? '' : 'on'}">通常</button><button type="button" data-wbview="up" class="${up ? 'on' : ''}">強化(+)</button>${up ? `<button type="button" data-wbview="auto" id="wbAuto" class="add"${w.card.up ? '' : ' disabled'}>自動に戻す</button>` : ''}</div>
+    ${up ? `<div class="note vhead">強化した後の「${esc(w.card.name || '')}+」を編集中。通常から変えた欄だけが強化として入る。<span id="wbUpNote">${w.card.up ? '' : '今は自動(ダメージ・ブロックなどの主な数値×1.3、切り上げ)の姿。'}</span></div>` : ''}
     <div class="cardpv" id="wbpv"></div>
     <div class="grp"><h3>基本</h3>
-      <div class="fld"><label for="w_name">名前</label><input id="w_name" data-wb="w_name" type="text" value="${esc(c.name || '')}" placeholder="カードの名前"></div>
+      ${up ? '' : `<div class="fld"><label for="w_name">名前</label><input id="w_name" data-wb="w_name" type="text" value="${esc(c.name || '')}" placeholder="カードの名前"></div>`}
       ${numIn('w_cost', c.cost, 'コスト(サイクル)', 0, 9)}
-      <div class="fld"><label for="w_rar">レア度</label>${sel('w_rar', w.rarity || '', Object.entries(RARITY))}</div>
+      ${up ? numIn('w_rep', c.rep, '効果をくり返す回数') : `<div class="fld"><label for="w_rar">レア度</label>${sel('w_rar', w.rarity || '', Object.entries(RARITY))}</div>`}
       <div class="fld"><label for="w_tg">対象</label>${sel('w_tg', tg, [['tgt', '敵のユニット1つ'], ['all', '敵のすべてのユニット'], ['none', '対象なし']])}</div>
     </div>
     ${fold('atk', `
@@ -666,9 +709,6 @@ function wbSideHTML(){
       <div class="fld"><label for="w_ampt">増幅(この戦闘の間)</label>${sel('w_ampt', c.amp ? c.amp.t : '', [['', 'なし'], ['melee', '近接'], ['ranged', '遠隔']])}</div>
       ${c.amp ? numIn('w_ampn', c.amp.n, '増幅の値') : ''}
       ${numIn('w_selfc', c.selfCrack, '自分にクラック(得る)')}${numIn('w_selfd', c.selfDmg, 'HPを失う(本体に直接。ブロックで防げない)')}`)}
-    ${fold('up', `
-      <div class="note">空の欄は自動(ダメージ・ブロックなどの主な数値×1.3、切り上げ)。強化した後: <span id="w_uptx"></span></div>
-      ${numIn('w_upcost', c.up && c.up.cost, '強化後のコスト')}${c.dmg ? numIn('w_updn', c.up && c.up.dmg && c.up.dmg.n, '強化後のダメージ') + numIn('w_updx', c.up && c.up.dmg && c.up.dmg.x, '強化後の回数') : ''}${numIn('w_upblk', c.up && c.up.block, '強化後のブロック')}${c.amp ? numIn('w_upamp', c.up && c.up.amp && c.up.amp.n, '強化後の増幅') : ''}${numIn('w_uprep', c.up && c.up.rep, '効果をくり返す回数')}`)}
     <div class="grp"><h3>効果文</h3>
       <div class="mode"><button type="button" data-wbtext="auto" class="${w.custom ? '' : 'on'}">欄から作る</button><button type="button" data-wbtext="custom" class="${w.custom ? 'on' : ''}">自分で書く</button></div>
       ${w.custom ? `<textarea id="w_text" data-wb="w_text" class="wtext" placeholder="{dmg} などの差し込みが使えます">${esc(c.text || genText(c))}</textarea><div class="note">差し込み: {dmg} ダメージ / {x} 回数 / {block} / {delay} / {crack} / {draw} / {t} {tdmg} 遅れて効く / {gain} / {per} 充電1あたり / {dn} {dp} 侵食の回数・威力 / {sc} 自分にクラック / {amp} 増幅 / {sd} HPを失う / {ww} {ws} 防壁 / {discard} / {grow} / {scrap} / {cn} {cp} 侵食を減らす / {wk} 虚弱 / 改行で行を分ける</div>` : `<div class="note" id="w_auto"></div>`}
@@ -683,17 +723,18 @@ function wbSideHTML(){
 }
 function wbRefresh(){
   if(!S.wb) return;
-  const c = S.wb.card;
-  const pv = $('#wbpv'); if(pv) pv.innerHTML = `<div class="cf"><span class="cc">${c.cost}</span><b>${esc(c.name || '(名前なし)')}</b><span class="ct">${wbType(c)}</span><span class="rar r-${S.wb.rarity || 'none'}">${RARITY[S.wb.rarity] || '—'}</span></div><div class="cft">${fillText(c) || '<span class="note">効果がありません</span>'}</div><div class="cfe">${effHTML(c, true)}</div>`;
+  const c = wbEd();
+  const wa = $('#wbAuto'); if(wa) wa.disabled = !S.wb.card.up;
+  const un = $('#wbUpNote'); if(un) un.textContent = S.wb.card.up ? '' : '今は自動(ダメージ・ブロックなどの主な数値×1.3、切り上げ)の姿。';
+  const pv = $('#wbpv'); if(pv) pv.innerHTML = `<div class="cf"><span class="cc">${c.cost}</span><b>${esc((c.name || '(名前なし)') + (S.wb.view === 'up' ? '+' : ''))}</b><span class="ct">${wbType(c)}</span><span class="rar r-${S.wb.rarity || 'none'}">${RARITY[S.wb.rarity] || '—'}</span></div><div class="cft">${fillText(c) || '<span class="note">効果がありません</span>'}</div><div class="cfe">${effHTML(c, true)}</div>`;
   const au = $('#w_auto'); if(au) au.textContent = genText(c) || '(効果がありません)';
-  const ut = $('#w_uptx'); if(ut && D.upCard){ const u = D.upCard(c, S.wb.key); ut.innerHTML = `<b>${esc(u.name)}</b> ${u.cost}コスト ${fillText(u)}`; }
   for(const d of document.querySelectorAll('details[data-fold]')){ const g = d.querySelector('.gs'), t = foldSum(d.dataset.fold, c); if(g){ g.textContent = t || '使っていない'; g.classList.toggle('off', !t); } }
   const inf = $('#wbinfo'); if(inf){ inf.hidden = !(S.wb.dirty || !DB); inf.textContent = DB ? '未保存' : '保存できない表示'; }
   for(const id of ['wbSave', 'wbReview']){ const b = $('#' + id); if(b) b.disabled = !DB || !(c.name || '').trim(); }
 }
 // 欄の値を card に入れる
 function wbInput(id, el){
-  const w = S.wb, c = w.card, num = () => el.value === '' ? undefined : Math.max(0, Math.round(Number(el.value)));
+  const w = S.wb, c = wbEd(), num = () => el.value === '' ? undefined : Math.max(0, Math.round(Number(el.value)));
   const setN = (k, v) => { if(v === undefined || v === 0) delete c[k]; else c[k] = v; };
   switch(id){
     case 'w_name': c.name = el.value; break;
@@ -719,8 +760,7 @@ function wbInput(id, el){
     case 'w_dotn': case 'w_dotp': { const d = c.dot || {n:0, p:0}; d[id === 'w_dotn' ? 'n' : 'p'] = num() || 0; if(!d.n && !d.p) delete c.dot; else c.dot = d; break; }
     case 'w_ww': case 'w_ws': { const d = c.ward || {w:0, s:0}; d[id === 'w_ww' ? 'w' : 's'] = num() || 0; if(!d.w && !d.s) delete c.ward; else c.ward = d; break; }
     case 'w_discard': setN('discard', num()); if(!c.discard) delete c.instant; return 'full';
-    case 'w_upcost': case 'w_upblk': case 'w_uprep': { const f = {w_upcost:'cost', w_upblk:'block', w_uprep:'rep'}[id], v = num(), u = c.up || {}; if(v === undefined) delete u[f]; else u[f] = v; if(Object.keys(u).length) c.up = u; else delete c.up; return 'full'; }
-    case 'w_updn': case 'w_updx': case 'w_upamp': { const [g, f] = {w_updn:['dmg', 'n'], w_updx:['dmg', 'x'], w_upamp:['amp', 'n']}[id], v = num(), u = c.up || {}; const o = Object.assign({}, u[g] || {}); if(v === undefined) delete o[f]; else o[f] = v; if(Object.keys(o).length) u[g] = o; else delete u[g]; if(Object.keys(u).length) c.up = u; else delete c.up; return 'full'; }
+    case 'w_rep': { const v = num(); if(v > 1) c.rep = v; else delete c.rep; break; }
     case 'w_instant': if(el.checked) c.instant = true; else delete c.instant; break;
     case 'w_cutn': case 'w_cutp': { const d = c.dotCut || {n:0, p:0}; d[id === 'w_cutn' ? 'n' : 'p'] = num() || 0; if(!d.n && !d.p) delete c.dotCut; else c.dotCut = d; break; }
     case 'w_needdot': setN('needDot', num()); break;
@@ -1064,15 +1104,18 @@ function renderSide0(){
     side.innerHTML = `<div class="empty">一覧から項目を選ぶと、ここで数値や文を書き換えられます。書き換えたら、下にコメントを添えて「送る」で依頼になります。数値を変えずにコメントだけ送れば相談になります。</div>`;
     return;
   }
-  const orig = S.draft.isNew ? {} : it.obj, o = S.draft.obj;
+  const orig0 = S.draft.isNew ? {} : it.obj, vv = S.draft.vv != null && VAR[S.kind] ? S.draft.vv : null;
+  const o = vv != null ? S.draft.vvObj : S.draft.obj, orig = vv != null ? VAR[S.kind].make(orig0, vv) : orig0;
   let body = '';
   if(K.preview) body += `<div class="preview" id="pv"></div>`;
   if(S.draft.isNew) body += `<div class="newkey"><label for="newkey">キー</label><input id="newkey" type="text" value="${esc(S.draft.key)}" placeholder="空なら自動で付ける"></div>`;
   body += `<div class="mode"><button type="button" data-mode="form" class="${S.json ? '' : 'on'}">欄で編集</button><button type="button" data-mode="json" class="${S.json ? 'on' : ''}">JSON で編集</button></div>`;
   if(S.json) body += `<textarea class="json" id="jsonbox" spellcheck="false">${esc(S.jsonText)}</textarea><div id="jsonmsg"></div>`;
-  else if(K.form) body += K.form(o, orig);
+  else if(K.form) body += vvBar() + K.form(o, orig);
   else {
+    body += vvBar();
     const f = flat(o), groups = {};
+    if(VAR[S.kind]) for(const p of Object.keys(f)) if(/^(up|upText)(\.|$)/.test(p) || (vv != null && VAR[S.kind].skip.concat(['slot']).includes(p))) delete f[p];
     for(const p of Object.keys(f)){ const parent = p.includes('.') ? p.slice(0, p.lastIndexOf('.')) : ''; (groups[parent] = groups[parent] || []).push(p); }
     body += Object.entries(groups).map(([g, ps]) => `<div class="grp"><h3>${esc(groupLabel(o, g))}</h3>${ps.map(p => fieldHTML(p, f[p], orig)).join('')}</div>`).join('');
   }
@@ -1098,14 +1141,15 @@ function refreshDyn(){
   if(KBY[S.kind] && KBY[S.kind].wb){ wbRefresh(); return; }
   if(!S.draft || S.kind === 'requests') return;
   const K = KBY[S.kind], it = curItem(), orig = S.draft.isNew ? {} : (it ? it.obj : {}), o = S.draft.obj;
-  const pv = $('#pv'); if(pv) pv.innerHTML = o && typeof o === 'object' ? K.preview(o) : '';
+  const vo = edObj(), vorig = S.draft.vv != null && VAR[S.kind] ? VAR[S.kind].make(orig, S.draft.vv) : orig;
+  const pv = $('#pv'); if(pv) pv.innerHTML = vo && typeof vo === 'object' ? K.preview(vo) : '';
   const jm = $('#jsonmsg'); if(jm) jm.innerHTML = S.jsonErr ? `<div class="err">${esc(S.jsonErr)}</div>` : '<div class="note">欄にない項目を足すときや、行動を増やすときはこちら。</div>';
   const ch = S.draft.isNew ? [] : diff(orig, o);
   const db = $('#diffbox'); if(db){ db.innerHTML = ch.map(c => `<div class="dl"><span class="p" title="${esc(c.path)}">${esc(c.path)}</span><span class="v"><s>${esc(c.from)}</s> → <b>${esc(c.to)}</b></span></div>`).join(''); db.hidden = !ch.length; }
   const si = $('#sendinfo'); if(si) si.textContent = dbState === 'off' ? 'この表示では送れません(サインインして開いてください)' : ch.length ? `変更 ${ch.length} か所` : S.draft.isNew ? '新しい項目' : '';
   const rs = $('#resetDraft'); if(rs) rs.hidden = !ch.length;
   const sb = $('#sendBtn'); if(sb) sb.disabled = !(DB && !S.jsonErr && (S.draft.isNew ? (S.draft.key.trim() || (S.draft.obj && (S.draft.obj.name || S.draft.obj.title)) || S.comment.trim()) : (ch.length || S.comment.trim())));
-  if(!S.json) document.querySelectorAll('#sideb .fld').forEach(f => { const inp = f.querySelector('[data-path]'); if(!inp) return; const p = inp.dataset.path; f.classList.toggle('chg', JSON.stringify(getPath(o, p)) !== JSON.stringify(getPath(orig, p))); });
+  if(!S.json) document.querySelectorAll('#sideb .fld').forEach(f => { const inp = f.querySelector('[data-path]'); if(!inp) return; const p = inp.dataset.path; f.classList.toggle('chg', JSON.stringify(getPath(vo, p)) !== JSON.stringify(getPath(vorig, p))); });
 }
 const STATUS = {open:'未対応', discuss:'相談中', done:'反映済み', dropped:'見送り'};
 const fmt = iso => { if(!iso) return ''; const d = new Date(iso); if(isNaN(d)) return ''; const z = n => String(n).padStart(2, '0'); return `${z(d.getMonth() + 1)}/${z(d.getDate())} ${z(d.getHours())}:${z(d.getMinutes())}`; };
@@ -1213,12 +1257,18 @@ document.addEventListener('click', e => {
   const tab = t.closest('[data-tab]'); if(tab){ S.bulkOpen = false; wbStash(); eStash(); if(S.ab && S.ab.dirty) ABDRAFT[S.ab.key] = S.ab; S.ab = null; S.kind = tab.dataset.tab; S.sel = null; S.draft = null; S.wb = null; S.wbDeckOpen = false; S.mobileOpen = false; S.q = ''; $('#q').value = ''; renderAll(); return; }
   // 敵のページ: 行動の欄を開く・閉じる / 足す・消す・並べ替え
   const fo = t.closest('[data-fopen]'); if(fo && S.draft){ S.foeOpen = S.foeOpen === fo.dataset.fopen ? null : fo.dataset.fopen; renderSide(); later(); const el = document.querySelector(`.act.open`); if(el && fo.classList.contains('tile')) el.scrollIntoView({block:'nearest'}); return; }
-  const fxb = t.closest('[data-fx]'); if(fxb && S.draft && !fxb.disabled){ foeOp(fxb.dataset.fx, fxb.dataset.base || '', fxb.dataset.x); renderSide(); later(); return; }
+  const fxb = t.closest('[data-fx]'); if(fxb && S.draft && !fxb.disabled){ foeOp(fxb.dataset.fx, fxb.dataset.base || '', fxb.dataset.x); vvSync(); renderSide(); later(); return; }
+  // 版の切り替え(0.38.0)
+  const vb = t.closest('[data-vv]'); if(vb && S.draft && VAR[S.kind]){ vvSync(); vvOpen(vb.dataset.vv === '' ? null : +vb.dataset.vv); renderSide(); return; }
+  const va = t.closest('[data-vadd]'); if(va && S.draft && VAR[S.kind]){ vvSync(); vvOpen(VAR[S.kind].add(S.draft.obj)); renderSide(); later(); return; }
+  const vd = t.closest('[data-vdel]'); if(vd && S.draft && S.draft.vv != null){ VAR[S.kind].del(S.draft.obj, S.draft.vv); vvOpen(null); renderSide(); later(); return; }
   // 敵のページ: 学習で出やすいカードを押して入れ外し
-  const pl = t.closest('[data-pool]'); if(pl && S.draft){ const k = pl.dataset.pool, a = (S.draft.obj.pool = (S.draft.obj.pool || []).slice()), i = a.indexOf(k); if(i >= 0) a.splice(i, 1); else a.push(k); renderSide(); later(); return; }
+  const pl = t.closest('[data-pool]'); if(pl && S.draft){ const k = pl.dataset.pool, a = (edObj().pool = (edObj().pool || []).slice()), i = a.indexOf(k); if(i >= 0) a.splice(i, 1); else a.push(k); renderSide(); later(); return; }
   // カード工房
   const wf = t.closest('[data-wbf]'); if(wf){ S.wbFilter = wf.dataset.wbf; renderList(); return; }
-  const wt = t.closest('[data-wbtext]'); if(wt && S.wb){ S.wb.custom = wt.dataset.wbtext === 'custom'; if(S.wb.custom && !S.wb.card.text) S.wb.card.text = genText(S.wb.card); S.wb.dirty = true; renderSide(); return; }
+  const wt = t.closest('[data-wbtext]'); if(wt && S.wb){ S.wb.custom = wt.dataset.wbtext === 'custom'; if(S.wb.custom && !wbEd().text) wbEd().text = genText(wbEd()); upSync(); S.wb.dirty = true; renderSide(); return; }
+  // カードの強化版の切り替え(0.38.0)
+  const wv = t.closest('[data-wbview]'); if(wv && S.wb && !wv.disabled){ const m = wv.dataset.wbview; if(m === 'auto'){ delete S.wb.card.up; S.wb.dirty = true; } S.wb.view = m === 'base' ? 'base' : 'up'; if(S.wb.view === 'up') S.wb.upEd = upEdOf(S.wb.card, S.wb.key); S.wb.foldUp = null; renderSide(); if(m === 'auto') renderList(); return; }
   const dk = t.closest('[data-dk]'); if(dk){ const d = S.wbDeckDraft || wbDeck().slice(), k = dk.dataset.dk.slice(1); if(dk.dataset.dk[0] === '+') d.push(k); else { const i = d.lastIndexOf(k); if(i >= 0) d.splice(i, 1); } S.wbDeckDraft = d; renderSide(); return; }
   if(t.closest('#wbSave')){ wbSave(); return; }
   if(t.closest('#wbReview')){ wbSave('review'); return; }
@@ -1259,7 +1309,7 @@ document.addEventListener('click', e => {
 document.addEventListener('keydown', e => { if(e.key === 'Enter'){ const row = e.target.closest && e.target.closest('tr.row'); if(row) selectItem(row.dataset.key); } });
 function setMode(json){
   if(json === S.json) return;
-  if(json){ S.jsonText = JSON.stringify(S.draft.obj, null, 2); S.jsonErr = ''; }
+  if(json){ if(S.draft.vv != null){ vvSync(); S.draft.vv = null; S.draft.vvObj = null; } S.jsonText = JSON.stringify(S.draft.obj, null, 2); S.jsonErr = ''; }
   else if(S.jsonErr) return;
   S.json = json; renderSide();
 }
@@ -1272,15 +1322,16 @@ document.addEventListener('input', e => {
   if(t.id === 'w_reply' && S.wb){ S.wb.reply = t.value; return; }
   if(t.id === 'a_reply' && S.ab){ S.ab.reply = t.value; return; }
   // 敵のページ: パッシブを足す(数は0から)
-  if(t.dataset && t.dataset.addpas && S.draft && t.value){ const o = S.draft.obj; (o.passives = (o.passives || []).slice()).push(t.value === 'command' ? {k:'command', unit:Object.keys(o.units || {})[0] || '', n:0} : ['loot', 'hoard'].includes(t.value) ? {k:t.value} : {k:t.value, n:0}); renderSide(); later(); return; }
+  if(t.dataset && t.dataset.addpas && S.draft && t.value){ const o = edObj(); (o.passives = (o.passives || []).slice()).push(t.value === 'command' ? {k:'command', unit:Object.keys(o.units || {})[0] || '', n:0} : ['loot', 'hoard'].includes(t.value) ? {k:t.value} : {k:t.value, n:0}); vvSync(); renderSide(); later(); return; }
+  if(t.dataset && t.dataset.vat && S.draft && S.draft.vv != null){ const v = Math.max(1, Math.min(10, Math.round(+t.value) || 1)); S.draft.obj.wary[S.draft.vv].at = v; later(); return; }
   // 敵のページ: 行動に属性を足す(値は0から)
   if(t.dataset && t.dataset.addx && S.draft && t.value){
-    const a = getPath(S.draft.obj, t.dataset.addx), k = t.value, W = {wind:{w:0, poise:0}, guard:{w:0, s:0}, counter:{w:0, d:0}, zone:{at:0, len:0, d:0, p:'calc'}};
+    const a = getPath(edObj(), t.dataset.addx), k = t.value, W = {wind:{w:0, poise:0}, guard:{w:0, s:0}, counter:{w:0, d:0}, zone:{at:0, len:0, d:0, p:'calc'}};
     if(a && a[k] == null){ a[k] = W[k] ? clone(W[k]) : 0; }
-    renderSide(); later(); return;
+    vvSync(); renderSide(); later(); return;
   }
   if(t.dataset && t.dataset.ab && S.ab){ const was = S.ab.dirty, r = abInput(t.dataset.ab, t); S.ab.dirty = true; if(r === 'full') renderSide(); else abRefresh(); if(!was || r === 'full') renderList(); return; }
-  if(t.dataset && t.dataset.wb && S.wb){ const was = S.wb.dirty, r = wbInput(t.dataset.wb, t); S.wb.dirty = true; if(!S.wb.custom && t.dataset.wb !== 'w_text') S.wb.card.text = genText(S.wb.card); if(r === 'full') renderSide(); else wbRefresh(); if(!was){ bulkLabel(); if(innerWidth > 820) renderList(); } return; }
+  if(t.dataset && t.dataset.wb && S.wb){ const was = S.wb.dirty, r = wbInput(t.dataset.wb, t); S.wb.dirty = true; if(!S.wb.custom && t.dataset.wb !== 'w_text') wbEd().text = genText(wbEd()); upSync(); if(r === 'full') renderSide(); else wbRefresh(); if(!was){ bulkLabel(); if(innerWidth > 820) renderList(); } return; }
   if(t.id === 'comment'){ S.comment = t.value; refreshDyn(); return; }
   if(t.id === 'newkey'){ S.draft.key = t.value; later(); return; }
   if(t.id === 'jsonbox'){ S.jsonText = t.value; try{ S.draft.obj = JSON.parse(t.value); S.jsonErr = ''; }catch(err){ S.jsonErr = 'JSON の書き方が崩れています: ' + err.message; } later(); return; }
@@ -1292,7 +1343,7 @@ document.addEventListener('input', e => {
     else if(ty === 'arr') v = t.value.split(/[,、]\s*/).map(s => s.trim()).filter(Boolean).map(s => /^-?\d+(\.\d+)?$/.test(s) ? Number(s) : s);
     else if(ty === 'json'){ try{ v = JSON.parse(t.value); }catch(_){ return; } }
     else v = t.value;
-    setPath(S.draft.obj, p, v); later();
+    setPath(edObj(), p, v); vvSync(); later();
   }
 });
 document.addEventListener('change', e => { const t = e.target; if(t.dataset && t.dataset.wb && S.wb && (t.tagName === 'SELECT' || t.type === 'checkbox') && !t._done){ /* input で処理済み */ } });

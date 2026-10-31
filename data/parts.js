@@ -49,5 +49,19 @@ DATA.startParts = {calc:'calc_std', arm:'arm_rail', out:'out_std', dur:'dur_std'
 // 鹵獲・イベントでパーツを出すときは、DATA.rarityRule.part の重みでレア度を引いてから、その中で選ぶ
 DATA.partRarity = {calc_std:'starter', arm_rail:'starter', out_std:'starter', dur_std:'starter', mob_std:'starter'};
 DATA.partRarityOf = id => DATA.partRarity[id] || 'common';
+// パーツの強化(0.38.0): 2段階。段階は部位が持つ(run.slotLv。付け替えても段階はそのまま)。鹵獲で「今のパーツを強化」を選ぶと上がる
+// パーツの up:[段階1, 段階2] は、その段階で書き換える欄(基本の値からの置き換え。fx は中身ごと置き換え)。文は text/parts.csv の「テキスト(強化1)」「テキスト(強化2)」
+// up に書いていない段階は仮の決まり: 耐久+2ずつ(効果は変わらない)
+DATA.partMaxLv = 2;
+DATA.partDef = (id, lv) => {
+  const b = DATA.parts[id]; if(!b || !lv) return b;
+  const u = (b.up || [])[lv - 1], o = Object.assign({}, b, {lv});
+  if(u) for(const [k, v] of Object.entries(u)) o[k] = v && typeof v === 'object' && !Array.isArray(v) ? JSON.parse(JSON.stringify(v)) : v;
+  else o.max = b.max + 2 * lv;
+  o.name = (b.name || '') + '+'.repeat(lv);
+  o.text = (u && u.text) || (b.upText || [])[lv - 1] || b.text;
+  delete o.up; delete o.upText;
+  return o;
+};
 // 本体耐久の最大値
 DATA.bodyMax = 50;

@@ -435,6 +435,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 .svc .opt{width:170px;padding:9px 10px;gap:4px}
 .opt.off{opacity:.45}
 .popt{width:250px}
+.popt.pup{border-style:dashed} .popt.pup .pt-h{color:#9be7a6}
 .pt-h{display:flex;align-items:center;gap:5px;color:var(--fg2);font-size:10.5px;width:100%}
 .pt-h .ic svg{width:14px;height:14px}
 .pt-m{margin-left:auto;font-family:var(--f-num)}
@@ -1210,7 +1211,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 <script src="data/text.js"></script>
 <script src="js/engine.js"></script>
 <script>
-const APP_VERSION = '0.37.1';
+const APP_VERSION = '0.38.0';
 const $ = s => document.querySelector(s);
 const EN = ENGINE, RULE = EN.RULE;
 const VIEW = RULE.view, NOW = 170, PX = 34, xs = c => NOW + c * PX, STRIP_Y = 150, SWIFT_VIS = 3;
@@ -1326,7 +1327,9 @@ let S = null, sel = null, PV = null, busy = false, lastTarget = 0, snapshot = nu
 // 待機の設定(いつでも待てる / 手札がないときだけ)。端末ごとに覚える
 const UI = {view:'normal', pick:null, learnOpts:[], screen:'map', mapSel:null, node:null, offers:null, partOpts:null, back:null, after:null, eventId:null};
 const markEls = new Map(), cardEls = new Map(), stripEls = new Map(), bandEls = new Map();
-const partOf = slot => PARTDEF[S.run.parts[slot].id];
+// 0.38.0: 部位の強化の段階(run.slotLv)を当てたパーツの定義。付け替えても段階は部位に残る
+const slotLv = slot => (S.run.slotLv || {})[slot] || 0;
+const partOf = slot => DATA.partDef(S.run.parts[slot].id, slotLv(slot));
 
 /* ---------- preview ---------- */
 function selAction(){ return !sel ? null : sel.kind === 'card' ? {type:'card', i:sel.i, k:sel.k, t:sel.target, pick: PICK && PICK.a ? PICK.ids.slice() : undefined} : {type:sel.kind}; }
@@ -2584,7 +2587,7 @@ function afterWin(){
 }
 function afterLearn(){
   UI.pick = null; UI.learnOpts = []; UI.bossHealed = null;
-  if(UI.after === 'part'){ UI.partOpts = randomParts(2 + (alLv() >= DATA.alert.partAt ? 1 : 0)); UI.back = 'map'; showPartOffer(); }
+  if(UI.after === 'part'){ UI.partOpts = partOffers(2 + (alLv() >= DATA.alert.partAt ? 1 : 0)); UI.back = 'map'; showPartOffer(); }
   else completeRoom();
 }
 function showLearn(){
@@ -2594,6 +2597,8 @@ function showLearn(){
 }
 // パーツの候補(0.36.0): 1つごとにレア度を引いてから、そのレア度の中で選ぶ。最初のパーツ(starter)は出ない
 const partPool = () => Object.keys(PARTDEF).filter(id => DATA.partRarityOf(id) !== 'starter');
+// 鹵獲の候補(0.38.0): 新しいパーツ n 個と、今のパーツの強化1つ(段階が上がりきっていない部位からランダム。キーは 'up:部位')
+function partOffers(n){ const out = randomParts(n), ok = SLOTS.filter(p => slotLv(p.id) < DATA.partMaxLv); if(ok.length) out.push('up:' + EN.pick(ok).id); return out; }
 function randomParts(n){
   const eq = new Set(Object.values(S.run.parts).map(p => p.id)), out = [];
   for(let j = 0; j < n; j++){ const x = pickByRarity(partPool().filter(id => !eq.has(id) && !out.includes(id)), DATA.partRarityOf, 'part'); if(x) out.push(x); }
@@ -2601,12 +2606,14 @@ function randomParts(n){
 }
 function showPartOffer(){
   const pk = UI.pick;
-  const tile = id => { const d = PARTDEF[id], cur = partOf(d.slot); return `<button class="opt popt${pk === id ? ' picked' : ''}" type="button" data-act="pick" data-arg="${id}" data-view="part"><span class="pt-h"><span class="ic">${IC[d.slot]}</span>${SLOT_BY[d.slot].fn}<span class="pt-m">${d.max}</span></span><b>${d.name}</b><span>${d.text}</span><span class="pt-cur">今: ${cur.name}</span></button>`; };
+  const tile = id => {
+    if(id.startsWith('up:')){ const sl = id.slice(3), cur = partOf(sl), d = DATA.partDef(S.run.parts[sl].id, slotLv(sl) + 1); return `<button class="opt popt pup${pk === id ? ' picked' : ''}" type="button" data-act="pick" data-arg="${id}" data-view="part"><span class="pt-h"><span class="ic">${IC[sl]}</span>${SLOT_BY[sl].fn}・${DATA.ui['part.up']}<span class="pt-m">${cur.max}→${d.max}</span></span><b>${d.name}</b><span>${d.text}</span><span class="pt-cur">今: ${cur.name}</span></button>`; }
+    const d0 = PARTDEF[id], d = DATA.partDef(id, slotLv(d0.slot)), cur = partOf(d0.slot); return `<button class="opt popt${pk === id ? ' picked' : ''}" type="button" data-act="pick" data-arg="${id}" data-view="part"><span class="pt-h"><span class="ic">${IC[d.slot]}</span>${SLOT_BY[d.slot].fn}<span class="pt-m">${d.max}</span></span><b>${d.name}</b><span>${d.text}</span><span class="pt-cur">今: ${cur.name}</span></button>`; };
   showOv(`<h2>鹵獲</h2><div class="opts">${UI.partOpts.map(tile).join('')}</div><div class="row"><button class="btn ghost" type="button" data-act="skipPart">取り込まない</button><button class="btn" type="button" data-act="takePart" ${pk ? '' : 'disabled'}>決定</button></div>`);
 }
 // 鹵獲で選んだパーツと今のパーツを並べて、交換するか確かめる(鹵獲の画面の上に重ねる)
 function partBox(id, damaged){
-  const d = PARTDEF[id];
+  const d = DATA.partDef(id, slotLv(PARTDEF[id].slot));
   return `<div class="sw-p"><span class="pt-h"><span class="ic">${IC[d.slot]}</span>${SLOT_BY[d.slot].fn}<span class="pt-m">${d.max}</span></span><b>${d.name}</b><span>${d.text}</span>${damaged ? '<span class="sw-dmg">損傷</span>' : ''}</div>`;
 }
 function showSwap(){
@@ -2692,7 +2699,7 @@ function applyEvent(fx){
   if(fx.partDamage) for(let j = 0; j < fx.partDamage; j++){ const ok = SLOTS.filter(p => !run.parts[p.id].damaged); if(ok.length) run.parts[EN.pick(ok).id].damaged = true; }
   if(fx.rerollParts){ const was = SLOTS.map(p => run.parts[p.id].id); for(const p of SLOTS){ const id = pickByRarity(partPool().filter(x => PARTDEF[x].slot === p.id && x !== run.parts[p.id].id), DATA.partRarityOf, 'part'); if(id) run.parts[p.id] = {id, damaged:false}; } UI.pick = null; showOv(`<h2>${DATA.ui['overhaul.title']}</h2><div class="rrl">${SLOTS.map((p, j) => { const d = PARTDEF[run.parts[p.id].id]; return `<div class="rr"><span class="ic">${IC[p.id]}</span><s>${PARTDEF[was[j]].name}</s><span class="rr-ar">→</span><b>${d.name}</b><span class="rr-t">${d.text}</span></div>`; }).join('')}</div><div class="row"><button class="btn" type="button" data-act="done">次へ</button></div>`); return; }
   if(fx.card){ const k = EN.pick(offerPool().filter(x => DATA.rarityOf(x) === 'rare')); run.deck.push(k); UI.pick = null; showOv(`<h2>取り込んだ</h2><div class="cards"><div class="card static">${cardInner(k, null)}</div></div><div class="row"><button class="btn" type="button" data-act="done">次へ</button></div>`); return; }
-  if(fx.part){ UI.partOpts = randomParts(2); UI.pick = null; UI.back = 'map'; showPartOffer(); return; }
+  if(fx.part){ UI.partOpts = partOffers(2); UI.pick = null; UI.back = 'map'; showPartOffer(); return; }
   if(fx.defrag){ UI.pick = null; UI.back = 'event'; showDefrag(); return; }
   completeRoom();
 }
@@ -3149,7 +3156,7 @@ function act(a, arg, el){
     }
     case 'learn': if(UI.pick){ S.run.deck.push(UI.pick); afterLearn(); } break;
     case 'skipLearn': afterLearn(); break;
-    case 'takePart': if(UI.pick) showSwap(); break;
+    case 'takePart': if(UI.pick && UI.pick.startsWith('up:')){ const sl = UI.pick.slice(3); S.run.slotLv = Object.assign({}, S.run.slotLv, {[sl]: slotLv(sl) + 1}); UI.pick = null; completeRoom(); } else if(UI.pick) showSwap(); break;
     case 'swapBack': hideOv2(); break;
     case 'swapGo': if(UI.pick){ const d = PARTDEF[UI.pick]; S.run.parts[d.slot] = {id:UI.pick, damaged:false}; UI.pick = null; completeRoom(); } break;
     case 'skipPart': UI.pick = null; completeRoom(); break;

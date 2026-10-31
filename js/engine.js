@@ -91,7 +91,8 @@ function parseT(t){ if(t == null) return {i:null, uid:null}; if(typeof t === 'st
 const inWin = (e, w) => !!w && e.r > 0 && e.r <= w.w;
 
 /* ---------- パーツ ---------- */
-function partOf(run, slot){ return D.parts[run.parts[slot].id]; }
+// 0.38.0: 部位の強化の段階(run.slotLv)を当てた定義
+function partOf(run, slot){ const id = run.parts[slot].id, lv = (run.slotLv || {})[slot] || 0; return D.partDef ? D.partDef(id, lv) : D.parts[id]; }
 // 戦闘中: 部位が壊れていれば効果なし
 function fx(st, slot, key){
   if(st.b && st.b.parts[slot].cur <= 0) return 0;
@@ -555,9 +556,8 @@ function waryFoe(key, lv){
   const f = Object.assign({}, D.foes[key]);
   for(const [k, v] of Object.entries(t)){
     if(k === 'at') continue;
-    // パッシブは足す。同じ種類(同じユニット)のパッシブがあれば置き換える(0.35.0)
-    if(k === 'passives') f.passives = (f.passives || []).filter(p => !v.some(q => q.k === p.k && (q.unit || null) === (p.unit || null))).concat(v);
-    else if(k === 'patAdd') f.pat = f.pat.concat(v);
+    // 0.38.0: 書いた欄は丸ごと置き換える(工房で警戒版を全体の姿で編集し、変わった欄を丸ごと書くため。パッシブも一覧ごと)。patAdd だけは足す(古い書き方)
+    if(k === 'patAdd') f.pat = f.pat.concat(v);
     else f[k] = v;
   }
   delete f.wary; f.waryAt = t.at;

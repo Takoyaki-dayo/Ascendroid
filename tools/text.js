@@ -31,7 +31,8 @@ const read = f => parseCSV(fs.readFileSync(path.join(DIR, f), 'utf8'));
 const T = {cards:{}, keywords:[], parts:{}, foes:{}, events:{}, lines:{rules:[], room:{}}, terms:{}, attrs:{}};
 for(const r of read('cards.csv')) T.cards[r['キー']] = {name:r['名前'], text:r['テキスト']};
 for(const r of read('keywords.csv')) T.keywords.push({key:r['キー'], name:r['名前'], desc:r['説明']});
-for(const r of read('parts.csv')) T.parts[r['キー']] = {name:r['名前'], text:r['テキスト']};
+// パーツの強化(0.38.0): 「テキスト(強化1)」「テキスト(強化2)」が空なら基本の文のまま
+for(const r of read('parts.csv')){ const o = {name:r['名前'], text:r['テキスト']}; const u = [r['テキスト(強化1)'] || '', r['テキスト(強化2)'] || '']; if(u.some(Boolean)) o.upText = u; T.parts[r['キー']] = o; }
 // ひとこと(敵.say.場面)は同じキーの行を並べると複数のセリフ(毎回どれか1つ。0.33.0)
 for(const r of read('enemies.csv')){ const k = r['キー']; if(k.includes('.say.') && k in T.foes) T.foes[k] = [].concat(T.foes[k], r['名前']); else T.foes[k] = r['名前']; }
 for(const r of read('events.csv')) T.events[r['キー']] = {title:r['タイトル'], text:r['本文'], choices:[1, 2, 3].filter(i => r['選択肢' + i]).map(i => ({label:r['選択肢' + i], sub:r['選択肢' + i + 'の説明']}))};

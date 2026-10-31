@@ -740,6 +740,7 @@ window.DATA = window.DATA || {};
   "ui.defrag": "デッキからカードを1枚取り除く。",
   "ui.rest.heal": "本体を{n}回復し、部位の損傷を直した。",
   "ui.upgrade": "デッキのカードを1枚強化する。",
+  "ui.part.up": "強化",
   "ui.overhaul.title": "付け替えた",
   "ui.mv.atk": "{part}に{d}ダメージを与える。",
   "ui.mv.hits": "{part}に{d}ダメージを{hits}回与える。",

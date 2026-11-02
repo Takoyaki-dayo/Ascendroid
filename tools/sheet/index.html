@@ -342,7 +342,7 @@ function foeCard(o){
   const hp = us.map(([k, u]) => `<span class="uhp"><i>${esc(u.name || (o.units ? k : '耐久'))}${u.core ? '・核' : u.vital && o.units ? '・急所' : ''}</i><b>${u.hp ?? 0}</b>${u.armor ? `<em>ブロック${u.armor}</em>` : ''}</span>`).join('');
   const nm = o.pname || {}, pas = (o.passives || []).map((p, j) => `<div><b>${esc(nm[j] || p.k)}</b> ${esc(pasText(p, o))}</div>`).join('');
   return `<div class="fcard"><div class="fch"><b>${esc(o.name || '(名前なし)')}</b><span class="note">最初の行動まで ${o.start ?? '?'}</span></div><div class="uhps">${hp}</div>
-    ${patStrip(o, o.pat, 'pat')}${o.phase ? `<div class="note">耐久${Math.round((o.phase.at || 0) * 100)}%未満で:</div>${patStrip(o, o.phase.pat, 'phase.pat')}` : ''}${pas ? `<div class="fpas">${pas}</div>` : ''}</div>`;
+    ${patStrip(o, o.pat, 'pat')}${o.phase ? `<div class="note">${esc(phaseWhen(o.phase))}:</div>${patStrip(o, o.phase.pat, 'phase.pat')}` : ''}${pas ? `<div class="fpas">${pas}</div>` : ''}</div>`;
 }
 const pasText = (p, o) => p.k === 'free' ? (p.text || '') : (D.ui['pas.' + (p.k === 'punctual' && p.n === 0 ? 'punctual0' : p.k)] || p.k).replace(/\{(\w+)\}/g, (m, n) => n === 'unit' ? (o.units && o.units[p.unit] ? o.units[p.unit].name : p.unit || '?') : n in p ? p[n] : m);
 // 1つの行動の欄(開いているときだけ)。上の行は要約と並べ替えのボタン
@@ -390,6 +390,8 @@ function vvBar(){
   const tabs = V.tabs(d.obj);
   return `<div class="mode vsw"><button type="button" data-vv="" class="${d.vv == null ? 'on' : ''}">通常</button>${tabs.map(t => `<button type="button" data-vv="${t.i}" class="${d.vv === t.i ? 'on' : ''}">${esc(t.label)}</button>`).join('')}${V.add ? '<button type="button" data-vadd="1" class="add">＋警戒版</button>' : ''}</div>${d.vv != null ? V.head(d.obj, d.vv) : ''}`;
 }
+// 行動が変わる条件(0.38.5): 自由記述の phase.when があればそれ、無ければ今の仕組み(耐久の割合 at)を文にしたもの
+const phaseWhen = ph => (ph && ph.when) || `耐久が${Math.round(((ph && ph.at) || 0) * 100)}%を切ったとき`;
 function foeForm(o, orig){
   const g = (t, body, open = true, note = '') => `<details class="grp fgrp"${open ? ' open' : ''}><summary>${t}${note ? `<span class="gs">${note}</span>` : ''}</summary>${body}</details>`;
   const units = o.units ? Object.entries(o.units).map(([k, u]) => [k, u.name || k]) : [];
@@ -398,7 +400,7 @@ function foeForm(o, orig){
     ${S.draft && S.draft.vv != null ? '' : `<div class="note">出るところ: ${appearChips(o.appear)}</div><div class="ar">${fIn('appear', o, orig, '出るところを変える(例: エリア1 警戒I〜II)', 'arr')}</div>`}`);
   const pats = (arr, prefix) => (arr || []).map((a, i) => actHTML(`${prefix}.${i}`, a, o, orig, units, i, arr.length)).join('') + `<div class="ar"><button type="button" class="btn quiet sm" data-fx="add" data-base="${prefix}">＋行動を足す</button></div>`;
   h += g('行動', `<div class="note">${o.ai === 'rand' ? '重みで選ぶ(同じ行動は3回続けない)' : '上から順に繰り返す'}。行を押すと開く。上の並びのタイルを押しても開く</div>` + pats(o.pat, 'pat'), true, `${(o.pat || []).length}つ`);
-  h += g('段階変化', o.phase ? `<div class="ar">${fIn('phase.at', o, orig, '耐久の割合(0.5 = 50%未満で)')}<button type="button" class="btn quiet sm" data-fx="delphase">段階変化をやめる</button></div>` + pats(o.phase.pat, 'phase.pat') : `<div class="ar"><button type="button" class="btn quiet sm" data-fx="addphase">＋段階変化を足す</button></div>`, !!o.phase);
+  h += g('段階変化', o.phase ? `<div class="ar"><label class="ff fw${JSON.stringify(getPath(o, 'phase.when')) !== JSON.stringify(getPath(orig, 'phase.when')) ? ' chg' : ''}"><span>行動が変わる条件(文で書く。Claude が仕組みにする)</span><textarea id="f-phase_when" data-path="phase.when" data-t="str" rows="2">${esc(phaseWhen(o.phase))}</textarea></label></div><div class="ar"><button type="button" class="btn quiet sm" data-fx="delphase">段階変化をやめる</button></div>` + pats(o.phase.pat, 'phase.pat') : `<div class="ar"><button type="button" class="btn quiet sm" data-fx="addphase">＋段階変化を足す</button></div>`, !!o.phase);
   h += g('ユニット', (o.units ? Object.entries(o.units).map(([k, u]) => `<div class="ar ur">${fIn(`units.${k}.name`, o, orig, '名前', 'str')}${fIn(`units.${k}.hp`, o, orig, '耐久')}${fIn(`units.${k}.armor`, o, orig, 'ブロック')}${fIn(`units.${k}.vital`, o, orig, '急所', 'bool')}${fIn(`units.${k}.core`, o, orig, '核', 'bool')}<button type="button" class="ib del" data-fx="delunit" data-base="${esc(k)}" title="消す">✕</button></div>`).join('') : '<div class="note">ユニットは1つ(耐久は「基本」)</div>') + `<div class="ar"><button type="button" class="btn quiet sm" data-fx="addunit">＋ユニットを足す</button></div>`, true, o.units ? `${units.length}つ` : '1つ');
   if(o.react) h += g('反応', `<div class="note">コスト「最小」以上のカードを使い始めると、1サイクル後に撃つ</div><div class="ar">${fIn('react.min', o, orig, '最小コスト')}${fIn('react.d', o, orig, 'ダメージ')}${fIn('react.p', o, orig, '部位', 'part')}</div>`);
   const pas = o.passives || [], PK = Object.keys(D.ui).filter(k => k.startsWith('pas.') && !['pas.react', 'pas.phase', 'pas.broke', 'pas.punctual0'].includes(k)).map(k => k.slice(4));
@@ -458,7 +460,7 @@ function foeAppear(fk){
 }
 function foePreview(o){
   const nm = o.pname || {}, ps = (o.passives || []).map((p, j) => { const t = p.k === 'free' ? (p.text || '') : (D.ui['pas.' + (p.k === 'punctual' && p.n === 0 ? 'punctual0' : p.k)] || '').replace(/\{(\w+)\}/g, (m, n) => n === 'unit' ? (o.units && o.units[p.unit] ? o.units[p.unit].name : p.unit) : n in p ? p[n] : n === 'n' ? 1 : m); return `<div><b>${esc(nm[j] || p.k)}</b> ${esc(t)}</div>`; });
-  if(o.phase) ps.push(`<div><b>${esc(nm.phase || '段階変化')}</b> 耐久${Math.round(o.phase.at * 100)}%未満で行動が変わる</div>`);
+  if(o.phase) ps.push(`<div><b>${esc(nm.phase || '段階変化')}</b> ${esc(phaseWhen(o.phase))}、行動が変わる</div>`);
   return `<b>${esc(o.name || '')}</b> <span class="note">${esc((o.appear || []).join('、') || '出ない')}</span>${ps.length ? `<div style="margin-top:4px">${ps.join('')}</div>` : '<div class="note">パッシブなし</div>'}`;
 }
 // セリフの一覧。キーは 敵.say.場面 / line.条件.番号 / room.部屋.番号

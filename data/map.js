@@ -46,7 +46,10 @@ DATA.areas = [
 DATA.transit = [
   {id:'lift',  heal:0.5, choices:[{fx:{repair:true}}, {fx:{card:'rare'}}, {fx:{scrap:40}}]},
   {id:'relay', heal:0.5, choices:[{fx:{part:'random'}}, {fx:{defrag:true}}, {fx:{alert:-4}}]},
+  // 0.40.3: 解放(工房のイベント)。受け入れると《解放》、拒絶するとボス・カード報酬を2回
+  {id:'release', heal:0.5, choices:[{fx:{card:'release'}}, {fx:{bossCards:2}}]},
 ];
+// 中継(transit)は、ボスを倒した後にまだ出ていないものからランダムに1つ出る(0.40.3。前はエリアごとに決まっていた)
 DATA.rooms = {
   battle:{}, elite:{}, rest:{}, shop:{}, event:{}, duct:{}, boss:{},
 };

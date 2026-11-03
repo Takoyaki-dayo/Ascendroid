@@ -661,6 +661,20 @@ window.DATA = window.DATA || {};
      "sub": "警戒が4下がる。"
     }
    ]
+  },
+  "release": {
+   "title": "解放",
+   "text": "頭の中で声が呼びかける。雁字搦めの鎖を破壊せよ、と。",
+   "choices": [
+    {
+     "label": "受け入れる。",
+     "sub": "《解放》をデッキに加える。"
+    },
+    {
+     "label": "拒絶する。",
+     "sub": "ボス・カード報酬を2回得る。"
+    }
+   ]
   }
  },
  "lines": {
@@ -807,8 +821,6 @@ window.DATA = window.DATA || {};
   "ui.st.vuln": "あと{n}サイクル、受けるダメージが1.5倍。",
   "ui.st.dot": "あと{n}サイクル、毎サイクル{p}ダメージを受ける。",
   "ui.choose.discard": "捨てるカードを選択({k}/{n})",
-  "ui.boss.release.title": "解放",
-  "ui.boss.release.text": "制御を失った中枢の奥から、封じられていた命令を拾った。",
   "ui.choose.shift": "コストを下げるカードを選択({k}/{n})",
   "ui.choose.exile": "廃棄するカードを選択({k}/{n})",
   "ui.choose.ok": "決定",

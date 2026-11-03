@@ -11,11 +11,11 @@ scout.passive.0,立て直し,パッシブ1
 turret,迎撃タレット,名前
 turret.pat.0,砲撃,行動1
 turret.pat.1,装甲を重ねる,行動2
+turret.pat.2,装甲投射,行動3
 turret.react,迎撃,反応(パッシブの名前と、撃つ行動の名前)
 exec,不屈の処刑者,名前
 exec.pat.0,殴打,行動1
 exec.pat.1,充填,行動2
-exec.pat.2,粉砕砲,行動3
 exec.phase.0,殴打,耐久50%未満の行動1
 exec.phase.1,粉砕砲,耐久50%未満の行動2
 exec.passive.phase,処刑態勢,パッシブ(耐久が減ると行動が変わる)
@@ -46,7 +46,7 @@ hackerE.pat.3,過負荷照射,行動4
 warden,管理AI ウォーデン,名前
 warden.pat.0,照射,行動1
 warden.pat.1,照射,行動2
-warden.pat.2,修復,行動3
+warden.pat.2,増幅修復,行動3
 warden.pat.3,消去プロトコル,行動4
 warden.react,排除,反応(パッシブの名前と、撃つ行動の名前)
 scanner,走査ドローン,名前
@@ -57,6 +57,7 @@ scanner.pat.3,連射,行動4
 accel,暴走機,名前
 accel.pat.0,突進,行動1
 accel.pat.1,蹴撃,行動2
+accel.pat.2,突撃,行動3
 accel.passive.0,最短周期,パッシブ1
 twin,双腕作業機,名前
 twin.unit.core,胴体,ユニットの名前
@@ -75,14 +76,14 @@ bomber.pat.2,防衛射撃,行動3
 bomber.pat.3,防衛射撃,行動4
 bomber.pat.4,臨界,行動5
 squad,第三警備小隊,名前
-squad.unit.lead,隊長,ユニットの名前
-squad.unit.gunner,射手,ユニットの名前
-squad.unit.shield,盾持ち,ユニットの名前
+squad.unit.lead,コマンド,ユニットの名前
+squad.unit.gunner,ボウガン,ユニットの名前
+squad.unit.shield,ライオット,ユニットの名前
 squad.pat.0,号令,行動1
-squad.pat.1,制圧射撃,行動2
-squad.pat.2,盾突撃,行動3
-squad.pat.3,制圧射撃,行動4
-squad.pat.4,制圧射撃,行動5
+squad.pat.1,盾突撃,行動2
+squad.pat.2,速射,行動3
+squad.pat.3,速射,行動4
+squad.pat.4,速射,行動5
 squad.passive.0,統率,パッシブ1
 squad.passive.1,最短周期,パッシブ2
 swarm,ドローン群,名前
@@ -106,6 +107,8 @@ tank.pat.1,踏みつけ,行動2
 tank.pat.2,掃射,行動3
 tank.pat.3,徹甲砲,行動4
 tank.pat.4,装甲展開,行動5
+tank.phase.0,装甲展開,最後の形の行動1
+tank.phase.1,突撃,最後の形の行動2
 warden.unit.core,中枢核,ユニットの名前
 warden.unit.eye,監視砲,ユニットの名前
 warden.phase.0,照射,耐久50%未満の行動1

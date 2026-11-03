@@ -37,18 +37,21 @@ window.DATA = window.DATA || {};
 DATA.foes = {
   // 0.39.0: 狙ってから撃つ。照準は不安定で、ブレイクすると次の大きい射撃も飛ぶ(link)
   drone:    {kind:'drone', hp:75, start:4,
-    pat:[{d:6, dl:5, p:'calc'}, {d:0, dl:4, ch:true, link:true}, {d:12, dl:3, p:'calc'}], pool:['jab','rapid','guard','flick','capacitor']},
+    pat:[{d:6, dl:2, p:'calc'}, {d:0, dl:4, ch:true, link:true, buff:1}, {d:18, dl:3, p:'calc'}], pool:['rapid','guard','flick','capacitor','careful','foresight','aim'],
+    wary:[{at:3, pat:[{d:6, dl:2, p:'calc'}, {d:0, dl:3, ch:true, link:true, buff:6}, {d:18, dl:3, p:'calc'}]}]},
   // 0.39.0: 速くて脆いが、崩しても立ち直りが早い(立て直し2)
   scout:    {kind:'scout', hp:60, start:2, ai:'rand', passives:[{k:'recover', n:2}],
     pat:[{d:3, dl:3, p:'out', wt:2}, {d:3, hits:3, dl:5, p:'mob', wt:1}, {d:7, dl:5, p:'out', wind:{w:2, poise:6}, rec:2, wt:1}],
     pool:['jab','flick','reload','coil','arc']},
-  turret:   {kind:'turret', hp:66, start:7, react:{min:4, d:4, p:'arm'},
-    pat:[{d:7, dl:8, p:'dur'}, {d:0, dl:4, armor:8}], pool:['wall','parry','emp','cell']},
+  turret:   {kind:'turret', hp:66, start:5, react:{min:4, d:4, p:'arm'},
+    pat:[{d:7, dl:2, p:'dur'}, {d:0, dl:4, armor:8}], pool:['wall','parry','emp','cell'],
+    // 0.40.0: 警戒III〜 堅固(ブロックを得るたび、その分が増える)と、ブロックが威力になる装甲投射
+    wary:[{at:3, pat:[{d:7, dl:2, p:'dur'}, {d:0, dl:4, armor:8, fort:3}, {d:10, dl:1, p:'calc', armorDmg:3}]}]},
   exec:     {kind:'exec', hp:86, start:5,
-    pat:[{d:7, dl:6, p:'out'}, {d:0, dl:5, buff:3, wind:{w:3, poise:12}}, {d:20, dl:7, p:'dur', ch:true, wind:{w:3, poise:12}, rec:3}],
+    pat:[{d:7, dl:6, p:'out'}, {d:0, dl:5, buff:3, wind:{w:3, poise:12}}],
     phase:{at:0.5, pat:[{d:7, dl:5, p:'out'}, {d:20, dl:7, p:'dur', ch:true, wind:{w:3, poise:12}, rec:3}]},
     pool:['slash','blow','crackshot','wall']},
-  hacker:   {kind:'hacker', hp:81, start:6,
+  hacker:   {kind:'hacker', hp:81, start:4,
     pat:[{kind:'delay', v:4, dl:7}, {d:13, dl:5, p:'calc', counter:{w:5, d:5}}, {d:0, dl:5, noise:2}], pool:['hack','backflow','timebomb','scan']},
   heavyExec:{kind:'exec', hp:115, start:5,
     pat:[{d:12, dl:5, p:'out'}, {d:8, hits:2, dl:6, p:'mob'}, {d:34, dl:7, p:'dur', ch:true, wind:{w:3, poise:14}, rec:3}],
@@ -64,21 +67,24 @@ DATA.foes = {
     pat:[{d:4, dl:5, p:'calc'}, {d:0, dl:4, zone:{at:3, len:2, d:5, p:'out'}}, {d:0, dl:4, zone:{at:3, len:2, d:5, p:'out'}}, {d:3, hits:2, dl:5, p:'mob'}], pool:['scan','crackshot','timebomb','hack']},
   accel:    {kind:'scout', hp:86, start:6,
     passives:[{k:'floor', n:2}],
-    pat:[{d:7, dl:7, p:'out', haste:1}, {d:6, dl:7, p:'mob', haste:1}], pool:['blow','slash','flick']},
+    pat:[{d:7, dl:7, p:'out', haste:1}, {d:6, dl:7, p:'mob', haste:1}, {d:10, dl:4, p:'dur'}], pool:['blow','slash','flick']},
   twin:     {kind:'twin', start:4, look:{s:1.2, at:[0, -6]},
     units:{core:{hp:78, vital:true, core:true, icon:'core', at:[0, 56], pt:[30, 32]}, armL:{hp:43, icon:'arm', at:[-104, -14], pt:[8, 34]}, armR:{hp:43, icon:'arm', at:[104, -14], pt:[52, 34]}},
     pat:[{by:'armL', d:7, dl:5, p:'out', wind:{w:2, poise:8}}, {by:'armR', d:4, hits:2, dl:4, p:'arm'}, {by:'armL', d:0, dl:4, guard:{w:3, s:8}}, {by:'armR', d:6, dl:5, p:'dur', rec:2}],
     pool:['parry','slash','rapid','wall']},
   bomber:   {kind:'turret', start:4, look:{s:1.15, at:[0, -4]},
-    units:{core:{hp:81, vital:true, core:true, icon:'core', at:[0, 56], pt:[30, 37]}, gun:{hp:29, icon:'gun', at:[-104, -22], pt:[8, 32]}},
+    units:{core:{hp:50, vital:true, core:true, icon:'core', at:[0, 56], pt:[30, 37]}, gun:{hp:29, icon:'gun', at:[-104, -22], pt:[8, 32]}},
     pat:[{by:'gun', d:5, dl:4, p:'arm'}, {by:'gun', d:5, dl:4, p:'arm'}, {by:'gun', d:5, dl:4, p:'mob'}, {by:'gun', d:5, dl:4, p:'arm'}, {by:'core', d:51, dl:6, p:'dur', ch:true, wind:{w:6, poise:16}}],
+    // 0.40.0: 警戒VIII〜 炉心が硬くなり、臨界は不安定でなくなる(止める手段は体勢16と、その前に倒すこと)
+    wary:[{at:8, units:{core:{hp:60, vital:true, core:true, icon:'core', at:[0, 56], pt:[30, 37]}, gun:{hp:29, icon:'gun', at:[-104, -22], pt:[8, 32]}},
+      pat:[{by:'gun', d:5, dl:4, p:'arm'}, {by:'gun', d:5, dl:4, p:'arm'}, {by:'gun', d:5, dl:4, p:'mob'}, {by:'gun', d:5, dl:4, p:'arm'}, {by:'core', d:51, dl:6, p:'dur', wind:{w:6, poise:16}}]}],
     pool:['blow','timebomb','backflow','parry']},
   // 統率: 隊長が健在な間、行動の間隔-1。隊長を先に落とすと遅くなる
-  squad:    {kind:null, start:4,
-    units:{lead:{hp:14, vital:true, icon:'lead', spr:'leader', s:.8, at:[96, -22]}, gunner:{hp:13, vital:true, icon:'gun', spr:'trooper', s:.8, at:[-8, -10]}, shield:{hp:16, vital:true, icon:'shield', spr:'shieldman', s:.85, at:[-112, 0], armor:6}},
+  squad:    {kind:null, start:2,
+    units:{lead:{hp:25, vital:true, icon:'lead', spr:'leader', s:.8, at:[96, -22]}, gunner:{hp:16, vital:true, icon:'gun', spr:'trooper', s:.8, at:[-8, -10]}, shield:{hp:31, vital:true, icon:'shield', spr:'shieldman', s:.85, at:[-112, 0], armor:6}},
     passives:[{k:'command', unit:'lead', n:1}, {k:'floor', n:2}],
-    pat:[{by:'lead', d:0, dl:5, buff:1}, {by:'gunner', d:6, dl:4, p:'calc'}, {by:'shield', d:7, dl:5, p:'out', guard:{w:3, s:8}}, {by:'gunner', d:6, dl:4, p:'mob'}, {by:'gunner', d:6, dl:4, p:'arm'}],
-    pool:['scatter','emp','crackshot','rapid']},
+    pat:[{by:'lead', d:0, dl:5, buff:1}, {by:'shield', d:7, dl:4, p:'out', guard:{w:3, s:8}, armor:8}, {by:'gunner', d:2, dl:3, p:'calc'}, {by:'gunner', d:2, dl:3, p:'mob'}, {by:'gunner', d:2, dl:3, p:'arm'}],
+    pool:['scatter','crackshot','rapid','iterate','timebomb']},
   // 群体: 子機が破壊されるたび、残りの攻撃力+1
   swarm:    {kind:null, start:3,
     units:{d1:{hp:12, vital:true, icon:'drone', spr:'drone', s:.6, at:[-118, -22]}, d2:{hp:12, vital:true, icon:'drone', spr:'drone', s:.6, at:[-40, 6]}, d3:{hp:12, vital:true, icon:'drone', spr:'drone', s:.6, at:[40, -30]}, d4:{hp:12, vital:true, icon:'drone', spr:'drone', s:.6, at:[118, -2]}},
@@ -88,7 +94,9 @@ DATA.foes = {
   tank:     {kind:'tank', start:4, look:{s:1.1, at:[0, -8]},
     units:{core:{hp:96, vital:true, core:true, icon:'core', armor:10, at:[0, 56], pt:[31, 31]}, gun:{hp:48, icon:'gun', at:[-124, -34], pt:[-4, 16]}, mg:{hp:29, icon:'gun', at:[110, -50], pt:[49, 8]}, legs:{hp:48, icon:'leg', at:[-118, 24], pt:[9, 50]}},
     pat:[{by:'mg', d:3, hits:3, dl:4, p:'calc'}, {by:'legs', d:10, dl:5, p:'mob', guard:{w:3, s:10}}, {by:'mg', d:3, hits:3, dl:4, p:'out'}, {by:'gun', d:24, dl:6, p:'dur', ch:true, wind:{w:4, poise:14}, rec:3, crack:1}, {by:'core', d:0, dl:4, armor:6}],
-    pool:['blow','emp','storm','wall']},
+    // 0.40.0: 車体以外の部位がすべて壊れると、最後の突撃に変わる(when:'parts')
+    phase:{when:'parts', pat:[{by:'core', d:0, dl:4, armor:6}, {d:10, dl:3, p:'dur', ch:true}]},
+    pool:['blow','emp','storm','wall','careful','dispose','crush']},
   // 0.23.0: 警戒度のプールに合わせて足した、性格のはっきりした敵(名前は仮)
   // 拾い屋: スクラップを盗んで逃げる。逃げる行動は不安定(JUSTで止まる)
   scav:     {kind:'scav', hp:46, start:2, passives:[{k:'loot'}],
@@ -96,8 +104,9 @@ DATA.foes = {
     pool:['flick','reload','coil','scan']},
   // 圧縮機: 手札のいちばん重いカードを飲み込む。体勢を崩せば止まる。倒すと吐き出す
   crusher:  {kind:'crusher', hp:82, start:4, passives:[{k:'hoard'}],
-    pat:[{d:5, dl:4, p:'dur'}, {d:0, dl:5, eat:1, wind:{w:3, poise:10}}, {d:11, dl:5, p:'out', rec:2}],
-    pool:['wall','blow','reload','backflow']},
+    pat:[{d:6, dl:4, p:'dur'}, {d:0, dl:5, eat:1, buff:2, wind:{w:3, poise:10}}, {d:11, dl:5, p:'out', rec:2}],
+    wary:[{at:5, pat:[{d:8, dl:4, p:'dur'}, {d:0, dl:5, eat:1, buff:4, wind:{w:3, poise:10}}, {d:11, dl:5, p:'out', rec:2}]}],
+    pool:['wall','blow','reload','backflow','iterate']},
   // 工程管理機(名前はタイムキーピング): 4サイクルごとに必ず動く。ディレイが効かない。警戒V以上では遅らせようとすると怒る(増幅。0.35.0)
   clock:    {kind:'clock', hp:80, start:4, passives:[{k:'punctual', n:0}], wary:[{at:5, passives:[{k:'punctual', n:1}], pat:[{d:8, dl:4, p:'calc'}, {d:8, dl:4, p:'arm'}, {d:8, dl:4, p:'mob'}, {d:16, dl:4, p:'dur', ch:true}]}],
     pat:[{d:5, dl:4, p:'calc'}, {d:5, dl:4, p:'arm'}, {d:5, dl:4, p:'mob'}, {d:16, dl:4, p:'dur', ch:true}],
@@ -105,7 +114,7 @@ DATA.foes = {
   // 溶接機: 壊した腕を直してしまう。直す行動は体勢で止められる
   welder:   {kind:'welder', start:4, look:{s:1.15, at:[0, -6]},
     units:{core:{hp:72, vital:true, core:true, icon:'core', at:[0, 58], pt:[32, 32]}, torch:{hp:26, icon:'arm', at:[-112, -34], pt:[6, 30]}, clamp:{hp:30, icon:'arm', at:[-108, 30], pt:[12, 49]}},
-    pat:[{by:'clamp', d:5, dl:4, p:'mob', guard:{w:2, s:6}}, {by:'torch', d:9, dl:5, p:'arm'}, {by:'core', d:0, dl:5, rebuild:20, wind:{w:3, poise:10}}, {by:'torch', d:9, dl:5, p:'out'}],
+    pat:[{by:'clamp', d:5, dl:4, p:'mob', guard:{w:2, s:6}}, {by:'torch', d:9, dl:5, p:'arm'}, {by:'core', d:0, dl:5, rebuild:20, wind:{w:2, poise:15}}, {by:'torch', d:9, dl:5, p:'out'}],
     pool:['parry','wall','slash','coil']},
   // 猟犬: 2頭の群れ。迷う(入れ替え・待機)と詰めてくる。片方を倒すと残りが逆上する
   hound:    {kind:null, start:3,
@@ -115,8 +124,9 @@ DATA.foes = {
     pool:['flick','rapid','emp','storm']},
   warden:   {kind:'warden', start:5, look:{s:1.25, at:[0, -8]},
     units:{core:{hp:170, vital:true, core:true, icon:'core', at:[0, 60], pt:[30, 40]}, eye:{hp:38, icon:'eye', at:[104, -44], pt:[30, 16]}}, react:{min:6, d:10, p:'calc'},
-    pat:[{d:10, dl:6, p:'calc'}, {d:10, dl:4, p:'arm'}, {d:0, dl:5, heal:15, wind:{w:4, poise:15}}, {d:34, dl:9, p:'dur', ch:true, wind:{w:4, poise:15}, rec:3}],
-    phase:{at:0.5, pat:[{d:10, dl:5, p:'calc'}, {by:'eye', d:7, dl:3, p:'mob'}, {d:0, dl:4, armor:15, wind:{w:4, poise:15}}, {by:'eye', d:0, dl:3, zone:{at:2, len:3, d:8, p:'calc'}}, {d:11, dl:5, p:'arm', counter:{w:5, d:4}}, {d:34, dl:7, p:'dur', ch:true, wind:{w:4, poise:15}, rec:3}]},
+    // 0.40.0: 殴り合いのボスに。大技の消去プロトコルは止められない(不安定でも体勢でもない)ので、ブロックで受ける。前半は放っておくと増幅が積もり、後半は加速する
+    pat:[{d:10, dl:6, p:'calc'}, {d:10, dl:4, p:'arm'}, {d:0, dl:4, buff:1, heal:8, wind:{w:4, poise:15}}, {d:24, dl:9, p:'dur', rec:3}],
+    phase:{at:0.5, pat:[{d:10, dl:5, p:'calc'}, {by:'eye', d:7, dl:3, p:'mob'}, {d:0, dl:4, armor:15, haste:1, wind:{w:4, poise:15}}, {by:'eye', d:0, dl:3, zone:{at:2, len:3, d:8, p:'calc'}}, {d:11, dl:5, p:'arm', counter:{w:5, d:4}}, {d:26, dl:7, p:'dur', rec:3}]},
     pool:[]},
 };
 

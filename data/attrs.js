@@ -23,9 +23,11 @@ DATA.attrs = {
   opt:    {on:'cast', fx:{draw:1}},
   strong: {on:'mod', fx:{dmgUp:1}},
   steady: {on:'mod', fx:{atomic:1}},
+  // 0.40.0
+  collapse: {on:'cast', fx:{dotn:3}},
 };
-// 手に入れ方: battle 通常の戦闘の報酬で、候補1枚ごとに属性が付く確率 / elite エリートの報酬は必ず付く / shop ショップに並ぶ属性の数と値段
-DATA.attrRule = {battle:0.2, elite:1, shop:1, price:40};
+// 手に入れ方: battle 通常の戦闘の報酬で、候補1枚ごとに属性が付く確率 / elite エリートの報酬は1枚ごとに確率(最低1枚) / shop ショップに並ぶ属性の数と値段
+DATA.attrRule = {battle:0.2, elite:0.6, shop:1, price:40};
 
 DATA.attrSplit = k => { const i = String(k).indexOf('@'); return i < 0 ? [k, null] : [k.slice(0, i), k.slice(i + 1)]; };
 // 属性が働くか(付けられるか)
@@ -88,5 +90,5 @@ DATA.regAttrCard = (cards, k) => {
   return true;
 };
 // 属性のレア度(0.36.0、工房のレア度)。書いていない属性はコモン。報酬で属性を付けるときは、レア度を引いてからその中で選ぶ
-DATA.attrRarity = {gnaw:'rare', regen:'uncommon', rend:'uncommon', blast:'uncommon', opt:'uncommon', strong:'common', steady:'common'};
+DATA.attrRarity = {gnaw:'rare', regen:'uncommon', rend:'uncommon', blast:'uncommon', opt:'uncommon', strong:'common', steady:'common', collapse:'rare'};
 DATA.attrRarityOf = a => DATA.attrRarity[a] || 'common';

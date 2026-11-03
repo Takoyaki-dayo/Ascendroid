@@ -66,7 +66,7 @@ function skipMove(e){
 }
 function advance(e){
   if(e.hist){ e.hist.push(e.idx); if(e.hist.length > 4) e.hist.shift(); }
-  if(e.phase && !e.phased && e.hp < e.maxHp * e.phase.at){ e.phased = true; e.pat = e.phase.pat; e.idx = 0; e.hist = []; resetQueue(e); }
+  if(e.phase && !e.phased && (e.phase.when === 'parts' ? e.uids.every(k => e.units[k].core || e.units[k].broken) : e.hp < e.maxHp * e.phase.at)){ e.phased = true; e.pat = e.phase.pat; e.idx = 0; e.hist = []; resetQueue(e); }
   else if(e.ai === 'rand'){ fillQueue(e); e.idx = e.queue.shift(); fillQueue(e); }
   else e.idx = (e.idx + 1) % e.pat.length;
   // 破壊されたユニットの行動は飛ばす
@@ -209,6 +209,8 @@ function hitFoe(st, e, n, ev, uid){
 }
 function gainBlock(b, n){
   const bd = RULE.blockDecay;
+  if(b.blockBonus && b.T < b.blockBonus.until) n += b.blockBonus.n; // クロック防御(0.40.0)
+  n += b.fort || 0;                                                  // 堅固(0.40.0): ブロックを得るたびその分が増える
   b.block += n; b.blockGain = (b.blockGain || 0) + n;
   if(bd && bd.type === 'cap') b.block = Math.min(b.block, bd.v);
   if(bd && bd.type === 'life') b.blockExp = b.T + bd.v;
@@ -315,6 +317,13 @@ function applyCard(st, k, ti){
   if(c.breakNext) for(const e of targets) if(e.alive){ const nm = cur(e).n; skipMove(e); b.breaks = (b.breaks || 0) + 1; ev.push({kind:'break', e:e.i, name:nm}); }
   // 手札を選んで捨てる(0.30.0、discard): カードを使い終えた後、手札から選ぶ(actions が選ぶ行動だけになる)
   if(c.discard && !c.instant) b.chooseNext = {kind:'discard', n:c.discard};
+  // 0.40.0: 手札を選んで廃棄する(exileHand) / 選んだ手札のコストを使うまで下げる(shift:{n, d})
+  if(c.exileHand) b.chooseNext = {kind:'exile', n:c.exileHand};
+  if(c.shift) b.chooseNext = {kind:'shift', n:c.shift.n, d:c.shift.d};
+  if(c.blockBonus){ b.blockBonus = {n:c.blockBonus.n, until:b.T + c.blockBonus.t}; ev.push({kind:'blockBonus', n:c.blockBonus.n, t:c.blockBonus.t}); }
+  if(c.ampAll){ b.amp = b.amp || {}; for(const t of ['melee', 'ranged']){ b.amp[t] = (b.amp[t] || 0) + c.ampAll; ev.push({kind:'amp', t, n:c.ampAll}); } }
+  if(c.fort){ b.fort = (b.fort || 0) + c.fort; ev.push({kind:'fort', n:c.fort}); }
+  if(c.refDraw){ b.refDraw = (b.refDraw || 0) + c.refDraw; ev.push({kind:'refDraw', n:c.refDraw}); }
   if(c.swift){ b.swift += c.swift; ev.push({kind:'swift', n:c.swift}); }
   if(c.timer && targets[0]){ b.timers.push({id:b.uid++, left:c.timer.t, k, e:targets[0].i, unit:uidOf(targets[0])}); ev.push({kind:'timerSet', e:targets[0].i, t:c.timer.t}); }
   if(c.draw){ const n = drawFx(st, c.draw, ev); if(c.borrow) b.drawIn += c.draw * RULE.draw; ev.push({kind:'draw', n, borrow: !!c.borrow}); }
@@ -345,7 +354,7 @@ function timerBreakAttr(st, t, ev){ const c = D.cards[t.k]; if(c) breakAttr(st, 
 const foeStr = e => (e.str || 0) - (e.weak || 0);
 function strike(st, e, a, extra, noParry){
   const b = st.b, raw = Math.max(0, a.d + (extra || 0)) + (b.crack || 0);
-  if(b.parryNow && !noParry){ const ev = []; hurtFoe(b, e, raw, ev, actorUid(e, a.by ? a : cur(e))); return {kind:'parried', name:a.n, raw, ev}; }
+  if(b.parryNow && !noParry){ const ev = []; hurtFoe(b, e, b.parryHalf ? Math.ceil(raw / 2) : raw, ev, actorUid(e, a.by ? a : cur(e))); return {kind:'parried', name:a.n, raw, ev}; }
   // 防壁(0.30.0): 期限付きの守り。古いものから先に受ける。残りをブロックが受ける
   let wd = 0; for(const w of b.wards || []){ const x = Math.min(w.s, raw - wd); w.s -= x; wd += x; if(wd >= raw) break; }
   if(b.wards) b.wards = b.wards.filter(w => w.s > 0);
@@ -372,7 +381,7 @@ function delayFoe(e, v, free){
 }
 function enemyAct(st, e, extra){ e.resist = 0;
   const a = cur(e), mv = (e.phased ? 'phase:' : 'pat:') + e.idx;
-  const res = a.kind === 'delay' ? {kind:'delay', name:a.n, v:a.v} : a.d > 0 ? strike(st, e, a, (extra || 0) + foeStr(e)) : {kind:'move', name:a.n};
+  const res = a.kind === 'delay' ? {kind:'delay', name:a.n, v:a.v} : a.d > 0 ? strike(st, e, a, (extra || 0) + foeStr(e) + (a.armorDmg ? Math.floor(((e.units[actorUid(e, a)] || {}).armor || 0) / a.armorDmg) : 0)) : {kind:'move', name:a.n};
   res.by = actorUid(e, a); res.mv = mv;
   // 多段: 残りを1サイクルおきに撃つ
   if(a.hits > 1 && !e.chain){ e.chain = a.hits - 1; e.r = 1; e.sh = 0; res.chainLeft = e.chain; return res; }
@@ -384,7 +393,8 @@ function enemyAct(st, e, extra){ e.resist = 0;
   if(a.buff){ for(const f of (a.all ? st.b.foes.filter(f => f.alive) : [e])) f.str = (f.str || 0) + a.buff; res.buff = a.buff; }
   // 放置の代償になる行動
   const b = st.b;
-  if(a.armor){ ap.armor += a.armor; res.armor = a.armor; }                // 装甲を重ねる(行動したユニットに。消えない)
+  if(a.fort){ e.fort = (e.fort || 0) + a.fort; res.fort = a.fort; }          // 堅固: 以後、ブロックを得るたびその分が増える
+  if(a.armor){ const g = a.armor + (e.fort || 0); ap.armor += g; res.armor = g; }                // 装甲を重ねる(行動したユニットに。消えない)
   if(a.heal){ const hp = !ap.broken ? ap : e.units[defaultUid(e)]; const h = Math.min(a.heal, hp.max - hp.hp); hp.hp += h; syncHp(e); res.heal = h; } // 修復(破壊されたユニットは戻らない)
   if(a.haste){ e.haste = (e.haste || 0) + a.haste; res.haste = a.haste; }                // 加速: 以後の間隔が縮む
   if(a.zone){ b.zones.push({id:b.uid++, from:a.zone.at, to:a.zone.at + a.zone.len - 1, d:Math.max(0, a.zone.d + foeStr(e)), p:a.zone.p, e:e.i, n:a.n}); res.zone = a.zone; } // 危険域
@@ -416,8 +426,8 @@ function enemyAct(st, e, extra){ e.resist = 0;
    カード(k あり)、入れ替え・待機(k なし)のどれも、cost サイクルぶん時間を進める。
    1サイクルごとにイベントを返すので、画面はそれを見て演出し、プレビューは最後まで回して結果だけを見る */
 function* spendGen(st, cost, k, ti, noInt){
-  const b = st.b, c = k ? D.cards[k] : null, atomic = !c || !!c.atomic, waiting = !c && !!b.waiting;
-  b.waiting = false;
+  const b = st.b, c = k ? D.cards[k] : null, atomic = !c || !!c.atomic || !!b.atomicNow, waiting = !c && !!b.waiting;
+  b.waiting = false; b.atomicNow = false;
   let left = cost;
   const out = {elapsed:0, completeAt:null, interruptedAt:null, justs:[], dead:false, won:false};
   b.cast = {k, left};
@@ -498,7 +508,7 @@ function* spendGen(st, cost, k, ti, noInt){
             out.justs.push({i:e.i, name:nm}); (b.justBroke = b.justBroke || []).push(e.i); yield {type:'just', e:e.i, crack:cr, delay:dl};
           }
         }
-        if(c.parry && real) b.parryNow = true;
+        if(c.parry && real){ b.parryNow = true; b.parryHalf = !!c.parryHalf; }
         const ev = applyCard(st, k, ti);
         if(jev.length) ev.unshift(...jev);
         b.cast = null;
@@ -684,14 +694,17 @@ function beginAction0(st, a){
     if(c.instant && c.discard){
       const n = Math.min(c.discard, b.hand.length), ids = (a.pick || []).filter(id => b.hand.some(h => h.id === id)).slice(0, n);
       for(const h of b.hand) if(ids.length < n && !ids.includes(h.id)) ids.push(h.id);
-      p.discarded = ids.map(id => b.hand.find(h => h.id === id)); b.hand = b.hand.filter(h => !ids.includes(h.id)); b.disc.push(...p.discarded);
+      p.discarded = ids.map(id => b.hand.find(h => h.id === id)); b.hand = b.hand.filter(h => !ids.includes(h.id)); (c.discardExile ? (b.exile = b.exile || []) : b.disc).push(...p.discarded);
     }
+    // 条件つきアトミック(0.40.0): 充電が足りていれば、その分を消費してアトミックになる
+    if(c.condAtomic && b.charge >= c.condAtomic){ b.charge -= c.condAtomic; b.atomicNow = true; }
     return p;
   }
   // 手札を選ぶ(0.30.0): 時間は使わない。discard は捨て札へ、exile は廃棄へ
   if(a.type === 'choose'){
-    const ch = b.choose, cd = b.hand.splice(a.i, 1)[0];
-    if(cd){ (ch && ch.kind === 'exile' ? (b.exile = b.exile || []) : b.disc).push(cd); }
+    const ch = b.choose, shift = ch && ch.kind === 'shift', cd = shift ? b.hand[a.i] : b.hand.splice(a.i, 1)[0];
+    if(shift){ if(cd) cd.dc = (cd.dc || 0) + ch.d; }
+    else if(cd){ (ch && ch.kind === 'exile' ? (b.exile = b.exile || []) : b.disc).push(cd); }
     if(ch){ ch.n--; if(ch.n <= 0 || !b.hand.length) b.choose = null; }
     return {card:null, cost:0, k:null, t:null, n:0, chose:cd || null};
   }
@@ -712,10 +725,10 @@ function endAction(st, p, out){
   // キャッシュを持つキャラ(0.39.0)は、使ったカードを捨て札ではなくキャッシュに置く(次の区切りで捨て札へ)
   if(p.card && p.card.k !== 'noise'){ if(D.cards[p.card.k] && D.cards[p.card.k].exile) (b.exile = b.exile || []).push(p.card); else (econ().cache ? (b.cache = b.cache || []) : b.disc).push(p.card); }
   // 手札を選ぶカードは、使い終えたら選ぶ番(手札が無ければ何もしない)
-  if(b.chooseNext){ const ch = b.chooseNext; b.chooseNext = null; if(!out.dead && !out.won && b.hand.length) b.choose = {kind:ch.kind, n:Math.min(ch.n, b.hand.length)}; }
+  if(b.chooseNext){ const ch = b.chooseNext; b.chooseNext = null; if(!out.dead && !out.won && b.hand.length) b.choose = {kind:ch.kind, n:Math.min(ch.n, b.hand.length), d:ch.d}; }
   if(p.reload && !out.dead && !out.won){ const ec = econ(); if(ec.blockReset === 'end' || ec.blockReset === true) b.block = 0; }
   if(p.mag && !out.dead && !out.won){ while(b.mag.length && b.hand.length < b.handMax) b.hand.push(b.mag.shift()); }
-  if(p.n && !out.dead && !out.won) drawN(b, p.n);
+  if((p.n || (p.reload && b.refDraw)) && !out.dead && !out.won) drawN(b, p.n + (p.reload ? (b.refDraw || 0) : 0)); // 解放: リフレッシュ時に追加で引く
 }
 // まとめて実行(シミュレータ用)
 function doAction(st, a, noInt){

@@ -15,7 +15,8 @@ function threat(st){ let s = 0; for(const e of st.b.foes) if(e.alive){ s += e.pa
 const dotPot = st => st.b.foes.reduce((a, e) => a + (e.alive ? Math.min(e.hp, e.uids.reduce((s, k) => s + (e.units[k].dot && !e.units[k].broken ? e.units[k].dot.n * e.units[k].dot.p : 0), 0)) : 0), 0);
 const zero = () => ({dot:0, dmg:0, kills:0, justs:0, bodyLoss:0, partLoss:0, breaks:0, elapsed:0, won:false, dead:false});
 function measure(before, after, out){
-  const hpB = before.b.foes.reduce((a, e) => a + (e.hp || 0), 0), hpA = after.b.foes.reduce((a, e) => a + (e.hp || 0), 0); // 部位は耐久を持たない
+  const arm = e => e.alive ? e.uids.reduce((s, k) => s + (e.units[k].broken ? 0 : e.units[k].armor || 0), 0) : 0; // 装甲(ブロック)を削るのも進んだことにする(0.40.0)
+  const hpB = before.b.foes.reduce((a, e) => a + (e.hp || 0) + arm(e), 0), hpA = after.b.foes.reduce((a, e) => a + (e.hp || 0) + arm(e), 0); // 部位は耐久を持たない
   const partsB = Object.values(before.b.parts).reduce((a, p) => a + p.cur, 0), partsA = Object.values(after.b.parts).reduce((a, p) => a + p.cur, 0);
   return {dot:dotPot(after) - dotPot(before), dmg:hpB - hpA, kills:before.b.foes.filter(e => e.alive).length - after.b.foes.filter(e => e.alive).length, justs:out.justs.length,
     bodyLoss:before.run.body - after.run.body, partLoss:partsB - partsA, breaks:Object.keys(after.b.broken).length - Object.keys(before.b.broken).length,

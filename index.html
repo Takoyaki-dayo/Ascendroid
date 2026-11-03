@@ -156,6 +156,8 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 .ftag.tgt{background:var(--cy);color:var(--bg)}
 .hpb{position:relative;display:block;width:58px;height:5px;background:#1c2937;border-radius:2px;overflow:hidden}
 .hpb i{position:absolute;left:0;top:0;bottom:0;background:var(--neutral);transition:width .25s}
+/* 手応え(0.40.0): 減った分の跡。いったん白く光り、少し遅れて縮む */
+.hpb::before{content:'';position:absolute;left:0;top:0;bottom:0;width:var(--tr,100%);background:#ffe3e8;box-shadow:0 0 6px #fff;transition:width .5s ease-out .35s}
 .hpb.me i{background:var(--cy)}
 .hpb s{position:absolute;top:0;bottom:0;background:repeating-linear-gradient(135deg,var(--foe) 0 2px,transparent 2px 4px)}
 .hpt{font-family:var(--f-num);font-size:10.5px;color:var(--fg2)}
@@ -192,7 +194,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 #handShade{position:absolute;left:0;top:170px;width:844px;height:220px;background:linear-gradient(180deg,rgba(10,15,21,0),rgba(10,15,21,.88) 40%);opacity:0;transition:opacity .2s;pointer-events:none}
 #handShade.on{opacity:1}
 /* 手札を選ぶ(0.30.0) */
-#chooseBar{position:absolute;left:300px;top:226px;z-index:30;display:flex;align-items:center;gap:10px;padding:4px 4px 4px 12px;border:1px solid var(--cy);border-radius:4px;background:#0b2230;color:#bff2ff;font-size:12px;font-weight:700}
+#chooseBar{position:absolute;right:14px;top:226px;z-index:30;display:flex;align-items:center;gap:10px;padding:4px 4px 4px 12px;border:1px solid var(--cy);border-radius:4px;background:#0b2230;color:#bff2ff;font-size:12px;font-weight:700}
 #chooseBar button{font:inherit;padding:4px 14px;border-radius:3px;border:1px solid var(--cy);background:var(--cy);color:#04141c;cursor:pointer}
 #chooseBar button:disabled{background:transparent;color:#6c8fa0;border-color:#2a4656;cursor:default}
 #hand .card.pk{border:1.5px solid #ffcf5a;box-shadow:0 0 0 2px rgba(255,207,90,.25),0 10px 22px rgba(255,207,90,.2)}
@@ -243,6 +245,10 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 #fx,#floats{position:absolute;inset:0;pointer-events:none}
 .float{position:absolute;transform:translate(-50%,-50%);font-family:var(--f-num);font-weight:700;font-size:17px;white-space:nowrap;text-shadow:-1.5px 0 rgba(56,211,255,.75),1.5px 0 rgba(255,77,106,.75),0 0 6px #000;animation:rise .9s ease-out forwards;color:#fff}
 .float.foe{color:var(--foe2)} .float.cy{color:var(--cy);font-size:14px} .float.dot{color:#ffb766;font-size:13px}
+body.hs *{animation-play-state:paused!important;transition:none!important}
+.float.dm{animation:dmpop .95s ease-out forwards}
+.float.dm.big{color:#fff3b0;letter-spacing:.04em}
+@keyframes dmpop{0%{opacity:0;transform:translate(-50%,-50%) scale(.4)}10%{opacity:1;transform:translate(-50%,-60%) scale(1.45)}22%{transform:translate(-50%,-52%) scale(.92)}32%{transform:translate(-50%,-55%) scale(1.08)}45%{transform:translate(-50%,-54%) scale(1)}100%{opacity:0;transform:translate(-50%,-110%) scale(1)}}
 @keyframes rise{0%{opacity:0;margin-top:4px;letter-spacing:.3em}8%{opacity:1;letter-spacing:0}12%{transform:translate(-46%,-50%)}16%{transform:translate(-50%,-50%)}100%{opacity:0;margin-top:-26px}}
 .burst{position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;border:2px solid var(--just);box-shadow:0 0 18px rgba(177,140,255,.9),inset 0 0 12px rgba(177,140,255,.6);animation:burst .5s ease-out forwards}
 @keyframes burst{0%{transform:scale(.4);opacity:1}70%{opacity:1}100%{transform:scale(1.8);opacity:0}}
@@ -1218,7 +1224,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 <script src="data/text.js"></script>
 <script src="js/engine.js"></script>
 <script>
-const APP_VERSION = '0.39.0';
+const APP_VERSION = '0.40.0';
 const $ = s => document.querySelector(s);
 const EN = ENGINE, RULE = EN.RULE;
 const VIEW = RULE.view, NOW = 170, PX = 34, xs = c => NOW + c * PX, STRIP_Y = 150, SWIFT_VIS = 3;
@@ -1593,7 +1599,7 @@ function pasText(e, x){
   if(x.k === 'command') return fillUi('pas.command', {unit: un(x.p.unit), n: x.p.n});
   if(x.k === 'frenzy') return fillUi('pas.frenzy', {n: x.p.n});
   if(x.k === 'react') return fillUi('pas.react', {min: x.p.min, part: SLOT_BY[x.p.p].fn, d: Math.max(0, x.p.d + EN.foeStr(e))});
-  if(x.k === 'phase') return fillUi('pas.phase', {at: Math.round(x.p.at * 100)});
+  if(x.k === 'phase') return x.p.when === 'parts' ? DATA.ui['pas.phaseParts'] : fillUi('pas.phase', {at: Math.round(x.p.at * 100)});
   if(x.k === 'broke') return fillUi('pas.broke', {unit: un(x.p.unit)});
   if(x.k === 'punctual' && x.p.n === 0) return fillUi('pas.punctual0', {});
   if(['punctual', 'pursuit', 'loot', 'hoard', 'floor', 'recover'].includes(x.k)) return fillUi('pas.' + x.k, {n: x.p.n || 1});
@@ -1670,7 +1676,7 @@ function renderFoes(){
         t.textContent = String(after < hp ? after : hp); t.classList.toggle('pv', after < hp);
         el.querySelector('.dt').className = 'dt ' + stDot(p);
       } else {
-        el.querySelector('.hpb i').style.width = (after / max * 100) + '%';
+        el.querySelector('.hpb i').style.width = (after / max * 100) + '%'; el.querySelector('.hpb').style.setProperty('--tr', (hp / max * 100) + '%');
         const sb = el.querySelector('.hpb s'); sb.style.left = (after / max * 100) + '%'; sb.style.width = ((hp - after) / max * 100) + '%';
         t.textContent = after < hp ? `${hp}→${after}` : String(hp); t.classList.toggle('pv', after < hp);
       }
@@ -1966,6 +1972,10 @@ function renderInner(){
 /* ---------- fx ---------- */
 function fxEl(cls, x, y, css){ const el = document.createElement('div'); el.className = cls; el.style.left = x + 'px'; el.style.top = y + 'px'; if(css) Object.assign(el.style, css); $('#fx').appendChild(el); return el; }
 function floatAt(x, y, text, cls){ const el = document.createElement('div'); el.className = 'float ' + (cls || ''); el.textContent = text; el.style.left = x + 'px'; el.style.top = y + 'px'; $('#floats').appendChild(el); setTimeout(() => el.remove(), 950); }
+// ダメージの数字(0.40.0): 当たるたびに少し散らし、大きいほど数字を大きく。弾むように出る
+function dmgFloat(x, y, n, size){ const el = document.createElement('div'); el.className = 'float foe dm ' + size; el.textContent = '−' + n; el.style.left = x + 'px'; el.style.top = y + 'px'; el.style.fontSize = Math.min(34, 16 + n * .55) + 'px'; $('#floats').appendChild(el); setTimeout(() => el.remove(), 950); }
+// ヒットストップ(0.40.0): 大きいダメージのときだけ、画面の動きを一瞬止める(連続した細かい攻撃には入れない)
+function hitStop(ms){ const b = document.body; b.classList.add('hs'); clearTimeout(hitStop.t); hitStop.t = setTimeout(() => b.classList.remove('hs'), ms); }
 function pulse(el, cls, ms){ if(!el) return; el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); setTimeout(() => el.classList.remove(cls), ms); }
 // 敵のひとこと(0.23.0)。text/enemies.csv の 敵.say.*。同じひとことは1戦闘に1回だけ
 function foeSay(i, key){
@@ -2064,7 +2074,7 @@ function cardMotion(k, ti){
 function unitTop(i, uid){ const g = GEOM.get(i); if(!g) return foeCenter(i); const u = g.units[g.multi ? uid : '*'] || g.units['*']; return u ? (u.lst ? {x: u.cx, y: u.cy - 18} : {x: u.x, y: u.y - 8}) : foeCenter(i); }
 function cardFx(x){
   switch(x.kind){
-    case 'dmg': { const p = unitTop(x.e, x.unit); floatAt(p.x, p.y, '−' + x.n, 'foe'); pulse(unitEl(x.e, x.unit), 'flash', 260); pulse(unitSpr(x.e, x.unit), 'ehit', 280); break; }
+    case 'dmg': { const p = unitTop(x.e, x.unit), big = x.n >= 20, mid = x.n >= 10; dmgFloat(p.x + (Math.random() - .5) * 34, p.y + (Math.random() - .5) * 16, x.n, big ? 'big' : mid ? 'mid' : ''); if(big) hitStop(70); else if(x.n >= 14) hitStop(40); pulse(unitEl(x.e, x.unit), 'flash', 260); pulse(unitSpr(x.e, x.unit), 'ehit', 280); break; }
     case 'kill': { const p = foeCenter(x.e); shards(p.x, p.y, '#d3e2ee'); break; }
     case 'unitBreak': { const p = unitCenter(x.e, x.unit); pulse(unitEl(x.e, x.unit), 'flash', 420); shards(p.x, p.y, '#ff8a9c'); pixels(p.x, p.y); flashFx('brk'); rescan('UNIT'); break; }
     case 'frenzy': { const p = foeCenter(x.e); floatAt(p.x, p.y - 70, '▲' + x.n, 'foe'); break; }
@@ -2196,7 +2206,7 @@ function pickOk(){
 // 手札を選ぶ(0.30.0): 処理などのカードの後。押したカードを捨てる(時間は使わない)
 function onChoose(i){
   const cd = S.b.hand[i]; if(!cd) return;
-  const el = cardEls.get(cd.id); cardEls.delete(cd.id); if(el) flyCard(el, 20, 344);
+  if(!(S.b.choose && S.b.choose.kind === 'shift')){ const el = cardEls.get(cd.id); cardEls.delete(cd.id); if(el) flyCard(el, 20, 344); }
   EN.beginAction(S, {type:'choose', i}); sel = null; PV = null; renderAll();
 }
 function onCard(i){
@@ -2545,7 +2555,7 @@ function onLose(){
 // (同じアーキタイプを作るために同じ敵とばかり戦う、を避けるため。地図にも敵は出さない)
 const LEARN_BIAS = 1.3;
 // レア度(0.32.0): 報酬・ショップに出せるカード(初期のカード・パーツのカード・ノイズ・属性付きは除く)
-const offerPool = () => Object.keys(CARDS).filter(k => !CARDS[k].junk && !CARDS[k].attr && !CARDS[k].upgraded && !CARDS[k].cut && !['charge','scatter'].includes(k) && DATA.rarityOf(k) !== 'starter');
+const offerPool = () => Object.keys(CARDS).filter(k => !CARDS[k].junk && !CARDS[k].attr && !CARDS[k].upgraded && !CARDS[k].cut && !['charge','scatter'].includes(k) && !['starter', 'special'].includes(DATA.rarityOf(k)));
 // レア度を1つ引く。kind は battle / elite / shop。報酬(battle・elite)は救済(rareOff)を使い、更新する
 function rollRarity(kind){
   const R = DATA.rarityRule, w = Object.assign({}, R[kind] || R.battle), run = S.run, pity = kind === 'battle' || kind === 'elite';
@@ -2575,7 +2585,11 @@ function learnOptions(n){
   const out = rarityPick(n, UI.node && UI.node.type === 'elite' ? 'elite' : 'battle', near);
   // 属性(0.28.0): エリートの報酬は必ず、通常の戦闘はときどき属性付きで出る
   const r = UI.node && UI.node.type === 'elite' ? DATA.attrRule.elite : DATA.attrRule.battle;
-  return out.map(k => Math.random() < r ? withAttr(k) : k);
+  // 0.40.0: エリートは1枚ごとに r の確率(最低1枚は付く)
+  const res = out.map(k => Math.random() < r ? withAttr(k) : k);
+  if(r >= 1 || !res.length || res.some(k => String(k).includes('@'))) return res;
+  const idx = res.map((k, i) => i).filter(i => attrsFor(res[i]).length); if(!idx.length) return res;
+  const j = EN.pick(idx); res[j] = withAttr(res[j]); return res;
 }
 // 属性: カード k に付けられる属性 / 1つ選んで付けたカードのキー(付けられなければそのまま)
 const attrsFor = k => Object.keys(DATA.attrs).filter(a => DATA.attrOk(CARDS[k], a));
@@ -2598,6 +2612,11 @@ function afterWin(){
 }
 function afterLearn(){
   UI.pick = null; UI.learnOpts = []; UI.bossHealed = null;
+  // ボスの後のイベント(0.40.0): 現行の報酬に足して、特別なカード《解放》を1回だけ受け取る(1回の挑戦に1度)
+  if(UI.node && UI.node.type === 'boss' && !S.run.released && CARDS.release){
+    S.run.released = true; S.run.deck.push('release');
+    showOv(`<h2>${DATA.ui['boss.release.title']}</h2><p class="rs-text">${DATA.ui['boss.release.text']}</p><div class="cards"><div class="card static">${cardInner('release', null)}</div></div><div class="row"><button class="btn" type="button" data-act="done">次へ</button></div>`); return;
+  }
   if(UI.after === 'part'){ UI.partOpts = partOffers(2 + (alLv() >= DATA.alert.partAt ? 1 : 0)); UI.back = 'map'; showPartOffer(); }
   else completeRoom();
 }
@@ -2846,7 +2865,7 @@ const roleTag = p => p.core ? DATA.ui['unit.tag.core'] : p.vital ? DATA.ui['unit
 // ユニットが使う行動(行動の並び・耐久が減った後の並び)。同じ文の行動は1つにまとめる
 function unitSkills(e, k){
   const groups = [{pat: e.pat, note: ''}];
-  if(e.phase && !e.phased) groups.push({pat: e.phase.pat, note: fillUi('foe.phase', {at: Math.round(e.phase.at * 100)})});
+  if(e.phase && !e.phased) groups.push({pat: e.phase.pat, note: e.phase.when === 'parts' ? DATA.ui['foe.phaseParts'] : fillUi('foe.phase', {at: Math.round(e.phase.at * 100)})});
   return groups.map(g => {
     const seen = new Set(), list = [];
     for(const a of g.pat){ if(EN.actorUid(e, a) !== k) continue; const lines = moveLines(e, a), key = (a.n || '') + '|' + lines.join(''); if(seen.has(key)) continue; seen.add(key); list.push({a, lines}); }
@@ -2875,7 +2894,7 @@ function renderFocus(){
   let rows = moveRow(e, pat, 'p', rand ? 0 : e.idx, !rand, rand, f.sel, hlU);
   // ランダムに選ぶ敵: 上にこれから先の行動(決まっている並び)、下に選ばれる候補
   if(rand) rows = seqRow(e, f.sel, hlU) + `<div class="fnote">${fillUi('foe.rand', {})}</div>` + rows;
-  if(e.phase && !e.phased) rows += `<div class="fnote">${fillUi('foe.phase', {at: Math.round(e.phase.at * 100)})}</div>` + moveRow(e, e.phase.pat, 'h', 0, false, false, f.sel, hlU);
+  if(e.phase && !e.phased) rows += `<div class="fnote">${e.phase.when === 'parts' ? DATA.ui['foe.phaseParts'] : fillUi('foe.phase', {at: Math.round(e.phase.at * 100)})}</div>` + moveRow(e, e.phase.pat, 'h', 0, false, false, f.sel, hlU);
   // 敵全体のパッシブ(ユニットに結び付かないもの)と、ユニットごとのパッシブ
   const wholePas = pas.filter(x => !(multi && pasUnit(x) && e.units[pasUnit(x)]));
   const next = EN.actorUid(e, EN.cur(e));
@@ -3082,7 +3101,7 @@ function startDebugBattle(enc){
     for(const k of e.uids){ const u = e.units[k]; u.hp = u.max = Math.max(1, Math.round(u.max * DBG.hp)); }
     e.hp = e.uids.reduce((x, k) => x + (e.units[k].vital ? e.units[k].hp : 0), 0); e.maxHp = e.hp;
     e.pat = fixPat(e.pat);
-    if(e.phase) e.phase = {at: e.phase.at, pat: fixPat(e.phase.pat)};
+    if(e.phase) e.phase = {at: e.phase.at, when: e.phase.when, pat: fixPat(e.phase.pat)};
     if(e.react) e.react = {...e.react, d: sc(e.react.d)};
   }
   renderAll();

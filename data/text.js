@@ -65,7 +65,7 @@ window.DATA = window.DATA || {};
   },
   "parry": {
    "name": "受け流し",
-   "text": "{block}ブロックを得る。JUST：攻撃を無効にし、同じダメージを返す。"
+   "text": "{block}ブロックを得る。JUST：攻撃をブレイクし、威力の半分だけダメージを与える。"
   },
   "slash": {
    "name": "スラッシュ",
@@ -170,6 +170,26 @@ window.DATA = window.DATA || {};
   "aim": {
    "name": "照準調整",
    "text": "遠隔増幅{amp}を得る。"
+  },
+  "accelshot": {
+   "name": "加速弾",
+   "text": "{dmg}ダメージを与える。\n手札1枚を選ぶ。それのコストは、使用するまで2減少する。"
+  },
+  "simplify": {
+   "name": "単純化ロジック",
+   "text": "手札を1枚選んで廃棄する。{block}ブロックを得る。"
+  },
+  "clockguard": {
+   "name": "クロック防御",
+   "text": "10サイクルの間、自身が得るブロックが2増加する。"
+  },
+  "steel": {
+   "name": "鋼鉄",
+   "text": "{block}ブロックを得る。廃棄。"
+  },
+  "release": {
+   "name": "解放",
+   "text": "アトミック。廃棄。\n増幅2、堅固2を得る。この戦闘中、リフレッシュ時にカードを1枚引く。"
   }
  },
  "keywords": [
@@ -367,11 +387,11 @@ window.DATA = window.DATA || {};
   "turret": "迎撃タレット",
   "turret.pat.0": "砲撃",
   "turret.pat.1": "装甲を重ねる",
+  "turret.pat.2": "装甲投射",
   "turret.react": "迎撃",
   "exec": "不屈の処刑者",
   "exec.pat.0": "殴打",
   "exec.pat.1": "充填",
-  "exec.pat.2": "粉砕砲",
   "exec.phase.0": "殴打",
   "exec.phase.1": "粉砕砲",
   "exec.passive.phase": "処刑態勢",
@@ -402,7 +422,7 @@ window.DATA = window.DATA || {};
   "warden": "管理AI ウォーデン",
   "warden.pat.0": "照射",
   "warden.pat.1": "照射",
-  "warden.pat.2": "修復",
+  "warden.pat.2": "増幅修復",
   "warden.pat.3": "消去プロトコル",
   "warden.react": "排除",
   "scanner": "走査ドローン",
@@ -413,6 +433,7 @@ window.DATA = window.DATA || {};
   "accel": "暴走機",
   "accel.pat.0": "突進",
   "accel.pat.1": "蹴撃",
+  "accel.pat.2": "突撃",
   "accel.passive.0": "最短周期",
   "twin": "双腕作業機",
   "twin.unit.core": "胴体",
@@ -431,14 +452,14 @@ window.DATA = window.DATA || {};
   "bomber.pat.3": "防衛射撃",
   "bomber.pat.4": "臨界",
   "squad": "第三警備小隊",
-  "squad.unit.lead": "隊長",
-  "squad.unit.gunner": "射手",
-  "squad.unit.shield": "盾持ち",
+  "squad.unit.lead": "コマンド",
+  "squad.unit.gunner": "ボウガン",
+  "squad.unit.shield": "ライオット",
   "squad.pat.0": "号令",
-  "squad.pat.1": "制圧射撃",
-  "squad.pat.2": "盾突撃",
-  "squad.pat.3": "制圧射撃",
-  "squad.pat.4": "制圧射撃",
+  "squad.pat.1": "盾突撃",
+  "squad.pat.2": "速射",
+  "squad.pat.3": "速射",
+  "squad.pat.4": "速射",
   "squad.passive.0": "統率",
   "squad.passive.1": "最短周期",
   "swarm": "ドローン群",
@@ -462,6 +483,8 @@ window.DATA = window.DATA || {};
   "tank.pat.2": "掃射",
   "tank.pat.3": "徹甲砲",
   "tank.pat.4": "装甲展開",
+  "tank.phase.0": "装甲展開",
+  "tank.phase.1": "突撃",
   "warden.unit.core": "中枢核",
   "warden.unit.eye": "監視砲",
   "warden.phase.0": "照射",
@@ -768,6 +791,7 @@ window.DATA = window.DATA || {};
   "ui.foe.react": "反応：コスト{min}以上のカードを使い始めると、1サイクル後に{part}に{d}ダメージを与える。",
   "ui.foe.sync": "連携：仲間と同じサイクルに攻撃すると、ダメージ+{sync}。",
   "ui.foe.rand": "これから先の行動は上のとおり。行動は下の中から選ばれ、同じ行動は3回続かない。",
+  "ui.foe.phaseParts": "車体以外の部位がすべて壊れたとき",
   "ui.foe.phase": "耐久{at}%未満",
   "ui.stname.armor": "ブロック",
   "ui.stname.str": "増幅",
@@ -781,6 +805,9 @@ window.DATA = window.DATA || {};
   "ui.st.vuln": "あと{n}サイクル、受けるダメージが1.5倍。",
   "ui.st.dot": "あと{n}サイクル、毎サイクル{p}ダメージを受ける。",
   "ui.choose.discard": "捨てるカードを選択({k}/{n})",
+  "ui.boss.release.title": "解放",
+  "ui.boss.release.text": "制御を失った中枢の奥から、封じられていた命令を拾った。",
+  "ui.choose.shift": "コストを下げるカードを選択({k}/{n})",
   "ui.choose.exile": "廃棄するカードを選択({k}/{n})",
   "ui.choose.ok": "決定",
   "ui.st.none": "状態の変化はない。",
@@ -812,6 +839,7 @@ window.DATA = window.DATA || {};
   "ui.pas.command": "【{unit}】ユニットが破壊されていない間、すべての行動のコスト-{n}。",
   "ui.pas.frenzy": "ユニットが破壊されるたび、増幅{n}を得る。",
   "ui.pas.react": "コスト{min}以上のカードを使い始めると、1サイクル後に{part}に{d}ダメージを与える。",
+  "ui.pas.phaseParts": "車体以外の部位がすべて壊れると、行動が変わる。",
   "ui.pas.phase": "耐久が{at}%を切ると、行動が変わる。",
   "ui.pas.broke": "【{unit}】ユニットが破壊されると、行動が変わる。",
   "ui.unit.core": "核。ほかのユニットからあふれたダメージを受ける。",
@@ -876,6 +904,10 @@ window.DATA = window.DATA || {};
   "steady": {
    "name": "不動の",
    "text": "アトミック。"
+  },
+  "collapse": {
+   "name": "崩壊する",
+   "text": "侵食3/0を与える。"
   }
  }
 });

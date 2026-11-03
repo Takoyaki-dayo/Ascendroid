@@ -65,6 +65,7 @@ function apply(D, T){
     if(!where) f.name = n;
     else if(where === 'pat' && f.pat[+i]) f.pat[+i].n = n;
     else if(where === 'phase' && f.phase && f.phase.pat[+i]) f.phase.pat[+i].n = n;
+    else if(where === 'phase2' && f.phase && f.phase.next && f.phase.next.pat[+i]) f.phase.next.pat[+i].n = n; // 2段目の段階変化(0.40.2)
     else if(where === 'react' && f.react) f.react.n = n;
     else if(where === 'unit' && f.units && f.units[i]) f.units[i].name = n;
     else if(where === 'passive') (f.pname = f.pname || {})[i] = n; // 番号は passives の何番目か。phase は段階変化の名前

@@ -67,6 +67,8 @@ function skipMove(e){
 function advance(e){
   if(e.hist){ e.hist.push(e.idx); if(e.hist.length > 4) e.hist.shift(); }
   if(e.phase && !e.phased && (e.phase.when === 'parts' ? e.uids.every(k => e.units[k].core || e.units[k].broken) : e.hp < e.maxHp * e.phase.at)){ e.phased = true; e.pat = e.phase.pat; e.idx = 0; e.hist = []; resetQueue(e); }
+  // 2段目の段階変化(0.40.2、phase.next:{at, pat}): 1段目の後、耐久が next.at 割を切ると変わる
+  else if(e.phased && !e.phased2 && e.phase && e.phase.next && e.hp < e.maxHp * e.phase.next.at){ e.phased2 = true; e.pat = e.phase.next.pat; e.idx = 0; e.hist = []; resetQueue(e); }
   else if(e.ai === 'rand'){ fillQueue(e); e.idx = e.queue.shift(); fillQueue(e); }
   else e.idx = (e.idx + 1) % e.pat.length;
   // 破壊されたユニットの行動は飛ばす
@@ -575,6 +577,7 @@ function waryFoe(key, lv){
     else f[k] = v;
   }
   delete f.wary; f.waryAt = t.at;
+  f.name = (D.foes[key].name || '') + '+'; // 0.40.2: 警戒版は名前の後ろに「+」(強くなっているのを見せる)
   return waryCache[id] = f;
 }
 function scaledFoe(key, sc, lv){

@@ -1224,7 +1224,7 @@ body.hs *{animation-play-state:paused!important;transition:none!important}
 <script src="data/text.js"></script>
 <script src="js/engine.js"></script>
 <script>
-const APP_VERSION = '0.40.1';
+const APP_VERSION = '0.40.2';
 const $ = s => document.querySelector(s);
 const EN = ENGINE, RULE = EN.RULE;
 const VIEW = RULE.view, NOW = 170, PX = 34, xs = c => NOW + c * PX, STRIP_Y = 150, SWIFT_VIS = 3;
@@ -2281,7 +2281,8 @@ function flyCard(el, x, y){
   setTimeout(() => el.remove(), 260);
 }
 // 耐久が減って行動が変わった敵を知らせる
-function phaseCheck(){ for(const e of S.b.foes){ if(e.phased && !e._phaseShown && e.alive){ e._phaseShown = true; const p = foeCenter(e.i); floatAt(p.x, p.y - 96, '!!', 'foe big'); pulse(foeEl(e.i), 'ejust', 460); rescan('PHASE'); foeSay(e.i, 'phase'); } } }
+function phaseCheck(){ for(const e of S.b.foes){ if(e.phased && !e._phaseShown && e.alive){ e._phaseShown = true; const p = foeCenter(e.i); floatAt(p.x, p.y - 96, '!!', 'foe big'); pulse(foeEl(e.i), 'ejust', 460); rescan('PHASE'); foeSay(e.i, 'phase'); }
+  if(e.phased2 && !e._phase2Shown && e.alive){ e._phase2Shown = true; const p = foeCenter(e.i); floatAt(p.x, p.y - 96, '!!!', 'foe big'); pulse(foeEl(e.i), 'ejust', 460); rescan('PHASE'); foeSay(e.i, 'phase2'); } } }
 async function showEvent(ev, k, ti){
   if(ev.type === 'card' || ev.type === 'timer' || ev.type === 'dot' || ev.type === 'foe') setTimeout(phaseCheck, 0);
   switch(ev.type){

@@ -108,7 +108,7 @@ DATA.foes = {
     wary:[{at:5, pat:[{d:8, dl:4, p:'dur'}, {d:0, dl:5, eat:1, buff:4, wind:{w:3, poise:10}}, {d:11, dl:5, p:'out', rec:2}]}],
     pool:['wall','blow','reload','backflow','iterate']},
   // 工程管理機(名前はタイムキーピング): 4サイクルごとに必ず動く。ディレイが効かない。警戒V以上では遅らせようとすると怒る(増幅。0.35.0)
-  clock:    {kind:'clock', hp:80, start:4, passives:[{k:'punctual', n:0}], wary:[{at:5, passives:[{k:'punctual', n:1}], pat:[{d:8, dl:4, p:'calc'}, {d:8, dl:4, p:'arm'}, {d:8, dl:4, p:'mob'}, {d:16, dl:4, p:'dur', ch:true}]}],
+  clock:    {kind:'clock', hp:80, start:4, passives:[{k:'punctual', n:0}], wary:[{at:5, passives:[{k:'punctual', n:1}], pname:{0:'定刻遵守'}, pat:[{d:8, dl:4, p:'calc'}, {d:8, dl:4, p:'arm'}, {d:8, dl:4, p:'mob'}, {d:16, dl:4, p:'dur', ch:true}]}],
     pat:[{d:5, dl:4, p:'calc'}, {d:5, dl:4, p:'arm'}, {d:5, dl:4, p:'mob'}, {d:16, dl:4, p:'dur', ch:true}],
     pool:['parry','rapid','crackshot']},
   // 溶接機: 壊した腕を直してしまう。直す行動は体勢で止められる

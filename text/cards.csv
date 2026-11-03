@@ -5,7 +5,7 @@ jab,打撃,{dmg}ダメージを与える。,1
 guard,障壁展開,{block}ブロックを得る。,1
 hack,妨害回路,ディレイ{delay}を与える。,1
 reload,再装填,カードを{draw}枚引く。,1
-timebomb,時限弾,{t}サイクル後、{tdmg}ダメージを与える。,1
+timebomb,時限弾,{t}サイクル後、{tdmg}遠隔ダメージを与える。,1
 rapid,二連撃,{dmg}ダメージを{x}回与える。,2
 crackshot,亀裂弾,{dmg}ダメージを与える。クラック{crack}を与える。,2
 parry,受け流し,{block}ブロックを得る。JUST：攻撃をブレイクし、威力の半分だけダメージを与える。,2

@@ -29,9 +29,12 @@
 window.DATA = window.DATA || {};
 DATA.areas = [
   {id:'a1', rooms:8, transfers:[2, 4, 6], last:'rest', fill:{battle:8, elite:3, event:3, shop:2, rest:1, duct:1}, scale:{hp:1, d:1}, boss:'boss',
+    // 0.40.1: 工房の「出るところ」に合わせる(警備ドローンは警戒I〜IV、迎撃タレットは警戒I〜V)
     pools:[{at:1, enc:['n_guard', 'n_scout', 'n_def', 'n_scav', 'n_crush']},
-           {at:2, enc:['n_scan', 'n_swarm', 'n_clock', 'n_weld', 'n_twin', 'n_crush']},
-           {at:3, enc:['n_hound', 'n_proc', 'n_accel', 'n_bomb', 'n_squad', 'n_net']}]},
+           {at:2, enc:['n_scan', 'n_swarm', 'n_clock', 'n_weld', 'n_twin', 'n_crush', 'n_guard', 'n_def']},
+           {at:3, enc:['n_hound', 'n_proc', 'n_accel', 'n_bomb', 'n_squad', 'n_net', 'n_guard', 'n_def']},
+           {at:5, enc:['n_hound', 'n_proc', 'n_accel', 'n_bomb', 'n_squad', 'n_net', 'n_def']},
+           {at:6, enc:['n_hound', 'n_proc', 'n_accel', 'n_bomb', 'n_squad', 'n_net']}]},
   {id:'a2', rooms:8, transfers:[2, 4, 6], last:'rest', fill:{battle:8, elite:3, event:3, shop:2, rest:1, duct:1}, scale:{hp:1, d:1}, boss:'boss2',
     pools:[{at:1, enc:['n_scan', 'n_swarm', 'n_clock', 'n_weld', 'n_twin', 'n_crush']},
            {at:5, enc:['n_proc', 'n_accel', 'n_bomb', 'n_squad', 'n_net', 'n_clock', 'n_weld']},

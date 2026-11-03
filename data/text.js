@@ -53,7 +53,7 @@ window.DATA = window.DATA || {};
   },
   "timebomb": {
    "name": "時限弾",
-   "text": "{t}サイクル後、{tdmg}ダメージを与える。"
+   "text": "{t}サイクル後、{tdmg}遠隔ダメージを与える。"
   },
   "rapid": {
    "name": "二連撃",
@@ -443,7 +443,7 @@ window.DATA = window.DATA || {};
   "twin.pat.1": "掴み打ち",
   "twin.pat.2": "腕で防ぐ",
   "twin.pat.3": "叩きつけ",
-  "bomber": "自爆機 BX-01",
+  "bomber": "脚のある爆弾",
   "bomber.unit.core": "炉心",
   "bomber.unit.gun": "防衛砲",
   "bomber.pat.0": "防衛射撃",

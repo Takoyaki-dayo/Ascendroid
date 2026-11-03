@@ -542,7 +542,7 @@ const needsMe = r => lastWho(r.thread) === 'claude' && ((r.status === 'open' || 
 // 工房のカード・属性・敵は「添削済み」のときと、まだ見ていない返事があるとき(開くと見たことになる)
 const cardNeedsMe = d => !!d && lastWho(d.thread) === 'claude' && (d.status === 'reviewed' || unseen(d));
 // 開いた項目の返事を見たことにする(共有データベースの seenAt)
-function markSeen(col, key, d){ if(!DB || !d || !unseen(d)) return; d.seenAt = new Date().toISOString(); DB.doc(col + '/' + key).update({seenAt:d.seenAt}).catch(() => {}); }
+function markSeen(col, key, d){ try{ if(!DB || !d || !unseen(d)) return; const at = new Date().toISOString(); (async () => { try{ await DB.doc(col + '/' + key).update({seenAt:at}); }catch(e){} })(); }catch(e){} }
 const kindReplies = kind => kind === 'cards' ? Object.values(WB).filter(cardNeedsMe).length : kind === 'attrs' ? Object.values(AB).filter(cardNeedsMe).length : (kind === 'foes' ? Object.values(FD).filter(cardNeedsMe).length : 0) + REQ.filter(r => needsMe(r) && (r.kind === kind || (r.type === 'batch' && kind === 'requests'))).length;
 const itemReplies = (kind, key) => REQ.filter(r => needsMe(r) && r.kind === kind && r.key === key).length;
 const allReplies = () => REQ.filter(needsMe).length + Object.values(WB).filter(cardNeedsMe).length + Object.values(AB).filter(cardNeedsMe).length + Object.values(FD).filter(cardNeedsMe).length;
@@ -1270,7 +1270,8 @@ async function docRevert(){
 }
 function selectItem(key){
   S.bulkOpen = false;
-  { const K = KBY[S.kind]; if(K && K.ab) markSeen('attrs', key, AB[key]); else if(K && K.wb) markSeen('cards', key, WB[key]); else if(K && K.doc){ const d = DOCS()[S.kind] && DOCS()[S.kind][key]; markSeen(K.doc, key, d); } }
+  // 0.40.0: 開いた項目の返事を見たことにする(書き込みは開いた後、失敗しても開くのは止めない)
+  setTimeout(() => { try{ const K = KBY[S.kind]; if(K && K.ab) markSeen('attrs', key, AB[key]); else if(K && K.wb) markSeen('cards', key, WB[key]); else if(K && K.doc){ const d = DOCS()[S.kind] && DOCS()[S.kind][key]; markSeen(K.doc, key, d); } }catch(e){} }, 0);
   if(KBY[S.kind] && KBY[S.kind].ab){ if(!(S.ab && S.ab.key === key)) abOpen(key); S.sel = key; S.mobileOpen = true; renderAll(); return; }
   if(KBY[S.kind] && KBY[S.kind].wb){ if(!(S.wb && S.wb.key === key)) wbOpen(key); S.sel = key; S.wbDeckOpen = false; S.revertArm = null; S.mobileOpen = true; renderAll(); return; }
   const it = curItems().find(x => x.key === key); if(!it) return;

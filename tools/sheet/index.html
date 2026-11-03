@@ -393,7 +393,8 @@ function vvBar(){
 // 行動が変わる条件(0.38.5): 自由記述の phase.when があればそれ、無ければ今の仕組み(耐久の割合 at)を文にしたもの
 const phaseWhen = ph => (ph && ph.when) || `耐久が${Math.round(((ph && ph.at) || 0) * 100)}%を切ったとき`;
 function foeForm(o, orig){
-  const g = (t, body, open = true, note = '') => `<details class="grp fgrp"${open ? ' open' : ''}><summary>${t}${note ? `<span class="gs">${note}</span>` : ''}</summary>${body}</details>`;
+  // 開け閉めは描き直しても覚えておく(0.40.2。学習候補を押すたびに閉じていた)
+  const g = (t, body, open = true, note = '') => `<details class="grp fgrp" data-fg="${esc(t)}"${(FGOPEN[t] != null ? FGOPEN[t] : open) ? ' open' : ''}><summary>${t}${note ? `<span class="gs">${note}</span>` : ''}</summary>${body}</details>`;
   const units = o.units ? Object.entries(o.units).map(([k, u]) => [k, u.name || k]) : [];
   let h = '';
   h += g('基本', `<div class="ar">${fIn('name', o, orig, '名前', 'str')}${o.units ? '' : fIn('hp', o, orig, '耐久')}${fIn('start', o, orig, '最初の行動まで')}</div>
@@ -1460,6 +1461,9 @@ function requestRender(side){
 $('#ver').textContent = META.version ? `ゲーム ${META.version}${META.commit ? ' · ' + META.commit : ''}` : '';
 restoreUnsent();
 document.addEventListener('input', () => keepUnsent());
+// 敵などの編集の折りたたみ(details.fgrp)の開け閉めを覚える
+const FGOPEN = {};
+document.addEventListener('toggle', ev => { const d = ev.target; if(d && d.matches && d.matches('details[data-fg]')) FGOPEN[d.dataset.fg] = d.open; }, true);
 renderAll();
 (async () => {
   const use = window.claude && window.claude.use;

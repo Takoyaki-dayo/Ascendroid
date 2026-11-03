@@ -30,17 +30,17 @@ DATA.cards = {
   backflow: {cost:3, all:true, delay:6},
   scatter:  {cost:3, all:true, dmg:{t:'ranged', n:4}},
   charge:   {cost:4, tgt:true, atomic:true, dmg:{t:'ranged', n:10}},
-  emp:      {cost:3, all:true, dmg:{t:'ranged', n:9}},
+  emp:      {cost:3, all:true, dmg:{t:'ranged', n:9}, up:{dmg:{n:14}}},
   blow:     {cost:6, tgt:true, dmg:{t:'ranged', n:20}},
   // 充電(貯めて消費する)
   capacitor:{cost:1, gain:4},
   arc:      {cost:2, tgt:true, dmg:{t:'melee', n:4}, gain:2},
-  coil:     {cost:1, gain:2, draw:1},
+  coil:     {cost:1, gain:1, draw:1},
   storm:    {cost:4, all:true, spend:{n:3, dmg:{t:'ranged', n:16}}},
   cell:     {cost:1, spend:{n:2, block:7}},
   // 0.31.0: 工房で作られたカード(名前はユーザー)
   dismantle:{cost:4, tgt:true, dmg:{t:'melee', n:15}, scrapBreak:6},
-  tempest:  {cost:3, all:true, dmg:{t:'ranged', n:1, x:7}},
+  tempest:  {cost:3, all:true, dmg:{t:'ranged', n:1, x:5}, up:{dmg:{x:8}}},
   paradox:  {cost:0, tgt:true, selfCrack:3, breakNext:true, exile:true},
   iterate:  {cost:1, tgt:true, dmg:{t:'melee', n:0, x:2}, grow:1},
   triple:   {cost:3, tgt:true, dmg:{t:'melee', n:6, x:3}},
@@ -50,7 +50,9 @@ DATA.cards = {
   parallel: {cost:1, block:12, selfDmg:4},
   phack:    {cost:2, tgt:true, dotCut:{n:0, p:4}, dot:{n:3, p:0}, needDotP:4, up:{rep:2}}, // 0.36.3: 威力を4減らして回数を3増やす(0.35.0 は逆だった)
   careful:  {cost:2, tgt:true, dmg:{t:'melee', n:7}, block:5},
-  foresight:{cost:3, tgt:true, justBreak:true, justWeak:1},
+  foresight:{cost:3, tgt:true, justBreak:true, justWeak:1, up:{justWeak:2}},
+  // 0.39.0
+  backdoor: {cost:2, tgt:true, dot:{n:4, p:4}, exile:true},
   // 0.36.0
   aim:      {cost:2, amp:{t:'ranged', n:1}, up:{amp:{t:'ranged', n:2}}},
   // 敵のノイズ注入で山札に混ざる。何もせず、使うと消える(ショップや学習には出ない)
@@ -64,9 +66,9 @@ DATA.startDeck = ['jab','jab','jab','jab','guard','guard','guard','guard','slash
 // レア度(0.32.0、工房のレア度): starter 初期(報酬・ショップに出ない) / common / uncommon / rare。書いていないカードはコモン
 DATA.rarity = {
   jab:'starter', guard:'starter', slash:'starter',
-  flick:'common', capacitor:'common', coil:'common', iterate:'common', rapid:'common', crackshot:'common', wall:'common', arc:'common', dispose:'common', parallel:'common', careful:'common', foresight:'common', backflow:'common', storm:'common', scatter:'common', charge:'common',
-  hack:'uncommon', reload:'uncommon', timebomb:'uncommon', cell:'uncommon', triple:'uncommon', dismantle:'uncommon', crush:'uncommon', phack:'uncommon', aim:'uncommon',
-  scan:'rare', paradox:'rare', parry:'rare', tempest:'rare', blow:'rare', emp:'rare',
+  flick:'common', capacitor:'common', coil:'common', iterate:'common', rapid:'common', crackshot:'common', wall:'common', arc:'common', dispose:'common', parallel:'common', careful:'common', backflow:'common', storm:'common', scatter:'common', charge:'common',
+  hack:'uncommon', reload:'uncommon', timebomb:'uncommon', cell:'uncommon', triple:'uncommon', dismantle:'uncommon', crush:'uncommon', phack:'uncommon', aim:'uncommon', foresight:'uncommon',
+  scan:'rare', paradox:'rare', parry:'rare', tempest:'rare', blow:'rare', emp:'rare', backdoor:'rare',
 };
 // 出やすさ(StS にならう): 報酬の1枚ごとにレア度を引いてから、そのレア度の中で選ぶ。rare は run.rareOff(はじめ pity.start)を足した値
 //   コモンを1枚出すたびに rareOff が pity.step 増え、レアが出ると pity.start に戻る(StS の救済)。price はショップの値段の倍率

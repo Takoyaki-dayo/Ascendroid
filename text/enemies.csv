@@ -1,12 +1,13 @@
 ﻿キー,名前,(参考)何の名前か
 drone,警備ドローン,名前
 drone.pat.0,射撃,行動1
-drone.pat.1,連射,行動2
-drone.pat.2,照準,行動3
+drone.pat.1,照準,行動2
+drone.pat.2,射撃,行動3
 scout,斥候機 SC-02,名前
 scout.pat.0,刺突,行動1
 scout.pat.1,乱れ突き,行動2
 scout.pat.2,踏み込み,行動3
+scout.passive.0,立て直し,パッシブ1
 turret,迎撃タレット,名前
 turret.pat.0,砲撃,行動1
 turret.pat.1,装甲を重ねる,行動2
@@ -51,7 +52,8 @@ warden.react,排除,反応(パッシブの名前と、撃つ行動の名前)
 scanner,走査ドローン,名前
 scanner.pat.0,射撃,行動1
 scanner.pat.1,走査線,行動2
-scanner.pat.2,連射,行動3
+scanner.pat.2,走査線,行動3
+scanner.pat.3,連射,行動4
 accel,暴走機,名前
 accel.pat.0,突進,行動1
 accel.pat.1,蹴撃,行動2

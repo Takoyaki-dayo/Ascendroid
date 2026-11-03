@@ -10,6 +10,7 @@ const D = root.DATA;
 // econ: 手札の補給の型(実験用。null なら今の「3サイクルごとに1枚届く」)
 //   {type:'turn', len, hand, blockReset, eject}  固定のターン: len サイクルごとに区切り。手札を捨てて hand 枚引く
 //   {type:'reload', r, hand, heat, blockReset, eject, keep}  再装填: 自分で区切る(手札がなければ区切るしかない)。r(+heat×回数)サイクルかけて hand 枚引く。keep なら手札を残して hand 枚まで引く
+//   cache(0.39.0): 使ったカードはキャッシュに置き、区切り(リフレッシュ)で捨て札へ。効果で引くとき、捨て札を混ぜても今の周回で使ったカードは戻らない
 //   {type:'mag', r, cap}  弾倉: 3サイクルごとに1枚が弾倉にたまり、区切り(r サイクル)でまとめて手札へ
 //   blockReset: 区切りでブロックが消える('start' 区切りの始め / true・'end' 終わり) / eject: 区切りで捨てたカード1枚ごとのブロック
 const RULE = {draw:3, handStart:5, handMax:7, view:18, freeWait:true, blockDecay:null, econ:null};
@@ -57,8 +58,10 @@ function fillQueue(e){
 function resetQueue(e){ if(e.ai !== 'rand') return; e.queue = []; e.idx = pickMove(e, e.hist || []); fillQueue(e); }
 // ブレイク・ユニットの破壊で行動を飛ばす(0.36.0): 飛ばした行動までの残りの時間はそのまま残す(後ろの予定を前に詰めない)
 // 立て直し(passive recover {n}): その敵だけ、残りを n サイクル縮める(最短1)
+// 連動(0.39.0、行動の link): ブレイクされると次の行動も一緒に飛ばす(飛ばした行動の間隔は残す)
 function skipMove(e){
-  const left = Math.max(0, e.r); advance(e);
+  const left = Math.max(0, e.r), a0 = e.pat[e.idx]; advance(e);
+  if(a0 && a0.link){ const l2 = e.r; advance(e); e.r += l2; }
   if(left > 0) e.r = Math.max(1, e.r + left - pasN(e, 'recover'));
 }
 function advance(e){
@@ -558,6 +561,7 @@ function waryFoe(key, lv){
     if(k === 'at') continue;
     // 0.38.0: 書いた欄は丸ごと置き換える(工房で警戒版を全体の姿で編集し、変わった欄を丸ごと書くため。パッシブも一覧ごと)。patAdd だけは足す(古い書き方)
     if(k === 'patAdd') f.pat = f.pat.concat(v);
+    else if(k === 'pat') f.pat = v.map((a, i) => a.n || !D.foes[key].pat[i] ? a : Object.assign({n:D.foes[key].pat[i].n}, a)); // 名前が無ければ通常の同じ番号の行動の名前
     else f[k] = v;
   }
   delete f.wary; f.waryAt = t.at;
@@ -597,6 +601,8 @@ const econ = () => RULE.econ || {type:'trickle'};
 function boundary(st, when){
   const b = st.b, ec = econ(), ev = {kind:'boundary', n:b.hand.length};
   const ej = (ec.eject || 0) * b.hand.filter(c => c.k !== 'noise').length;
+  // キャッシュ(0.39.0、econ.cache): 区切りまでに使ったカードは、区切りで手札より先に捨て札へ移る
+  if(ec.cache && b.cache && (when === 'start' || when === 'turn')){ b.disc.push(...b.cache); b.cache = []; }
   if((when === 'start' && !ec.keep) || when === 'turn'){ for(const c of b.hand) if(c.k !== 'noise') b.disc.push(c); b.hand = []; }
   else if(when === 'start'){ b.hand = b.hand.filter(c => c.k !== 'noise'); } // keep: 手札を残し、足りない分だけ引く(ノイズは消える)
   if(ec.blockReset && (ec.blockReset === when || when === 'turn')) b.block = 0; // 再装填で true/'end' のときは終わりに消す(endAction)
@@ -622,7 +628,7 @@ function newBattle(run, encKey){
   for(const key of E.foes) foes.push(makeFoe(key, foes.length, D.foes[key].wary ? sc0 : sc, alertLevel(run)));
   let uid = 1;
   const cards = shuffle(battleDeck(run).map(k => ({k, id:uid++})));
-  const b = {enc:encKey, T:0, block:0, swift:0, foes, parts, draw:cards, disc:[], hand:[], cast:null, broken:{}, over:false, timers:[], zones:[], drawIn:RULE.draw, handMax:RULE.handMax, uid:1000, parryNow:false, charge:0, exile:[], wards:[], grow:{}, choose:null};
+  const b = {enc:encKey, T:0, block:0, swift:0, foes, parts, draw:cards, disc:[], cache:[], hand:[], cast:null, broken:{}, over:false, timers:[], zones:[], drawIn:RULE.draw, handMax:RULE.handMax, uid:1000, parryNow:false, charge:0, exile:[], wards:[], grow:{}, choose:null};
   st.b = b;
   b.handMax += fx(st, 'calc', 'handMax');
   const sb = fx(st, 'dur', 'startBlock'); if(sb) gainBlock(b, sb);
@@ -703,7 +709,8 @@ function beginAction0(st, a){
 function endAction(st, p, out){
   const b = st.b;
   // ノイズは使うと消える。廃棄(0.30.0、exile)のカードはこの戦闘の間、廃棄に置く(山札にも捨て札にも戻らない)
-  if(p.card && p.card.k !== 'noise'){ if(D.cards[p.card.k] && D.cards[p.card.k].exile) (b.exile = b.exile || []).push(p.card); else b.disc.push(p.card); }
+  // キャッシュを持つキャラ(0.39.0)は、使ったカードを捨て札ではなくキャッシュに置く(次の区切りで捨て札へ)
+  if(p.card && p.card.k !== 'noise'){ if(D.cards[p.card.k] && D.cards[p.card.k].exile) (b.exile = b.exile || []).push(p.card); else (econ().cache ? (b.cache = b.cache || []) : b.disc).push(p.card); }
   // 手札を選ぶカードは、使い終えたら選ぶ番(手札が無ければ何もしない)
   if(b.chooseNext){ const ch = b.chooseNext; b.chooseNext = null; if(!out.dead && !out.won && b.hand.length) b.choose = {kind:ch.kind, n:Math.min(ch.n, b.hand.length)}; }
   if(p.reload && !out.dead && !out.won){ const ec = econ(); if(ec.blockReset === 'end' || ec.blockReset === true) b.block = 0; }

@@ -203,6 +203,10 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 .pile .ic svg{width:14px;height:14px}
 .pile b{font-family:var(--f-num);font-size:13px}
 #pileDisc{color:var(--dim)}
+/* キャッシュ(0.39.0): 使ったカードがリフレッシュまで置かれる所。キャッシュを持つキャラでは3つの札を詰めて並べる */
+#pileCache{display:none;color:var(--cy)}
+#shaker.cached .pile{height:26px}
+#shaker.cached #pileDraw{top:300px!important}#shaker.cached #pileCache{display:flex;top:328px}#shaker.cached #pileDisc{top:356px!important}
 .card{position:absolute;width:96px;height:136px;transform-origin:50% 100%;overflow:hidden;border-radius:8px;background:var(--raised);border:1px solid #233446;color:var(--fg);display:flex;flex-direction:column;
   transition:left .22s cubic-bezier(.2,.8,.2,1),top .22s cubic-bezier(.2,.8,.2,1),transform .22s cubic-bezier(.2,.8,.2,1),opacity .22s,border-color .15s,box-shadow .2s}
 .card.sel,.card.picked{border:1.5px solid var(--cy);box-shadow:0 10px 24px rgba(56,211,255,.28)}
@@ -1181,6 +1185,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 
       <div id="handShade"></div>
       <button class="pile" id="pileDraw" type="button" style="top:302px" aria-label="山札"><span class="ic" id="icDeck"></span><b id="nDraw">0</b></button>
+      <button class="pile" id="pileCache" type="button" aria-label="キャッシュ"><span class="ic" id="icCache"></span><b id="nCache">0</b></button>
       <button class="pile" id="pileDisc" type="button" style="top:344px" aria-label="捨て札"><span class="ic" id="icDisc"></span><b id="nDisc">0</b></button>
       <div id="handCnt" class="np"><span class="ic" id="icHand"></span><b id="nHand"></b></div>
       <div id="hand"></div>
@@ -1213,7 +1218,7 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 <script src="data/text.js"></script>
 <script src="js/engine.js"></script>
 <script>
-const APP_VERSION = '0.38.5';
+const APP_VERSION = '0.39.0';
 const $ = s => document.querySelector(s);
 const EN = ENGINE, RULE = EN.RULE;
 const VIEW = RULE.view, NOW = 170, PX = 34, xs = c => NOW + c * PX, STRIP_Y = 150, SWIFT_VIS = 3;
@@ -1267,6 +1272,7 @@ const IC = {
   arrow:'<svg viewBox="0 0 24 10" style="width:24px;height:10px"><path d="M1 5H21M17 1L22 5L17 9" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>',
   loop:'<svg viewBox="0 0 24 16" style="width:24px;height:16px"><path d="M2 8A6 6 0 0 0 8 14H16A6 6 0 0 0 16 2H6M9 -1L5 2L9 5" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>',
   deck:'<svg viewBox="0 0 14 14"><rect x="3" y="1" width="9" height="11" rx="1.5" stroke="currentColor" stroke-width="1.2" fill="none"/><path d="M1 4V13H9" stroke="currentColor" stroke-width="1.2" fill="none"/></svg>',
+  cache:'<svg viewBox="0 0 14 14"><rect x="2" y="3" width="8" height="10" rx="1.5" stroke="currentColor" stroke-width="1.2" fill="none"/><path d="M5 1H12V10" stroke="currentColor" stroke-width="1.2" fill="none"/><path d="M4.5 8H7.5M6 6.5V9.5" stroke="currentColor" stroke-width="1.2"/></svg>',
   disc:'<svg viewBox="0 0 14 14"><rect x="3" y="2" width="9" height="11" rx="1.5" stroke="currentColor" stroke-width="1.2" fill="none" transform="rotate(12 7 7)"/><path d="M5 6L9 10M9 6L5 10" stroke="currentColor" stroke-width="1.2"/></svg>',
   hand:'<svg viewBox="0 0 14 14"><rect x="1" y="3" width="6" height="9" rx="1.2" stroke="currentColor" stroke-width="1.2" fill="none" transform="rotate(-10 4 7)"/><rect x="6" y="2" width="6" height="9" rx="1.2" stroke="currentColor" stroke-width="1.2" fill="none" transform="rotate(8 9 7)"/></svg>',
   redraw:'<svg viewBox="0 0 20 20"><path d="M16 7A7 7 0 1 0 17 11" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/><path d="M16 2V7H11" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>',
@@ -1431,7 +1437,7 @@ function buildStatic(){
   for(let c = 1; c <= VIEW; c++) h += `<div class="tl${c % RULE.draw === 0 ? ' tl3' : ''}" style="left:${xs(c)}px"></div><div class="tn" style="left:${xs(c) - 10}px">${c}</div>`;
   $('#ticks').innerHTML = h;
   $('#parts').innerHTML = SLOTS.map((p, j) => `<button class="part" type="button" data-p="${p.id}" style="top:${10 + j * 48}px"><span class="ph"><span class="pico">${IC[p.id]}</span><span class="pname">${p.fn}</span><span class="pnum"></span></span><span class="pips"></span></button>`).join('');
-  $('#icDeck').innerHTML = IC.deck; $('#icDisc').innerHTML = IC.disc; $('#icHand').innerHTML = IC.hand;
+  $('#icDeck').innerHTML = IC.deck; $('#icDisc').innerHTML = IC.disc; $('#icCache').innerHTML = IC.cache; $('#icHand').innerHTML = IC.hand;
   $('#menuBtn').innerHTML = IC.menu; $('#icWait').innerHTML = IC.wait;
 }
 function foeX(n, i){ return (n === 1 ? [620] : n === 2 ? [560, 690] : [494, 600, 706])[i]; }
@@ -1907,6 +1913,9 @@ function renderSide(){
   rd.disabled = busy || (!ec && fw && empty);
   const wb = $('#waitBtn'); wb.classList.toggle('sel', fw && !!sel && sel.kind === 'wait'); wb.disabled = busy;
   $('#nDraw').textContent = b.draw.length; $('#nDisc').textContent = b.disc.length;
+  { const ca = !!(RULE.econ && RULE.econ.cache), sh = $('#shaker'), was = +($('#nCache').textContent || 0), n = (b.cache || []).length;
+    sh.classList.toggle('cached', ca); $('#nCache').textContent = n;
+    if(ca && was > 0 && n === 0) pulse($('#pileDisc'), 'flash', 360); }
   $('#nHand').textContent = `${b.hand.length}/${b.handMax}`;
   $('#handCnt').classList.toggle('full', b.hand.length >= b.handMax);
   $('#handShade').classList.toggle('on', UI.view === 'hand');
@@ -1951,7 +1960,7 @@ function renderInner(){
     const s2 = b.parts[p.id], worn = S.run.parts[p.id].damaged, d = partOf(p.id);
     return `<div class="drow${s2.cur <= 0 ? ' broken' : ''}"><span class="ic">${IC[p.id]}</span><span class="dn">${p.fn}</span><span class="dp">${d.name}</span><span class="pips">${pipsHTML(s2.max, s2.cur, s2.cur, worn ? Math.ceil(s2.max / 2) : s2.max, pipW(s2.max, 70))}</span><span class="pnum">${s2.cur}</span><span class="de">${d.text}</span></div>`;
   }).join('');
-  $('#inner').innerHTML = `<div class="face">${FACE}<div class="mono">${UI.line || ''}</div><div class="sts">${st}</div></div><div class="diag">${rows}</div><div class="mem"><div class="mh"><span class="ic">${IC.deck}</span>${b.draw.length}</div><div class="ml">${memChips(b.draw)}</div><div class="mh"><span class="ic">${IC.disc}</span>${b.disc.length}</div><div class="ml">${memChips(b.disc)}</div></div>`;
+  $('#inner').innerHTML = `<div class="face">${FACE}<div class="mono">${UI.line || ''}</div><div class="sts">${st}</div></div><div class="diag">${rows}</div><div class="mem"><div class="mh"><span class="ic">${IC.deck}</span>${b.draw.length}</div><div class="ml">${memChips(b.draw)}</div>${RULE.econ && RULE.econ.cache ? `<div class="mh"><span class="ic">${IC.cache}</span>${(b.cache || []).length}</div><div class="ml">${memChips(b.cache || [])}</div>` : ''}<div class="mh"><span class="ic">${IC.disc}</span>${b.disc.length}</div><div class="ml">${memChips(b.disc)}</div></div>`;
 }
 
 /* ---------- fx ---------- */
@@ -2754,6 +2763,7 @@ function moveLines(e, a){
   if(a.kind === 'delay') L.push(fillUi('mv.delay', {v: a.v}));
   else if(a.d > 0) L.push(fillUi(a.hits > 1 ? 'mv.hits' : 'mv.atk', {part, d, hits: a.hits}));
   if(a.ch) L.push(fillUi('mv.charge', {}));
+  if(a.link) L.push(fillUi('mv.link', {}));
   if(a.armor) L.push(fillUi('mv.armor', {armor: a.armor}));
   if(a.heal) L.push(fillUi('mv.heal', {heal: a.heal}));
   if(a.crack) L.push(fillUi('mv.crack', {crack: a.crack}));

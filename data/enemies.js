@@ -35,9 +35,11 @@
 // encounters: 遭遇。敵は常に1体(0.15.0 から)。fam は系統。どの通常戦がどこで出るかは data/map.js の areas の pools(警戒度ごと)。elite / boss は特別な部屋
 window.DATA = window.DATA || {};
 DATA.foes = {
-  drone:    {kind:'drone', hp:75, start:4, ai:'rand',
-    pat:[{d:8, dl:6, p:'calc', wt:2}, {d:4, hits:2, dl:5, p:'out', wt:1}, {d:0, dl:5, crack:1, wt:1}], pool:['jab','rapid','guard','flick','capacitor']},
-  scout:    {kind:'scout', hp:74, start:2, ai:'rand',
+  // 0.39.0: 狙ってから撃つ。照準は不安定で、ブレイクすると次の大きい射撃も飛ぶ(link)
+  drone:    {kind:'drone', hp:75, start:4,
+    pat:[{d:6, dl:5, p:'calc'}, {d:0, dl:4, ch:true, link:true}, {d:12, dl:3, p:'calc'}], pool:['jab','rapid','guard','flick','capacitor']},
+  // 0.39.0: 速くて脆いが、崩しても立ち直りが早い(立て直し2)
+  scout:    {kind:'scout', hp:60, start:2, ai:'rand', passives:[{k:'recover', n:2}],
     pat:[{d:3, dl:3, p:'out', wt:2}, {d:3, hits:3, dl:5, p:'mob', wt:1}, {d:7, dl:5, p:'out', wind:{w:2, poise:6}, rec:2, wt:1}],
     pool:['jab','flick','reload','coil','arc']},
   turret:   {kind:'turret', hp:66, start:7, react:{min:4, d:4, p:'arm'},
@@ -59,7 +61,7 @@ DATA.foes = {
     pool:['hack','backflow','timebomb','scan']},
   // 0.16.0〜: 危険域・加速。0.17.0〜: ユニットが複数ある敵(行動の列は1本、耐久と状態はユニットごと)
   scanner:  {kind:'drone', hp:75, start:3,
-    pat:[{d:4, dl:5, p:'calc'}, {d:0, dl:4, zone:{at:3, len:3, d:5, p:'out'}}, {d:3, hits:2, dl:5, p:'mob'}], pool:['scan','crackshot','timebomb','hack']},
+    pat:[{d:4, dl:5, p:'calc'}, {d:0, dl:4, zone:{at:3, len:2, d:5, p:'out'}}, {d:0, dl:4, zone:{at:3, len:2, d:5, p:'out'}}, {d:3, hits:2, dl:5, p:'mob'}], pool:['scan','crackshot','timebomb','hack']},
   accel:    {kind:'scout', hp:86, start:6,
     passives:[{k:'floor', n:2}],
     pat:[{d:7, dl:7, p:'out', haste:1}, {d:6, dl:7, p:'mob', haste:1}], pool:['blow','slash','flick']},
@@ -97,7 +99,7 @@ DATA.foes = {
     pat:[{d:5, dl:4, p:'dur'}, {d:0, dl:5, eat:1, wind:{w:3, poise:10}}, {d:11, dl:5, p:'out', rec:2}],
     pool:['wall','blow','reload','backflow']},
   // 工程管理機(名前はタイムキーピング): 4サイクルごとに必ず動く。ディレイが効かない。警戒V以上では遅らせようとすると怒る(増幅。0.35.0)
-  clock:    {kind:'clock', hp:80, start:4, passives:[{k:'punctual', n:0}], wary:[{at:5, passives:[{k:'punctual', n:1}]}],
+  clock:    {kind:'clock', hp:80, start:4, passives:[{k:'punctual', n:0}], wary:[{at:5, passives:[{k:'punctual', n:1}], pat:[{d:8, dl:4, p:'calc'}, {d:8, dl:4, p:'arm'}, {d:8, dl:4, p:'mob'}, {d:16, dl:4, p:'dur', ch:true}]}],
     pat:[{d:5, dl:4, p:'calc'}, {d:5, dl:4, p:'arm'}, {d:5, dl:4, p:'mob'}, {d:16, dl:4, p:'dur', ch:true}],
     pool:['parry','rapid','crackshot']},
   // 溶接機: 壊した腕を直してしまう。直す行動は体勢で止められる

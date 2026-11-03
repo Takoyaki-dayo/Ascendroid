@@ -159,6 +159,10 @@ window.DATA = window.DATA || {};
    "name": "慎重な一撃",
    "text": "{dmg}ダメージを与える。{block}ブロックを得る。"
   },
+  "backdoor": {
+   "name": "バックドア",
+   "text": "侵食{dn}/{dp}を与える。廃棄。"
+  },
   "foresight": {
    "name": "見切り",
    "text": "〈JUST〉敵の行動をブレイク。虚弱{wk}を付与する。"
@@ -353,12 +357,13 @@ window.DATA = window.DATA || {};
  "foes": {
   "drone": "警備ドローン",
   "drone.pat.0": "射撃",
-  "drone.pat.1": "連射",
-  "drone.pat.2": "照準",
+  "drone.pat.1": "照準",
+  "drone.pat.2": "射撃",
   "scout": "斥候機 SC-02",
   "scout.pat.0": "刺突",
   "scout.pat.1": "乱れ突き",
   "scout.pat.2": "踏み込み",
+  "scout.passive.0": "立て直し",
   "turret": "迎撃タレット",
   "turret.pat.0": "砲撃",
   "turret.pat.1": "装甲を重ねる",
@@ -403,7 +408,8 @@ window.DATA = window.DATA || {};
   "scanner": "走査ドローン",
   "scanner.pat.0": "射撃",
   "scanner.pat.1": "走査線",
-  "scanner.pat.2": "連射",
+  "scanner.pat.2": "走査線",
+  "scanner.pat.3": "連射",
   "accel": "暴走機",
   "accel.pat.0": "突進",
   "accel.pat.1": "蹴撃",
@@ -757,6 +763,7 @@ window.DATA = window.DATA || {};
   "ui.mv.crack": "こちらにクラック{crack}を与える。こちらが受ける攻撃すべてのダメージ+{crack}。重なる。",
   "ui.mv.noise": "山札に《ノイズ》{noise}枚を混ぜる。",
   "ui.mv.summon": "{name}を呼ぶ。",
+  "ui.mv.link": "ブレイクされると、次の行動も飛ばされる。",
   "ui.mv.none": "攻撃はしない。",
   "ui.foe.react": "反応：コスト{min}以上のカードを使い始めると、1サイクル後に{part}に{d}ダメージを与える。",
   "ui.foe.sync": "連携：仲間と同じサイクルに攻撃すると、ダメージ+{sync}。",

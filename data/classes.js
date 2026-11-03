@@ -1,6 +1,7 @@
 // キャラ(クラス)ごとの違い
 // 敵・タイムライン・部位などは全キャラ共通。キャラごとに変えるのは、手札の補給の型と、カードの数値(いずれはカードの集合そのもの)
 // econ: 手札の補給の型(js/engine.js の RULE.econ)。null は「3サイクルごとに1枚届く」
+//   cache: 使ったカードはキャッシュに置き、リフレッシュで捨て札に移す(0.39.0。0コストで引くカードの無限ループを止める)
 //   reload: 自動では引かず、好きなときに r サイクル使って手札を全部捨て hand 枚引く。blockReset:'start' なら始めにブロックをすべて失う
 //   turn: len サイクルごとに区切り、手札を捨てて hand 枚引く。ブロックも消える
 // wait: true なら手札があっても1サイクル待機できる(右下の下段のボタン)
@@ -10,7 +11,7 @@
 window.DATA = window.DATA || {};
 DATA.classes = {
   // 既定のキャラ。リフレッシュ2・5枚。コスト2以下は時間に比例する強さ(常時供給の約0.78倍)、コスト3以上は約1.55倍
-  k7: {name:'K-7', sys:'リフレッシュ', econ:{type:'reload', r:2, hand:5, blockReset:'end'}, wait:false,
+  k7: {name:'K-7', sys:'リフレッシュ', econ:{type:'reload', r:2, hand:5, blockReset:'end', cache:true}, wait:false,
     cards:{flick:{dmg:3}, jab:{dmg:3}, guard:{block:4}, timebomb:{timer:9}, rapid:{dmg:4}, crackshot:{dmg:3}, parry:{block:2},
       slash:{dmg:15}, scatter:{dmg:5}, charge:{dmg:16}, blow:{dmg:40},
       arc:{dmg:5}}},

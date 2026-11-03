@@ -535,9 +535,14 @@ const openCount = (kind, key) => REQ.filter(r => r.kind === kind && r.key === ke
 const kindOpen = kind => REQ.filter(r => r.kind === kind && (r.status === 'open' || r.status === 'discuss')).length;
 // Claude の返事にまだ答えていないもの(やりとりの最後が Claude)。一覧・タブ・依頼で目立たせる
 const lastWho = t => t && t.length ? t[t.length - 1].who : '';
-const needsMe = r => (r.status === 'open' || r.status === 'discuss') && lastWho(r.thread) === 'claude';
-// 工房のカード・属性は「添削済み」のときだけ(確定・作業中・添削待ち・削るにしたら、返信しなくても消える)
-const cardNeedsMe = d => !!d && d.status === 'reviewed' && lastWho(d.thread) === 'claude';
+// 0.40.0: まだ見ていない Claude の返事(seenAt より新しい)は、状態に関わらず知らせる(反映済み・終わった依頼でも)
+const lastAt = t => t && t.length ? t[t.length - 1].at || '' : '';
+const unseen = d => !!d && lastWho(d.thread) === 'claude' && !(d.seenAt && d.seenAt >= lastAt(d.thread));
+const needsMe = r => lastWho(r.thread) === 'claude' && ((r.status === 'open' || r.status === 'discuss') || unseen(r));
+// 工房のカード・属性・敵は「添削済み」のときと、まだ見ていない返事があるとき(開くと見たことになる)
+const cardNeedsMe = d => !!d && lastWho(d.thread) === 'claude' && (d.status === 'reviewed' || unseen(d));
+// 開いた項目の返事を見たことにする(共有データベースの seenAt)
+function markSeen(col, key, d){ if(!DB || !d || !unseen(d)) return; d.seenAt = new Date().toISOString(); DB.doc(col + '/' + key).update({seenAt:d.seenAt}).catch(() => {}); }
 const kindReplies = kind => kind === 'cards' ? Object.values(WB).filter(cardNeedsMe).length : kind === 'attrs' ? Object.values(AB).filter(cardNeedsMe).length : (kind === 'foes' ? Object.values(FD).filter(cardNeedsMe).length : 0) + REQ.filter(r => needsMe(r) && (r.kind === kind || (r.type === 'batch' && kind === 'requests'))).length;
 const itemReplies = (kind, key) => REQ.filter(r => needsMe(r) && r.kind === kind && r.key === key).length;
 const allReplies = () => REQ.filter(needsMe).length + Object.values(WB).filter(cardNeedsMe).length + Object.values(AB).filter(cardNeedsMe).length + Object.values(FD).filter(cardNeedsMe).length;
@@ -1174,7 +1179,7 @@ function reqHTML(r, withItem){
     <div class="req-h"><span class="badge ${esc(r.status)}">${STATUS[r.status] || r.status}</span>${r.type === 'new' ? '<span class="badge new">追加</span>' : r.type === 'note' ? '<span class="badge dropped">相談</span>' : ''}${item}<span class="d">${fmt(r.at)}${r.version ? ' · ' + esc(r.version) : ''}</span></div>
     ${r.type === 'batch' ? batchBody(r) : ''}${ch ? `<div class="diff">${ch}</div>` : ''}${r.type === 'new' && r.obj ? `<div class="note">キー ${esc(r.key)}: <code>${esc(JSON.stringify(r.obj)).slice(0, 300)}</code></div>` : ''}
     ${r.comment ? `<div class="cm">${esc(r.comment)}</div>` : ''}${thread}
-    ${r.status === 'done' || r.status === 'dropped' ? '' : `${needsMe(r) ? `<div class="reply"><button class="btn" type="button" data-agree="${esc(r.id)}">その案で</button><span class="note">違うときは下に返信</span></div>` : ''}<div class="reply"><input type="text" data-reply="${esc(r.id)}" placeholder="返信" aria-label="返信"><button class="btn quiet" type="button" data-send-reply="${esc(r.id)}">返信</button><button class="btn quiet" type="button" data-drop="${esc(r.id)}">取り下げ</button></div>`}
+    ${r.status === 'done' || r.status === 'dropped' ? (unseen(r) ? `<div class="reply"><button class="btn" type="button" data-seen="${esc(r.id)}">確認した</button></div>` : '') : `${needsMe(r) ? `<div class="reply"><button class="btn" type="button" data-agree="${esc(r.id)}">その案で</button><span class="note">違うときは下に返信</span></div>` : ''}<div class="reply"><input type="text" data-reply="${esc(r.id)}" placeholder="返信" aria-label="返信"><button class="btn quiet" type="button" data-send-reply="${esc(r.id)}">返信</button><button class="btn quiet" type="button" data-drop="${esc(r.id)}">取り下げ</button></div>`}
   </div>`;
 }
 function batchBody(r){
@@ -1184,7 +1189,7 @@ function batchBody(r){
   return cs || is || rs ? `<div class="bis">${cs}${is}${rs ? `<div class="note">一緒に相談する依頼 ${(r.refs || []).length}件</div>${rs}` : ''}</div>` : '';
 }
 function renderReqPane(){
-  const f = S.reqFilter, rs = REQ.filter(r => f === 'all' || (f === 'reply' ? needsMe(r) : f === 'active' ? r.status === 'open' || r.status === 'discuss' : r.status === f)).sort((a, b) => (needsMe(b) - needsMe(a)) || (b.at || '').localeCompare(a.at || ''));
+  const f = S.reqFilter, rs = REQ.filter(r => f === 'all' || (f === 'reply' ? needsMe(r) : f === 'active' ? r.status === 'open' || r.status === 'discuss' || needsMe(r) : r.status === f)).sort((a, b) => (needsMe(b) - needsMe(a)) || (b.at || '').localeCompare(a.at || ''));
   const nr = REQ.filter(needsMe).length;
   const fl = [['reply', `Claude の返事${nr ? ' ' + nr : ''}`], ['active', '対応待ち'], ['done', '反映済み'], ['all', 'すべて']].map(([k, n]) => `<button type="button" class="btn ${S.reqFilter === k ? '' : 'quiet'}" data-rf="${k}">${n}</button>`).join('');
   const general = `<div class="req"><div class="req-h"><span class="t">項目によらない依頼・相談</span></div><textarea id="generalText" placeholder="例: 新しいアーキタイプ「侵食」を作りたい。カード案は…" style="width:100%;min-height:60px;border:1px solid var(--line);border-radius:6px;padding:6px 8px;background:var(--panel)"></textarea><div class="reply"><span class="sp" style="flex:1"></span><button class="btn" type="button" id="sendGeneral"${DB ? '' : ' disabled'}>送る</button></div></div>`;
@@ -1265,6 +1270,7 @@ async function docRevert(){
 }
 function selectItem(key){
   S.bulkOpen = false;
+  { const K = KBY[S.kind]; if(K && K.ab) markSeen('attrs', key, AB[key]); else if(K && K.wb) markSeen('cards', key, WB[key]); else if(K && K.doc){ const d = DOCS()[S.kind] && DOCS()[S.kind][key]; markSeen(K.doc, key, d); } }
   if(KBY[S.kind] && KBY[S.kind].ab){ if(!(S.ab && S.ab.key === key)) abOpen(key); S.sel = key; S.mobileOpen = true; renderAll(); return; }
   if(KBY[S.kind] && KBY[S.kind].wb){ if(!(S.wb && S.wb.key === key)) wbOpen(key); S.sel = key; S.wbDeckOpen = false; S.revertArm = null; S.mobileOpen = true; renderAll(); return; }
   const it = curItems().find(x => x.key === key); if(!it) return;
@@ -1353,6 +1359,7 @@ document.addEventListener('click', e => {
   const go = t.closest('[data-goto]'); if(go){ const [k, key] = go.dataset.goto.split('|'); if(KBY[k]){ eStash(); S.kind = k; S.draft = null; renderAll(); if(key) selectItem(key); } return; }
   const sr = t.closest('[data-send-reply]'); if(sr){ reply(sr.dataset.sendReply); return; }
   const ag = t.closest('[data-agree]'); if(ag){ agree(ag.dataset.agree); return; }
+  const sn = t.closest('[data-seen]'); if(sn){ const rq = REQ.find(x => x.id === sn.dataset.seen); markSeen('requests', sn.dataset.seen, rq); renderAll(); return; }
   const dr = t.closest('[data-drop]'); if(dr){ drop(dr.dataset.drop); return; }
   if(t.closest('#sendBtn')){ send(); return; }
   if(t.closest('#docSave')){ docSave(); return; }

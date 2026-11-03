@@ -543,7 +543,7 @@ const needsMe = r => lastWho(r.thread) === 'claude' && ((r.status === 'open' || 
 // 工房のカード・属性・敵は「添削済み」のときと、まだ見ていない返事があるとき(開くと見たことになる)
 const cardNeedsMe = d => !!d && lastWho(d.thread) === 'claude' && (d.status === 'reviewed' || unseen(d));
 // 開いた項目の返事を見たことにする(共有データベースの seenAt)
-function markSeen(col, key, d){ try{ if(!DB || !d || !unseen(d)) return; const at = new Date().toISOString(); (async () => { try{ await DB.doc(col + '/' + key).update({seenAt:at}); }catch(e){} })(); }catch(e){} }
+function markSeen(col, key, d){ try{ if(!DB || !d || !unseen(d)) return; const now = new Date().toISOString(), la = lastAt(d.thread), at = la > now ? la : now; // 返事の時刻が端末の時計より先でも見たことにできるように (async () => { try{ await DB.doc(col + '/' + key).update({seenAt:at}); }catch(e){} })(); }catch(e){} }
 const kindReplies = kind => kind === 'cards' ? Object.values(WB).filter(cardNeedsMe).length : kind === 'attrs' ? Object.values(AB).filter(cardNeedsMe).length : (kind === 'foes' ? Object.values(FD).filter(cardNeedsMe).length : 0) + REQ.filter(r => needsMe(r) && ((r.kind === kind && reqOnRow(r)) || (r.type === 'batch' && kind === 'requests'))).length;
 // 依頼が一覧の行に出るか(0.40.2): 終わった依頼で、追加したときのキーが本体で別のキーになったもの(行が無い)は、タブでは数えず依頼のタブだけで知らせる
 const reqOnRow = r => (r.status === 'open' || r.status === 'discuss') || !KBY[r.kind] || !KBY[r.kind].items || KBY[r.kind].items().some(it => it.key === r.key);

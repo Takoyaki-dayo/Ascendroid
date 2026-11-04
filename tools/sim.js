@@ -140,9 +140,12 @@ function playRun(pol, seed){
     const n = naive ? nx[Math.floor(R() * nx.length)] : pickNode(run, nx, R);
     if(n.type === 'battle') E.encFor(run, n);
     if(n.enc){
-      const st = E.newBattle(run, n.enc);
+      const body0 = run.body, st = E.newBattle(run, n.enc);
       let o = null;
       for(let k = 0; k < 400; k++){ o = E.doAction(st, POL[pol](st)); if(o.won || o.dead) break; }
+      // 集計(0.40.4): 遭遇ごとの回数・負け・被ダメージ・かかったサイクル(ランの中で、その時のデッキと本体で)
+      { const T = playRun.stats = playRun.stats || {}, k = n.enc + '@a' + (run.area + 1), x = T[k] = T[k] || {n:0, lost:0, loss:0, cyc:0, bodyIn:0};
+        x.n++; x.bodyIn += body0; x.cyc += st.b.T; if(!o || !o.won) x.lost++; else x.loss += body0 - st.run.body; }
       if(!o || !o.won) return {clear:false, at:'a' + (run.area + 1) + ':' + n.type, rooms:log.length, body:0, log};
       for(const s of D.slots) run.parts[s.id].damaged = !!st.b.broken[s.id];
       E.lootBack(st); if(!E.fledAll(st)) run.scrap += Math.round((n.type === 'elite' ? D.rewards.elite : n.type === 'battle' ? D.rewards.battle : 0) * (1 + D.alert.scrap * (E.alertLevel(run) - 1)));

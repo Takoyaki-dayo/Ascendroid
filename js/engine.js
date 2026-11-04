@@ -466,7 +466,7 @@ function* spendGen(st, cost, k, ti, noInt){
         for(const t of due){
           const ev = fireTimer(st, t);
           // 不安定(0.31.0): 時限もカードのダメージなので、この行動と同じサイクルに当たればブレイク
-          for(const e of b.foes) if(e.alive && e.r <= 0 && cur(e).ch && !e.chain && ev.some(x => x.kind === 'dmg' && x.e === e.i)){ const nm = cur(e).n; advance(e); b.breaks = (b.breaks || 0) + 1; ev.push({kind:'break', e:e.i, name:nm}); }
+          for(const e of b.foes) if(e.alive && e.r <= 0 && cur(e).ch && !e.chain && ev.some(x => x.kind === 'dmg' && x.e === e.i)){ const nm = cur(e).n; skipMove(e); /* 0.40.4: 連動(link)も飛ばす */ b.breaks = (b.breaks || 0) + 1; ev.push({kind:'break', e:e.i, name:nm}); }
           timerBreakAttr(st, t, ev);
           yield {type:'timer', t, ev};
         }
@@ -504,7 +504,7 @@ function* spendGen(st, cost, k, ti, noInt){
         if(real) for(const e of b.foes){
           // 不安定(0.31.0): カードでダメージを与えるときだけ(防御のカードや持続ではブレイクしない)
           if(e.alive && e.r <= 0 && cur(e).ch && !e.chain && cardHitsFoe(b, c, e, ti)){
-            const nm = cur(e).n, jp = actorUid(e, cur(e)); advance(e);
+            const nm = cur(e).n, jp = actorUid(e, cur(e)); skipMove(e); /* 0.40.4: JUST でも連動(link)の次の行動を飛ばす(前は advance で飛ばしていなかった) */
             const cr = fx(st, 'calc', 'justCrack'); e.units[jp].crack += cr;
             const dl = fx(st, 'calc', 'justDelay'); if(dl) delayFoe(e, dl);
             out.justs.push({i:e.i, name:nm}); (b.justBroke = b.justBroke || []).push(e.i); yield {type:'just', e:e.i, crack:cr, delay:dl};

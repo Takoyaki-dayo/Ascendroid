@@ -16,7 +16,7 @@
   - `classes.js` キャラごとの手札の補給の型とカードの数値(敵は全キャラ共通)
 - `tools/text.js` text/*.csv から data/text.js を作る
 - `tools/datadoc.js` データ一覧の資料に載せる表を data から作る
-- `tools/sim.js` 自動対戦のシミュレータ。`node tools/sim.js greedy 40` で遭遇ごと、`node tools/sim.js greedy 40 run` でラン全体。キャラは `CLS=k7` のように環境変数で選ぶ(省略時は常時供給)
+- `tools/sim.js` 自動対戦のシミュレータ。`node tools/sim.js master 40` で遭遇ごと、`node tools/sim.js master 40 run` でラン全体。キャラは `CLS=k7` のように環境変数で選ぶ(省略時は常時供給)。打ち方は master(2手先まで読み、これから来る攻撃を減らす。いちばん人に近い)・expert・greedy・random。ラン全体は道・学習・整備・ショップ・イベント・中継も考えて選ぶ(`RUN=naive` で前の雑な遊び方)
 - `tools/lab/` ルールの条件を切り替えて比べる実験
   - `lab.js` と `exp1〜3.js`: 抽象モデルで、決め方・手札の補給・強さの曲線・中断などを比べる(結果は同名の .json)
   - `lab2.js` と `exp4.js`: 抽象モデルで、敵の行動の複雑さと「待てる」を比べる。`node tools/lab/exp4.js A,D,K 5`(条件の記号、乱数の種)

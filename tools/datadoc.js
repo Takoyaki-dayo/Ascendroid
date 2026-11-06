@@ -63,7 +63,7 @@ out.map = `## 地図と部屋\n\n1周は${D.areas.length}エリア。1エリア�
   D.events.map(e => `| ${e.title} | ${e.choices.map(c => `${c.label}: ${c.sub}`).join(' ／ ')} |`).join('\n') +
   `\n\nエリアの間の中継: 本体を最大の${Math.round(D.transit[0].heal * 100)}%回復し、そのエリア固有のイベント(今は仮)。\n\n| 中継 | 選択肢 |\n| --- | --- |\n` +
   D.transit.map((e, i) => `| エリア${i + 1}→${i + 2}: ${e.title} | ${e.choices.map(c => `${c.label}: ${c.sub}`).join(' ／ ')} |`).join('\n') +
-  `\n\n### 警戒\n\n相対値の5段(−2〜+2)。区画ごとに ${D.heat.cool} 冷め、戦闘で上がる(${Object.entries(D.heat.gain).map(([k, v]) => k + ' ' + v).join('、')})。+1・+2 で敵が「+」「++」の形で出る。` +
+  `\n\n### 警戒\n\n相対値の5段(−2〜+2)。区画ごとに ${D.heat.cool} 冷め、戦闘で上がる(${Object.entries(D.heat.gain).map(([k, v]) => k + ' ' + v).join('、')})。+1・+2 で敵が「+」「++」の形で出る。`;
 const cond = {bodyLow:'本体が最大の4割未満', partBroken:'破損した部位がある', chargeSoon:'9サイクル以内に不安定な行動が来る', vulnNow:'隙を見せている敵がいる', windNow:'体勢の窓にいる(もうすぐ入る)敵がいる', handEmpty:'手札がない', partWorn:'前の戦闘の損傷が残っている', focus:'見えている攻撃が1つの部位に合計10以上'};
 out.lines = `## セリフ\n\n下スワイプの内側画面で${D.lines.speaker}が話す独り言です。上から順に条件を調べ、最初に当てはまったものを出します(文が複数あればランダムで1つ)。{part}{enemy}{move}{t}{poise} には部位名、敵の名前、技の名前、残りサイクル、ブレイクに要る一撃が入ります。\n\n| 優先 | 条件 | セリフ |\n| --- | --- | --- |\n` +
   D.lines.rules.map((r, i) => `| ${i + 1} | ${cond[r.when]} | ${r.text.join(' / ')} |`).join('\n') + `\n\nどれにも当てはまらないときは、部屋の種類ごとの一言を出します。\n\n| 部屋 | 一言 |\n| --- | --- |\n` + Object.entries(D.lines.room).map(([k, v]) => `| ${D.rooms[k].name} | ${v.join(' / ')} |`).join('\n');

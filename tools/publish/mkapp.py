@@ -2,6 +2,11 @@
 # リポジトリの index.html から PWA 用の head とサービスワーカーの登録を外し、スクリプトを ?v=版 付きで読む
 # 出力フォルダに data/*.js と js/engine.js も写す。公開は Artifact の file_path=<出力>/index.html、files に data/・js/
 import re, os, sys, shutil
+import subprocess
+# 0.41.2: 構文の誤りがあれば作らない
+_R = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+if subprocess.call(['node', os.path.join(_R, 'tools/publish/check.js'), os.path.join(_R, 'index.html'), os.path.join(_R, 'js/engine.js')] + [os.path.join(_R, 'data', f) for f in sorted(os.listdir(os.path.join(_R, 'data'))) if f.endswith('.js')]) != 0:
+    sys.exit('構文の誤りがあるので止めました')
 R = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 out = sys.argv[1]
 os.makedirs(out + '/data', exist_ok=True); os.makedirs(out + '/js', exist_ok=True)

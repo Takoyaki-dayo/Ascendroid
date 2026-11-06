@@ -2,6 +2,8 @@
 # カード工房(データ台帳)の公開フォルダを作る: sh tools/publish/stage.sh <出力フォルダ> <版> <コミット>
 # 公開は Artifact の file_path=<出力>/index.html、files に data/・js/・meta.js・play/
 R=$(cd "$(dirname "$0")/../.." && pwd); S=$1
+# 0.41.2: 構文の誤りがあれば作らない
+node $R/tools/publish/check.js $R/tools/sheet/index.html $R/index.html $R/js/engine.js $R/data/*.js || { echo "構文の誤りがあるので止めました"; exit 1; }
 mkdir -p $S/data $S/js
 cp $R/tools/sheet/index.html $S/index.html
 cp $R/data/attrs.js $R/data/cards.js $R/data/classes.js $R/data/enemies.js $R/data/map.js $R/data/parts.js $R/data/text.js $S/data/

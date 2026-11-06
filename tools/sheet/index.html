@@ -34,6 +34,10 @@ button{cursor:pointer}
 header{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding-block:12px 10px;border-bottom:1px solid var(--line)}
 header h1{font-size:16px;margin:0;letter-spacing:.04em;font-weight:700}
 .ver{font-family:var(--f-num);font-size:12px;color:var(--dim)}
+/* 0.41.2: 古い版の警告と、依頼の担当(会話A=仕組み / 会話B=中身) */
+.ver.old{color:#fff;background:var(--bad, #c0392b);padding:2px 8px;border-radius:4px;font-weight:700}
+#oldBanner{position:sticky;top:0;z-index:50;background:#c0392b;color:#fff;font-size:13px;font-weight:700;padding:6px 12px;text-align:center}
+.badge.lane{cursor:pointer;border:1px solid var(--line);background:var(--panel);color:var(--fg)} .badge.lane.A{color:#2a7fd4;border-color:#2a7fd4} .badge.lane.B{color:#b5651d;border-color:#b5651d}
 .tabs{display:flex;gap:2px;flex-wrap:wrap;margin-left:auto}
 .tab{border:0;background:none;padding:6px 10px;border-radius:6px;color:var(--fg2);font-weight:700;font-size:12.5px;display:inline-flex;gap:6px;align-items:center}
 .tab:hover{background:var(--raised)}
@@ -535,6 +539,13 @@ let DB = null, REQ = [], dbState = 'wait';
 const openCount = (kind, key) => REQ.filter(r => r.kind === kind && r.key === key && (r.status === 'open' || r.status === 'discuss')).length;
 const kindOpen = kind => REQ.filter(r => r.kind === kind && (r.status === 'open' || r.status === 'discuss')).length;
 // Claude の返事にまだ答えていないもの(やりとりの最後が Claude)。一覧・タブ・依頼で目立たせる
+// 依頼の担当(0.41.2): 会話A は仕組み(ルール・画面・地図・警戒度・キャラ)、会話B は中身(カード・敵・パーツ・イベントなど)。lane で上書きできる
+const LANE_A = ['general', 'areas', 'encounters', 'alert', 'classes', 'requests'];
+const laneOf = r => r.lane || (LANE_A.includes(r.kind) || r.type === 'batch' ? 'A' : 'B');
+const LANE_NAME = {A:'会話A 仕組み', B:'会話B 中身'};
+// 版の比べ方(0.41.2): '0.41.2' のような版を数の並びで比べる
+const verCmp = (a, b) => { const x = String(a || '0').split('.').map(Number), y = String(b || '0').split('.').map(Number); for(let i = 0; i < 3; i++){ if((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) - (y[i] || 0); } return 0; };
+let BUILD = null;
 const lastWho = t => t && t.length ? t[t.length - 1].who : '';
 // 0.40.0: まだ見ていない Claude の返事(seenAt より新しい)は、状態に関わらず知らせる(反映済み・終わった依頼でも)
 const lastAt = t => t && t.length ? t[t.length - 1].at || '' : '';
@@ -543,7 +554,7 @@ const needsMe = r => lastWho(r.thread) === 'claude' && ((r.status === 'open' || 
 // 工房のカード・属性・敵は「添削済み」のときと、まだ見ていない返事があるとき(開くと見たことになる)
 const cardNeedsMe = d => !!d && lastWho(d.thread) === 'claude' && (d.status === 'reviewed' || unseen(d));
 // 開いた項目の返事を見たことにする(共有データベースの seenAt)
-function markSeen(col, key, d){ try{ if(!DB || !d || !unseen(d)) return; const now = new Date().toISOString(), la = lastAt(d.thread), at = la > now ? la : now; // 返事の時刻が端末の時計より先でも見たことにできるように (async () => { try{ await DB.doc(col + '/' + key).update({seenAt:at}); }catch(e){} })(); }catch(e){} }
+function markSeen(col, key, d){ try{ if(!DB || !d || !unseen(d)) return; const now = new Date().toISOString(), la = lastAt(d.thread), at = la > now ? la : now; /* 返事の時刻が端末の時計より先でも見たことにできるように */ (async () => { try{ await DB.doc(col + '/' + key).update({seenAt:at}); }catch(e){} })(); }catch(e){} }
 const kindReplies = kind => kind === 'cards' ? Object.values(WB).filter(cardNeedsMe).length : kind === 'attrs' ? Object.values(AB).filter(cardNeedsMe).length : (kind === 'foes' ? Object.values(FD).filter(cardNeedsMe).length : 0) + REQ.filter(r => needsMe(r) && ((r.kind === kind && reqOnRow(r)) || (r.type === 'batch' && kind === 'requests'))).length;
 // 依頼が一覧の行に出るか(0.40.2): 終わった依頼で、追加したときのキーが本体で別のキーになったもの(行が無い)は、タブでは数えず依頼のタブだけで知らせる
 const reqOnRow = r => (r.status === 'open' || r.status === 'discuss') || !KBY[r.kind] || !KBY[r.kind].items || KBY[r.kind].items().some(it => it.key === r.key);
@@ -1179,7 +1190,7 @@ function reqHTML(r, withItem){
   const ch = (r.changes || []).map(c => `<div class="dl"><span class="p" title="${esc(c.path)}">${esc(c.path)}</span><span class="v"><s>${esc(c.from)}</s> → <b>${esc(c.to)}</b></span></div>`).join('');
   const thread = (r.thread || []).map(m => `<div class="msg ${m.who === 'claude' ? 'claude' : 'user'}"><span class="w">${m.who === 'claude' ? 'Claude' : 'あなた'} · ${fmt(m.at)}</span>${esc(m.text)}</div>`).join('');
   return `<div class="req ${esc(r.status)}${needsMe(r) ? ' hl' : ''}" data-req="${esc(r.id)}">
-    <div class="req-h"><span class="badge ${esc(r.status)}">${STATUS[r.status] || r.status}</span>${r.type === 'new' ? '<span class="badge new">追加</span>' : r.type === 'note' ? '<span class="badge dropped">相談</span>' : ''}${item}<span class="d">${fmt(r.at)}${r.version ? ' · ' + esc(r.version) : ''}</span></div>
+    <div class="req-h"><span class="badge ${esc(r.status)}">${STATUS[r.status] || r.status}</span><button type="button" class="badge lane ${laneOf(r)}" data-lane="${esc(r.id)}" title="押すと担当を入れ替える">${LANE_NAME[laneOf(r)]}</button>${r.type === 'new' ? '<span class="badge new">追加</span>' : r.type === 'note' ? '<span class="badge dropped">相談</span>' : ''}${item}<span class="d">${fmt(r.at)}${r.version ? ' · ' + esc(r.version) : ''}</span></div>
     ${r.type === 'batch' ? batchBody(r) : ''}${ch ? `<div class="diff">${ch}</div>` : ''}${r.type === 'new' && r.obj ? `<div class="note">キー ${esc(r.key)}: <code>${esc(JSON.stringify(r.obj)).slice(0, 300)}</code></div>` : ''}
     ${r.comment ? `<div class="cm">${esc(r.comment)}</div>` : ''}${thread}
     ${r.status === 'done' || r.status === 'dropped' ? (unseen(r) ? `<div class="reply"><button class="btn" type="button" data-seen="${esc(r.id)}">確認した</button></div>` : '') : `${needsMe(r) ? `<div class="reply"><button class="btn" type="button" data-agree="${esc(r.id)}">その案で</button><span class="note">違うときは下に返信</span></div>` : ''}<div class="reply"><input type="text" data-reply="${esc(r.id)}" placeholder="返信" aria-label="返信"><button class="btn quiet" type="button" data-send-reply="${esc(r.id)}">返信</button><button class="btn quiet" type="button" data-drop="${esc(r.id)}">取り下げ</button></div>`}
@@ -1192,9 +1203,10 @@ function batchBody(r){
   return cs || is || rs ? `<div class="bis">${cs}${is}${rs ? `<div class="note">一緒に相談する依頼 ${(r.refs || []).length}件</div>${rs}` : ''}</div>` : '';
 }
 function renderReqPane(){
-  const f = S.reqFilter, rs = REQ.filter(r => f === 'all' || (f === 'reply' ? needsMe(r) : f === 'active' ? r.status === 'open' || r.status === 'discuss' || needsMe(r) : r.status === f)).sort((a, b) => (needsMe(b) - needsMe(a)) || (b.at || '').localeCompare(a.at || ''));
+  const f = S.reqFilter, ln = S.reqLane || 'all', rs = REQ.filter(r => ln === 'all' || laneOf(r) === ln).filter(r => f === 'all' || (f === 'reply' ? needsMe(r) : f === 'active' ? r.status === 'open' || r.status === 'discuss' || needsMe(r) : r.status === f)).sort((a, b) => (needsMe(b) - needsMe(a)) || (b.at || '').localeCompare(a.at || ''));
   const nr = REQ.filter(needsMe).length;
-  const fl = [['reply', `Claude の返事${nr ? ' ' + nr : ''}`], ['active', '対応待ち'], ['done', '反映済み'], ['all', 'すべて']].map(([k, n]) => `<button type="button" class="btn ${S.reqFilter === k ? '' : 'quiet'}" data-rf="${k}">${n}</button>`).join('');
+  const fl = [['reply', `Claude の返事${nr ? ' ' + nr : ''}`], ['active', '対応待ち'], ['done', '反映済み'], ['all', 'すべて']].map(([k, n]) => `<button type="button" class="btn ${S.reqFilter === k ? '' : 'quiet'}" data-rf="${k}">${n}</button>`).join('')
+    + '<span style="width:12px"></span>' + [['all', '担当: すべて'], ['A', LANE_NAME.A], ['B', LANE_NAME.B]].map(([k, n]) => `<button type="button" class="btn ${(S.reqLane || 'all') === k ? '' : 'quiet'}" data-rl="${k}">${n}</button>`).join('');
   const general = `<div class="req"><div class="req-h"><span class="t">項目によらない依頼・相談</span></div><textarea id="generalText" placeholder="例: 新しいアーキタイプ「侵食」を作りたい。カード案は…" style="width:100%;min-height:60px;border:1px solid var(--line);border-radius:6px;padding:6px 8px;background:var(--panel)"></textarea><div class="reply"><span class="sp" style="flex:1"></span><button class="btn" type="button" id="sendGeneral"${DB ? '' : ' disabled'}>送る</button></div></div>`;
   return `<div class="reqs"><div class="filters">${fl}</div>${general}${rs.length ? rs.map(r => reqHTML(r, true)).join('') : `<div class="note">${dbState === 'wait' ? '読み込み中…' : dbState === 'off' ? 'この表示では依頼を読めません。' : 'まだ依頼はありません。'}</div>`}</div>`;
 }
@@ -1361,6 +1373,8 @@ document.addEventListener('click', e => {
   const row = t.closest('tr.row'); if(row){ selectItem(row.dataset.key); return; }
   const md = t.closest('[data-mode]'); if(md){ setMode(md.dataset.mode === 'json'); return; }
   const rf = t.closest('[data-rf]'); if(rf){ S.reqFilter = rf.dataset.rf; renderList(); return; }
+  const rl = t.closest('[data-rl]'); if(rl){ S.reqLane = rl.dataset.rl; renderList(); return; }
+  const lb = t.closest('[data-lane]'); if(lb){ const q = REQ.find(x => x.id === lb.dataset.lane); if(q && DB){ const nl = laneOf(q) === 'A' ? 'B' : 'A'; q.lane = nl; renderList(); (async () => { try{ await DB.doc('requests/' + q.id).update({lane:nl}); }catch(e){ toast('変えられませんでした'); } })(); } return; }
   const go = t.closest('[data-goto]'); if(go){ const [k, key] = go.dataset.goto.split('|'); if(KBY[k]){ eStash(); S.kind = k; S.draft = null; renderAll(); if(key) selectItem(key); } return; }
   const sr = t.closest('[data-send-reply]'); if(sr){ reply(sr.dataset.sendReply); return; }
   const ag = t.closest('[data-agree]'); if(ag){ agree(ag.dataset.agree); return; }
@@ -1462,6 +1476,11 @@ function requestRender(side){
 }
 /* ---------- 共有データベース(依頼) ---------- */
 $('#ver').textContent = META.version ? `ゲーム ${META.version}${META.commit ? ' · ' + META.commit : ''}` : '';
+function showBuild(){
+  const old = BUILD && META.version && verCmp(META.version, BUILD.version) < 0, v = $('#ver'); if(v) v.classList.toggle('old', !!old);
+  let bn = $('#oldBanner'); if(old && !bn){ bn = document.createElement('div'); bn.id = 'oldBanner'; document.body.prepend(bn); }
+  if(bn){ if(old) bn.textContent = `この工房は古い版(${META.version})です。最新は ${BUILD.version}${BUILD.commit ? '(' + BUILD.commit + ')' : ''}。Claude に「工房を最新の版で公開し直して」と頼んでください`; else bn.remove(); }
+}
 restoreUnsent();
 document.addEventListener('input', () => keepUnsent());
 // 敵などの編集の折りたたみ(details.fgrp)の開け閉めを覚える
@@ -1497,6 +1516,9 @@ renderAll();
     if(changed && k && clean){ const it = KBY.foes.items().find(x => x.key === k); if(it){ const rp = S.docReply, vv = S.draft.vv, fo = S.foeOpen; startDraft(it); S.docReply = rp; S.foeOpen = fo; if(vv != null && VAR.foes.tabs(S.draft.obj).some(t => t.i === vv)) vvOpen(vv); S.foeOpen = fo; } }
     requestRender(changed && S.kind === 'foes');
   }, () => {});
+  // 公開した版の記録(0.41.2): 開いた工房が記録より新しければ記録を上げ、古ければ警告する(会話が古い版を公開し直してしまったときに気づけるように)
+  DB.doc('config/build').onSnapshot(d => { BUILD = d.exists ? d.data() : null; showBuild();
+    if(META.version && (!BUILD || verCmp(META.version, BUILD.version) > 0)){ (async () => { try{ await DB.doc('config/build').set({version:META.version, commit:META.commit || '', at:new Date().toISOString()}); }catch(e){} })(); } }, () => {});
   DB.doc('config/deck').onSnapshot(d => { WBDECK = d.exists ? d.data() : null; requestRender(S.wbDeckOpen && !S.wbDeckDraft); }, () => {});
   DB.collection('requests').onSnapshot(s => { REQ = s.docs.map(d => Object.assign({id:d.id}, d.data())); dbState = 'on'; if(busy()){ S.pending = true; renderTabs(); refreshDyn(); } else renderAll(); },
     () => { dbState = 'off'; DB = null; renderAll(); });

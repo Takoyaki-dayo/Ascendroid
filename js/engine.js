@@ -364,6 +364,8 @@ function timerBreakAttr(st, t, ev){ const c = D.cards[t.k]; if(c) breakAttr(st, 
 // 敵の攻撃1回。extra は連携の上乗せ
 // 敵の攻撃の上乗せ: 増幅 − 虚弱(0.35.0)。攻撃の威力は0未満にならない(strike で切る)
 const foeStr = e => (e.str || 0) - (e.weak || 0);
+/* 行動そのものが足すダメージ(0.45.0 で画面と共有): armorDmg は行動したユニットのブロック armorDmg ごとに+1、mimic はこちらが最後に当てた一撃の分 */
+const moveBonus = (b, e, a) => (a.armorDmg ? Math.floor(((e.units[actorUid(e, a)] || {}).armor || 0) / a.armorDmg) : 0) + (a.mimic && b ? b.lastHit || 0 : 0);
 function strike(st, e, a, extra, noParry){
   const b = st.b, raw = Math.max(0, a.d + (extra || 0)) + (b.crack || 0);
   if(b.parryNow && !noParry){ const ev = []; hurtFoe(b, e, b.parryHalf ? Math.ceil(raw / 2) : raw, ev, actorUid(e, a.by ? a : cur(e))); return {kind:'parried', name:a.n, raw, ev}; }
@@ -393,7 +395,7 @@ function delayFoe(e, v, free){
 }
 function enemyAct(st, e, extra){ e.resist = 0;
   const a = cur(e), mv = (e.phased ? 'phase:' : 'pat:') + e.idx;
-  const res = a.kind === 'delay' ? {kind:'delay', name:a.n, v:a.v} : a.d > 0 ? strike(st, e, a, (extra || 0) + foeStr(e) + (a.armorDmg ? Math.floor(((e.units[actorUid(e, a)] || {}).armor || 0) / a.armorDmg) : 0) + (a.mimic ? st.b.lastHit || 0 : 0)) : {kind:'move', name:a.n};
+  const res = a.kind === 'delay' ? {kind:'delay', name:a.n, v:a.v} : a.d > 0 ? strike(st, e, a, (extra || 0) + foeStr(e) + moveBonus(st.b, e, a)) : {kind:'move', name:a.n};
   res.by = actorUid(e, a); res.mv = mv;
   // 多段: 残りを1サイクルおきに撃つ
   if(a.hits > 1 && !e.chain){ e.chain = a.hits - 1; e.r = 1; e.sh = 0; res.chainLeft = e.chain; return res; }
@@ -854,7 +856,7 @@ function nextNodes(run){
 
 const API = {RULE, makeFoe, defaultUid, liveUids, actorUid, parseT, gap, reloadCost, rngFrom, setRandom, shuffle, pick, clone, cur, advance, partOf, fx, partCards, battleDeck, partMax, dmgOf, blockOf,
   drawOne, drawN, upcoming, arrivals, applyCard, enemyAct, spendGen, runGen, newBattle, actions, actionCost, beginAction, endAction, doAction,
-  newRun, nextArea, delayFoe, addDot, tickDots, growOf, waryTier, lootBack, fledAll, pasN, attrOf, costOf, baseKey, spendShort, dotShort, needShort, foeStr, regDeck, genMap, nextNodes, reachAfter, scaledFoe, heatLevel, addHeat, roomHeat, heatDelta, heatScrap, heatCards, heatBoost, encFor, poolIndex};
+  newRun, nextArea, delayFoe, addDot, tickDots, growOf, waryTier, lootBack, fledAll, pasN, attrOf, costOf, baseKey, spendShort, dotShort, needShort, foeStr, moveBonus, regDeck, genMap, nextNodes, reachAfter, scaledFoe, heatLevel, addHeat, roomHeat, heatDelta, heatScrap, heatCards, heatBoost, encFor, poolIndex};
 root.ENGINE = API;
 if(typeof module !== 'undefined') module.exports = API;
 })(typeof window !== 'undefined' ? window : globalThis);

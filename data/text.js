@@ -16,6 +16,8 @@ window.DATA = window.DATA || {};
     const [k, where, i] = id.split('.'), f = D.foes[k]; if(!f) continue;
     if(!where) f.name = n;
     else if(where === 'pat' && f.pat[+i]) f.pat[+i].n = n;
+    /* 0.45.0: 通常版に無い番号の行動(警戒版だけが持つ行動)は、警戒版の同じ番号に名前を付ける */
+    else if(where === 'pat'){ for(const w of f.wary || []) if(w.pat && w.pat[+i] && !w.pat[+i].n) w.pat[+i].n = n; }
     else if(where === 'phase' && f.phase && f.phase.pat[+i]) f.phase.pat[+i].n = n;
     else if(where === 'phase2' && f.phase && f.phase.next && f.phase.next.pat[+i]) f.phase.next.pat[+i].n = n; // 2段目の段階変化(0.40.2)
     else if(where === 'react' && f.react) f.react.n = n;
@@ -1036,7 +1038,21 @@ window.DATA = window.DATA || {};
   "ui.heat.r.high": "アンコモンが出やすい",
   "ui.heat.foe1": "敵が「+」で出る",
   "ui.heat.foe2": "敵が「++」で出る",
-  "ui.duct.text": "点検用の狭い通路。工場の目がここまでは届かない。"
+  "ui.duct.text": "点検用の狭い通路。工場の目がここまでは届かない。",
+  "ui.mv.shredAll": "こちらのブロックをすべて失わせる。",
+  "ui.mv.shred": "こちらのブロックを{n}失わせる。",
+  "ui.mv.junk.draw": "山札に{card}を{n}枚混ぜる。",
+  "ui.mv.junk.hand": "手札に{card}を{n}枚加える。手札がいっぱいなら捨て札へ。",
+  "ui.mv.junk.disc": "捨て札に{card}を{n}枚加える。",
+  "ui.mv.shatter": "手札のカードからランダムに{n}枚を{card}に変える。",
+  "ui.mv.mimic": "こちらが直前に当てた一撃のダメージを、この攻撃に足す(いまは+{n})。",
+  "ui.mv.armorDmg": "このユニットのブロック{n}ごとに、この攻撃のダメージ+1。",
+  "ui.mv.fort": "堅固{n}：これ以後、ブロックを得るたびその量+{n}。",
+  "ui.stname.fort": "堅固",
+  "ui.st.fort": "ブロックを得るたび、その量+{n}。",
+  "ui.unit.shelter": "ほかのユニットが1つでも残っている間、ダメージを受けない(あふれたダメージも)。",
+  "ui.fx.immune": "無効",
+  "ui.fx.capped": "上限"
  },
  "attrs": {
   "gnaw": {

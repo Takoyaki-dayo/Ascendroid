@@ -1269,7 +1269,7 @@ body.hs *{animation-play-state:paused!important;transition:none!important}
 <script src="data/text.js"></script>
 <script src="js/engine.js"></script>
 <script>
-const APP_VERSION = '0.44.1';
+const APP_VERSION = '0.45.0';
 const $ = s => document.querySelector(s);
 const EN = ENGINE, RULE = EN.RULE;
 const VIEW = RULE.view, NOW = 170, PX = 34, xs = c => NOW + c * PX, STRIP_Y = 150, SWIFT_VIS = 3;
@@ -1351,7 +1351,10 @@ const IC = {
   dur:'<svg viewBox="0 0 12 12"><path d="M2 2H10L9 10H3Z" stroke="currentColor" stroke-width="1.3" fill="none"/></svg>',
   mob:'<svg viewBox="0 0 12 12"><path d="M4 1V7L2 11M8 1V7L10 11" stroke="currentColor" stroke-width="1.4" fill="none"/></svg>',
 };
-IC.armor = IC.block; // 0.27.0: 敵の装甲はブロックにまとめた(名前とアイコン。仕組みは今のまま)
+IC.armor = IC.block;
+/* 0.45.0: 崩す(こちらのブロックを失わせる)= 割れた盾。堅固(敵)はブロックと同じ絵 */
+IC.shred = '<svg viewBox="0 0 12 12"><path d="M5.2 1.3L1 3V6C1 9 3.5 10.5 5.2 10.9M6.8 1.3L11 3V6C11 9 8.5 10.5 6.8 10.9" stroke="currentColor" stroke-width="1.4" fill="none"/><path d="M6.3 1L5 4.5L7 6.5L5.6 11" stroke="currentColor" stroke-width="1" fill="none"/></svg>';
+IC.fort = IC.block; // 0.27.0: 敵の装甲はブロックにまとめた(名前とアイコン。仕組みは今のまま)
 const SPR = {
   drone:'<svg width="90" height="100" viewBox="0 -4 60 66" aria-hidden="true"><path d="M8 16h44" stroke="#4d6578" stroke-width="2"/><path d="M30 16v6" stroke="#4d6578" stroke-width="2"/><circle cx="30" cy="34" r="13" fill="#152130" stroke="#4d6578" stroke-width="1.2"/><circle cx="25" cy="34" r="4" fill="#ff4d6a" opacity=".8"/><path d="M22 46l-4 8M38 46l4 8" stroke="#4d6578" stroke-width="2"/></svg>',
   link:'<svg width="90" height="100" viewBox="0 -4 60 66" aria-hidden="true"><path d="M10 14h40" stroke="#4d6578" stroke-width="2"/><path d="M30 14v6M44 6v8" stroke="#4d6578" stroke-width="2"/><circle cx="44" cy="5" r="2.5" fill="#ff4d6a" opacity=".8"/><rect x="18" y="22" width="24" height="22" rx="7" fill="#152130" stroke="#4d6578" stroke-width="1.2"/><circle cx="25" cy="33" r="3.5" fill="#ff4d6a" opacity=".8"/><path d="M22 44l-3 10M38 44l3 10" stroke="#4d6578" stroke-width="2"/></svg>',
@@ -1638,7 +1641,7 @@ function passives(e){
   for(const k of Object.keys(f.broke || {})) out.push({id: 'broke-' + k, name: nm['broke.' + k] || '', k: 'broke', p: {unit: k}, on: !!e.units[k] && !e.units[k].broken});
   return out;
 }
-const PAS_IC = {command: IC.pt_lead, frenzy: IC.frenzy, react: IC.eye, phase: IC.phase, broke: IC.phase, punctual: IC.clock, recover: IC.haste, pursuit: IC.haste, loot: IC.scrap, hoard: IC.eat, floor: IC.clock};
+const PAS_IC = {command: IC.pt_lead, frenzy: IC.frenzy, react: IC.eye, phase: IC.phase, broke: IC.phase, punctual: IC.clock, recover: IC.haste, pursuit: IC.haste, loot: IC.scrap, hoard: IC.eat, floor: IC.clock, cap: IC.block, improve: IC.frenzy, free: IC.eye};
 function pasText(e, x){
   const un = k => e.units[k] ? e.units[k].name : k;
   if(x.k === 'command') return fillUi('pas.command', {unit: un(x.p.unit), n: x.p.n});
@@ -1648,6 +1651,9 @@ function pasText(e, x){
   if(x.k === 'broke') return fillUi('pas.broke', {unit: un(x.p.unit)});
   if(x.k === 'punctual' && x.p.n === 0) return fillUi('pas.punctual0', {});
   if(['punctual', 'pursuit', 'loot', 'hoard', 'floor', 'recover'].includes(x.k)) return fillUi('pas.' + x.k, {n: x.p.n || 1});
+  if(x.k === 'cap') return fillUi('pas.cap', {n: x.p.n});
+  if(x.k === 'improve') return fillUi('pas.improve', {n: x.p.n || 0, haste: x.p.haste || 0});
+  if(x.k === 'free') return x.p.text || '';
   return '';
 }
 // 画面の小さな札: ユニットの状態(クラック・装甲・隙)と、敵全体の状態(増幅・加速・パッシブ)
@@ -1830,7 +1836,7 @@ function placeBand(key, x0, x1, y, cls, html){
 const WIN = {wind:'構', guard:'防', counter:'返'};
 // 帯は文字を使わずアイコンと数字で: 体勢(★ ブレイクに要る一撃)・防壁(盾)・反撃(返し矢印)・隙(照準)
 const WIC = {wind:IC.poise, guard:IC.block, counter:IC.counterIc};
-function moveIcon(a){ return a.flee ? `<span class="ic">${IC.flee}</span>` : a.eat ? `<span class="ic">${IC.eat}</span>` : a.rebuild ? `<span class="ic">${IC.rest}</span>` : a.buff ? `<span class="ic">${IC.str}</span><b>${a.buff}</b>` : a.armor ? `<span class="ic">${IC.armor}</span><b>${a.armor}</b>` : a.heal ? `<b>+${a.heal}</b>` : a.crack ? `<span class="ic">${IC.crack}</span>` : a.noise ? `<span class="ic">${IC.junk}</span>` : a.zone ? `<span class="ic">${IC.zone}</span>` : a.haste ? `<span class="ic">${IC.swift}</span>` : a.summon ? `<b>援</b>` : a.guard ? `<span class="ic">${IC.block}</span>` : '<b>·</b>'; }
+function moveIcon(a){ return a.flee ? `<span class="ic">${IC.flee}</span>` : a.eat ? `<span class="ic">${IC.eat}</span>` : a.rebuild ? `<span class="ic">${IC.rest}</span>` : a.buff ? `<span class="ic">${IC.str}</span><b>${a.buff}</b>` : a.shred ? `<span class="ic">${IC.shred}</span>` : a.junk || a.shatter ? `<span class="ic">${IC.junk}</span>` : a.armor ? `<span class="ic">${IC.armor}</span><b>${a.armor}</b>` : a.heal ? `<b>+${a.heal}</b>` : a.crack ? `<span class="ic">${IC.crack}</span>` : a.noise ? `<span class="ic">${IC.junk}</span>` : a.zone ? `<span class="ic">${IC.zone}</span>` : a.haste ? `<span class="ic">${IC.swift}</span>` : a.summon ? `<b>援</b>` : a.guard ? `<span class="ic">${IC.block}</span>` : '<b>·</b>'; }
 function renderMarks(){
   const b = S.b, seen = new Set(), seenB = new Set(), syn = syncTimes(), pv = PV && !busy ? PV : null;
   for(const e of b.foes){
@@ -1851,8 +1857,8 @@ function renderMarks(){
       }
       const by_ = multi && a.by && e.units[a.by] ? `<i class="mby">${pIcon(e.units[a.by])}</i>` : '';
       // 増幅・連携で上がった攻撃は、数字の右上に ▲ を付ける
-      const up = atk && (EN.foeStr(e) + (sy ? e.sync : 0)) > 0, dn = atk && EN.foeStr(e) + (sy ? e.sync : 0) < 0;
-      const html = by_ + (a.kind === 'delay' ? `<span class="ic">${IC.delay}</span><b>${a.v}</b>` : atk ? `<b${up ? ' class="up"' : dn ? ' class="dn"' : ''}>${Math.max(0, a.d + EN.foeStr(e) + (sy ? e.sync : 0))}</b>${up ? '<i class="mup">▲</i>' : dn ? '<i class="mdn">▼</i>' : ''}<span class="ic tp">${IC[a.p]}</span>` : moveIcon(a));
+      const plus = atk ? EN.foeStr(e) + (sy ? e.sync : 0) + EN.moveBonus(S.b, e, a) : 0, up = atk && plus > 0, dn = atk && plus < 0;
+      const html = by_ + (a.kind === 'delay' ? `<span class="ic">${IC.delay}</span><b>${a.v}</b>` : atk ? `<b${up ? ' class="up"' : dn ? ' class="dn"' : ''}>${Math.max(0, a.d + plus)}</b>${up ? '<i class="mup">▲</i>' : dn ? '<i class="mdn">▼</i>' : ''}<span class="ic tp">${IC[a.p]}</span>` : moveIcon(a));
       placeMark(key, xs(m.t) - (so ? 20 : 13), y, cls, html, {e:e.i, kind:'pat', a, t:m.t});
       lastT = Math.max(lastT, m.t);
       if(m.hit) continue;
@@ -2123,6 +2129,8 @@ function cardFx(x){
     case 'kill': { const p = foeCenter(x.e); shards(p.x, p.y, '#d3e2ee'); break; }
     case 'unitBreak': { const p = unitCenter(x.e, x.unit); pulse(unitEl(x.e, x.unit), 'flash', 420); shards(p.x, p.y, '#ff8a9c'); pixels(p.x, p.y); flashFx('brk'); rescan('UNIT'); break; }
     case 'frenzy': { const p = foeCenter(x.e); floatAt(p.x, p.y - 70, '▲' + x.n, 'foe'); break; }
+    case 'immune': { const p = unitTop(x.e, x.unit); floatAt(p.x, p.y, DATA.ui['fx.immune'], 'cy'); break; }
+    case 'capped': { const p = unitTop(x.e, x.unit); floatAt(p.x + 24, p.y - 16, DATA.ui['fx.capped'], 'cy'); break; }
     case 'cancel': floatAt(xs(1), ROWY[x.e] - 20, '×', 'cy'); rescan('VOID'); break;
     case 'shift': floatAt(xs(1), ROWY[x.e] - 20, '!!', 'foe'); rescan('SHIFT'); break;
     case 'crack': { const p = unitCenter(x.e, x.unit); floatAt(p.x + 30, p.y - 30, '+' + x.n, 'foe'); break; }
@@ -2175,6 +2183,11 @@ async function foeFx(i, r){
   const mk = r.react ? markEls.get('r' + i) : markEls.get(r.chainLeft > 0 ? `${i}-${e.seq}-${r.chainLeft}` : `${i}-${e.seq - 1}-0`);
   if(mk) mk.classList.add('fire');
   await sleep(110);
+  /* 0.45.0: 崩す・汚染・割るは、攻撃でもそれ以外でも起きるので先に出す */
+  if(r.shred){ floatAt(DROID.x + 10, DROID.y - 78, DATA.kwName.block + '−' + r.shred, 'foe'); pulse($('#droid'), 'glitch', 320); }
+  if(r.junk){ const dk = r.junk.to === 'hand' ? null : r.junk.to === 'disc' ? $('#pileDisc') : $('#pileDraw'), nm = CARDS[r.junk.k] ? CARDS[r.junk.k].name : '';
+    floatAt(dk ? 70 : 180, dk ? (r.junk.to === 'disc' ? 342 : 300) : 330, nm + '+' + (r.junk.n || 1), 'foe'); if(dk) pulse(dk, 'flash', 360); }
+  if(r.shatter && r.shatter.length) floatAt(180, 330, CARDS.shard.name + '+' + r.shatter.length, 'foe');
   if(r.kind === 'move'){
     const p = foeCenter(i);
     if(r.buff) floatAt(p.x, p.y - 70, '▲' + r.buff, 'foe');
@@ -2838,16 +2851,24 @@ function renderRef(){
 // 行動を押すと、その行動が何をするかを文で出す(文は text/terms.csv の ui.mv.* / ui.foe.* / ui.pas.* / ui.unit.*)
 const fillUi = (k, v) => (DATA.ui[k] || '').replace(/\{(\w+)\}/g, (m, n) => n in v ? `<b>${v[n]}</b>` : m);
 const FOCUS = {scale: 2.5, x: 655, y: 205};
+/* 敵の攻撃の、いま当たるダメージ(増幅・虚弱と、行動そのものが足す分。エンジンの moveBonus と同じ計算) */
+const foeDmg = (e, a) => Math.max(0, (a.d || 0) + EN.foeStr(e) + EN.moveBonus(S && S.b, e, a));
 function moveLines(e, a){
-  const L = [], part = a.p ? SLOT_BY[a.p].fn : '', d = Math.max(0, (a.d || 0) + EN.foeStr(e));
+  const L = [], part = a.p ? SLOT_BY[a.p].fn : '', d = foeDmg(e, a);
   if(a.kind === 'delay') L.push(fillUi('mv.delay', {v: a.v}));
   else if(a.d > 0) L.push(fillUi(a.hits > 1 ? 'mv.hits' : 'mv.atk', {part, d, hits: a.hits}));
+  if(a.mimic) L.push(fillUi('mv.mimic', {n: S && S.b ? S.b.lastHit || 0 : 0}));
+  if(a.armorDmg) L.push(fillUi('mv.armorDmg', {n: a.armorDmg}));
   if(a.ch) L.push(fillUi('mv.charge', {}));
   if(a.link) L.push(fillUi('mv.link', {}));
-  if(a.armor) L.push(fillUi('mv.armor', {armor: a.armor}));
+  if(a.fort) L.push(fillUi('mv.fort', {n: a.fort}));
+  if(a.armor) L.push(fillUi('mv.armor', {armor: a.armor + (a.fort || 0) + (e.fort || 0)}));
   if(a.heal) L.push(fillUi('mv.heal', {heal: a.heal}));
   if(a.crack) L.push(fillUi('mv.crack', {crack: a.crack}));
   if(a.noise) L.push(fillUi('mv.noise', {noise: a.noise}));
+  if(a.shred) L.push(a.shred === true ? fillUi('mv.shredAll', {}) : fillUi('mv.shred', {n: a.shred}));
+  if(a.junk) L.push(fillUi('mv.junk.' + (a.junk.to || 'draw'), {card: '《' + (CARDS[a.junk.k] ? CARDS[a.junk.k].name : a.junk.k) + '》', n: a.junk.n || 1}));
+  if(a.shatter) L.push(fillUi('mv.shatter', {n: a.shatter, card: '《' + CARDS.shard.name + '》'}));
   if(a.summon) L.push(fillUi('mv.summon', {name: FOES[a.summon].name}));
   if(a.steal) L.push(fillUi('mv.steal', {n: a.steal}));
   if(a.eat) L.push(fillUi('mv.eat', {n: a.eat}));
@@ -2865,8 +2886,8 @@ function moveLines(e, a){
 }
 function moveGlyph(e, a){
   if(a.kind === 'delay') return `<span class="ic">${IC.delay}</span><b>${a.v}</b>`;
-  if(a.d > 0) return `<b>${Math.max(0, a.d + EN.foeStr(e))}</b>${a.hits > 1 ? `<i>×${a.hits}</i>` : ''}`;
-  const ic = a.flee ? IC.flee : a.eat ? IC.eat : a.rebuild ? IC.rest : a.armor ? IC.armor : a.crack ? IC.crack : a.buff ? IC.str : a.noise ? IC.junk : a.zone ? IC.zone : a.haste ? IC.swift : a.guard ? IC.block : null;
+  if(a.d > 0) return `<b>${foeDmg(e, a)}</b>${a.hits > 1 ? `<i>×${a.hits}</i>` : ''}`;
+  const ic = a.flee ? IC.flee : a.eat ? IC.eat : a.rebuild ? IC.rest : a.shred ? IC.shred : a.junk || a.shatter ? IC.junk : a.armor ? IC.armor : a.crack ? IC.crack : a.buff ? IC.str : a.noise ? IC.junk : a.zone ? IC.zone : a.haste ? IC.swift : a.guard ? IC.block : null;
   if(ic) return `<span class="ic big">${ic}</span>`;
   const g = a.heal ? '修' : a.summon ? '援' : '·';
   return `<b class="g">${g}</b>`;
@@ -2916,6 +2937,7 @@ function foeStates(e){
   if(e.weak) out.push({k:'weak', id:'weak', n:e.weak, cls:'good'});
   if(e.haste) out.push({k:'haste', id:'haste', n:e.haste, cls:'bad'});
   if(e.resist) out.push({k:'resist', id:'resist', n:e.resist, cls:'res'});
+  if(e.fort) out.push({k:'fort', id:'fort', n:e.fort, cls:'arm'});
   return out;
 }
 // ユニットに結び付くパッシブか(統率・破壊で変わる)。結び付くならそのユニットのキー
@@ -2934,14 +2956,14 @@ function unitSkills(e, k){
   }).filter(g => g.list.length);
 }
 function unitDetail(e, k){
-  const p = e.units[k], role = p.core ? 'unit.core' : p.vital ? 'unit.vital' : 'unit.part';
+  const p = e.units[k], role = p.core ? 'unit.core' : p.vital ? 'unit.vital' : 'unit.part', shel = p.shelter ? `<p class="frl">${refText(fillUi('unit.shelter', {}))}</p>` : '';
   const skills = unitSkills(e, k);
   const sk = skills.map(g => (g.note ? `<div class="fsk-n">${g.note}</div>` : '') + g.list.map(({a, lines}) => {
     const cls = a.kind === 'delay' ? 'dl' : a.ch ? 'ch' : a.d > 0 ? 'atk' : 'mv';
     const under = a.kind === 'delay' ? '' : a.d > 0 ? `<span class="ic">${IC[a.p]}</span>` : '';
     return `<div class="fsk"><span class="fm mini ${cls}"><span class="fm-v">${moveGlyph(e, a)}</span><span class="fm-p">${under}</span></span><div><b>${a.n}</b>${lines.map(t => `<p>${refText(t)}</p>`).join('')}</div></div>`;
   }).join('')).join('');
-  return `<div class="fdet stx unit"><div class="fdn"><span class="ic">${pIcon(p)}</span> ${p.name}${roleTag(p) ? `<span class="frole">${roleTag(p)}</span>` : ''}<span class="fby">${p.broken ? DATA.ui['unit.broken'] : `${p.hp}/${p.max}`}</span></div><p class="frl">${refText(fillUi(role, {}))}</p>${sk || `<p>${fillUi('mv.none', {})}</p>`}</div>`;
+  return `<div class="fdet stx unit"><div class="fdn"><span class="ic">${pIcon(p)}</span> ${p.name}${roleTag(p) ? `<span class="frole">${roleTag(p)}</span>` : ''}<span class="fby">${p.broken ? DATA.ui['unit.broken'] : `${p.hp}/${p.max}`}</span></div><p class="frl">${refText(fillUi(role, {}))}</p>${shel}${sk || `<p>${fillUi('mv.none', {})}</p>`}</div>`;
 }
 function renderFocus(){
   const f = UI.focus, e = S.b.foes[f.i], rand = e.ai === 'rand', pat = e.pat, multi = e.uids.length > 1, pas = passives(e);
@@ -2972,7 +2994,7 @@ function renderFocus(){
   else if(px){ const uk = pasUnit(px), on = multi && uk && e.units[uk] ? `<span class="fby"><span class="ic">${pIcon(e.units[uk])}</span>${e.units[uk].name}</span>` : '';
     det = `<div class="fdet pas"><div class="fdn">${px.name}${on}</div><p>${refText(pasText(e, px))}</p></div>`; }
   else if(tag === 'u' && e.units[idx]) det = unitDetail(e, idx);
-  else if(a) det = `<div class="fdet${a.ch ? ' ch' : ''}"><div class="fdn">${a.n}${a.by && multi && e.units[a.by] ? `<span class="fby"><span class="ic">${pIcon(e.units[a.by])}</span>${e.units[a.by].name}${e.units[a.by].broken ? '(' + DATA.ui['unit.broken'] + ')' : ''}</span>` : ''}</div>${moveLines(e, a).map(t => `<p>${refText(t)}</p>`).join('')}</div>`;
+  else if(a) det = `<div class="fdet${a.ch ? ' ch' : ''}"><div class="fdn">${a.n || ''}${a.by && multi && e.units[a.by] ? `<span class="fby"><span class="ic">${pIcon(e.units[a.by])}</span>${e.units[a.by].name}${e.units[a.by].broken ? '(' + DATA.ui['unit.broken'] + ')' : ''}</span>` : ''}</div>${moveLines(e, a).map(t => `<p>${refText(t)}</p>`).join('')}</div>`;
   $('#focus').classList.toggle('many', !!(e.phase && !e.phased) || rand || multi);
   $('#focus').innerHTML = `<div class="fhead"><b>${e.name}</b><button class="btn ghost fclose" type="button" data-act="foeClose">戻る</button></div>
     <div class="fhp"><b>${e.hp}</b><span>/${e.maxHp}</span><span class="ei-bar"><i style="width:${e.hp / e.maxHp * 100}%"></i></span></div>${whole.length ? `<div class="fwhole">${whole.map(x => stChip(x, f.sel)).join('')}</div>` : ''}

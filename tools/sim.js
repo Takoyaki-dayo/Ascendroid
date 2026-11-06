@@ -111,16 +111,16 @@ if(require.main === module && process.argv[4] !== 'run'){
 //   イベント: 本体が減っていれば本体を失う選択肢を避ける / ボス: 回復と、属性付きのレアのカードを1枚 / 中継: まだ出ていないものからランダム
 const RV = {common:1, uncommon:2, rare:3};
 const offerPool = () => Object.keys(D.cards).filter(k => !D.cards[k].junk && !D.cards[k].attr && !D.cards[k].upgraded && !D.cards[k].cut && !['charge', 'scatter'].includes(k) && !['starter', 'special'].includes(D.rarityOf(k)));
-function rollRarity(R, kind){ const w = D.rarityRule[kind] || D.rarityRule.battle, t = Object.values(w).reduce((a, b) => a + b, 0); let x = R() * t; for(const [r, v] of Object.entries(w)){ if((x -= v) < 0) return r; } return 'common'; }
-function offers(R, kind, near, n){
+function rollRarity(R, kind, hr){ const w0 = D.rarityRule[kind] || D.rarityRule.battle, m = (hr && D.heat && D.heat.rar[hr]) || {}, w = Object.fromEntries(Object.entries(w0).map(([r, v]) => [r, v * (m[r] || 1)])), t = Object.values(w).reduce((a, b) => a + b, 0); let x = R() * t; for(const [r, v] of Object.entries(w)){ if((x -= v) < 0) return r; } return 'common'; }
+function offers(R, kind, near, n, hr){
   const all = offerPool(), out = [];
-  for(let i = 0; i < n; i++){ const r = rollRarity(R, kind), nr = near.filter(k => all.includes(k) && D.rarityOf(k) === r && !out.includes(k)), ar = all.filter(k => D.rarityOf(k) === r && !out.includes(k));
+  for(let i = 0; i < n; i++){ const r = rollRarity(R, kind, hr), nr = near.filter(k => all.includes(k) && D.rarityOf(k) === r && !out.includes(k)), ar = all.filter(k => D.rarityOf(k) === r && !out.includes(k));
     const pool = nr.length && R() < 0.6 ? nr : ar.length ? ar : all.filter(k => !out.includes(k)); if(pool.length) out.push(pool[Math.floor(R() * pool.length)]); }
   return out;
 }
 function cardVal(run, k){ const c = D.cards[k]; if(!c) return 0; const same = run.deck.filter(x => E.baseKey(x) === k).length; return RV[D.rarityOf(k)] + (c.dmg || c.timer ? 0.3 : 0) - 0.6 * same; }
 function learn(run, R, kind, near){
-  const os = offers(R, kind, near, 3).sort((a, b) => cardVal(run, b) - cardVal(run, a)); const k = os[0];
+  const hc = E.heatCards(run), os = offers(R, kind, near, hc.n, hc.r).sort((a, b) => cardVal(run, b) - cardVal(run, a)); const k = os[0];
   if(k && (run.deck.length < 14 || D.rarityOf(k) !== 'common')) run.deck.push(k);
 }
 function upgradeOne(run){
@@ -151,7 +151,7 @@ function playRun(pol, seed){
         x.n++; x.bodyIn += body0; x.cyc += st.b.T; x.loops = (x.loops || 0) + Math.max(...st.b.foes.map(e => (e.seq || 0) / e.pat.length)); if(!o || !o.won) x.lost++; else x.loss += body0 - st.run.body; }
       if(!o || !o.won) return {clear:false, at:'a' + (run.area + 1) + ':' + n.type, rooms:log.length, body:0, log};
       for(const s of D.slots) run.parts[s.id].damaged = !!st.b.broken[s.id];
-      E.lootBack(st); if(!E.fledAll(st)) run.scrap += Math.round((n.type === 'elite' ? D.rewards.elite : n.type === 'battle' ? D.rewards.battle : 0) * (1 + D.alert.scrap * (E.alertLevel(run) - 1)));
+      E.lootBack(st); if(!E.fledAll(st)) run.scrap += Math.round((n.type === 'elite' ? D.rewards.elite : n.type === 'battle' ? D.rewards.battle : 0) * E.heatScrap(run));
       const pool = [...new Set(D.encounters[n.enc].foes.flatMap(f => D.foes[f].pool))];
       if(naive){ if(pool.length) run.deck.push(pool[Math.floor(R() * pool.length)]); }
       else if(n.type === 'boss'){ run.body = Math.min(run.bodyMax, run.body + D.rewards.boss.heal); const rs = offerPool().filter(k => D.rarityOf(k) === 'rare'); if(rs.length) run.deck.push(rs[Math.floor(R() * rs.length)]); }
@@ -165,16 +165,16 @@ function playRun(pol, seed){
       const ev = D.events.find(e => e.id === n.ev), hp = run.body / run.bodyMax;
       const ch = naive ? ev.choices[0] : ev.choices.find(c => !(c.fx.body < 0 && hp < 0.6) && !(c.fx.partDamage && hp < 0.6)) || ev.choices[ev.choices.length - 1];
       const fx = ch.fx;
-      if(fx.alert) E.addAlert(run, fx.alert); if(fx.body) run.body = Math.max(1, Math.min(run.bodyMax, run.body + fx.body)); if(fx.repair) for(const s of D.slots) run.parts[s.id].damaged = false;
+      if(fx.alert) E.addHeat(run, fx.alert); if(fx.body) run.body = Math.max(1, Math.min(run.bodyMax, run.body + fx.body)); if(fx.repair) for(const s of D.slots) run.parts[s.id].damaged = false;
       if(fx.card){ const rs = offerPool().filter(k => D.rarityOf(k) === 'rare'); run.deck.push(naive ? D.rareCards[0] : rs[Math.floor(R() * rs.length)]); }
       if(fx.scrap) run.scrap += fx.scrap;
       if(fx.defrag && !naive){ const i = run.deck.indexOf('jab'); if(i >= 0) run.deck.splice(i, 1); }
     }
-    E.addAlert(run, E.alertGain(n.type)); run.visited.push(n.lane + ':' + n.idx);
-    log.push(n.type + ':' + run.body + ':' + E.alertLevel(run));
+    E.roomHeat(run, n.type); run.visited.push(n.lane + ':' + n.idx);
+    log.push(n.type + ':' + run.body + ':' + E.heatLevel(run));
     run.at = n.type === 'boss' ? {boss:true} : {lane:n.lane, idx:n.idx};
     if(n.type === 'boss'){
-      (playRun.alertAt = playRun.alertAt || []).push([run.area, E.alertLevel(run)]);
+      (playRun.alertAt = playRun.alertAt || []).push([run.area, E.heatLevel(run)]);
       if(E.nextArea(run) === null) return {clear:true, body:run.body, log};
       // 中継: naive はエリアの番号のもの(前の形)。smart はまだ出ていないものからランダムに選び、選択肢を考える
       const used = run.transitUsed = run.transitUsed || [], left = D.transit.filter(t => !used.includes(t.id)), tr = naive ? D.transit[run.area - 1] : left[Math.floor(R() * left.length)] || D.transit[0];

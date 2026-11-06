@@ -4,7 +4,7 @@
 //   fill: 部屋2〜(最後の1つ前)の中身の合計(3列ぶん)。列ごとの性格(道)は 0.21.0 でなくした
 //   last: 最後の部屋(ボスの手前)。全部の道で同じ
 //   scale: 敵の強さの倍率。hp は耐久と回復、d は攻撃・ガード・装甲・構えの値
-//   pools(0.23.0、仮): 通常戦に出る遭遇の組。警戒度が at 以上のうちいちばん後の組から選ぶ。
+//   pools(0.44.0): 通常戦に出る遭遇の組。区画の深さ(列の番号。0 が最初の区画)が from 以上のうちいちばん後の組から選ぶ。
 //     工場がこちらに気付くほど、持ち場の機械から、こちらを追うための機械へ入れ替わっていく(猟犬は追跡の組)
 //   boss: ボスの遭遇
 //   エリア2・3 の敵は今は仮(エリア1 の敵の強化版)。名前も仮
@@ -14,36 +14,33 @@
 //   エリートは部屋3以降 / エリート・整備・ショップ・保守通路は同じ列で続けて出ない
 //   どの列にも整備かショップが1つ以上 / 同じ縦の並びに同じ特別な部屋は2つまで / どの列も通常戦は2〜4
 // transit: エリアの間の中継。heal は本体の回復(最大の割合)。choices はそのエリア固有のイベント(今は仮)
-// alert(0.20.0): 警戒度。工場が侵入者に気付いていく度合い。1周を通して積み上がり、エリアをまたいでも下がらない
-//   ゲージ per 目盛りで1段上がる。段は I〜X(max)。1周でおよそ X、1エリアでおよそ3段の想定
-//   gain: 区画を終えたときのゲージの増減(区画の種類ごと)。イベントは選択肢の fx.alert
-//   enemy: 段が1上がるごとの敵の倍率の上乗せ(hp 耐久・回復、d 攻撃など)。I が基準
-//   scrap: 段が1上がるごとの戦闘の報酬のスクラップの上乗せ
-//   learnAt: この段から学習の候補が1枚増える / partAt: この段から鹵獲の候補が1つ増える
+// heat(0.44.0): 警戒。相対値で、ゲージ(−10〜+10)を5段(−2〜+2)で見せる。暴れると上がり、何もしなければ冷める
+//   gain: 区画を終えたときに足す量(区画の種類ごと。イベントは選択肢の fx.alert) / cool: 区画ごとに冷める量 / decay: 0 へ寄せる割合(行き過ぎ防止)
+//   th: 段の境目(±th[0] で ±1、±th[1] で ±2) / carry: エリアの移り目でゲージに掛ける倍率
+//   scrap: 段ごとの戦闘のスクラップの増減 / cards: 段ごとの学習の候補 {n 枚数, r: low コモンが出やすい / high アンコモンが出やすい}
+//   rar: low・high のときのレア度の重みの倍率 / parts: 段ごとの鹵獲の候補の増減
+//   boost: 警戒版の無い敵が +1・+2 で受ける上乗せ / plus2: 「+」しか無い敵が +2 で受ける上乗せ(どちらも会話Bが作るまでの仮)
 // rewards: スクラップ(お金)の量
 // shop: 値段。price はカードのコスト別
 // events: イベント。fx の中身
 //   body 本体の増減 / scrap スクラップ / card 'rare' で珍しいカード1枚 / repair 損傷を修復
-//   part 'random' でパーツの候補を出す / defrag カードを1枚消す / alert 警戒のゲージの増減
+//   part 'random' でパーツの候補を出す / defrag カードを1枚消す / alert 警戒のゲージの増減(0.44.0 から相対値の熱)
 //   partDamage ランダムな部位を n か所損傷させる / rerollParts すべての部位のパーツをランダムに付け替える(パーツのレア度の重みで。0.36.0)
 window.DATA = window.DATA || {};
 // 0.42.0: エリアを区画12+ボスに(8から1.5倍)。乗り換えは区画3・6・9の後。整備は択一になったので、配分の整備は増やさない(ボス前の整備と、道の中の1つ)
-//   警戒のゲージは1段6(4から1.5倍)にして、エリアの中の段の進み方を8区画のときと揃える
 DATA.areas = [
   {id:'a1', rooms:12, transfers:[3, 6, 9], last:'rest', fill:{battle:14, elite:5, event:5, shop:3, rest:1, duct:2}, scale:{hp:1, d:1}, boss:'boss',
-    // 0.40.1: 工房の「出るところ」に合わせる(警備ドローンは警戒I〜IV、迎撃タレットは警戒I〜V)
-    pools:[{at:1, enc:['n_guard', 'n_scout', 'n_def', 'n_scav', 'n_crush']},
-           {at:2, enc:['n_scan', 'n_swarm', 'n_clock', 'n_weld', 'n_twin', 'n_crush', 'n_guard', 'n_def']},
-           {at:3, enc:['n_hound', 'n_proc', 'n_accel', 'n_bomb', 'n_squad', 'n_net', 'n_guard', 'n_def']},
-           {at:5, enc:['n_hound', 'n_proc', 'n_accel', 'n_bomb', 'n_squad', 'n_net', 'n_def']},
-           {at:6, enc:['n_hound', 'n_proc', 'n_accel', 'n_bomb', 'n_squad', 'n_net']}]},
+    // 0.44.0: 組は区画の深さで決める(前半 0〜3・中盤 4〜7・後半 8〜11)。前の警戒I・II・III の組を読み替えた(仮。会話Bが見直す)
+    pools:[{from:0, enc:['n_guard', 'n_scout', 'n_def', 'n_scav', 'n_crush']},
+           {from:4, enc:['n_scan', 'n_swarm', 'n_clock', 'n_weld', 'n_twin', 'n_crush', 'n_guard', 'n_def']},
+           {from:8, enc:['n_hound', 'n_proc', 'n_accel', 'n_bomb', 'n_squad', 'n_net', 'n_guard', 'n_def']}]},
   {id:'a2', rooms:12, transfers:[3, 6, 9], last:'rest', fill:{battle:14, elite:5, event:5, shop:3, rest:1, duct:2}, scale:{hp:1, d:1}, boss:'boss2',
-    pools:[{at:1, enc:['n_scan', 'n_swarm', 'n_clock', 'n_weld', 'n_twin', 'n_crush']},
-           {at:5, enc:['n_proc', 'n_accel', 'n_bomb', 'n_squad', 'n_net', 'n_clock', 'n_weld']},
-           {at:6, enc:['n_hound', 'n_proc', 'n_bomb', 'n_squad', 'n_net', 'n_weld']}]},
+    pools:[{from:0, enc:['n_scan', 'n_swarm', 'n_clock', 'n_weld', 'n_twin', 'n_crush']},
+           {from:4, enc:['n_proc', 'n_accel', 'n_bomb', 'n_squad', 'n_net', 'n_clock', 'n_weld']},
+           {from:8, enc:['n_hound', 'n_proc', 'n_bomb', 'n_squad', 'n_net', 'n_weld']}]},
   {id:'a3', rooms:12, transfers:[3, 6, 9], last:'rest', fill:{battle:14, elite:5, event:5, shop:3, rest:1, duct:2}, scale:{hp:1.05, d:1}, boss:'boss3',
-    pools:[{at:1, enc:['n_proc', 'n_accel', 'n_bomb', 'n_squad', 'n_net', 'n_clock', 'n_weld']},
-           {at:9, enc:['n_hound', 'n_squad', 'n_bomb', 'n_net', 'n_proc']}]},
+    pools:[{from:0, enc:['n_proc', 'n_accel', 'n_bomb', 'n_squad', 'n_net', 'n_clock', 'n_weld']},
+           {from:6, enc:['n_hound', 'n_squad', 'n_bomb', 'n_net', 'n_proc']}]},
 ];
 DATA.transit = [
   {id:'lift',  heal:0.5, choices:[{fx:{repair:true}}, {fx:{card:'rare'}}, {fx:{scrap:40}}]},
@@ -55,11 +52,11 @@ DATA.transit = [
 DATA.rooms = {
   battle:{}, elite:{}, rest:{}, shop:{}, event:{}, duct:{}, boss:{},
 };
-DATA.alert = {max:10, per:6, gain:{battle:2, elite:3, boss:3, duct:-3}, enemy:{hp:0.02, d:0.015}, scrap:0.1, learnAt:5, partAt:8,
-  // 0.41.0: ゴムひも。エリアごとの基準の段(区画を進むにつれ from → to)から離れるほど、戻る向きに補正する(仮の値)
-  //   上にいると上がる量が減り下がる量が増え、下にいると逆。倍率は 1 ∓ k×(段の差)(0.41.1 で k を 0.25 → 0.15。もう少し遊び方で振れるように) を [min, max] に収める
-  //   エリアの移り目では、次のエリアの基準(from)に向けて差の carry 割だけ寄せる
-  band:{areas:[{from:1, to:4}, {from:4, to:6.5}, {from:6.5, to:9}], k:0.15, min:0.25, max:2, carry:0.5}};
+DATA.heat = {gain:{battle:1.5, elite:4, boss:2, duct:-2}, cool:1.2, decay:0.04, min:-10, max:10, th:[2, 5], carry:0.5,
+  scrap:{'-2':-0.3, '-1':-0.2, '0':0, '1':0.15, '2':0.3},
+  cards:{'-2':{n:2, r:'low'}, '-1':{n:3, r:'low'}, '0':{n:3}, '1':{n:3, r:'high'}, '2':{n:4, r:'high'}},
+  rar:{low:{common:1.5, uncommon:0.7, rare:0.7}, high:{common:0.7, uncommon:1.5, rare:1}}, parts:{'2':1},
+  boost:{'1':{hp:0.1, d:0.05}, '2':{hp:0.2, d:0.1}}, plus2:{hp:0.15, d:0.1}};
 // restHeal: 整備で必ず回復する量(0.36.0。部位の損傷も直す) / boss: ボスを倒したときの報酬(回復と、属性付きのレアのカードを cards 枚から1枚。仮の値)
 DATA.rewards = {scrapStart:20, battle:12, elite:25, restHeal:15, boss:{heal:15, cards:3}};
 DATA.shop = {price:{0:18, 1:18, 2:26, 3:30, 4:36, 6:44}, defrag:30, repairCost:25, repairBody:12, offers:3};

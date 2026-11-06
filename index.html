@@ -1142,6 +1142,45 @@ body.hs *{animation-play-state:paused!important;transition:none!important}
 .rs-still.duct .rs-glyph{color:#8fc6d9}
 .rs-heal.al{color:var(--cy)}
 .abanner.al i{color:var(--al2)} .abanner.al.t3 i{color:var(--al3)} .abanner.al.t4 i{color:var(--al4)}
+/* 警戒(0.44.0): 5段の色。熱い側は橙〜赤、冷たい側は水色〜青、0 は灰 */
+.h2{--hc:var(--foe)} .h1{--hc:#ffb84d} .h0{--hc:#8fa6b8} .hm1{--hc:var(--cy)} .hm2{--hc:#6f8dff}
+.hchip{display:inline-flex;align-items:center;gap:7px;height:30px;padding:0 10px 0 7px;border:1px solid color-mix(in srgb,var(--hc) 55%,transparent);border-radius:4px;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--hc) 14%,#0d1720),#0b141c);color:var(--hc)}
+.hchip .hc-ic{display:flex;align-items:center;justify-content:center;width:18px;height:20px;filter:drop-shadow(0 0 3px color-mix(in srgb,var(--hc) 70%,transparent))}
+.hchip .hc-n{display:flex;flex-direction:column;align-items:flex-start;line-height:1}
+.hchip .hc-n i{font-style:normal;font-size:8.5px;letter-spacing:.14em;color:color-mix(in srgb,var(--hc) 70%,#fff)}
+.hchip .hc-n b{font-size:13px;font-weight:700;letter-spacing:.06em;color:var(--hc);margin-top:2px;text-shadow:0 0 8px color-mix(in srgb,var(--hc) 55%,transparent)}
+.hchip.h2{animation:alGlow 1.1s ease-in-out infinite}
+.hchip.bumpUp{animation:hBumpUp .9s cubic-bezier(.2,.8,.2,1)} .hchip.bumpDn{animation:hBumpDn .9s cubic-bezier(.2,.8,.2,1)}
+.hchip.nudgeUp .hc-ic{animation:hNudgeUp .6s ease-out} .hchip.nudgeDn .hc-ic{animation:hNudgeDn .6s ease-out}
+@keyframes hBumpUp{0%{transform:none}20%{transform:translateY(-5px) scale(1.12);box-shadow:0 0 18px var(--hc)}100%{transform:none}}
+@keyframes hBumpDn{0%{transform:none}20%{transform:translateY(5px) scale(1.12);box-shadow:0 0 18px var(--hc)}100%{transform:none}}
+@keyframes hNudgeUp{0%{transform:none}35%{transform:translateY(-4px)}100%{transform:none}}
+@keyframes hNudgeDn{0%{transform:none}35%{transform:translateY(4px)}100%{transform:none}}
+.mi-al{color:var(--hc,#ffb84d)} .mi-al.up{--hc:#ffb84d;border-color:rgba(255,184,77,.5)} .mi-al.dn{--hc:var(--cy);border-color:rgba(56,211,255,.45)}
+.mi-al .chev,.ag .mi-al .chev,.rs-heal.al .chev{display:block}
+.rs-heal.al{display:flex;align-items:center;gap:6px}
+/* 段が変わったときの演出 */
+.hflash{position:absolute;inset:0;pointer-events:none;z-index:6;box-shadow:inset 0 0 0 0 transparent;animation:hFlash 1.3s ease-out forwards}
+.hflash.up{background:radial-gradient(ellipse 70% 60% at 50% 100%,color-mix(in srgb,var(--hc) 30%,transparent),transparent 70%)}
+.hflash.dn{background:radial-gradient(ellipse 70% 60% at 50% 0%,color-mix(in srgb,var(--hc) 30%,transparent),transparent 70%)}
+@keyframes hFlash{0%{opacity:0;box-shadow:inset 0 0 0 2px var(--hc),inset 0 0 60px color-mix(in srgb,var(--hc) 45%,transparent)}15%{opacity:1}100%{opacity:0;box-shadow:inset 0 0 0 0 transparent,inset 0 0 0 transparent}}
+.hbanner{position:absolute;left:0;right:0;top:118px;height:150px;display:flex;align-items:center;justify-content:center;gap:22px;pointer-events:none;z-index:7;color:var(--hc);
+  background:linear-gradient(90deg,transparent,rgba(5,9,14,.9) 25%,rgba(5,9,14,.9) 75%,transparent);animation:abanner 2.1s ease-in-out forwards}
+.hbanner .hb-ch{display:flex;filter:drop-shadow(0 0 10px var(--hc))}
+.hbanner.up .hb-ch .cv{animation:hRise .9s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:calc((1 - var(--j)) * 90ms + 120ms)}
+.hbanner.dn .hb-ch .cv{animation:hFall .9s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:calc(var(--j) * 90ms + 120ms)}
+@keyframes hRise{0%{opacity:0;transform:translateY(26px)}60%{opacity:1}100%{opacity:1;transform:none}}
+@keyframes hFall{0%{opacity:0;transform:translateY(-26px)}60%{opacity:1}100%{opacity:1;transform:none}}
+.hbanner .hb-t{display:flex;flex-direction:column;align-items:flex-start;gap:4px}
+.hbanner .hb-t i{font-style:normal;font-family:var(--f-num);font-size:11px;letter-spacing:.3em;color:color-mix(in srgb,var(--hc) 75%,#fff)}
+.hbanner .hb-t b{font-size:26px;letter-spacing:.2em;color:#fff;text-shadow:0 0 14px var(--hc)}
+.hbanner .hb-now{opacity:.85;transform:scale(1.4)}
+/* 説明の一覧 */
+.hlist{list-style:none;margin:0 0 10px;padding:0;display:flex;flex-direction:column;gap:4px}
+.hlist li{display:grid;grid-template-columns:22px 56px 120px 1fr 120px;align-items:center;gap:8px;padding:5px 8px;border:1px solid var(--line);border-radius:4px;font-size:11.5px;color:var(--fg2)}
+.hlist li .hl-ic{color:var(--hc);display:flex;justify-content:center} .hlist li b{color:var(--hc)}
+.hlist li.on{border-color:var(--hc);background:color-mix(in srgb,var(--hc) 10%,transparent);color:var(--fg)}
 .abanner.al i.pu{margin-top:4px;font-size:12px;letter-spacing:.12em;font-family:inherit;color:var(--fg)}
 .abanner.al b{text-shadow:0 0 14px rgba(255,184,77,.6)}
 .abanner.al{background:linear-gradient(90deg,transparent,rgba(30,12,8,.92) 25%,rgba(30,12,8,.92) 75%,transparent)}
@@ -1230,7 +1269,7 @@ body.hs *{animation-play-state:paused!important;transition:none!important}
 <script src="data/text.js"></script>
 <script src="js/engine.js"></script>
 <script>
-const APP_VERSION = '0.43.1';
+const APP_VERSION = '0.44.0';
 const $ = s => document.querySelector(s);
 const EN = ENGINE, RULE = EN.RULE;
 const VIEW = RULE.view, NOW = 170, PX = 34, xs = c => NOW + c * PX, STRIP_Y = 150, SWIFT_VIS = 3;
@@ -2349,7 +2388,7 @@ function clearSave(){ try{ localStorage.removeItem(SAVE_KEY); }catch(e){} }
 function resumeRun(){
   const o = loadSave(); if(!o){ showTitle(); return; }
   hideOv(); $('#titleScr').hidden = true;
-  S = {run: o.run, b: null}; UI.mapSel = null; UI.node = null; UI.pick = null; if(S.run.alert == null) S.run.alert = 0;
+  S = {run: o.run, b: null}; UI.mapSel = null; UI.node = null; UI.pick = null; if(S.run.heat == null) S.run.heat = 0;
   if(o.pending === 'transit'){ UI.node = {type:'transit'}; UI.eventId = transitId(); UI.healed = null; showEventRoom(); }
   else if(o.pending){ const n = findNode(o.pending); if(n) enterRoom(n); else showMap(); }
   else showMap();
@@ -2368,7 +2407,7 @@ function showTitle(){
   let cont = '';
   if(o){
     const A = DATA.areas[o.run.area || 0], at = o.run.at, pd = o.pending, pos = pd === 'transit' ? '中継' : pd === 'boss' ? 'ボス' : pd ? `部屋${+pd.split('-')[1] + 1}` : !at ? '入口' : at.boss ? 'ボス' : `部屋${at.idx + 1}`;
-    cont = `<button class="tt-b main" type="button" data-act="continue"><b>つづきから</b><span>${A.name} · ${pos} · <span class="ic">${IC.core}</span>${o.run.body}/${o.run.bodyMax} · ${DATA.ui.alert} ${ROMAN[EN.alertLevel(o.run) - 1]}</span></button>`;
+    cont = `<button class="tt-b main" type="button" data-act="continue"><b>つづきから</b><span>${A.name} · ${pos} · <span class="ic">${IC.core}</span>${o.run.body}/${o.run.bodyMax} · ${DATA.ui.heat} ${DATA.ui['heat.' + EN.heatLevel(o.run)] || ''}</span></button>`;
   }
   const nw = `<button class="tt-b${o ? '' : ' main'}${conf ? ' warn' : ''}" type="button" data-act="newGame"><b>${conf ? '記録を消してはじめから' : 'はじめから'}</b>${conf ? '<span>もう一度押すと、つづきの記録は消える</span>' : ''}</button>`;
   const ts = $('#titleScr'), fresh = ts.hidden;
@@ -2427,7 +2466,7 @@ function showMap(){
   let info = '';
   if(s){
     const E = s.enc ? ENC[s.enc] : null;
-    info = `<span class="mi-ic k-${s.type}">${IC[s.type]}</span><span class="mi-t"><span><b>${DATA.rooms[s.type].name}</b></span><span class="mi-d">${DATA.ui['rd.' + s.type] || ''}</span></span>${(() => { const g = EN.alertGain(s.type); return g ? `<span class="mi-al${g < 0 ? ' dn' : ''}"><span class="ic">${IC.alert}</span>${g > 0 ? '+' + g : '−' + -g}</span>` : ''; })()}`;
+    info = `<span class="mi-ic k-${s.type}">${IC[s.type]}</span><span class="mi-t"><span><b>${DATA.rooms[s.type].name}</b></span><span class="mi-d">${DATA.ui['rd.' + s.type] || ''}</span></span>${heatHint(s.type)}`;
   }
   const fresh = $('#mapScr').hidden;
   $('#mapScr').innerHTML = `${topBar(AREA().name)}
@@ -2448,13 +2487,9 @@ function showMap(){
   if(fresh) enter($('#mapScr'));
   saveRun(null);
   // 新しいエリアに入ったら、エリアの名前を大きく出す
-  if(UI.areaShown !== S.run.area){ UI.areaShown = S.run.area; UI.alertUp = false; areaBanner(); }
-  else if(UI.alertUp){ UI.alertUp = false; alertBanner(); }
-}
-function alertBanner(){
-  const el = document.createElement('div'); el.className = 'abanner al t' + alTier(alLv());
-  el.innerHTML = `<i>${DATA.ui['alert.up']}</i><b>${DATA.ui.alert} ${ROMAN[alLv() - 1]}</b>${UI.poolUp ? `<i class="pu">${DATA.ui['alert.poolUp']}</i>` : ''}`; UI.poolUp = false;
-  $('#mapScr').appendChild(el); setTimeout(() => el.remove(), 2100);
+  if(UI.areaShown !== S.run.area){ UI.areaShown = S.run.area; UI.heatChange = 0; UI.heatMove = 0; areaBanner(); }
+  else if(UI.heatChange){ const d = UI.heatChange; UI.heatChange = 0; UI.heatMove = 0; heatBanner(d); }
+  else if(UI.heatMove){ const d = UI.heatMove; UI.heatMove = 0; setTimeout(() => heatNudge(d), 250); }
 }
 function areaBanner(){
   const el = document.createElement('div'); el.className = 'abanner';
@@ -2463,46 +2498,46 @@ function areaBanner(){
 }
 /* ---------- 警戒度(0.20.0) ---------- */
 const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
-const alLv = () => EN.alertLevel(S.run);
-const alTier = lv => lv >= 10 ? 4 : lv >= 7 ? 3 : lv >= 4 ? 2 : 1;
-// 輪(0.23.0): 段 I〜X を10区切りに。済んだ段は段ごとの色で埋め、今の段はゲージの進みだけ埋める。
-// 外側の印は、このエリアで出てくる敵の組が入れ替わる段(data/map.js の pools)
-const ALC = lv => `var(--al${alTier(lv)})`;
-function arcD(r, a0, a1){ const p = a => `${(r * Math.cos(a)).toFixed(2)} ${(r * Math.sin(a)).toFixed(2)}`; return `M${p(a0)}A${r} ${r} 0 ${a1 - a0 > Math.PI ? 1 : 0} 1 ${p(a1)}`; }
-function ringSvg(big){
-  const A = DATA.alert, lv = alLv(), N = A.max, r = big ? 34 : 10.5, w = big ? 7 : 3.6, gap = big ? .07 : .12, sz = (r + w + (big ? 6 : 2)) * 2;
-  const prog = lv >= N ? 1 : ((S.run.alert || 0) % A.per) / A.per;
-  let h = '';
-  for(let j = 0; j < N; j++){
-    const a0 = -Math.PI / 2 + j / N * 2 * Math.PI + gap / 2, a1 = a0 + 2 * Math.PI / N - gap, col = ALC(j + 1);
-    if(j < lv - 1) h += `<path class="sg f" d="${arcD(r, a0, a1)}" stroke="${col}" style="color:${col}" stroke-width="${w}"/>`;
-    else if(j === lv - 1){ h += `<path class="sg c" d="${arcD(r, a0, a1)}" stroke-width="${w}"/>`; if(prog > 0) h += `<path class="sg f" d="${arcD(r, a0, a0 + (a1 - a0) * prog)}" stroke="${col}" style="color:${col}" stroke-width="${w}"/>`; }
-    else h += `<path class="sg e" d="${arcD(r, a0, a1)}" stroke-width="${w}"/>`;
-  }
-  for(const p of AREA().pools || []) if(p.at > 1){ const a = -Math.PI / 2 + (p.at - 1) / N * 2 * Math.PI, r0 = r + w / 2 + (big ? 2 : 1), r1 = r0 + (big ? 5 : 2.6);
-    h += `<line class="bm${lv >= p.at ? ' on' : ''}" x1="${(r0 * Math.cos(a)).toFixed(2)}" y1="${(r0 * Math.sin(a)).toFixed(2)}" x2="${(r1 * Math.cos(a)).toFixed(2)}" y2="${(r1 * Math.sin(a)).toFixed(2)}"${big ? '' : ' stroke-width="1"'}/>`; }
-  return `<svg viewBox="${-sz / 2} ${-sz / 2} ${sz} ${sz}" width="${sz}" height="${sz}">${h}</svg>`;
+// 警戒(0.44.0): 相対値の5段(−2〜+2)。0 以外は上向き・下向きの折れ線(シェブロン)を重ねて見せる。色は熱い側が橙〜赤、冷たい側が青
+const hLv = () => EN.heatLevel(S.run);
+const hName = lv => DATA.ui['heat.' + lv] || '';
+const hCls = lv => lv >= 2 ? 'h2' : lv === 1 ? 'h1' : lv === 0 ? 'h0' : lv === -1 ? 'hm1' : 'hm2';
+// 折れ線の矢印を n 本重ねる(n>0 上向き / n<0 下向き / 0 は横線)。big は演出用の大きいもの
+function chevSvg(n, big){
+  const k = Math.abs(n), w = big ? 64 : 16, step = big ? 15 : 4.2, hh = big ? 18 : 5, sw = big ? 7 : 2.2;
+  const H = k ? hh + step * (k - 1) + sw * 2 : sw * 4, y0 = sw + (n > 0 ? hh : 0);
+  let p = '';
+  if(!k) p = `<path d="M${sw} ${H / 2}H${w - sw}" />`;
+  else for(let j = 0; j < k; j++){ const y = n > 0 ? y0 + step * j : sw + step * j, d = n > 0 ? -hh : hh; p += `<path class="cv" style="--j:${j}" d="M${sw} ${y}L${w / 2} ${y + d}L${w - sw} ${y}" />`; }
+  return `<svg class="chev" viewBox="0 0 ${w} ${H}" width="${w}" height="${H}" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
 }
-function alertRing(big){
-  const lv = alLv(), R = ROMAN[lv - 1];
-  if(big) return `<span class="aring big t${alTier(lv)}">${ringSvg(true)}<b class="${R.length >= 3 ? 'long' : ''}">${R}</b></span>`;
-  return `<span class="achip t${alTier(lv)}"><span class="aring">${ringSvg(false)}<span class="ai">${IC.alert}</span></span><span class="an"><i>${DATA.ui['alert.gauge']}</i><b>${R}</b></span></span>`;
+function heatChip(){ const lv = hLv(); return `<span class="hchip ${hCls(lv)}" id="hchip"><span class="hc-ic">${chevSvg(lv)}</span><span class="hc-n"><i>${DATA.ui.heat}</i><b>${hName(lv)}</b></span></span>`; }
+// 地図の区画の説明に出す「警戒の動き」: 足す量 − 冷める量の向きと大きさ
+function heatHint(type){ const d = EN.heatDelta(type); if(Math.abs(d) < 0.05) return ''; const n = d >= 2 ? 2 : d > 0 ? 1 : d <= -2 ? -2 : -1; return `<span class="mi-al ${n > 0 ? 'up' : 'dn'}">${chevSvg(n)}</span>`; }
+// 段が変わったときの演出: 画面の縁が熱い色・冷たい色に光り、大きな矢印が上(下)へ抜け、新しい段の名前が出る
+function heatBanner(d){
+  const lv = hLv(), up = d > 0, host = $('#mapScr').hidden ? $('#roomScr') : $('#mapScr');
+  const fl = document.createElement('div'); fl.className = 'hflash ' + (up ? 'up' : 'dn') + ' ' + hCls(lv); host.appendChild(fl); setTimeout(() => fl.remove(), 1300);
+  const el = document.createElement('div'); el.className = 'hbanner ' + (up ? 'up' : 'dn') + ' ' + hCls(lv);
+  el.innerHTML = `<span class="hb-ch">${chevSvg(up ? Math.max(1, Math.abs(d)) : -Math.max(1, Math.abs(d)), true)}</span><span class="hb-t"><i>${DATA.ui[up ? 'heat.up' : 'heat.down']}</i><b>${hName(lv)}</b></span><span class="hb-now">${chevSvg(lv)}</span>`;
+  host.appendChild(el); setTimeout(() => el.remove(), 2100);
+  const c = $('#hchip'); if(c) pulse(c, up ? 'bumpUp' : 'bumpDn', 900);
 }
+// 段は変わらないがゲージが動いたとき: 上の帯の表示が少し上(下)に揺れる
+function heatNudge(dir){ const c = $('#hchip'); if(c && dir) pulse(c, dir > 0 ? 'nudgeUp' : 'nudgeDn', 600); }
+// 押したときの説明: 今の段、段ごとの効果、区画ごとの動き
 function infoAlert(){
-  const A = DATA.alert, lv = alLv(), ar = AREA(), u = DATA.ui, l1 = lv - 1;
-  const left = lv >= A.max ? 0 : A.per - (S.run.alert || 0) % A.per;
-  const row = (on, t) => `<li class="${on ? '' : 'off'}">${t}</li>`;
-  const pct = x => Math.round(x * 100);
-  const gains = Object.entries(A.gain).map(([k, v]) => `<span class="ag"><span class="ic">${IC[k]}</span>${DATA.rooms[k].name}<b class="${v < 0 ? 'dn' : ''}">${v > 0 ? '+' + v : '−' + -v}</b></span>`).join('');
-  showOv(`<h2>${u.alert} ${ROMAN[lv - 1]}</h2><div class="alv">${alertRing(true)}<div><p class="adesc">${u['alert.desc']}</p><p class="anext">${lv >= A.max ? '' : u['alert.next'].replace('{n}', left)}</p></div></div>
-    <ul class="aeff">${row(l1 > 0, u['alert.enemy'].replace('{hp}', pct(A.enemy.hp * l1)).replace('{d}', pct(A.enemy.d * l1)))}${row(l1 > 0, u['alert.scrap'].replace('{n}', pct(A.scrap * l1)))}${row(lv >= A.learnAt, `${u['alert.learn']}<i>${ROMAN[A.learnAt - 1]}〜</i>`)}${row(lv >= A.partAt, `${u['alert.part']}<i>${ROMAN[A.partAt - 1]}〜</i>`)}${(() => { const ps = (ar.pools || []).filter(p => p.at > 1); if(!ps.length) return ''; const nx = ps.find(p => p.at > lv) || ps[ps.length - 1]; return row(lv >= nx.at, u['alert.pool'].replace('{lv}', ROMAN[nx.at - 1])); })()}</ul>
-    <div class="again">${gains}</div>${closeRow}`, true);
+  const H = DATA.heat, lv = hLv(), u = DATA.ui, pct = x => (x > 0 ? '+' : x < 0 ? '−' : '±') + Math.round(Math.abs(x) * 100) + '%';
+  const rows = [2, 1, 0, -1, -2].map(l => { const c = H.cards[l] || {n:3};
+    return `<li class="${l === lv ? 'on' : ''} ${hCls(l)}"><span class="hl-ic">${chevSvg(l)}</span><b>${hName(l)}</b><span>${u['heat.scrap'].replace('{n}', pct(H.scrap[l] || 0))}</span><span>${u['heat.cards'].replace('{n}', c.n)}${c.r ? '・' + u['heat.r.' + c.r] : ''}</span><span>${l > 0 ? u['heat.foe' + l] : ''}</span></li>`; }).join('');
+  const gains = ['battle', 'elite', 'boss', 'duct', 'rest'].map(k => `<span class="ag"><span class="ic">${IC[k]}</span>${DATA.rooms[k].name}${heatHint(k)}</span>`).join('');
+  showOv(`<h2>${u.heat}: ${hName(lv)}</h2><p class="adesc">${u['heat.desc']}</p><ul class="hlist">${rows}</ul><div class="again">${gains}</div>${closeRow}`, true);
 }
 // 地図と部屋の画面の上の帯(本体・部位・スクラップ・デッキ・メニュー)
 function topBar(title){
   const run = S.run, partsMini = SLOTS.map(p => `<span class="pm${run.parts[p.id].damaged ? ' dmg' : ''}" title="${p.fn}"><span class="ic">${IC[p.id]}</span></span>`).join('');
   const apr = `<span class="apr">${DATA.areas.map((A, i) => `<i class="${i < run.area ? 'done' : i === run.area ? 'on' : ''}"></i>`).join('')}</span>`;
-  return `<div class="mh-bar"><b>${title}</b>${apr}<button class="mbtn alb" type="button" data-act="alert" aria-label="${DATA.ui.alert}">${alertRing(false)}</button><span class="mb"><span class="ic">${IC.core}</span>${run.body}/${run.bodyMax}</span><button class="mbtn pms" type="button" data-act="unit" aria-label="機体">${partsMini}</button><span class="mb"><span class="ic">${IC.scrap}</span>${run.scrap}</span><span class="sp"></span><button class="mbtn" type="button" data-act="deck"><span class="ic">${IC.deck}</span>${EN.battleDeck(run).length}</button><button class="mbtn" type="button" data-act="menu" aria-label="メニュー">${IC.menu}</button></div>`;
+  return `<div class="mh-bar"><b>${title}</b>${apr}<button class="mbtn alb" type="button" data-act="alert" aria-label="${DATA.ui.heat}">${heatChip()}</button><span class="mb"><span class="ic">${IC.core}</span>${run.body}/${run.bodyMax}</span><button class="mbtn pms" type="button" data-act="unit" aria-label="機体">${partsMini}</button><span class="mb"><span class="ic">${IC.scrap}</span>${run.scrap}</span><span class="sp"></span><button class="mbtn" type="button" data-act="deck"><span class="ic">${IC.deck}</span>${EN.battleDeck(run).length}</button><button class="mbtn" type="button" data-act="menu" aria-label="メニュー">${IC.menu}</button></div>`;
 }
 // 整備・ショップ・イベントは画面ごと切り替える(左はいずれスチルを置く枠)。still なしは全幅
 function showRoom(kind, body, still){
@@ -2529,7 +2564,7 @@ function completeRoom(){
   const n = UI.node, run = S.run;
   if(n && n.type === 'transit'){ UI.node = null; UI.pick = null; hideOv(); hideOv2(); $('#roomScr').hidden = true; showMap(); return; }
   run.at = n.type === 'boss' ? {boss:true} : {lane:n.lane, idx:n.idx};
-  { const pb = EN.poolIndex(run); if(EN.addAlert(run, EN.alertGain(n.type)) > 0){ UI.alertUp = true; if(EN.poolIndex(run) > pb) UI.poolUp = true; } }
+  { const g0 = run.heat || 0, d = EN.roomHeat(run, n.type); if(d) UI.heatChange = d; else UI.heatMove = Math.sign((run.heat || 0) - g0); }
   run.visited.push(nodeKey(n));
   UI.pick = null; UI.learnOpts = []; UI.partOpts = null; UI.after = null;
   hideOv(); hideOv2(); $('#roomScr').hidden = true;
@@ -2559,7 +2594,7 @@ function onWin(){
   for(const p of SLOTS) S.run.parts[p.id].damaged = !!S.b.broken[p.id];
   // 0.23.0: 逃げられたら戦闘のスクラップはなし。盗まれた分は、倒していれば取り戻す
   const n = UI.node, fled = EN.fledAll(S), loot = EN.lootBack(S);
-  const gain = fled ? 0 : Math.round((n.type === 'elite' ? DATA.rewards.elite : n.type === 'battle' ? DATA.rewards.battle : 0) * (1 + DATA.alert.scrap * (alLv() - 1)));
+  const gain = fled ? 0 : Math.round((n.type === 'elite' ? DATA.rewards.elite : n.type === 'battle' ? DATA.rewards.battle : 0) * EN.heatScrap(S.run));
   S.run.scrap += gain;
   const fm = fled ? `<p class="fledmsg">${fillUi('win.fled', {name: S.b.foes.find(e => e.fled).name})}</p>` : '';
   const lm = loot ? `<span class="loot">${fillUi('win.loot', {n: loot})}</span>` : '';
@@ -2577,6 +2612,8 @@ const offerPool = () => Object.keys(CARDS).filter(k => !CARDS[k].junk && !CARDS[
 // レア度を1つ引く。kind は battle / elite / shop。報酬(battle・elite)は救済(rareOff)を使い、更新する
 function rollRarity(kind){
   const R = DATA.rarityRule, w = Object.assign({}, R[kind] || R.battle), run = S.run, pity = kind === 'battle' || kind === 'elite';
+  // 0.44.0: 警戒の段で、戦闘の報酬のレア度の重みを変える(low コモンが出やすい / high アンコモンが出やすい)
+  if(pity){ const hr = EN.heatCards(run).r, m = hr && DATA.heat.rar[hr]; if(m) for(const r of ['common', 'uncommon', 'rare']) w[r] *= m[r] || 1; }
   if(pity){ if(run.rareOff == null) run.rareOff = R.pity.start; w.rare = Math.max(0, w.rare + run.rareOff); w.common = Math.max(0, w.common - Math.max(0, run.rareOff)); }
   let x = Math.random() * (w.common + w.uncommon + w.rare), r = 'common';
   if((x -= w.common) >= 0) r = (x -= w.uncommon) >= 0 ? 'rare' : 'uncommon';
@@ -2622,7 +2659,7 @@ function afterWin(){
     const R = DATA.rewards.boss, run = S.run, v = Math.min(R.heal, run.bodyMax - run.body); run.body += v; UI.bossHealed = v;
     bossLearn(); return;
   }
-  UI.learnOpts = learnOptions(3 + (alLv() >= DATA.alert.learnAt ? 1 : 0)); UI.pick = null;
+  UI.learnOpts = learnOptions(EN.heatCards(S.run).n); UI.pick = null;
   UI.after = n.type === 'elite' ? 'part' : 'map';
   if(UI.learnOpts.length) showLearn(); else afterLearn();
 }
@@ -2635,7 +2672,7 @@ function bossLearn(){
 function afterLearn(){
   UI.pick = null; UI.learnOpts = []; UI.bossHealed = null;
   if(UI.bossPicks > 0){ UI.bossPicks--; UI.bossHealed = null; bossLearn(); return; } // 0.40.3: 拒絶したときの2回目
-  if(UI.after === 'part'){ UI.partOpts = partOffers(2 + (alLv() >= DATA.alert.partAt ? 1 : 0)); UI.back = 'map'; showPartOffer(); }
+  if(UI.after === 'part'){ UI.partOpts = partOffers(2 + ((DATA.heat.parts || {})[hLv()] || 0)); UI.back = 'map'; showPartOffer(); }
   else completeRoom();
 }
 function showLearn(){
@@ -2677,8 +2714,7 @@ function rsUnit(){
 }
 // 保守通路(0.20.0): 何も起きないが、警戒が下がる
 function showDuct(){
-  const g = EN.alertGain('duct');
-  showRoom('duct', `<h2>${DATA.rooms.duct.name}</h2><p class="rs-text">${DATA.ui['duct.text']}</p><p class="rs-heal al"><span class="ic">${IC.alert}</span>${DATA.ui['alert.gauge']} ${g < 0 ? '−' + -g : '+' + g}</p><div class="row"><button class="btn" type="button" data-act="leave">進む</button></div>`, true);
+  showRoom('duct', `<h2>${DATA.rooms.duct.name}</h2><p class="rs-text">${DATA.ui['duct.text']}</p><p class="rs-heal al">${DATA.ui.heat}${heatHint('duct')}</p><div class="row"><button class="btn" type="button" data-act="leave">進む</button></div>`, true);
 }
 // 整備(0.36.0): 入ると必ず本体が回復し、部位の損傷が直る(同じ部屋で2回は回復しない)。そのあと強化かデフラグを選ぶ
 // 整備(0.42.0): StS の休憩所と同じく「回復(本体と部位の損傷)・強化・デフラグ」から1つ
@@ -2747,7 +2783,7 @@ function applyEvent(fx){
   const run = S.run;
   if(fx.body) run.body = Math.max(1, Math.min(run.bodyMax, run.body + fx.body));
   if(fx.scrap) run.scrap += fx.scrap;
-  if(fx.alert){ const pb = EN.poolIndex(run); if(EN.addAlert(run, fx.alert) > 0){ UI.alertUp = true; if(EN.poolIndex(run) > pb) UI.poolUp = true; } }
+  if(fx.alert){ const d = EN.addHeat(run, fx.alert); if(d) UI.heatChange = d; else UI.heatMove = Math.sign(fx.alert); }
   if(fx.repair) for(const p of SLOTS) run.parts[p.id].damaged = false;
   // 0.36.0: ランダムな部位を損傷させる / すべての部位のパーツを付け替える(損傷は直る)
   if(fx.partDamage) for(let j = 0; j < fx.partDamage; j++){ const ok = SLOTS.filter(p => !run.parts[p.id].damaged); if(ok.length) run.parts[EN.pick(ok).id].damaged = true; }

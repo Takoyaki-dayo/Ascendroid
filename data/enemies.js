@@ -31,14 +31,14 @@
 //   敵のひとこと(0.23.0): text/enemies.csv の 敵.say.start(戦闘の始め)・敵.say.pat:番号(その行動のとき)・敵.say.anger(定刻の敵がディレイを受けたとき)・敵.say.phase(段階変化したとき、0.33.0)。同じキーを並べると複数(どれか1つ)
 //   wary(0.30.0): 警戒版 [{at, ...}]。警戒度が at 以上の遭遇では、書いた欄で置き換えた形で出る(いちばん高い at を1つ)
 //     書いた欄は丸ごと置き換える(0.38.0 から passives も一覧ごと)。patAdd だけは行動の並びの最後に足す(古い書き方)。警戒版を持つ敵は警戒度の数値の上乗せを受けない
-//     工房の敵のページでは、上の「警戒版」の切り替えで全体の姿のまま編集でき、変わった欄だけがここに入る。例: wary:[{at:5, passives:[{k:'punctual', n:1}]}]
+//     工房の敵のページでは、上の「警戒版」の切り替えで全体の姿のまま編集でき、変わった欄だけがここに入る。例: wary:[{at:1, passives:[{k:'punctual', n:1}]}]
 // encounters: 遭遇。敵は常に1体(0.15.0 から)。fam は系統。どの通常戦がどこで出るかは data/map.js の areas の pools(警戒度ごと)。elite / boss は特別な部屋
 window.DATA = window.DATA || {};
 DATA.foes = {
   // 0.39.0: 狙ってから撃つ。照準は不安定で、ブレイクすると次の大きい射撃も飛ぶ(link)
   drone:    {kind:'drone', hp:75, start:4,
     pat:[{d:6, dl:2, p:'calc'}, {d:0, dl:4, ch:true, link:true, buff:1}, {d:18, dl:3, p:'calc'}], pool:['rapid','guard','flick','capacitor','careful','foresight','aim'],
-    wary:[{at:3, pat:[{d:6, dl:2, p:'calc'}, {d:0, dl:3, ch:true, link:true, buff:6}, {d:18, dl:3, p:'calc'}]}]},
+    wary:[{at:1, pat:[{d:6, dl:2, p:'calc'}, {d:0, dl:3, ch:true, link:true, buff:6}, {d:18, dl:3, p:'calc'}]}]},
   // 0.39.0: 速くて脆いが、崩しても立ち直りが早い(立て直し2)
   scout:    {kind:'scout', hp:60, start:2, ai:'rand', passives:[{k:'recover', n:2}],
     pat:[{d:3, dl:3, p:'out', wt:2}, {d:3, hits:3, dl:5, p:'mob', wt:1}, {d:7, dl:5, p:'out', wind:{w:2, poise:6}, rec:2, wt:1}],
@@ -46,7 +46,7 @@ DATA.foes = {
   turret:   {kind:'turret', hp:66, start:5, react:{min:4, d:4, p:'arm'},
     pat:[{d:7, dl:2, p:'dur'}, {d:0, dl:4, armor:8}], pool:['wall','parry','emp','cell'],
     // 0.40.0: 警戒III〜 堅固(ブロックを得るたび、その分が増える)と、ブロックが威力になる装甲投射
-    wary:[{at:3, pat:[{d:7, dl:2, p:'dur'}, {d:0, dl:4, armor:8, fort:3}, {d:10, dl:1, p:'calc', armorDmg:3}]}]},
+    wary:[{at:1, pat:[{d:7, dl:2, p:'dur'}, {d:0, dl:4, armor:8, fort:3}, {d:10, dl:1, p:'calc', armorDmg:3}]}]},
   exec:     {kind:'exec', hp:86, start:5,
     pat:[{d:7, dl:6, p:'out'}, {d:0, dl:5, buff:3, wind:{w:3, poise:12}}],
     phase:{at:0.5, pat:[{d:7, dl:5, p:'out'}, {d:20, dl:7, p:'dur', ch:true, wind:{w:3, poise:12}, rec:3}]},
@@ -76,7 +76,7 @@ DATA.foes = {
     units:{core:{hp:50, vital:true, core:true, icon:'core', at:[0, 56], pt:[30, 37]}, gun:{hp:29, icon:'gun', at:[-104, -22], pt:[8, 32]}},
     pat:[{by:'gun', d:5, dl:4, p:'arm'}, {by:'gun', d:5, dl:4, p:'arm'}, {by:'gun', d:5, dl:4, p:'mob'}, {by:'gun', d:5, dl:4, p:'arm'}, {by:'core', d:51, dl:6, p:'dur', ch:true, wind:{w:6, poise:16}}],
     // 0.40.0: 警戒VIII〜 炉心が硬くなり、臨界は不安定でなくなる(止める手段は体勢16と、その前に倒すこと)
-    wary:[{at:8, units:{core:{hp:60, vital:true, core:true, icon:'core', at:[0, 56], pt:[30, 37]}, gun:{hp:29, icon:'gun', at:[-104, -22], pt:[8, 32]}},
+    wary:[{at:1, units:{core:{hp:60, vital:true, core:true, icon:'core', at:[0, 56], pt:[30, 37]}, gun:{hp:29, icon:'gun', at:[-104, -22], pt:[8, 32]}},
       pat:[{by:'gun', d:5, dl:4, p:'arm'}, {by:'gun', d:5, dl:4, p:'arm'}, {by:'gun', d:5, dl:4, p:'mob'}, {by:'gun', d:5, dl:4, p:'arm'}, {by:'core', d:51, dl:6, p:'dur', wind:{w:6, poise:16}}]}],
     pool:['blow','timebomb','backflow','parry']},
   // 統率: 隊長が健在な間、行動の間隔-1。隊長を先に落とすと遅くなる
@@ -105,10 +105,10 @@ DATA.foes = {
   // 圧縮機: 手札のいちばん重いカードを飲み込む。体勢を崩せば止まる。倒すと吐き出す
   crusher:  {kind:'crusher', hp:82, start:4, passives:[{k:'hoard'}],
     pat:[{d:6, dl:4, p:'dur'}, {d:0, dl:5, eat:1, buff:2, wind:{w:3, poise:10}}, {d:11, dl:5, p:'out', rec:2}],
-    wary:[{at:5, pat:[{d:8, dl:4, p:'dur'}, {d:0, dl:5, eat:1, buff:4, wind:{w:3, poise:10}}, {d:11, dl:5, p:'out', rec:2}]}],
+    wary:[{at:1, pat:[{d:8, dl:4, p:'dur'}, {d:0, dl:5, eat:1, buff:4, wind:{w:3, poise:10}}, {d:11, dl:5, p:'out', rec:2}]}],
     pool:['wall','blow','reload','backflow','iterate']},
   // 工程管理機(名前はタイムキーピング): 4サイクルごとに必ず動く。ディレイが効かない。警戒V以上では遅らせようとすると怒る(増幅。0.35.0)
-  clock:    {kind:'clock', hp:80, start:4, passives:[{k:'punctual', n:0}], wary:[{at:5, passives:[{k:'punctual', n:1}], pname:{0:'定刻遵守'}, pat:[{d:8, dl:4, p:'calc'}, {d:8, dl:4, p:'arm'}, {d:8, dl:4, p:'mob'}, {d:16, dl:4, p:'dur', ch:true}]}],
+  clock:    {kind:'clock', hp:80, start:4, passives:[{k:'punctual', n:0}], wary:[{at:1, passives:[{k:'punctual', n:1}], pname:{0:'定刻遵守'}, pat:[{d:8, dl:4, p:'calc'}, {d:8, dl:4, p:'arm'}, {d:8, dl:4, p:'mob'}, {d:16, dl:4, p:'dur', ch:true}]}],
     pat:[{d:5, dl:4, p:'calc'}, {d:5, dl:4, p:'arm'}, {d:5, dl:4, p:'mob'}, {d:16, dl:4, p:'dur', ch:true}],
     pool:['parry','rapid','crackshot']},
   // 溶接機: 壊した腕を直してしまう。直す行動は体勢で止められる

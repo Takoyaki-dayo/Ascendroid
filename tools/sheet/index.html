@@ -297,8 +297,8 @@ const KINDS = [
     head:['名前', '部屋', '敵の強さ(耐久・攻撃)', 'ボス'], cells:it => [nmCell(it), `<td class="num">${it.obj.rooms}</td>`, `<td class="num">×${it.obj.scale.hp} ・ ×${it.obj.scale.d}</td>`, `<td>${esc((D.encounters[it.obj.boss] || {foes:[]}).foes.map(f => D.foes[f] ? D.foes[f].name : f).join('、'))}</td>`]},
   {id:'encounters', label:'遭遇', items:() => Object.entries(D.encounters).map(([k, e]) => ({key:k, name:e.fam, obj:clone(e)})),
     head:['区分', '系統', '敵'], cells:it => [`<td>${ENCNAME(it.obj, it.key)}</td>`, nmCell(it), `<td>${esc(it.obj.foes.map(f => D.foes[f] ? D.foes[f].name : f).join('、'))}</td>`]},
-  {id:'alert', label:'警戒度', items:() => D.alert ? [{key:'alert', name:'警戒度', obj:clone(D.alert)}] : [],
-    head:['名前', '段', '1段の目盛り', '区画ごとの増減'], cells:it => [nmCell(it), `<td class="num">I〜${it.obj.max}</td>`, `<td class="num">${it.obj.per}</td>`, `<td>${esc(Object.entries(it.obj.gain).map(([k, v]) => `${D.rooms[k] ? D.rooms[k].name : k} ${v > 0 ? '+' : ''}${v}`).join('、'))}</td>`]},
+  {id:'alert', label:'警戒', items:() => D.heat ? [{key:'heat', name:'警戒(相対値)', obj:clone(D.heat)}] : [],
+    head:['名前', '冷める量', '区画ごとに足す量', '段の境目'], cells:it => [nmCell(it), `<td class="num">−${it.obj.cool}/区画</td>`, `<td>${esc(Object.entries(it.obj.gain).map(([k, v]) => `${D.rooms[k] ? D.rooms[k].name : k} ${v > 0 ? '+' : ''}${v}`).join('、'))}</td>`, `<td class="num">±${it.obj.th[0]} ・ ±${it.obj.th[1]}</td>`]},
   {id:'classes', label:'キャラ', items:() => Object.entries(D.classes).map(([k, c]) => ({key:k, name:c.name, obj:clone(c)})),
     head:['名前', '補給', '待機'], cells:it => [nmCell(it), `<td>${esc(it.obj.sys)}</td>`, `<td>${it.obj.wait ? 'あり' : 'なし'}</td>`]},
 ];
@@ -371,12 +371,12 @@ function actHTML(base, a, o, orig, units, i, n){
 const VAR = {
   foes: {
     skip: ['wary', 'appear', 'say', 'pool'],
-    tabs: o => (o.wary || []).map((t, i) => ({i, label: `警戒${ROMAN[(t.at || 1) - 1] || t.at}〜`})),
-    add: o => { const W = (o.wary = o.wary || []), at = Math.min(10, (W.length ? Math.max(...W.map(t => t.at || 1)) : 4) + 1); W.push({at}); return W.length - 1; },
+    tabs: o => (o.wary || []).map((t, i) => ({i, label: '+'.repeat(Math.min(2, t.at || 1))})), // 0.44.0: 警戒+1 で「+」、+2 で「++」
+    add: o => { const W = (o.wary = o.wary || []); if(W.length >= 2) return W.length - 1; const at = W.some(t => t.at === 1) ? 2 : 1; W.push({at}); W.sort((a, b) => a.at - b.at); return W.findIndex(t => t.at === at); },
     del: (o, i) => { o.wary.splice(i, 1); if(!o.wary.length) delete o.wary; },
     make(o, i){ const t = (o.wary || [])[i]; const V = clone(o); delete V.wary; if(!t) return V; for(const [k, v] of Object.entries(t)) if(k !== 'at' && k !== 'patAdd') V[k] = v === null ? undefined : clone(v); if(t.patAdd) V.pat = (V.pat || []).concat(clone(t.patAdd)); for(const k of Object.keys(V)) if(V[k] === undefined) delete V[k]; return V; },
     store(o, i, V){ const base = clone(o); delete base.wary; const d = {at: o.wary[i].at}; for(const k of new Set([...Object.keys(V), ...Object.keys(base)])){ if(this.skip.includes(k)) continue; if(JSON.stringify(V[k]) !== JSON.stringify(base[k])) d[k] = V[k] === undefined ? null : clone(V[k]); } o.wary[i] = d; },
-    head: (o, i) => `<div class="ar vhead">${'<label class="ff"><span>この警戒度から</span><input type="number" min="1" max="10" data-vat="1" value="' + ((o.wary[i] || {}).at || '') + '"></label>'}<button type="button" class="btn quiet sm" data-vdel="1">この警戒版を消す</button></div><div class="note">警戒度がこの値以上の遭遇で、この姿で出る(いちばん高い段を1つ)。通常から変えた欄だけが警戒版として送られる。警戒版を持つ敵は、警戒度による耐久・攻撃の上乗せを受けない</div>`,
+    head: (o, i) => `<div class="ar vhead"><b>${'+'.repeat(Math.min(2, (o.wary[i] || {}).at || 1))}</b><button type="button" class="btn quiet sm" data-vdel="1">この警戒版を消す</button></div><div class="note">警戒が+1のときは「+」、+2のときは「++」の姿で出る。通常から変えた欄だけが送られる。「++」が無ければ「+」に耐久+15%・攻撃+10%、どちらも無ければ素の姿に上乗せ(仮)して出る</div>`,
   },
   parts: {
     skip: ['up', 'upText', 'rarity', 'name'],
@@ -414,7 +414,7 @@ function foeForm(o, orig){
   if(!(S.draft && S.draft.vv != null)) h += g('ひとこと', Object.keys(o.say || {}).map(k => `<div class="ar">${fIn(`say.${k}`, o, orig, SAYW(k, o), 'lines')}</div>`).join('') + '<div class="note">1行に1つ。複数あれば毎回どれか1つ。空なら言わない</div>', false, `${Object.values(o.say || {}).reduce((a, v) => a + [].concat(v || []).length, 0)}つ`);
   const pool = o.pool || [], cand = Object.keys(D.cards).filter(k => !D.cards[k].junk && (D.rarity || {})[k] !== 'starter' || pool.includes(k));
   if(!(S.draft && S.draft.vv != null)) h += g('学習で出やすいカード', `<div class="chips">${cand.map(k => `<button type="button" class="chip${pool.includes(k) ? ' on' : ''}" data-pool="${esc(k)}">${esc(D.cards[k].name || k)}</button>`).join('')}</div>`, false, pool.map(k => (D.cards[k] || {}).name || k).join('・'));
-  if(S.draft && S.draft.vv == null) h += g('警戒版', `<div class="note">${(o.wary || []).length ? `${o.wary.map(t => `警戒${ROMAN[(t.at || 1) - 1] || t.at}〜: ${Object.keys(t).filter(k => k !== 'at').map(k => LB[k] || k).join('・') || '変更なし'}`).join(' ／ ')}。` : 'まだない。'}上の「＋警戒版」で足し、切り替えて全体の姿のまま編集する</div>`, false);
+  if(S.draft && S.draft.vv == null) h += g('警戒版', `<div class="note">${(o.wary || []).length ? `${o.wary.map(t => `${'+'.repeat(Math.min(2, t.at || 1))}: ${Object.keys(t).filter(k => k !== 'at').map(k => LB[k] || k).join('・') || '変更なし'}`).join(' ／ ')}。` : 'まだない。'}上の「＋警戒版」で足し、切り替えて全体の姿のまま編集する</div>`, false);
   const art = [];
   for(const k of ['kind', 'look', 'ai', 'sync', 'broke'].filter(k => o[k] != null)){ const f = flat({[k]: o[k]}); for(const p of Object.keys(f)) art.push(fieldHTML(p, f[p], orig)); }
   if(o.units) for(const k of Object.keys(o.units)){ const f = flat({units:{[k]:o.units[k]}}); for(const p of Object.keys(f)) if(!/\.(name|hp|armor|vital|core)$/.test(p)) art.push(fieldHTML(p, f[p], orig)); }
@@ -452,12 +452,11 @@ function foeOp(fx, base, x){
 // 敵の出るところ: 通常の遭遇はエリアの警戒度の段(pools)、エリート・ボスは遭遇の区分
 function foeAppear(fk){
   const out = [];
-  // 警戒度の段は次の段が始まるまで(0.33.0: 「〜」だけだと最後まで出るように見えたので、終わりの段も書く。続く段はまとめる)
-  const mx = (D.alert && D.alert.max) || 10;
+  // 0.44.0: 通常の遭遇はエリアの中の深さ(区画の番号)で決まる。次の組が始まる区画の手前まで
   (D.areas || []).forEach((A, i) => {
-    const P = (A.pools || []).slice().sort((x, y) => x.at - y.at), rg = [];
-    P.forEach((p, j) => { if(!p.enc.some(e => D.encounters[e] && D.encounters[e].foes.includes(fk))) return; const lo = p.at, hi = j + 1 < P.length ? P[j + 1].at - 1 : mx; const last = rg[rg.length - 1]; if(last && last[1] + 1 === lo) last[1] = hi; else rg.push([lo, hi]); });
-    for(const [lo, hi] of rg) out.push(`エリア${i + 1} 警戒${ROMAN[lo - 1]}${hi > lo ? '〜' + ROMAN[hi - 1] : ''}`);
+    const P = (A.pools || []).slice().sort((x, y) => (x.from || 0) - (y.from || 0)), rg = [], last0 = (A.rooms || 12) - 1;
+    P.forEach((p, j) => { if(!p.enc.some(e => D.encounters[e] && D.encounters[e].foes.includes(fk))) return; const lo = p.from || 0, hi = j + 1 < P.length ? (P[j + 1].from || 0) - 1 : last0; const last = rg[rg.length - 1]; if(last && last[1] + 1 === lo) last[1] = hi; else rg.push([lo, hi]); });
+    for(const [lo, hi] of rg) out.push(`エリア${i + 1} 区画${lo + 1}${hi > lo ? '〜' + (hi + 1) : ''}`);
     if(D.encounters[A.boss] && D.encounters[A.boss].foes.includes(fk)) out.push(`エリア${i + 1} ボス`);
   });
   if(Object.values(D.encounters).some(e => e.elite && e.foes.includes(fk))) out.push('エリート');

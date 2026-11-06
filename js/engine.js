@@ -574,14 +574,17 @@ function runGen(g){ let r; while(!(r = g.next()).done){} return r.value; }
 /* ---------- 戦闘の準備と、行動の候補 ---------- */
 // 強化(0.19.0): エリアの倍率で敵の数値を上げた定義を作る。hp(耐久・回復)と d(攻撃・ガード・装甲・構え)
 const scaledCache = {};
-// 警戒版(0.30.0): 敵のデータの wary:[{at, ...}] は、警戒度が at 以上の遭遇で使う形。いちばん高い at を1つ選ぶ
-//   書いた欄はそのまま置き換える(hp・start・pat・phase・react・units など)。ただし passives は足し、patAdd は行動の並びの最後に足す
-//   警戒版を持つ敵は、警戒度による数値の上乗せ(DATA.alert.enemy)を受けない
-const waryTier = (key, lv) => { const W = D.foes[key] && D.foes[key].wary; if(!W || !lv) return null; let t = null; for(const w of W) if(w.at <= lv && (!t || w.at > t.at)) t = w; return t; };
+// 警戒版(0.44.0 から「+」「++」): 敵のデータの wary:[{at, ...}] の at は警戒の段(1 なら+、2 なら++)。警戒が+1なら「+」、+2なら「++」で出る
+//   書いた欄はそのまま置き換える(hp・start・pat・phase・react・units など)。patAdd だけは行動の並びの最後に足す
+//   ++ が無い敵は + に DATA.heat.plus2 を上乗せ、警戒版が1つも無い敵は素の形に DATA.heat.boost[段] を上乗せ(会話Bが作るまでの仮)
+const waryTier = (key, h) => { const W = D.foes[key] && D.foes[key].wary; if(!W || !(h > 0)) return null; return W.find(w => w.at === h) || (h >= 2 ? W.find(w => w.at === 1) : null) || null; };
+function heatBoost(key, h){ if(!(h > 0)) return null; const W = (D.foes[key] && D.foes[key].wary) || [], H = HT();
+  if(W.some(w => w.at === h)) return null; if(W.some(w => w.at === 1)) return h >= 2 ? H.plus2 : null; return H.boost[h] || null; }
 const waryCache = {};
 function waryFoe(key, lv){
-  const t = waryTier(key, lv); if(!t) return D.foes[key];
-  const id = key + '!' + t.at; if(waryCache[id]) return waryCache[id];
+  if(!(lv > 0)) return D.foes[key];
+  const t = waryTier(key, lv) || {at:lv};
+  const id = key + '!' + lv; if(waryCache[id]) return waryCache[id];
   const f = Object.assign({}, D.foes[key]);
   for(const [k, v] of Object.entries(t)){
     if(k === 'at') continue;
@@ -590,12 +593,12 @@ function waryFoe(key, lv){
     else if(k === 'pat') f.pat = v.map((a, i) => a.n || !D.foes[key].pat[i] ? a : Object.assign({n:D.foes[key].pat[i].n}, a)); // 名前が無ければ通常の同じ番号の行動の名前
     else f[k] = v;
   }
-  delete f.wary; f.waryAt = t.at;
-  f.name = (D.foes[key].name || '') + '+'; // 0.40.2: 警戒版は名前の後ろに「+」(強くなっているのを見せる)
+  delete f.wary; f.waryAt = lv;
+  f.name = (D.foes[key].name || '') + '+'.repeat(lv); /* 警戒+1 なら「+」、+2 なら「++」 */
   return waryCache[id] = f;
 }
 function scaledFoe(key, sc, lv){
-  const src = waryFoe(key, lv), wk = src.waryAt ? key + '!' + src.waryAt : key;
+  const src = waryFoe(key, lv), wk = src.waryAt ? key + '!' + src.waryAt : key; // 警戒の段ごとに別の形
   if(!sc || (sc.hp === 1 && sc.d === 1)) return src;
   const id = wk + '@' + sc.hp + '/' + sc.d; if(scaledCache[id]) return scaledCache[id];
   // s はガードの量のときだけ(ユニットの絵の大きさの s は変えない)
@@ -648,13 +651,12 @@ function newBattle(run, encKey){
   const parts = {};
   for(const s of D.slots){ const mx = partMax(run, s.id); parts[s.id] = {cur: run.parts[s.id].damaged ? Math.ceil(mx / 2) : mx, max:mx}; }
   const foes = [], A = D.areas[run.area || 0], es = E.scale || {hp:1, d:1};
-  // 敵の強さ = エリアの倍率 × 遭遇の倍率 × 警戒度の上乗せ
-  const lv = alertLevel(run) - 1, ae = AL().enemy || {hp:0, d:0};
-  const sc = A ? {hp:+(A.scale.hp * es.hp * (1 + ae.hp * lv)).toFixed(3), d:+(A.scale.d * es.d * (1 + ae.d * lv)).toFixed(3)} : null;
+  // 敵の強さ = エリアの倍率 × 遭遇の倍率。警戒が+1・+2なら「+」「++」の形で出る(作られていなければ仮の上乗せ。heatBoost)
+  const h = heatLevel(run);
   if(!E.boss && !E.elite) run.lastEnc = encKey;
-  // 警戒版を持つ敵は、警戒度の上乗せの無い倍率で
-  const sc0 = A ? {hp:+(A.scale.hp * es.hp).toFixed(3), d:+(A.scale.d * es.d).toFixed(3)} : null;
-  for(const key of E.foes) foes.push(makeFoe(key, foes.length, D.foes[key].wary ? sc0 : sc, alertLevel(run)));
+  for(const key of E.foes){ const bo = heatBoost(key, h) || {hp:0, d:0};
+    const sc = A ? {hp:+(A.scale.hp * es.hp * (1 + bo.hp)).toFixed(3), d:+(A.scale.d * es.d * (1 + bo.d)).toFixed(3)} : null;
+    foes.push(makeFoe(key, foes.length, sc, h)); }
   let uid = 1;
   const cards = shuffle(battleDeck(run).map(k => ({k, id:uid++})));
   const b = {enc:encKey, T:0, block:0, swift:0, foes, parts, draw:cards, disc:[], cache:[], hand:[], cast:null, broken:{}, over:false, timers:[], zones:[], drawIn:RULE.draw, handMax:RULE.handMax, uid:1000, parryNow:false, charge:0, exile:[], wards:[], grow:{}, choose:null};
@@ -766,30 +768,31 @@ const fledAll = st => st.b.foes.some(e => e.fled) && !st.b.foes.some(e => e.aliv
 function newRun(seed){
   const parts = {};
   for(const s of D.slots) parts[s.id] = {id:D.startParts[s.id], damaged:false};
-  const run = {seed, area:0, alert:0, lastEnc:null, body:D.bodyMax, bodyMax:D.bodyMax, parts, deck:D.startDeck.slice(), scrap:D.rewards.scrapStart, at:null, visited:[], map:null};
+  const run = {seed, area:0, heat:0, lastEnc:null, body:D.bodyMax, bodyMax:D.bodyMax, parts, deck:D.startDeck.slice(), scrap:D.rewards.scrapStart, at:null, visited:[], map:null};
   run.map = genMap(seed, 0);
   return run;
 }
-/* ---------- 警戒度(0.20.0) ----------
-   run.alert はゲージ(0〜per×(max-1))。段は I〜X */
-const AL = () => D.alert || {max:10, per:4, gain:{}, enemy:{hp:0, d:0}, scrap:0};
-function alertLevel(run){ return Math.min(AL().max, 1 + Math.floor((run.alert || 0) / AL().per)); }
-// ゴムひも(0.41.0、DATA.alert.band): いまのエリアの基準の段。区画を進むにつれ from から to へ
-function alertTarget(run, area){ const B = AL().band, A = B && B.areas[area == null ? (run.area || 0) : area]; if(!A) return null;
-  const rooms = (D.areas[run.area || 0] || {}).rooms || 8, p = area == null ? Math.min(1, (run.visited || []).length / rooms) : 0; return A.from + (A.to - A.from) * p; }
-const alertLv = run => 1 + (run.alert || 0) / AL().per; // 段(小数つき)
-function addAlert(run, n, raw){ const cap = AL().per * (AL().max - 1); const before = alertLevel(run);
-  const B = AL().band, tg = !raw && B && n ? alertTarget(run) : null;
-  if(tg != null){ const diff = alertLv(run) - tg, m = Math.max(B.min, Math.min(B.max, 1 - Math.sign(n) * B.k * diff)); n = n * m; }
-  run.alert = Math.max(0, Math.min(cap, (run.alert || 0) + n)); return alertLevel(run) - before; }
-// 区画を終えたときの警戒の増減(イベントは選択肢の fx.alert で別に)
-function alertGain(type){ return (AL().gain || {})[type] || 0; }
-// 通常戦の敵(0.23.0): エリアの pools から、今の警戒度で入る組(at が警戒度以下でいちばん大きい組)を使う。
+/* 警戒(0.44.0 で作り直し): 相対値。ゲージ run.heat(−10〜+10)を5段(−2〜+2)で見せる。DATA.heat
+   区画を終えるたびに、種類ごとの量(gain)を足し、一定量(cool)冷める。行き過ぎないよう、わずかに0へ寄せる(decay)
+   エリアの移り目で carry 倍(半分)。エリアが進むと強くなる役は、エリアごとの敵と、エリアの中の深さで決まる敵の組(pools の from)が持つ */
+const HT = () => D.heat || {gain:{}, cool:0, decay:0, min:-10, max:10, th:[2, 5], carry:0.5, scrap:{}, cards:{}, boost:{}, plus2:{hp:0, d:0}};
+function heatLevel(run){ const g = run.heat || 0, t = HT().th; return g <= -t[1] ? -2 : g <= -t[0] ? -1 : g < t[0] ? 0 : g < t[1] ? 1 : 2; }
+const heatClamp = g => Math.max(HT().min, Math.min(HT().max, g));
+// イベントなどで増減(戻り値は段の変化)
+function addHeat(run, n){ const b = heatLevel(run); run.heat = heatClamp((run.heat || 0) + n); return heatLevel(run) - b; }
+// 区画を終えたとき(戻り値は段の変化)
+function roomHeat(run, type){ const H = HT(), b = heatLevel(run); run.heat = heatClamp((run.heat || 0) + ((H.gain || {})[type] || 0) - (H.cool || 0)) * (1 - (H.decay || 0)); return heatLevel(run) - b; }
+// 区画の種類ごとの増減の目安(地図の表示用): 足す量 − 冷める量
+const heatDelta = type => ((HT().gain || {})[type] || 0) - (HT().cool || 0);
+// 段ごとの報酬: スクラップの倍率 / 学習の候補 {n, r}(r: low コモンが出やすい / high アンコモンが出やすい)
+const heatScrap = run => 1 + ((HT().scrap || {})[heatLevel(run)] || 0);
+const heatCards = run => (HT().cards || {})[heatLevel(run)] || {n:3};
+// 通常戦の敵(0.44.0): エリアの pools から、区画の深さ(列の番号 idx)で入る組(from が idx 以下でいちばん後の組)を使う
 // 直前と同じ遭遇は避ける。区画ごとに決まった乱数で選ぶ(つづきからでも同じ)
-function poolIndex(run, area){ const P = D.areas[area == null ? (run.area || 0) : area].pools, lv = alertLevel(run); let i = 0; P.forEach((p, j) => { if(p.at <= lv) i = j; }); return i; }
+function poolIndex(run, area, idx){ const P = D.areas[area == null ? (run.area || 0) : area].pools; let i = 0; P.forEach((p, j) => { if((p.from || 0) <= (idx || 0)) i = j; }); return i; }
 function encFor(run, node){
   if(node.enc) return node.enc;
-  const A = D.areas[run.area || 0], bi = poolIndex(run);
+  const A = D.areas[run.area || 0], bi = poolIndex(run, null, node.idx);
   const all = A.pools[bi].enc, pool = all.filter(k => k !== run.lastEnc);
   node.enc = pick(pool.length ? pool : all, rngFrom(run.seed + run.area * 131 + node.lane * 17 + node.idx * 7 + 3));
   node.band = bi;
@@ -801,7 +804,8 @@ function nextArea(run){
   const tr = D.transit[run.area] || {heal:0};
   const before = run.body; run.body = Math.min(run.bodyMax, run.body + Math.round(run.bodyMax * (tr.heal || 0)));
   run.area += 1; run.at = null; run.visited = [];
-  { const B = AL().band, tg = B ? alertTarget(run, run.area) : null; if(tg != null) addAlert(run, (tg - alertLv(run)) * B.carry * AL().per, true); } // 0.41.0: 次のエリアの基準へ寄せる run.map = genMap(run.seed + run.area * 7919, run.area);
+  run.heat = (run.heat || 0) * (HT().carry == null ? 0.5 : HT().carry); /* 0.44.0: 警戒はエリアの移り目で半分に */
+  run.map = genMap(run.seed + run.area * 7919, run.area); /* 0.41.0〜0.43.1 はこの行が注釈に呑まれていて、エリアが変わっても地図が作り直されていなかった */
   return run.body - before;
 }
 
@@ -848,7 +852,7 @@ function nextNodes(run){
 
 const API = {RULE, makeFoe, defaultUid, liveUids, actorUid, parseT, gap, reloadCost, rngFrom, setRandom, shuffle, pick, clone, cur, advance, partOf, fx, partCards, battleDeck, partMax, dmgOf, blockOf,
   drawOne, drawN, upcoming, arrivals, applyCard, enemyAct, spendGen, runGen, newBattle, actions, actionCost, beginAction, endAction, doAction,
-  newRun, nextArea, delayFoe, addDot, tickDots, growOf, waryTier, lootBack, fledAll, pasN, attrOf, costOf, baseKey, spendShort, dotShort, needShort, foeStr, regDeck, genMap, nextNodes, reachAfter, scaledFoe, alertLevel, alertTarget, addAlert, alertGain, encFor, poolIndex};
+  newRun, nextArea, delayFoe, addDot, tickDots, growOf, waryTier, lootBack, fledAll, pasN, attrOf, costOf, baseKey, spendShort, dotShort, needShort, foeStr, regDeck, genMap, nextNodes, reachAfter, scaledFoe, heatLevel, addHeat, roomHeat, heatDelta, heatScrap, heatCards, heatBoost, encFor, poolIndex};
 root.ENGINE = API;
 if(typeof module !== 'undefined') module.exports = API;
 })(typeof window !== 'undefined' ? window : globalThis);

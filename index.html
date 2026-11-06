@@ -1269,7 +1269,7 @@ body.hs *{animation-play-state:paused!important;transition:none!important}
 <script src="data/text.js"></script>
 <script src="js/engine.js"></script>
 <script>
-const APP_VERSION = '0.45.0';
+const APP_VERSION = '0.45.1';
 const $ = s => document.querySelector(s);
 const EN = ENGINE, RULE = EN.RULE;
 const VIEW = RULE.view, NOW = 170, PX = 34, xs = c => NOW + c * PX, STRIP_Y = 150, SWIFT_VIS = 3;
@@ -2859,6 +2859,12 @@ function moveLines(e, a){
   else if(a.d > 0) L.push(fillUi(a.hits > 1 ? 'mv.hits' : 'mv.atk', {part, d, hits: a.hits}));
   if(a.mimic) L.push(fillUi('mv.mimic', {n: S && S.b ? S.b.lastHit || 0 : 0}));
   if(a.armorDmg) L.push(fillUi('mv.armorDmg', {n: a.armorDmg}));
+  /* 0.45.1(会話B): ブロックを使う攻撃・敵の充電・次の攻撃の上乗せ・ランダムの部位 */
+  if(a.armorSpend) L.push(fillUi('mv.armorSpend', {pct: Math.round(a.armorSpend * 100)}));
+  if(a.gain) L.push(fillUi('mv.gain', {n: a.gain, now: e.charge || 0}));
+  if(a.spend) L.push(fillUi('mv.spend', {n: a.spend, now: e.charge || 0}));
+  if(a.prime) L.push(fillUi('mv.prime', {n: a.prime}));
+  if(a.rp) L.push(fillUi('mv.rand', {}));
   if(a.ch) L.push(fillUi('mv.charge', {}));
   if(a.link) L.push(fillUi('mv.link', {}));
   if(a.fort) L.push(fillUi('mv.fort', {n: a.fort}));

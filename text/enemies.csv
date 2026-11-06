@@ -1,4 +1,4 @@
-﻿キー,名前,(参考)何の名前か
+キー,名前,(参考)何の名前か
 drone,警備ドローン,名前
 drone.pat.0,射撃,行動1
 drone.pat.1,照準,行動2
@@ -11,7 +11,7 @@ scout.passive.0,立て直し,パッシブ1
 turret,迎撃タレット,名前
 turret.pat.0,砲撃,行動1
 turret.pat.1,装甲を重ねる,行動2
-turret.pat.2,装甲投射,行動3
+turret.pat.2,装甲砲撃,行動3
 turret.react,迎撃,反応(パッシブの名前と、撃つ行動の名前)
 exec,不屈の処刑者,名前
 exec.pat.0,殴打,行動1
@@ -187,8 +187,8 @@ camnet.unit.cam1,カメラ,ユニットの名前
 camnet.unit.cam2,カメラ,ユニットの名前
 camnet.pat.0,捕捉,行動1
 camnet.pat.1,射撃,行動2
-camnet.pat.2,捕捉,行動3
-camnet.pat.3,連射,行動4
+camnet.pat.2,測距,行動3
+camnet.pat.3,放電,行動4
 tram,(仮)路面電車,名前
 tram.pat.0,線路,行動1
 tram.pat.1,通過,行動2

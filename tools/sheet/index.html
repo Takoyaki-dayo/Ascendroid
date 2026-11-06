@@ -259,7 +259,7 @@ const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;'})[c]);
 const clone = o => o === undefined ? undefined : JSON.parse(JSON.stringify(o));
 const K7 = D.classes[D.defaultClass];
-const SLOT = Object.fromEntries(D.slots.map(s => [s.id, s.fn]));
+const SLOT = Object.fromEntries(D.slots.map(s => [s.id, s.fn])); const SLOTX = Object.assign({}, SLOT, {rand:'ランダム'}); /* 0.45.1: 敵の行動の部位の表示用 */
 const TNAME = {melee:'近接', ranged:'遠隔'};
 // 通常戦は、どのエリアのどの警戒度の組に入っているか(0.23.0 から data/map.js の areas の pools)
 const ROMAN = ['I','II','III','IV','V','VI','VII','VIII','IX','X'];
@@ -310,7 +310,7 @@ function fIn(p, o, orig, lab, kind, opts){
   const v = getPath(o, p), chg = JSON.stringify(v) !== JSON.stringify(getPath(orig, p)), id = 'f-' + p.replace(/[^\w]/g, '_');
   let input;
   if(kind === 'bool') input = `<input id="${id}" type="checkbox" data-path="${esc(p)}" data-t="bool"${v ? ' checked' : ''}>`;
-  else if(kind === 'part') input = `<select id="${id}" data-path="${esc(p)}" data-t="str">${Object.entries(SLOT).map(([k, n]) => `<option value="${k}"${k === v ? ' selected' : ''}>${n}</option>`).join('')}</select>`;
+  else if(kind === 'part') input = `<select id="${id}" data-path="${esc(p)}" data-t="str">${Object.entries(/^(phase\.(next\.)?)?pat\.\d+\.p$/.test(p) ? Object.assign({}, SLOT, {rand:'ランダム'}) : SLOT).map(([k, n]) => `<option value="${k}"${k === v ? ' selected' : ''}>${n}</option>`).join('')}</select>`;
   else if(kind === 'unit') input = `<select id="${id}" data-path="${esc(p)}" data-t="str"><option value=""${v ? '' : ' selected'}>(本体)</option>${opts.map(([k, n]) => `<option value="${k}"${k === v ? ' selected' : ''}>${esc(n)}</option>`).join('')}</select>`;
   else if(kind === 'str') input = `<input id="${id}" type="text" data-path="${esc(p)}" data-t="str" value="${esc(v ?? '')}">`;
   else if(kind === 'lines') input = `<textarea id="${id}" data-path="${esc(p)}" data-t="lines" rows="${Math.max(1, (v || []).length)}" placeholder="1行に1つ(複数ならどれか)">${esc((v || []).join('\n'))}</textarea>`;
@@ -326,12 +326,12 @@ const ACT_X = [['wind', '体勢', [['w', '窓'], ['poise', '一撃']]], ['guard'
 const actAttrs = (a, o) => [a.steal ? `スクラップを${a.steal}盗む` : '', a.eat ? `手札を${a.eat}枚飲み込む` : '', a.rebuild ? `ユニットを耐久${a.rebuild}で直す` : '', a.flee ? '逃げる' : '', a.hits > 1 ? `${a.hits}回` : '',
   a.wind ? `体勢${a.wind.w}/${a.wind.poise}` : '', a.guard ? `防壁${a.guard.w}/${a.guard.s}` : '', a.counter ? `反撃${a.counter.w}/${a.counter.d}` : '', a.rec ? `隙${a.rec}` : '', a.buff ? `増幅+${a.buff}${a.all ? '(全員)' : ''}` : '',
   a.armor ? `ブロック+${a.armor}` : '', a.heal ? `修復${a.heal}` : '', a.crack ? `こちらにクラック+${a.crack}` : '', a.noise ? `ノイズ${a.noise}枚` : '', a.haste ? `加速${a.haste}` : '',
-  a.zone ? `射界(${a.zone.at}後から${a.zone.len}、${a.zone.d}→${SLOT[a.zone.p] || ''})` : '', a.summon ? `増援` : '', ...(a.free || [])].filter(Boolean);
+  a.zone ? `射界(${a.zone.at}後から${a.zone.len}、${a.zone.d}→${SLOTX[a.zone.p] || ''})` : '', a.summon ? `増援` : '', ...(a.free || [])].filter(Boolean);
 const actWho = (a, o) => a.by && o.units && o.units[a.by] ? (o.units[a.by].name || a.by) : '';
 // 行動のタイル(ゲームのタイムラインに近い見た目)。押すとその行動の欄を開く
 function actTile(a, o, base){
   const big = a.kind === 'delay' ? `⏳${a.v || 0}` : a.d > 0 ? `${a.d}${a.hits > 1 ? '×' + a.hits : ''}` : '·';
-  const sub = a.kind === 'delay' ? '自分にディレイ' : a.d > 0 ? (SLOT[a.p] || '') : '';
+  const sub = a.kind === 'delay' ? '自分にディレイ' : a.d > 0 ? (SLOTX[a.p] || '') : '';
   const tags = actAttrs(a, o).filter(t => !/^\d+回$/.test(t));
   return `<button type="button" class="tile${a.ch ? ' ch' : ''}${S.foeOpen === base ? ' on' : ''}" data-fopen="${esc(base)}"><b>${esc(big)}</b><i>${esc(sub)}</i><span>${esc(a.n || '(名前なし)')}</span>${actWho(a, o) ? `<u>${esc(actWho(a, o))}</u>` : ''}${tags.length ? `<em>${esc(tags.join(' '))}</em>` : ''}</button>`;
 }

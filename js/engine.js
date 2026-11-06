@@ -42,6 +42,8 @@ function setRandom(fn){ rand = fn || Math.random; }
 function shuffle(a, r){ const R = r || rand; for(let i = a.length - 1; i > 0; i--){ const j = Math.floor(R() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 function pick(a, r){ return a[Math.floor((r || rand)() * a.length)]; }
 const clone = o => JSON.parse(JSON.stringify(o));
+// 0.45.1: 狙う部位「ランダム」(p:'rand')。行動の並びを持つときに部位を決め、撃つたびに決め直す(予定には決まった部位が出る)
+const rollPat = pat => pat.some(a => a.p === 'rand' || a.rp) ? pat.map(a => a.p === 'rand' || a.rp ? Object.assign({}, a, {p:pick(D.slots).id, rp:true}) : a) : pat;
 const isJunk = c => !!(D.cards[c.k] && D.cards[c.k].junk); // 汚染のカード(0.41.3)
 const fades = c => !!(D.cards[c.k] && D.cards[c.k].fade);   // 区切りで手札から消える汚染
 const cur = e => e.pat[e.idx];
@@ -73,9 +75,9 @@ function skipMove(e){
 }
 function advance(e){
   if(e.hist){ e.hist.push(e.idx); if(e.hist.length > 4) e.hist.shift(); }
-  if(e.phase && !e.phased && (e.phase.when === 'parts' ? e.uids.every(k => e.units[k].core || e.units[k].broken) : e.hp < e.maxHp * e.phase.at)){ e.phased = true; e.pat = e.phase.pat; e.idx = 0; e.hist = []; resetQueue(e); }
+  if(e.phase && !e.phased && (e.phase.when === 'parts' ? e.uids.every(k => e.units[k].core || e.units[k].broken) : e.hp < e.maxHp * e.phase.at)){ e.phased = true; e.pat = rollPat(e.phase.pat); e.idx = 0; e.hist = []; resetQueue(e); }
   // 2段目の段階変化(0.40.2、phase.next:{at, pat}): 1段目の後、耐久が next.at 割を切ると変わる
-  else if(e.phased && !e.phased2 && e.phase && e.phase.next && e.hp < e.maxHp * e.phase.next.at){ e.phased2 = true; e.pat = e.phase.next.pat; e.idx = 0; e.hist = []; resetQueue(e); }
+  else if(e.phased && !e.phased2 && e.phase && e.phase.next && e.hp < e.maxHp * e.phase.next.at){ e.phased2 = true; e.pat = rollPat(e.phase.next.pat); e.idx = 0; e.hist = []; resetQueue(e); }
   else if(e.ai === 'rand'){ fillQueue(e); e.idx = e.queue.shift(); fillQueue(e); }
   else e.idx = (e.idx + 1) % e.pat.length;
   // 破壊されたユニットの行動は飛ばす
@@ -189,7 +191,7 @@ function hurtFoe(b, e, d, ev, uid){
     for(const ps of e.pas || []) if(ps.k === 'improve' && e.alive){ e.str = (e.str || 0) + (ps.n || 0); e.haste = (e.haste || 0) + (ps.haste || 0); ev.push({kind:'frenzy', e:e.i, n:ps.n || 0}); } // 改善(0.41.3)
     // broke: このユニットが破壊されると行動の並びが変わる
     const nb = (D.foes[e.key].broke || {})[uid];
-    if(nb && e.alive){ e.pat = nb; e.idx = 0; e.hist = []; e.sh = 0; e.chain = 0; resetQueue(e); ev.push({kind:'shift', e:e.i, unit:uid}); }
+    if(nb && e.alive){ e.pat = rollPat(nb); e.idx = 0; e.hist = []; e.sh = 0; e.chain = 0; resetQueue(e); ev.push({kind:'shift', e:e.i, unit:uid}); }
     else fillQueue(e); // 破壊されたユニットの行動を並びから除いて足す
     // 予定に入っていたこのユニットの行動は消える
     if(e.alive && !moveOk(e, cur(e)) && e.uids.some(k => !e.units[k].broken && e.units[k].vital)){ const nm = cur(e).n; skipMove(e); ev.push({kind:'cancel', e:e.i, name:nm}); }
@@ -263,7 +265,7 @@ function breakAttr(st, c, ev, extra){
 function hitA(st, c, e, n, ev, uid){ hitFoe(st, e, n, ev, uid); const A = attrOf(c); if(A && A.on === 'hit') attrFx(st, A, e, uid, ev, n); }
 // 持続(0.29.0、名前は仮): ユニットごとに {n:回数, p:威力}。カードで足す(合算)。毎サイクルの終わりに威力分のダメージを与え、回数が1減る。0で消える
 // 回数0のユニットに威力だけ足したときは回数1にする。持続のダメージはヒットではない(クラック・隙・ブロック・防壁・反撃・体勢・属性はどれも関係しない)
-function addDot(u, n, p){ const d = u.dot || {n:0, p:0}; d.n += n || 0; d.p += p || 0; if(d.n <= 0 && d.p > 0) d.n = 1; if(d.n > 0) u.dot = d; }
+function addDot(u, n, p){ const fresh = !u.dot || (u.dot.n <= 0 && u.dot.p <= 0), d = u.dot || {n:0, p:0}; d.n += n || 0; d.p += p || 0; if(fresh && d.n > 0 && d.p <= 0) d.p = 1; /* 0.45.1: 侵食の無い相手に回数だけ与えたら威力1 */ if(d.n <= 0 && d.p > 0) d.n = 1; if(d.n > 0) u.dot = d; }
 function tickDots(st){
   const b = st.b, ev = [];
   for(const e of b.foes) if(e.alive) for(const k of e.uids.slice()){
@@ -365,7 +367,10 @@ function timerBreakAttr(st, t, ev){ const c = D.cards[t.k]; if(c) breakAttr(st, 
 // 敵の攻撃の上乗せ: 増幅 − 虚弱(0.35.0)。攻撃の威力は0未満にならない(strike で切る)
 const foeStr = e => (e.str || 0) - (e.weak || 0);
 /* 行動そのものが足すダメージ(0.45.0 で画面と共有): armorDmg は行動したユニットのブロック armorDmg ごとに+1、mimic はこちらが最後に当てた一撃の分 */
-const moveBonus = (b, e, a) => (a.armorDmg ? Math.floor(((e.units[actorUid(e, a)] || {}).armor || 0) / a.armorDmg) : 0) + (a.mimic && b ? b.lastHit || 0 : 0);
+const moveBonus = (b, e, a) => (a.armorDmg ? Math.floor(((e.units[actorUid(e, a)] || {}).armor || 0) / a.armorDmg) : 0) + (a.mimic && b ? b.lastHit || 0 : 0)
+  + (a.armorSpend ? Math.floor(((e.units[actorUid(e, a)] || {}).armor || 0) * a.armorSpend) : 0)  /* 0.45.1: 行動したユニットのブロックの armorSpend 割を使って威力に */
+  + (a.spend ? a.spend * (e.charge || 0) : 0)                                                      /* 0.45.1: 敵の充電1につき spend */
+  + (a.d > 0 ? e.prime || 0 : 0);                                                                 /* 0.45.1: 次の攻撃のダメージ+(prime) */
 function strike(st, e, a, extra, noParry){
   const b = st.b, raw = Math.max(0, a.d + (extra || 0)) + (b.crack || 0);
   if(b.parryNow && !noParry){ const ev = []; hurtFoe(b, e, b.parryHalf ? Math.ceil(raw / 2) : raw, ev, actorUid(e, a.by ? a : cur(e))); return {kind:'parried', name:a.n, raw, ev}; }
@@ -401,12 +406,18 @@ function enemyAct(st, e, extra){ e.resist = 0;
   if(a.hits > 1 && !e.chain){ e.chain = a.hits - 1; e.r = 1; e.sh = 0; res.chainLeft = e.chain; return res; }
   if(e.chain > 0){ e.chain--; if(e.chain > 0){ e.r = 1; res.chainLeft = e.chain; return res; } }
   res.chainLeft = 0;
+  // 0.45.1: 撃ち終えたら、使ったブロック(armorSpend)・充電(spend)・次の攻撃の上乗せ(prime)を消す
+  if(a.armorSpend){ const u = e.units[actorUid(e, a)]; if(u) u.armor -= Math.floor((u.armor || 0) * a.armorSpend); }
+  if(a.spend){ res.spent = e.charge || 0; e.charge = 0; }
+  if(a.d > 0 && e.prime){ e.prime = 0; }
   if(a.d > 0 && res.kind === 'hit') afterHit(st.b);
   const ap = e.units[actorUid(e, a)];
   if(a.rec) ap.vuln = a.rec + 1;
   if(a.buff){ for(const f of (a.all ? st.b.foes.filter(f => f.alive) : [e])) f.str = (f.str || 0) + a.buff; res.buff = a.buff; }
   // 放置の代償になる行動
   const b = st.b;
+  if(a.gain){ e.charge = (e.charge || 0) + a.gain; res.gain = a.gain; }      // 0.45.1: 敵の充電(spend の攻撃で消費する)
+  if(a.prime){ e.prime = (e.prime || 0) + a.prime; res.prime = a.prime; }    // 0.45.1: 次の攻撃のダメージ+
   if(a.fort){ e.fort = (e.fort || 0) + a.fort; res.fort = a.fort; }          // 堅固: 以後、ブロックを得るたびその分が増える
   if(a.armor){ const g = a.armor + (e.fort || 0); ap.armor += g; res.armor = g; }                // 装甲を重ねる(行動したユニットに。消えない)
   if(a.heal){ const hp = !ap.broken ? ap : e.units[defaultUid(e)]; const h = Math.min(a.heal, hp.max - hp.hp); hp.hp += h; syncHp(e); res.heal = h; } // 修復(破壊されたユニットは戻らない)
@@ -435,6 +446,7 @@ function enemyAct(st, e, extra){ e.resist = 0;
     if(k){ const u = e.units[k]; u.broken = false; u.hp = Math.min(u.max, a.rebuild); u.crack = 0; u.vuln = 0; syncHp(e); fillQueue(e); res.rebuild = k; }
     else { const hp = !ap.broken ? ap : e.units[defaultUid(e)]; const h = Math.min(Math.ceil(a.rebuild / 2), hp.max - hp.hp); hp.hp += h; syncHp(e); res.heal = h; }
   }
+  if(a.rp){ e.pat = e.pat.slice(); e.pat[e.idx] = Object.assign({}, a, {p:pick(D.slots).id}); } // ランダムの部位を決め直す
   if(a.flee){ e.alive = false; e.fled = true; e.reactIn = null; res.flee = true; return res; }
   advance(e);
   return res;
@@ -606,7 +618,7 @@ function scaledFoe(key, sc, lv){
   if(!sc || (sc.hp === 1 && sc.d === 1)) return src;
   const id = wk + '@' + sc.hp + '/' + sc.d; if(scaledCache[id]) return scaledCache[id];
   // s はガードの量のときだけ(ユニットの絵の大きさの s は変えない)
-  const H = ['hp', 'heal', 'rebuild'], DK = ['d', 'armor', 'poise'];
+  const H = ['hp', 'heal', 'rebuild'], DK = ['d', 'armor', 'poise', 'prime'];
   const walk = (o, pk) => { if(Array.isArray(o)) return o.map(x => walk(x, pk)); if(!o || typeof o !== 'object') return o; const r = {};
     for(const [k, v] of Object.entries(o)){
       if(typeof v === 'number' && v > 0 && H.includes(k)) r[k] = Math.round(v * sc.hp);
@@ -619,7 +631,7 @@ function scaledFoe(key, sc, lv){
 }
 function makeFoe(key, i, sc, lv){
   const f = scaledFoe(key, sc, lv);
-  const e = {key, i, wary:f.waryAt || 0, name:f.name, tag:'ABCDEF'[i], kind:f.kind, pat:f.pat, idx:0, r:f.start, seq:0, alive:true,
+  const e = {key, i, wary:f.waryAt || 0, name:f.name, tag:'ABCDEF'[i], kind:f.kind, pat:rollPat(f.pat), idx:0, r:f.start, seq:0, alive:true,
     react:f.react || null, sync:f.sync || 0, reactIn:null, ai:f.ai || null, phase:f.phase || null, phased:false, hist:[], chain:0, sh:0, str:0, haste:0, pas:f.passives || []};
   // ユニット。書かなければ耐久 hp の核1つ
   const defs = f.units || {core:{hp:f.hp, vital:true, core:true}};

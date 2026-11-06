@@ -45,9 +45,9 @@ DATA.foes = {
     pat:[{d:3, dl:3, p:'out', wt:2}, {d:3, hits:3, dl:5, p:'mob', wt:1}, {d:7, dl:5, p:'out', wind:{w:2, poise:6}, rec:2, wt:1}],
     pool:['jab','flick','reload','coil','arc']},
   turret:   {kind:'turret', hp:66, start:5, react:{min:4, d:4, p:'arm'},
-    pat:[{d:7, dl:2, p:'dur'}, {d:0, dl:4, armor:8}], pool:['wall','parry','emp','cell'],
-    // 0.40.0: 警戒III〜 堅固(ブロックを得るたび、その分が増える)と、ブロックが威力になる装甲投射
-    wary:[{at:1, pat:[{d:7, dl:2, p:'dur'}, {d:0, dl:4, armor:8, fort:3}, {d:10, dl:1, p:'calc', armorDmg:3}]}]},
+    pat:[{d:7, dl:2, p:'dur'}, {d:0, dl:4, armor:8, ch:true}], pool:['wall','parry','emp','cell'],
+    // 0.45.1(工房の確定): 装甲を重ねるのは不安定(JUST で止まる)。+ は堅固1と、ブロックを半分使ってその分だけ重くなる装甲砲撃
+    wary:[{at:1, pat:[{d:7, dl:2, p:'dur'}, {d:0, dl:4, armor:8, fort:1, ch:true}, {d:12, dl:1, p:'calc', armorSpend:0.5}]}]},
   exec:     {kind:'exec', hp:86, start:5,
     pat:[{d:7, dl:6, p:'out'}, {d:0, dl:5, buff:3, wind:{w:3, poise:12}}],
     phase:{at:0.5, pat:[{d:7, dl:5, p:'out'}, {d:20, dl:7, p:'dur', ch:true, wind:{w:3, poise:12}, rec:3}]},
@@ -146,9 +146,12 @@ DATA.foes = {
     pool:['scatter','storm','slash','iterate']},
   // 監視カメラ網: カメラがこちらにクラックを重ね続ける(消えない)。先にカメラを潰すか、押し切るか
   camnet:   {kind:'drone', start:3,
-    units:{core:{hp:85, vital:true, core:true, icon:'core', at:[0, 56], pt:[30, 36]}, cam1:{hp:18, icon:'eye', at:[-110, -30], pt:[6, 14]}, cam2:{hp:18, icon:'eye', at:[110, -30], pt:[54, 14]}},
-    pat:[{by:'cam1', d:0, dl:3, crack:1}, {by:'core', d:8, dl:3, p:'calc'}, {by:'cam2', d:0, dl:3, crack:1}, {by:'core', d:6, hits:2, dl:4, p:'arm'}],
-    pool:['flick','scatter','aim','scan']},
+    units:{core:{hp:95, vital:true, core:true, icon:'core', at:[0, 56], pt:[30, 36]}, cam1:{hp:20, icon:'eye', at:[-110, -30], pt:[6, 14]}, cam2:{hp:20, icon:'eye', at:[110, -30], pt:[54, 14]}},
+    // 0.45.1: 充電のアーキタイプで作り直し。カメラと射撃で銃座が充電し、放電(不安定)で充電1につき+4。止めても充電は残り、次の放電が重くなる
+    pat:[{by:'cam1', d:0, dl:3, crack:1, gain:1}, {by:'core', d:9, dl:3, p:'calc', gain:1}, {by:'cam2', d:0, dl:3, gain:2}, {by:'core', d:6, dl:4, p:'dur', spend:4, ch:true}],
+    wary:[{at:1, pat:[{by:'cam1', d:0, dl:3, crack:1, gain:1}, {by:'core', d:9, dl:3, p:'calc', gain:1}, {by:'cam2', d:0, dl:3, gain:3}, {by:'core', d:6, dl:4, p:'dur', spend:4, ch:true}]},
+          {at:2, units:{core:{hp:110, vital:true, core:true, icon:'core', at:[0, 56], pt:[30, 36]}, cam1:{hp:24, icon:'eye', at:[-110, -30], pt:[6, 14]}, cam2:{hp:24, icon:'eye', at:[110, -30], pt:[54, 14]}}}],
+    pool:['capacitor','coil','storm','cell','scatter']},
   // 路面電車: 定刻どおりに走る(ディレイが効かない)。線路(射界)を敷き、止められない通過で轢く。受けるか、それまでに削り切るか
   tram:     {kind:'tank', hp:105, start:6, look:{s:1.1, at:[0, -8]}, passives:[{k:'punctual', n:0}],
     pat:[{d:0, dl:3, zone:{at:2, len:2, d:8, p:'mob'}}, {d:14, dl:5, p:'dur'}, {d:6, dl:4, p:'out'}],

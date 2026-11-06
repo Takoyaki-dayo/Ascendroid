@@ -129,6 +129,9 @@ function upgradeOne(run){
   run.deck[run.deck.indexOf(k)] = D.upKey(k);
 }
 function pickNode(run, nx, R){
+  const st = process.env.ROUTE; // 0.41.0: aggro はエリートと戦闘を取り続ける / safe は保守通路と整備を好み、エリートを避ける
+  if(st === 'aggro'){ const s = n => ({elite:3, battle:2, event:1}[n.type] || 0) + R() * 0.5; return nx.slice().sort((a, b) => s(b) - s(a))[0]; }
+  if(st === 'safe'){ const s = n => ({duct:3, rest:2, event:1.5, shop:1, battle:0.5, elite:-3}[n.type] || 0) + R() * 0.5; return nx.slice().sort((a, b) => s(b) - s(a))[0]; }
   const hp = run.body / run.bodyMax, sc = n => (n.type === 'rest' ? (hp < 0.6 ? 5 : 0) : n.type === 'elite' ? (hp > 0.7 ? 2 : -4) : n.type === 'shop' ? (run.scrap >= D.shop.defrag ? 1 : -1) : n.type === 'battle' ? 1 : 0.5) + R() * 0.5;
   return nx.slice().sort((a, b) => sc(b) - sc(a))[0];
 }
@@ -164,11 +167,11 @@ function playRun(pol, seed){
       if(fx.scrap) run.scrap += fx.scrap;
       if(fx.defrag && !naive){ const i = run.deck.indexOf('jab'); if(i >= 0) run.deck.splice(i, 1); }
     }
-    E.addAlert(run, E.alertGain(n.type));
+    E.addAlert(run, E.alertGain(n.type)); run.visited.push(n.lane + ':' + n.idx);
     log.push(n.type + ':' + run.body + ':' + E.alertLevel(run));
     run.at = n.type === 'boss' ? {boss:true} : {lane:n.lane, idx:n.idx};
     if(n.type === 'boss'){
-      (playRun.alertAt = playRun.alertAt || []).push(E.alertLevel(run));
+      (playRun.alertAt = playRun.alertAt || []).push([run.area, E.alertLevel(run)]);
       if(E.nextArea(run) === null) return {clear:true, body:run.body, log};
       // 中継: naive はエリアの番号のもの(前の形)。smart はまだ出ていないものからランダムに選び、選択肢を考える
       const used = run.transitUsed = run.transitUsed || [], left = D.transit.filter(t => !used.includes(t.id)), tr = naive ? D.transit[run.area - 1] : left[Math.floor(R() * left.length)] || D.transit[0];

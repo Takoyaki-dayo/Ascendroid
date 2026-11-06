@@ -757,7 +757,14 @@ function newRun(seed){
    run.alert はゲージ(0〜per×(max-1))。段は I〜X */
 const AL = () => D.alert || {max:10, per:4, gain:{}, enemy:{hp:0, d:0}, scrap:0};
 function alertLevel(run){ return Math.min(AL().max, 1 + Math.floor((run.alert || 0) / AL().per)); }
-function addAlert(run, n){ const cap = AL().per * (AL().max - 1); const before = alertLevel(run); run.alert = Math.max(0, Math.min(cap, (run.alert || 0) + n)); return alertLevel(run) - before; }
+// ゴムひも(0.41.0、DATA.alert.band): いまのエリアの基準の段。区画を進むにつれ from から to へ
+function alertTarget(run, area){ const B = AL().band, A = B && B.areas[area == null ? (run.area || 0) : area]; if(!A) return null;
+  const rooms = (D.areas[run.area || 0] || {}).rooms || 8, p = area == null ? Math.min(1, (run.visited || []).length / rooms) : 0; return A.from + (A.to - A.from) * p; }
+const alertLv = run => 1 + (run.alert || 0) / AL().per; // 段(小数つき)
+function addAlert(run, n, raw){ const cap = AL().per * (AL().max - 1); const before = alertLevel(run);
+  const B = AL().band, tg = !raw && B && n ? alertTarget(run) : null;
+  if(tg != null){ const diff = alertLv(run) - tg, m = Math.max(B.min, Math.min(B.max, 1 - Math.sign(n) * B.k * diff)); n = n * m; }
+  run.alert = Math.max(0, Math.min(cap, (run.alert || 0) + n)); return alertLevel(run) - before; }
 // 区画を終えたときの警戒の増減(イベントは選択肢の fx.alert で別に)
 function alertGain(type){ return (AL().gain || {})[type] || 0; }
 // 通常戦の敵(0.23.0): エリアの pools から、今の警戒度で入る組(at が警戒度以下でいちばん大きい組)を使う。
@@ -776,7 +783,8 @@ function nextArea(run){
   if(run.area + 1 >= D.areas.length) return null;
   const tr = D.transit[run.area] || {heal:0};
   const before = run.body; run.body = Math.min(run.bodyMax, run.body + Math.round(run.bodyMax * (tr.heal || 0)));
-  run.area += 1; run.at = null; run.visited = []; run.map = genMap(run.seed + run.area * 7919, run.area);
+  run.area += 1; run.at = null; run.visited = [];
+  { const B = AL().band, tg = B ? alertTarget(run, run.area) : null; if(tg != null) addAlert(run, (tg - alertLv(run)) * B.carry * AL().per, true); } // 0.41.0: 次のエリアの基準へ寄せる run.map = genMap(run.seed + run.area * 7919, run.area);
   return run.body - before;
 }
 
@@ -823,7 +831,7 @@ function nextNodes(run){
 
 const API = {RULE, makeFoe, defaultUid, liveUids, actorUid, parseT, gap, reloadCost, rngFrom, setRandom, shuffle, pick, clone, cur, advance, partOf, fx, partCards, battleDeck, partMax, dmgOf, blockOf,
   drawOne, drawN, upcoming, arrivals, applyCard, enemyAct, spendGen, runGen, newBattle, actions, actionCost, beginAction, endAction, doAction,
-  newRun, nextArea, delayFoe, addDot, tickDots, growOf, waryTier, lootBack, fledAll, pasN, attrOf, costOf, baseKey, spendShort, dotShort, needShort, foeStr, regDeck, genMap, nextNodes, reachAfter, scaledFoe, alertLevel, addAlert, alertGain, encFor, poolIndex};
+  newRun, nextArea, delayFoe, addDot, tickDots, growOf, waryTier, lootBack, fledAll, pasN, attrOf, costOf, baseKey, spendShort, dotShort, needShort, foeStr, regDeck, genMap, nextNodes, reachAfter, scaledFoe, alertLevel, alertTarget, addAlert, alertGain, encFor, poolIndex};
 root.ENGINE = API;
 if(typeof module !== 'undefined') module.exports = API;
 })(typeof window !== 'undefined' ? window : globalThis);

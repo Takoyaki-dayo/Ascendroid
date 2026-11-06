@@ -27,19 +27,21 @@
 //   part 'random' でパーツの候補を出す / defrag カードを1枚消す / alert 警戒のゲージの増減
 //   partDamage ランダムな部位を n か所損傷させる / rerollParts すべての部位のパーツをランダムに付け替える(パーツのレア度の重みで。0.36.0)
 window.DATA = window.DATA || {};
+// 0.42.0: エリアを区画12+ボスに(8から1.5倍)。乗り換えは区画3・6・9の後。整備は択一になったので、配分の整備は増やさない(ボス前の整備と、道の中の1つ)
+//   警戒のゲージは1段6(4から1.5倍)にして、エリアの中の段の進み方を8区画のときと揃える
 DATA.areas = [
-  {id:'a1', rooms:8, transfers:[2, 4, 6], last:'rest', fill:{battle:8, elite:3, event:3, shop:2, rest:1, duct:1}, scale:{hp:1, d:1}, boss:'boss',
+  {id:'a1', rooms:12, transfers:[3, 6, 9], last:'rest', fill:{battle:14, elite:5, event:5, shop:3, rest:1, duct:2}, scale:{hp:1, d:1}, boss:'boss',
     // 0.40.1: 工房の「出るところ」に合わせる(警備ドローンは警戒I〜IV、迎撃タレットは警戒I〜V)
     pools:[{at:1, enc:['n_guard', 'n_scout', 'n_def', 'n_scav', 'n_crush']},
            {at:2, enc:['n_scan', 'n_swarm', 'n_clock', 'n_weld', 'n_twin', 'n_crush', 'n_guard', 'n_def']},
            {at:3, enc:['n_hound', 'n_proc', 'n_accel', 'n_bomb', 'n_squad', 'n_net', 'n_guard', 'n_def']},
            {at:5, enc:['n_hound', 'n_proc', 'n_accel', 'n_bomb', 'n_squad', 'n_net', 'n_def']},
            {at:6, enc:['n_hound', 'n_proc', 'n_accel', 'n_bomb', 'n_squad', 'n_net']}]},
-  {id:'a2', rooms:8, transfers:[2, 4, 6], last:'rest', fill:{battle:8, elite:3, event:3, shop:2, rest:1, duct:1}, scale:{hp:1, d:1}, boss:'boss2',
+  {id:'a2', rooms:12, transfers:[3, 6, 9], last:'rest', fill:{battle:14, elite:5, event:5, shop:3, rest:1, duct:2}, scale:{hp:1, d:1}, boss:'boss2',
     pools:[{at:1, enc:['n_scan', 'n_swarm', 'n_clock', 'n_weld', 'n_twin', 'n_crush']},
            {at:5, enc:['n_proc', 'n_accel', 'n_bomb', 'n_squad', 'n_net', 'n_clock', 'n_weld']},
            {at:6, enc:['n_hound', 'n_proc', 'n_bomb', 'n_squad', 'n_net', 'n_weld']}]},
-  {id:'a3', rooms:8, transfers:[2, 4, 6], last:'rest', fill:{battle:8, elite:3, event:3, shop:2, rest:1, duct:1}, scale:{hp:1.05, d:1}, boss:'boss3',
+  {id:'a3', rooms:12, transfers:[3, 6, 9], last:'rest', fill:{battle:14, elite:5, event:5, shop:3, rest:1, duct:2}, scale:{hp:1.05, d:1}, boss:'boss3',
     pools:[{at:1, enc:['n_proc', 'n_accel', 'n_bomb', 'n_squad', 'n_net', 'n_clock', 'n_weld']},
            {at:9, enc:['n_hound', 'n_squad', 'n_bomb', 'n_net', 'n_proc']}]},
 ];
@@ -53,7 +55,7 @@ DATA.transit = [
 DATA.rooms = {
   battle:{}, elite:{}, rest:{}, shop:{}, event:{}, duct:{}, boss:{},
 };
-DATA.alert = {max:10, per:4, gain:{battle:2, elite:3, boss:3, duct:-3}, enemy:{hp:0.02, d:0.015}, scrap:0.1, learnAt:5, partAt:8,
+DATA.alert = {max:10, per:6, gain:{battle:2, elite:3, boss:3, duct:-3}, enemy:{hp:0.02, d:0.015}, scrap:0.1, learnAt:5, partAt:8,
   // 0.41.0: ゴムひも。エリアごとの基準の段(区画を進むにつれ from → to)から離れるほど、戻る向きに補正する(仮の値)
   //   上にいると上がる量が減り下がる量が増え、下にいると逆。倍率は 1 ∓ k×(段の差)(0.41.1 で k を 0.25 → 0.15。もう少し遊び方で振れるように) を [min, max] に収める
   //   エリアの移り目では、次のエリアの基準(from)に向けて差の carry 割だけ寄せる

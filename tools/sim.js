@@ -157,8 +157,8 @@ function playRun(pol, seed){
       else if(n.type === 'boss'){ run.body = Math.min(run.bodyMax, run.body + D.rewards.boss.heal); const rs = offerPool().filter(k => D.rarityOf(k) === 'rare'); if(rs.length) run.deck.push(rs[Math.floor(R() * rs.length)]); }
       else learn(run, R, n.type === 'elite' ? 'elite' : 'battle', pool);
     } else if(n.type === 'rest'){
-      // 実験(0.41.2): REST=either は StS と同じく「回復か強化のどちらか」(本体が7割未満なら回復と修理、そうでなければ強化)
-      if(process.env.REST === 'either' && !naive){ if(run.body < run.bodyMax * 0.7){ run.body = Math.min(run.bodyMax, run.body + D.rewards.restHeal); for(const s of D.slots) run.parts[s.id].damaged = false; } else upgradeOne(run); }
+      // 0.42.0: 整備は「回復か強化のどちらか」(本体が7割未満なら回復と修理、そうでなければ強化)。REST=both で前の形(両方)
+      if(!naive && process.env.REST !== 'both'){ if(run.body < run.bodyMax * 0.7){ run.body = Math.min(run.bodyMax, run.body + D.rewards.restHeal); for(const s of D.slots) run.parts[s.id].damaged = false; } else upgradeOne(run); }
       else { run.body = Math.min(run.bodyMax, run.body + D.rewards.restHeal); for(const s of D.slots) run.parts[s.id].damaged = false; if(!naive) upgradeOne(run); } }
     else if(n.type === 'shop' && !naive){ const i = run.deck.indexOf('jab'); if(run.scrap >= D.shop.defrag && i >= 0){ run.scrap -= D.shop.defrag; run.deck.splice(i, 1); } }
     else if(n.type === 'event'){

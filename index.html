@@ -1224,7 +1224,7 @@ body.hs *{animation-play-state:paused!important;transition:none!important}
 <script src="data/text.js"></script>
 <script src="js/engine.js"></script>
 <script>
-const APP_VERSION = '0.41.2';
+const APP_VERSION = '0.42.0';
 const $ = s => document.querySelector(s);
 const EN = ENGINE, RULE = EN.RULE;
 const VIEW = RULE.view, NOW = 170, PX = 34, xs = c => NOW + c * PX, STRIP_Y = 150, SWIFT_VIS = 3;
@@ -2500,7 +2500,7 @@ function findNode(k){ const m = S.run.map; if(k === 'boss') return m.boss; const
 function enterRoom(n){
   UI.node = n; UI.mapSel = null;
   if(n.type === 'battle') EN.encFor(S.run, n);
-  if(n.type === 'rest') restHeal(n);
+  // 0.42.0: 整備の回復は選択肢の1つ(入っただけでは回復しない)
   saveRun(nodeKey(n));
   if(n.type === 'battle' || n.type === 'elite' || n.type === 'boss') startBattle(n);
   else if(n.type === 'rest'){ UI.pick = null; showRest(); }
@@ -2664,14 +2664,14 @@ function showDuct(){
   showRoom('duct', `<h2>${DATA.rooms.duct.name}</h2><p class="rs-text">${DATA.ui['duct.text']}</p><p class="rs-heal al"><span class="ic">${IC.alert}</span>${DATA.ui['alert.gauge']} ${g < 0 ? '−' + -g : '+' + g}</p><div class="row"><button class="btn" type="button" data-act="leave">進む</button></div>`, true);
 }
 // 整備(0.36.0): 入ると必ず本体が回復し、部位の損傷が直る(同じ部屋で2回は回復しない)。そのあと強化かデフラグを選ぶ
-function restHeal(n){
-  const run = S.run, id = nodeKey(n) + '@' + run.area;
-  if(run.restAt !== id){ const v = Math.min(DATA.rewards.restHeal, run.bodyMax - run.body); run.body += v; for(const p of SLOTS) run.parts[p.id].damaged = false; run.restAt = id; run.restHealed = v; }
-  UI.restHealed = run.restHealed || 0;
+// 整備(0.42.0): StS の休憩所と同じく「回復(本体と部位の損傷)・強化・デフラグ」から1つ
+function restHeal(){
+  const run = S.run, v = Math.min(DATA.rewards.restHeal, run.bodyMax - run.body); run.body += v; for(const p of SLOTS) run.parts[p.id].damaged = false; return v;
 }
 function showRest(){
   const pk = UI.pick, opt = (id, ic, name, sub) => `<button class="opt${pk === id ? ' picked' : ''}" type="button" data-act="pick" data-arg="${id}" data-view="rest"><span class="ic">${IC[ic]}</span><b>${name}</b><span>${sub}</span></button>`;
-  showRoom('rest', `<h2>整備</h2><p class="rs-heal"><span class="ic">${IC.core}</span>${fillUi('rest.heal', {n: UI.restHealed || 0})}</p><div class="rs-opts">${opt('upgrade', 'str', '強化', DATA.ui.upgrade)}${opt('defrag', 'defrag', 'デフラグ', DATA.ui.defrag)}</div><div class="row"><button class="btn ghost" type="button" data-act="leave">何もしない</button><button class="btn" type="button" data-act="rest" ${pk ? '' : 'disabled'}>決定</button></div>`, rsUnit());
+  const hv = Math.min(DATA.rewards.restHeal, S.run.bodyMax - S.run.body), dmg = SLOTS.some(p => S.run.parts[p.id].damaged);
+  showRoom('rest', `<h2>整備</h2><div class="rs-opts">${opt('heal', 'core', DATA.ui['rest.healOpt'], fillUi(dmg ? 'rest.healSub' : 'rest.healSub0', {n: hv}))}${opt('upgrade', 'str', '強化', DATA.ui.upgrade)}${opt('defrag', 'defrag', 'デフラグ', DATA.ui.defrag)}</div><div class="row"><button class="btn ghost" type="button" data-act="leave">何もしない</button><button class="btn" type="button" data-act="rest" ${pk ? '' : 'disabled'}>決定</button></div>`, rsUnit());
 }
 // 強化するカードを選ぶ(0.36.0)。押したカードは強化した後の姿で見せる
 function showUpgrade(){
@@ -3200,7 +3200,8 @@ function act(a, arg, el){
     case 'swapGo': if(UI.pick){ const d = PARTDEF[UI.pick]; S.run.parts[d.slot] = {id:UI.pick, damaged:false}; UI.pick = null; completeRoom(); } break;
     case 'skipPart': UI.pick = null; completeRoom(); break;
     case 'rest':
-      if(UI.pick === 'upgrade'){ UI.pick = null; showUpgrade(); }
+      if(UI.pick === 'heal'){ UI.pick = null; restHeal(); completeRoom(); }
+      else if(UI.pick === 'upgrade'){ UI.pick = null; showUpgrade(); }
       else if(UI.pick === 'defrag'){ UI.pick = null; UI.back = 'rest'; showDefrag(); }
       break;
     case 'backAttach': UI.pick = null; hideOv(); showShop(); break;

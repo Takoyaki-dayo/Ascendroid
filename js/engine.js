@@ -803,7 +803,7 @@ function genMap(seed, area){
         row.every((t, i) => t !== 'elite' || i >= 2) &&
         row.every((t, i) => i === 0 || ![...SPECIAL, 'event'].includes(t) || row[i - 1] !== t) &&
         row.slice(1, -1).some(t => t === 'rest' || t === 'shop') &&
-        (n => n >= 2 && n <= 4)(row.slice(1, -1).filter(t => t === 'battle').length)) &&
+        (n => n >= Math.round(mid / 3) && n <= Math.round(mid * 2 / 3))(row.slice(1, -1).filter(t => t === 'battle').length)) &&
       Array.from({length: mid}, (_, i) => rows.map(row => row[i + 1])).every(col => SPECIAL.every(t => col.filter(x => x === t).length <= 2));
     if(!ok) continue;
     const elites = shuffle(Object.entries(D.encounters).filter(([, e]) => e.elite).map(([k]) => k), r);

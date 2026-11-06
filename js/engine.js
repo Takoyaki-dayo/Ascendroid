@@ -26,6 +26,11 @@ const RULE = {draw:3, handStart:5, handMax:7, view:18, freeWait:true, blockDecay
 //   punctual {n}       定刻(0.23.0): ディレイを受けない。ディレイを与えられるたび、代わりに増幅+n(0.35.0: n:0 なら増幅は得ない)
 //   pursuit {n}        追跡(0.23.0): こちらが手札を入れ替えるか待機するたび、次の行動が n サイクル早まる(最短1)
 //   loot / hoard       見せるだけ。盗んだスクラップ(steal)・飲み込んだカード(eat)は撃破すると戻る
+//   cap {n}            耐久試験(0.41.3、案): カードの一撃で受けるダメージは n まで(ブロック・防壁を引いた後)
+//   improve {n, haste} 改善(0.41.3、案): ユニットが破壊されるたび、増幅 n と加速 haste を得る
+// ユニットの shelter(0.41.3、案): ほかのユニットが1つでも残っている間、ダメージを受けない(あふれたダメージも)
+// 汚染のカード(0.41.3): data/cards.js の junk。fade なら区切り(リフレッシュ)で手札から消える(ノイズ)。fade でなければ捨て札へ回り続ける。
+//   使うと消える。dump は区切りで手札から消えるとき本体へのダメージ。was を持つカード(破片)は使うと元のカードに戻る
 
 /* ---------- 乱数と小道具 ---------- */
 function rngFrom(seed){
@@ -37,6 +42,8 @@ function setRandom(fn){ rand = fn || Math.random; }
 function shuffle(a, r){ const R = r || rand; for(let i = a.length - 1; i > 0; i--){ const j = Math.floor(R() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 function pick(a, r){ return a[Math.floor((r || rand)() * a.length)]; }
 const clone = o => JSON.parse(JSON.stringify(o));
+const isJunk = c => !!(D.cards[c.k] && D.cards[c.k].junk); // 汚染のカード(0.41.3)
+const fades = c => !!(D.cards[c.k] && D.cards[c.k].fade);   // 区切りで手札から消える汚染
 const cur = e => e.pat[e.idx];
 // 次の行動へ。ai:'rand' なら重み wt で選ぶ(同じ行動は3回続けない)。phase なら耐久が at 割を切った後に行動の並びが変わる
 // ランダムに選ぶ敵も、先の行動まで決めておく(0.18.3)。e.queue に今の行動(e.idx)の後の並びを QN 個持ち、予定にもそのまま出す
@@ -170,6 +177,7 @@ function hurtFoe(b, e, d, ev, uid){
   uid = uid && e.units[uid] ? uid : defaultUid(e);
   let p = e.units[uid];
   if(p.broken){ const c = coreUid(e); if(c && c !== uid && !e.units[c].broken){ uid = c; p = e.units[c]; } else return; }
+  if(p.shelter && e.uids.some(k => k !== uid && !e.units[k].broken)){ ev.push({kind:'immune', e:e.i, unit:uid}); return; } // 0.41.3: 守られている(ほかのユニットが残っている間は無敵)
   const take = Math.min(p.hp, d), over = d - take;
   p.hp -= take; ev.push({kind:'dmg', e:e.i, unit:uid, n:take});
   if(p.hp <= 0 && !p.broken){
@@ -178,6 +186,7 @@ function hurtFoe(b, e, d, ev, uid){
     if(p.dot){ const c = coreUid(e); if(c && c !== uid && !e.units[c].broken) addDot(e.units[c], p.dot.n, p.dot.p); delete p.dot; }
     // パッシブ frenzy: ユニットが破壊されるたび攻撃力+
     for(const ps of e.pas || []) if(ps.k === 'frenzy' && e.alive){ e.str = (e.str || 0) + ps.n; ev.push({kind:'frenzy', e:e.i, n:ps.n}); }
+    for(const ps of e.pas || []) if(ps.k === 'improve' && e.alive){ e.str = (e.str || 0) + (ps.n || 0); e.haste = (e.haste || 0) + (ps.haste || 0); ev.push({kind:'frenzy', e:e.i, n:ps.n || 0}); } // 改善(0.41.3)
     // broke: このユニットが破壊されると行動の並びが変わる
     const nb = (D.foes[e.key].broke || {})[uid];
     if(nb && e.alive){ e.pat = nb; e.idx = 0; e.hist = []; e.sh = 0; e.chain = 0; resetQueue(e); ev.push({kind:'shift', e:e.i, unit:uid}); }
@@ -200,12 +209,13 @@ function hitFoe(st, e, n, ev, uid){
   const b = st.b, a = cur(e);
   uid = uid && e.units[uid] && !e.units[uid].broken ? uid : defaultUid(e);
   const p = e.units[uid], onActor = !a.by || a.by === uid || !e.units[a.by];
-  n += p.crack || 0;
+  n += p.crack || 0; b.lastHit = n; // 写す(mimic)用に、こちらの最後の一撃
   let d = n;
   if(p.vuln > 0){ d = Math.round(d * 1.5); b.vulnHits = (b.vulnHits || 0) + 1; ev.push({kind:'vulnHit', e:e.i, unit:uid}); }
   if(onActor && inWin(e, a.guard) && e.sh > 0){ const ab = Math.min(e.sh, d); e.sh -= ab; d -= ab; b.guarded = (b.guarded || 0) + ab; ev.push({kind:'guarded', e:e.i, n:ab}); }
   if(p.armor > 0 && d > 0){ const ab = Math.min(p.armor, d); p.armor -= ab; d -= ab; b.guarded = (b.guarded || 0) + ab; ev.push({kind:'armored', e:e.i, unit:uid, n:ab}); }
   if(onActor && inWin(e, a.counter)){ const res = strike(st, e, {n:a.n, d:a.counter.d, p:a.p || 'dur'}, 0, true); afterHit(b); b.countered = (b.countered || 0) + 1; ev.push({kind:'counter', e:e.i, res}); }
+  const cp = pasN(e, 'cap'); if(cp && d > cp){ ev.push({kind:'capped', e:e.i, n:d - cp}); d = cp; } // 耐久試験(0.41.3)
   if(d > 0) hurtFoe(b, e, d, ev, uid);
   if(e.alive && onActor && cur(e) === a && inWin(e, a.wind) && n >= a.wind.poise){ const nm = a.n; skipMove(e); b.breaks = (b.breaks || 0) + 1; ev.push({kind:'break', e:e.i, name:nm}); }
 }
@@ -383,7 +393,7 @@ function delayFoe(e, v, free){
 }
 function enemyAct(st, e, extra){ e.resist = 0;
   const a = cur(e), mv = (e.phased ? 'phase:' : 'pat:') + e.idx;
-  const res = a.kind === 'delay' ? {kind:'delay', name:a.n, v:a.v} : a.d > 0 ? strike(st, e, a, (extra || 0) + foeStr(e) + (a.armorDmg ? Math.floor(((e.units[actorUid(e, a)] || {}).armor || 0) / a.armorDmg) : 0)) : {kind:'move', name:a.n};
+  const res = a.kind === 'delay' ? {kind:'delay', name:a.n, v:a.v} : a.d > 0 ? strike(st, e, a, (extra || 0) + foeStr(e) + (a.armorDmg ? Math.floor(((e.units[actorUid(e, a)] || {}).armor || 0) / a.armorDmg) : 0) + (a.mimic ? st.b.lastHit || 0 : 0)) : {kind:'move', name:a.n};
   res.by = actorUid(e, a); res.mv = mv;
   // 多段: 残りを1サイクルおきに撃つ
   if(a.hits > 1 && !e.chain){ e.chain = a.hits - 1; e.r = 1; e.sh = 0; res.chainLeft = e.chain; return res; }
@@ -403,13 +413,17 @@ function enemyAct(st, e, extra){ e.resist = 0;
   const ac = a.crack || a.mark; // こちらにクラック(受ける攻撃すべて+)。mark は 0.14 までの名前(実験の古い敵のデータ用)
   if(ac){ b.crack = (b.crack || 0) + ac; res.crack = ac; }
   if(a.noise){ for(let i = 0; i < a.noise; i++){ const at = Math.floor(rand() * (b.draw.length + 1)); b.draw.splice(at, 0, {k:'noise', id:b.uid++}); } res.noise = a.noise; } // ノイズ注入
+  // 0.41.3: 崩す(こちらのブロックを shred 失わせる。true なら全て) / 汚染(junk:{k, n, to:'draw'|'hand'|'disc'}) / 割る(手札のカード shatter 枚を《破片》に変える)
+  if(a.shred){ const v = a.shred === true ? b.block : Math.min(b.block, a.shred); b.block -= v; res.shred = v; }
+  if(a.junk){ const j = a.junk; for(let i = 0; i < (j.n || 1); i++){ const c = {k:j.k, id:b.uid++}; if(j.to === 'hand' && b.hand.length < (b.handMax || 10)) b.hand.push(c); else if(j.to === 'disc' || j.to === 'hand') b.disc.push(c); else b.draw.splice(Math.floor(rand() * (b.draw.length + 1)), 0, c); } res.junk = j; }
+  if(a.shatter){ res.shatter = []; for(let n = 0; n < a.shatter; n++){ const hs = b.hand.filter(c => !isJunk(c)); if(!hs.length) break; const pk = pick(hs), i = b.hand.indexOf(pk); b.hand[i] = {k:'shard', id:b.uid++, was:pk}; res.shatter.push(pk); } }
   if(a.summon && b.foes.filter(f => f.alive).length < 3){ const nf = makeFoe(a.summon, b.foes.length); b.foes.push(nf); res.summon = nf.i; } // 増援
   // 0.23.0: 盗む(スクラップ。撃破すると戻る) / 飲み込む(手札のいちばんコストの高いカード。撃破すると捨て札に戻る) / 再溶接(破壊されたユニットを直す) / 逃げる
   if(a.steal){ const t = Math.min(st.run.scrap || 0, a.steal); st.run.scrap -= t; e.loot = (e.loot || 0) + t; res.steal = t; }
   if(a.eat){
     res.eat = [];
     for(let n = 0; n < a.eat; n++){
-      const hs = b.hand.filter(c => c.k !== 'noise'); if(!hs.length) break;
+      const hs = b.hand.filter(c => !isJunk(c)); if(!hs.length) break;
       const top = Math.max(...hs.map(c => D.cards[c.k].cost)), pk = pick(hs.filter(c => D.cards[c.k].cost === top));
       b.hand.splice(b.hand.indexOf(pk), 1); (e.eaten = e.eaten || []).push(pk); res.eat.push(pk);
     }
@@ -603,7 +617,7 @@ function makeFoe(key, i, sc, lv){
   // ユニット。書かなければ耐久 hp の核1つ
   const defs = f.units || {core:{hp:f.hp, vital:true, core:true}};
   e.uids = Object.keys(defs); e.units = {};
-  for(const k of e.uids){ const d = defs[k]; e.units[k] = {name:d.name || '', hp:d.hp, max:d.hp, vital:!!d.vital, core:!!d.core, icon:d.icon || k, crack:0, vuln:0, armor:d.armor || 0, broken:false}; }
+  for(const k of e.uids){ const d = defs[k]; e.units[k] = {name:d.name || '', hp:d.hp, max:d.hp, vital:!!d.vital, core:!!d.core, icon:d.icon || k, crack:0, vuln:0, armor:d.armor || 0, broken:false, shelter:!!d.shelter}; }
   syncHp(e);
   if(e.ai === 'rand') resetQueue(e);
   const a = cur(e); e.sh = a.guard ? a.guard.s : 0;
@@ -613,11 +627,13 @@ const econ = () => RULE.econ || {type:'trickle'};
 // 区切り: 手札を捨て(排莢)、ブロックを消す。引くのは呼ぶ側
 function boundary(st, when){
   const b = st.b, ec = econ(), ev = {kind:'boundary', n:b.hand.length};
-  const ej = (ec.eject || 0) * b.hand.filter(c => c.k !== 'noise').length;
+  const ej = (ec.eject || 0) * b.hand.filter(c => !isJunk(c)).length;
   // キャッシュ(0.39.0、econ.cache): 区切りまでに使ったカードは、区切りで手札より先に捨て札へ移る
   if(ec.cache && b.cache && (when === 'start' || when === 'turn')){ b.disc.push(...b.cache); b.cache = []; }
-  if((when === 'start' && !ec.keep) || when === 'turn'){ for(const c of b.hand) if(c.k !== 'noise') b.disc.push(c); b.hand = []; }
-  else if(when === 'start'){ b.hand = b.hand.filter(c => c.k !== 'noise'); } // keep: 手札を残し、足りない分だけ引く(ノイズは消える)
+  // 汚染(0.41.3): 消えるもの(fade)は消え、dump があれば本体にダメージ
+  for(const c of b.hand){ const cd = D.cards[c.k] || {}; if(cd.fade && cd.dump){ st.run.body -= cd.dump; ev.dump = (ev.dump || 0) + cd.dump; } }
+  if((when === 'start' && !ec.keep) || when === 'turn'){ for(const c of b.hand) if(!fades(c)) b.disc.push(c); b.hand = []; }
+  else if(when === 'start'){ b.hand = b.hand.filter(c => !fades(c)); } // keep: 手札を残し、足りない分だけ引く(ノイズは消える)
   if(ec.blockReset && (ec.blockReset === when || when === 'turn')) b.block = 0; // 再装填で true/'end' のときは終わりに消す(endAction)
   if(ej) gainBlock(b, ej);
   ev.eject = ej;
@@ -726,7 +742,8 @@ function endAction(st, p, out){
   const b = st.b;
   // ノイズは使うと消える。廃棄(0.30.0、exile)のカードはこの戦闘の間、廃棄に置く(山札にも捨て札にも戻らない)
   // キャッシュを持つキャラ(0.39.0)は、使ったカードを捨て札ではなくキャッシュに置く(次の区切りで捨て札へ)
-  if(p.card && p.card.k !== 'noise'){ if(D.cards[p.card.k] && D.cards[p.card.k].exile) (b.exile = b.exile || []).push(p.card); else (econ().cache ? (b.cache = b.cache || []) : b.disc).push(p.card); }
+  if(p.card && p.card.was) p.card = p.card.was; // 破片(0.41.3): 使うと元のカードに戻る
+  if(p.card && !isJunk(p.card)){ if(D.cards[p.card.k] && D.cards[p.card.k].exile) (b.exile = b.exile || []).push(p.card); else (econ().cache ? (b.cache = b.cache || []) : b.disc).push(p.card); }
   // 手札を選ぶカードは、使い終えたら選ぶ番(手札が無ければ何もしない)
   if(b.chooseNext){ const ch = b.chooseNext; b.chooseNext = null; if(!out.dead && !out.won && b.hand.length) b.choose = {kind:ch.kind, n:Math.min(ch.n, b.hand.length), d:ch.d}; }
   if(p.reload && !out.dead && !out.won){ const ec = econ(); if(ec.blockReset === 'end' || ec.blockReset === true) b.block = 0; }
@@ -806,7 +823,7 @@ function genMap(seed, area){
         (n => n >= Math.round(mid / 3) && n <= Math.round(mid * 2 / 3))(row.slice(1, -1).filter(t => t === 'battle').length)) &&
       Array.from({length: mid}, (_, i) => rows.map(row => row[i + 1])).every(col => SPECIAL.every(t => col.filter(x => x === t).length <= 2));
     if(!ok) continue;
-    const elites = shuffle(Object.entries(D.encounters).filter(([, e]) => e.elite).map(([k]) => k), r);
+    const elites = shuffle(Object.entries(D.encounters).filter(([, e]) => e.elite && !e.draft).map(([k]) => k), r); // 0.41.3: draft(工房で相談中の案)は出さない
     let ei = 0;
     // 通常戦の敵は入ったときに警戒度で決める(encFor)
     const nodes = rows.map((row, l) => row.map((t, i) => {

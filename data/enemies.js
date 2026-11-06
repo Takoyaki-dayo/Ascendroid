@@ -128,6 +128,96 @@ DATA.foes = {
     pat:[{d:10, dl:6, p:'calc'}, {d:10, dl:4, p:'arm'}, {d:0, dl:4, buff:1, heal:8, wind:{w:4, poise:15}}, {d:24, dl:9, p:'dur', rec:3}],
     phase:{at:0.5, pat:[{d:10, dl:5, p:'calc'}, {by:'eye', d:7, dl:3, p:'mob'}, {d:0, dl:4, armor:15, haste:1, wind:{w:4, poise:15}}, {by:'eye', d:0, dl:3, zone:{at:2, len:3, d:8, p:'calc'}}, {d:11, dl:5, p:'arm', counter:{w:5, d:4}}, {d:26, dl:7, p:'dur', rec:3}]},
     pool:[]},
+  // ---------- 0.41.3: エリア2・3 の敵の案(工房で相談中。名前は仮。encounters の draft:true で、どこにも出ない) ----------
+  // エリア2 クロックポリス(機械が作る街): 街の設備と、街を作る機械。ボスは監視塔の尖兵
+  // 信号機: 赤の間は防壁で固く、青で連打、黄の後に隙。叩く時間を選ぶ敵
+  signal:   {kind:'clock', hp:105, start:3,
+    pat:[{d:0, dl:4, guard:{w:4, s:30}}, {d:4, hits:3, dl:4, p:'mob'}, {d:13, dl:3, p:'out', rec:3}],
+    pool:['rapid','parry','crackshot','careful']},
+  // 解体機: こちらのブロックを全て崩してから大振り。ブロックを貯めず、崩された後に張るか、大振りを崩す
+  demolisher:{kind:'crusher', hp:120, start:4,
+    pat:[{d:11, dl:4, p:'arm'}, {d:0, dl:4, shred:true, free:['こちらのブロックを全て失わせる。']}, {d:22, dl:3, p:'dur', wind:{w:2, poise:16}, rec:2}],
+    pool:['blow','wall','parry','crush']},
+  // 製造ライン: 作業人形を作り直し続ける。人形を払い続けるか、本体を急いで落とすか
+  factory:  {kind:'welder', start:3, look:{s:1.15, at:[0, -6]},
+    units:{core:{hp:100, vital:true, core:true, icon:'core', at:[0, 58], pt:[32, 32]}, w1:{hp:22, icon:'lead', spr:'trooper', s:.7, at:[-122, -14]}, w2:{hp:22, icon:'lead', spr:'trooper', s:.7, at:[122, -14]}, w3:{hp:22, icon:'lead', spr:'trooper', s:.7, at:[0, -84]}},
+    pat:[{by:'w1', d:7, dl:3, p:'arm'}, {by:'w2', d:7, dl:3, p:'out'}, {by:'w3', d:7, dl:3, p:'mob'}, {by:'core', d:0, dl:4, rebuild:22, wind:{w:3, poise:14}}, {by:'core', d:11, dl:4, p:'dur'}],
+    pool:['scatter','storm','slash','iterate']},
+  // 監視カメラ網: カメラがこちらにクラックを重ね続ける(消えない)。先にカメラを潰すか、押し切るか
+  camnet:   {kind:'drone', start:3,
+    units:{core:{hp:85, vital:true, core:true, icon:'core', at:[0, 56], pt:[30, 36]}, cam1:{hp:18, icon:'eye', at:[-110, -30], pt:[6, 14]}, cam2:{hp:18, icon:'eye', at:[110, -30], pt:[54, 14]}},
+    pat:[{by:'cam1', d:0, dl:3, crack:1}, {by:'core', d:8, dl:3, p:'calc'}, {by:'cam2', d:0, dl:3, crack:1}, {by:'core', d:6, hits:2, dl:4, p:'arm'}],
+    pool:['flick','scatter','aim','scan']},
+  // 路面電車: 定刻どおりに走る(ディレイが効かない)。線路(射界)を敷き、止められない通過で轢く。受けるか、それまでに削り切るか
+  tram:     {kind:'tank', hp:105, start:6, look:{s:1.1, at:[0, -8]}, passives:[{k:'punctual', n:0}],
+    pat:[{d:0, dl:3, zone:{at:2, len:2, d:8, p:'mob'}}, {d:14, dl:5, p:'dur'}, {d:6, dl:4, p:'out'}],
+    pool:['wall','steel','blow','clockguard']},
+  // エリート 起重機: 吊り荷の影(射界)の後に落とす(不安定・体勢16)。吊り具を壊せば落とせなくなる
+  crane:    {kind:'tank', start:4, look:{s:1.15, at:[0, -8]},
+    units:{core:{hp:130, vital:true, core:true, icon:'core', at:[0, 56], pt:[31, 31]}, boom:{hp:55, icon:'arm', at:[-124, -34], pt:[-4, 16]}, hook:{hp:45, icon:'gun', at:[110, -50], pt:[49, 8]}},
+    pat:[{by:'boom', d:13, dl:4, p:'arm'}, {by:'hook', d:0, dl:3, zone:{at:3, len:2, d:14, p:'dur'}}, {by:'hook', d:34, dl:5, p:'dur', ch:true, wind:{w:4, poise:16}}, {by:'core', d:0, dl:4, armor:10}],
+    phase:{when:'parts', pat:[{by:'core', d:12, dl:3, p:'out'}, {by:'core', d:0, dl:3, armor:10}]},
+    pool:['blow','emp','storm','crush','steel']},
+  // エリート 鎮圧機: 盾で受け、《重り》を山札に混ぜて手を遅くする(尖兵の汚染の予告)
+  riot:     {kind:'exec', start:4, look:{s:1.1, at:[0, -6]},
+    units:{core:{hp:135, vital:true, core:true, icon:'core', at:[0, 58], pt:[30, 36]}, shield:{hp:50, icon:'shield', armor:8, at:[-116, -10], pt:[8, 34]}},
+    pat:[{by:'shield', d:9, dl:4, p:'out', guard:{w:3, s:14}}, {by:'core', d:0, dl:4, junk:{k:'weight', n:2, to:'draw'}, free:['山札に《重り》を2枚混ぜる。']}, {by:'core', d:13, dl:4, p:'calc', counter:{w:4, d:4}}, {by:'core', d:5, hits:3, dl:5, p:'mob', rec:2}],
+    pool:['parry','wall','iterate','backflow']},
+  // ボス 監視塔の尖兵: 鎌・ハルバード・大剣の3人。それぞれ別の汚染をする。倒す順番で、どの汚染を先に止めるかを選ぶ。仲間が倒れると残りが強くなる
+  //   鎌: 《傷》を手札に(リフレッシュで手札にあると本体にダメージ) / ハルバード: 《重り》を山札に(消えずに回り続ける) / 大剣: 手札のカードを《破片》に割る(使うと元に戻る)
+  vanguard: {kind:null, start:3,
+    units:{scythe:{hp:55, vital:true, icon:'arm', spr:'trooper', s:.9, at:[-118, -10]}, halberd:{hp:70, vital:true, icon:'shield', spr:'shieldman', s:.9, at:[0, -24]}, great:{hp:90, vital:true, icon:'lead', spr:'leader', s:.95, at:[118, -6]}},
+    passives:[{k:'frenzy', n:2}],
+    pat:[{by:'scythe', d:5, hits:2, dl:3, p:'mob'}, {by:'halberd', d:11, dl:4, p:'arm', counter:{w:4, d:4}},
+         {by:'scythe', d:0, dl:3, junk:{k:'gash', n:2, to:'hand'}, free:['手札に《傷》を2枚加える。']},
+         {by:'great', d:22, dl:5, p:'dur', ch:true, wind:{w:3, poise:15}, rec:2},
+         {by:'halberd', d:0, dl:3, junk:{k:'weight', n:2, to:'draw'}, free:['山札に《重り》を2枚混ぜる。']},
+         {by:'great', d:0, dl:4, shatter:1, armor:8, free:['手札のカード1枚を《破片》に変える。']}],
+    pool:[]},
+  // エリア3 計画設計部門: 試作・検証・改良の機械。ボスはウィザード
+  // 試作機: 行動がランダムで振れ幅が大きい。大技は不安定で、外すと長い隙
+  prototype:{kind:'exec', hp:115, start:4, ai:'rand',
+    pat:[{d:9, dl:3, p:'out', wt:2}, {d:20, dl:6, p:'dur', ch:true, rec:4, wt:1}, {d:5, hits:3, dl:4, p:'mob', wt:2}, {d:0, dl:3, buff:2, heal:10, wt:1}],
+    pool:['blow','parry','timebomb','foresight']},
+  // 負荷試験機: 一撃で受けるダメージに上限がある(耐久試験9)。大振りより手数
+  stresser: {kind:'turret', hp:130, start:4, passives:[{k:'cap', n:10}],
+    pat:[{d:8, dl:3, p:'arm'}, {d:8, dl:3, p:'calc'}, {d:0, dl:4, armor:12}, {d:16, dl:4, p:'dur', wind:{w:2, poise:10}}],
+    pool:['rapid','scatter','storm','iterate']},
+  // 組立治具: 本体はクランプが残っている間は無敵。クランプを直す行動は体勢で止まる(ウィザードの予告)
+  jig:      {kind:'welder', start:4, look:{s:1.15, at:[0, -6]},
+    units:{core:{hp:80, vital:true, core:true, shelter:true, icon:'core', at:[0, 58], pt:[32, 32]}, c1:{hp:22, icon:'arm', at:[-112, -34], pt:[6, 30]}, c2:{hp:22, icon:'arm', at:[-108, 30], pt:[12, 49]}},
+    passives:[{k:'free', text:'【本体】ほかのユニットが残っている間、ダメージを受けない。'}],
+    pat:[{by:'c1', d:6, dl:3, p:'arm'}, {by:'c2', d:6, dl:3, p:'mob'}, {by:'c1', d:5, dl:4, p:'out'}, {by:'core', d:14, dl:4, p:'dur'}, {by:'core', d:0, dl:4, rebuild:12, wind:{w:3, poise:12}}],
+    pool:['slash','blow','crush','emp']},
+  // 作図機: 射界を重ねて引き、だんだん速くなる。カードを撃ち終えるサイクルを選ぶ敵
+  drafter:  {kind:'drone', hp:105, start:3, passives:[{k:'floor', n:2}],
+    pat:[{d:0, dl:3, zone:{at:2, len:3, d:6, p:'calc'}}, {d:7, dl:3, p:'out'}, {d:0, dl:3, zone:{at:1, len:2, d:6, p:'arm'}}, {d:12, dl:4, p:'dur', haste:1}],
+    pool:['flick','reload','foresight','hack']},
+  // 複製機: 直前にこちらが当てた一撃を写して撃ち返す。大きい一撃の直後はブロックか、写しを崩す
+  mimic:    {kind:'hacker', hp:145, start:4,
+    pat:[{d:8, dl:4, p:'calc'}, {d:6, dl:4, p:'dur', mimic:true, wind:{w:2, poise:12}, free:['直前にこちらが当てた一撃のダメージを、この攻撃に足す。']}, {d:0, dl:3, armor:8}, {d:10, dl:4, p:'arm'}],
+    pool:['parry','backflow','wall','scan']},
+  // エリート 実証機: 耐久が減るたびに改良型・完成型へ換装する(段階変化2つ)
+  demo:     {kind:'exec', hp:150, start:4, look:{s:1.15, at:[0, -6]},
+    pat:[{d:10, dl:4, p:'out'}, {d:8, hits:2, dl:4, p:'mob'}, {d:0, dl:3, armor:10}],
+    phase:{at:0.66, pat:[{d:12, dl:3, p:'out'}, {d:26, dl:5, p:'dur', ch:true, wind:{w:3, poise:15}, rec:2}, {d:0, dl:3, buff:2}],
+      next:{at:0.33, pat:[{d:6, hits:3, dl:4, p:'calc'}, {d:12, dl:3, p:'arm', haste:1}, {d:26, dl:5, p:'dur', rec:3}]}},
+    pool:['blow','timebomb','steel','careful']},
+  // エリート 量産試験機: 2機。片方が壊れると、残りが改善する(増幅4・加速1)。そろえて落とす
+  massprod: {kind:null, start:3,
+    units:{a:{hp:75, vital:true, icon:'core', spr:'trooper', s:1, at:[-90, -10]}, b:{hp:75, vital:true, icon:'core', spr:'trooper', s:1, at:[90, -10]}},
+    passives:[{k:'improve', n:3, haste:1}],
+    pat:[{by:'a', d:9, dl:3, p:'out'}, {by:'b', d:9, dl:3, p:'arm'}, {by:'a', d:5, hits:2, dl:4, p:'mob'}, {by:'b', d:14, dl:4, p:'dur', wind:{w:2, poise:12}}],
+    pool:['scatter','storm','rapid','timebomb']},
+  // ボス ウィザード: 本体は無力で、ほかのユニット(設計した武装)が残っている間は無敵。武装が壊れるたびに改善(増幅3・加速1)。
+  //   修理アームは壊れた武装を直す(体勢で止まる)。武装が全部壊れると、本体は武装を作り直そうとする(体勢18)
+  wizard:   {kind:'warden', start:4, look:{s:1.25, at:[0, -8]},
+    units:{core:{hp:90, vital:true, core:true, shelter:true, icon:'core', at:[0, 60], pt:[30, 40]}, cannon:{hp:34, icon:'gun', at:[-124, -34], pt:[4, 16]}, blade:{hp:34, icon:'arm', at:[124, -34], pt:[56, 16]}, arm:{hp:28, icon:'arm', at:[-118, 30], pt:[8, 50]}, thruster:{hp:28, icon:'leg', at:[118, 30], pt:[52, 50]}},
+    passives:[{k:'improve', n:3, haste:1}, {k:'floor', n:2}, {k:'free', text:'【本体】ほかのユニットが残っている間、ダメージを受けない。'}],
+    pat:[{by:'cannon', d:10, dl:4, p:'calc'}, {by:'blade', d:4, hits:3, dl:4, p:'mob'}, {by:'arm', d:0, dl:3, rebuild:12, wind:{w:3, poise:12}}, {by:'thruster', d:8, dl:3, p:'mob'},
+         {by:'cannon', d:20, dl:5, p:'dur', ch:true, wind:{w:3, poise:16}, rec:2}, {by:'blade', d:8, dl:3, p:'arm', counter:{w:3, d:4}}],
+    phase:{when:'parts', pat:[{by:'core', d:0, dl:5, rebuild:25, wind:{w:4, poise:16}}, {by:'core', d:8, dl:3, p:'out'}]},
+    pool:[]},
 };
 
 DATA.encounters = {
@@ -155,4 +245,21 @@ DATA.encounters = {
   // エリア2・3 のボスは仮(エリアの倍率に boss の倍率を重ねる)
   boss2:  {fam:'戦車', boss:true, foes:['tank'], scale:{hp:1.4, d:1.05}},
   boss3:  {fam:'中枢', boss:true, foes:['warden'], scale:{hp:1.05, d:1}},
+  // 0.41.3: エリア2・3 の敵の案(draft: 工房で相談中。地図にもエリートにも出ない。自動対戦では測れる)
+  d2_signal:{fam:'信号', draft:true, foes:['signal']},
+  d2_demol: {fam:'解体', draft:true, foes:['demolisher']},
+  d2_fact:  {fam:'製造', draft:true, foes:['factory']},
+  d2_cam:   {fam:'監視', draft:true, foes:['camnet']},
+  d2_tram:  {fam:'軌道', draft:true, foes:['tram']},
+  d2e_crane:{fam:'重機', draft:true, elite:true, foes:['crane']},
+  d2e_riot: {fam:'鎮圧', draft:true, elite:true, foes:['riot']},
+  d2_boss:  {fam:'尖兵', draft:true, boss:true, foes:['vanguard']},
+  d3_proto: {fam:'試作', draft:true, foes:['prototype']},
+  d3_stress:{fam:'試験', draft:true, foes:['stresser']},
+  d3_jig:   {fam:'組立', draft:true, foes:['jig']},
+  d3_draft: {fam:'作図', draft:true, foes:['drafter']},
+  d3_mimic: {fam:'複製', draft:true, foes:['mimic']},
+  d3e_demo: {fam:'実証', draft:true, elite:true, foes:['demo']},
+  d3e_mass: {fam:'量産', draft:true, elite:true, foes:['massprod']},
+  d3_boss:  {fam:'設計', draft:true, boss:true, foes:['wizard']},
 };

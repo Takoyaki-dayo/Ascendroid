@@ -148,7 +148,7 @@ function playRun(pol, seed){
       for(let k = 0; k < 400; k++){ o = E.doAction(st, POL[pol](st)); if(o.won || o.dead) break; }
       // 集計(0.40.4): 遭遇ごとの回数・負け・被ダメージ・かかったサイクル(ランの中で、その時のデッキと本体で)
       { const T = playRun.stats = playRun.stats || {}, k = n.enc + '@a' + (run.area + 1), x = T[k] = T[k] || {n:0, lost:0, loss:0, cyc:0, bodyIn:0};
-        x.n++; x.bodyIn += body0; x.cyc += st.b.T; if(!o || !o.won) x.lost++; else x.loss += body0 - st.run.body; }
+        x.n++; x.bodyIn += body0; x.cyc += st.b.T; x.loops = (x.loops || 0) + Math.max(...st.b.foes.map(e => (e.seq || 0) / e.pat.length)); if(!o || !o.won) x.lost++; else x.loss += body0 - st.run.body; }
       if(!o || !o.won) return {clear:false, at:'a' + (run.area + 1) + ':' + n.type, rooms:log.length, body:0, log};
       for(const s of D.slots) run.parts[s.id].damaged = !!st.b.broken[s.id];
       E.lootBack(st); if(!E.fledAll(st)) run.scrap += Math.round((n.type === 'elite' ? D.rewards.elite : n.type === 'battle' ? D.rewards.battle : 0) * (1 + D.alert.scrap * (E.alertLevel(run) - 1)));
@@ -156,7 +156,10 @@ function playRun(pol, seed){
       if(naive){ if(pool.length) run.deck.push(pool[Math.floor(R() * pool.length)]); }
       else if(n.type === 'boss'){ run.body = Math.min(run.bodyMax, run.body + D.rewards.boss.heal); const rs = offerPool().filter(k => D.rarityOf(k) === 'rare'); if(rs.length) run.deck.push(rs[Math.floor(R() * rs.length)]); }
       else learn(run, R, n.type === 'elite' ? 'elite' : 'battle', pool);
-    } else if(n.type === 'rest'){ run.body = Math.min(run.bodyMax, run.body + D.rewards.restHeal); for(const s of D.slots) run.parts[s.id].damaged = false; if(!naive) upgradeOne(run); }
+    } else if(n.type === 'rest'){
+      // 実験(0.41.2): REST=either は StS と同じく「回復か強化のどちらか」(本体が7割未満なら回復と修理、そうでなければ強化)
+      if(process.env.REST === 'either' && !naive){ if(run.body < run.bodyMax * 0.7){ run.body = Math.min(run.bodyMax, run.body + D.rewards.restHeal); for(const s of D.slots) run.parts[s.id].damaged = false; } else upgradeOne(run); }
+      else { run.body = Math.min(run.bodyMax, run.body + D.rewards.restHeal); for(const s of D.slots) run.parts[s.id].damaged = false; if(!naive) upgradeOne(run); } }
     else if(n.type === 'shop' && !naive){ const i = run.deck.indexOf('jab'); if(run.scrap >= D.shop.defrag && i >= 0){ run.scrap -= D.shop.defrag; run.deck.splice(i, 1); } }
     else if(n.type === 'event'){
       const ev = D.events.find(e => e.id === n.ev), hp = run.body / run.bodyMax;
@@ -192,3 +195,11 @@ if(require.main === module && process.argv[4] === 'run'){
   for(let i = 0; i < N; i++){ const r = playRun(pol, 1000 + i); if(r.clear) c++; else where[r.at] = (where[r.at] || 0) + 1; }
   console.log(`run ${pol}: clear ${(c / N * 100).toFixed(0)}%`, JSON.stringify(where));
 }
+
+// 実験の切り替え(0.41.2、環境変数): どれも指定したときだけ効く
+//   BLOCK=life:N  ブロックが得てから N サイクルで消える(StS のように毎ターン消える形に近づける)
+//   AREA=h2,d2,h3,d3  エリア2・3の敵の耐久・攻撃の倍率 / DELAY=倍率  カードのディレイの量 / HEAL=割合  中継の回復
+if(process.env.BLOCK){ const [t, v] = process.env.BLOCK.split(':'); E.RULE.blockDecay = {type:t, v:+v}; }
+if(process.env.AREAX){ const [h2, d2, h3, d3] = process.env.AREAX.split(',').map(Number); D.areas[1].scale = {hp:h2, d:d2}; D.areas[2].scale = {hp:h3, d:d3}; }
+if(process.env.DELAY){ const m = +process.env.DELAY; for(const c of Object.values(D.cards)) if(c.delay) c.delay = Math.max(0, Math.round(c.delay * m)); }
+if(process.env.HEAL){ for(const t of D.transit) t.heal = +process.env.HEAL; }

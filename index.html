@@ -791,6 +791,12 @@ body.hs *{animation-play-state:paused!important;transition:none!important}
 .mbtn{height:26px;min-width:30px;padding:0 8px;border:1px solid var(--line);border-radius:5px;background:var(--panel);color:var(--fg2);display:inline-flex;align-items:center;justify-content:center;gap:5px;font-family:var(--f-num);font-weight:700}
 .mbtn .ic svg{width:13px;height:13px}
 .medges{position:absolute;left:0;top:0;pointer-events:none}
+/* 0.42.1: 地図の横スクロール。スクロールバーは出さず、端をぼかしてまだ続くことを見せる */
+.mscroll{position:absolute;inset:0;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-ms-overflow-style:none;-webkit-overflow-scrolling:touch;
+  -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 22px,#000 calc(100% - 22px),transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 22px,#000 calc(100% - 22px),transparent 100%)}
+.mscroll::-webkit-scrollbar{display:none}
+.mcanvas{position:relative;height:100%}
+#mapScr .mh-bar,#mapScr .minfo{z-index:2}
 .ed{stroke:#24364a;stroke-width:2}
 .ed.tr{stroke-dasharray:4 4}
 .ed.vis{stroke:var(--cy-dim)}
@@ -1224,7 +1230,7 @@ body.hs *{animation-play-state:paused!important;transition:none!important}
 <script src="data/text.js"></script>
 <script src="js/engine.js"></script>
 <script>
-const APP_VERSION = '0.42.0';
+const APP_VERSION = '0.43.0';
 const $ = s => document.querySelector(s);
 const EN = ENGINE, RULE = EN.RULE;
 const VIEW = RULE.view, NOW = 170, PX = 34, xs = c => NOW + c * PX, STRIP_Y = 150, SWIFT_VIS = 3;
@@ -1537,7 +1543,7 @@ function renderAll(){
 }
 function renderMe(){
   const body = S.run.body, after = PV ? PV.body : body, max = S.run.bodyMax;
-  $('#meBar i').style.width = (after / max * 100) + '%';
+  $('#meBar i').style.width = (after / max * 100) + '%'; $('#meBar').style.setProperty('--tr', (body / max * 100) + '%'); // 0.42.1: 減り跡(--tr)を自機にも。無いと100%のままで、減った分がずっと白く残っていた
   const s = $('#meBar s'); s.style.left = (after / max * 100) + '%'; s.style.width = ((body - after) / max * 100) + '%';
   const n = $('#meNum'); n.textContent = after < body ? `${body}→${after}` : String(body); n.classList.toggle('pv', after < body);
   let st = '';
@@ -2388,7 +2394,8 @@ function newRun(){
 const nodeKey = n => n.type === 'boss' ? 'boss' : n.lane + '-' + n.idx;
 // 地図の列: 入口・部屋・ボス。部屋数から等間隔に
 const MAPY = [118, 196, 274];
-const mapX = i => { const cols = AREA().rooms + 2; return 44 + i * (800 - 44) / (cols - 1); };
+// 0.42.1: 列の間隔は一定(MAPGAP)。区画が増えて画面に収まらない分は横にスクロールする(.mscroll、スクロールバーは出さない)
+const MAPGAP = 84, mapX = i => 44 + i * MAPGAP, mapW = () => mapX(AREA().rooms + 1) + 44;
 function nodePos(n){ return n.type === 'boss' ? {x: mapX(AREA().rooms + 1), y: MAPY[1]} : {x: mapX(n.idx + 1), y: MAPY[n.lane]}; }
 function encFoes(enc){ const c = {}; for(const f of ENC[enc].foes){ const nm = FOES[f].name; c[nm] = (c[nm] || 0) + 1; } return Object.entries(c).map(([n, k]) => k > 1 ? `${n}×${k}` : n).join('・'); }
 function showMap(){
@@ -2424,10 +2431,20 @@ function showMap(){
   }
   const fresh = $('#mapScr').hidden;
   $('#mapScr').innerHTML = `${topBar(AREA().name)}
-    <svg class="medges" width="844" height="390" viewBox="0 0 844 390" aria-hidden="true">${lines}</svg>
+    <div class="mscroll"><div class="mcanvas" style="width:${mapW()}px">
+    <svg class="medges" width="${mapW()}" height="390" viewBox="0 0 ${mapW()} 390" aria-hidden="true">${lines}</svg>
     <span class="mn start${atKey === 'start' ? ' here' : ''}" style="left:${st.x}px;top:${st.y}px"><span class="ic">${IC.start}</span></span>${all.map(btn).join('')}
+    </div></div>
     <div class="minfo${s ? ' has' : ''}">${info || `<span class="mi-leg">${['battle', 'elite', 'rest', 'shop', 'event', 'duct', 'boss'].map(t => `<span class="k-${t}"><span class="ic">${IC[t]}</span>${DATA.rooms[t].name}</span>`).join('')}</span>`}<span class="sp"></span><button class="btn" type="button" data-act="go" ${s && reach.has(UI.mapSel) ? '' : 'disabled'}>決定</button></div>`;
   $('#mapScr').hidden = false; $('#mapScr').classList.remove('leave');
+  // 横のスクロール: 描き直しても位置を保つ。新しく開いたときは、今いる所が左から1/3あたりに来るように
+  { const sc = $('#mapScr .mscroll'); if(sc){
+      if(fresh || UI.mapScroll == null){ const hp = atKey === 'start' ? st : nodePos(all.find(n => nodeKey(n) === atKey) || {type:'boss'}); sc.scrollLeft = Math.max(0, hp.x - sc.clientWidth / 3); }
+      else sc.scrollLeft = UI.mapScroll;
+      UI.mapScroll = sc.scrollLeft;
+      sc.addEventListener('scroll', () => { UI.mapScroll = sc.scrollLeft; }, {passive:true});
+      sc.addEventListener('wheel', e => { if(Math.abs(e.deltaY) > Math.abs(e.deltaX)){ sc.scrollLeft += e.deltaY; e.preventDefault(); } }, {passive:false}); // マウスのホイールでも横に動く
+  } }
   if(fresh) enter($('#mapScr'));
   saveRun(null);
   // 新しいエリアに入ったら、エリアの名前を大きく出す

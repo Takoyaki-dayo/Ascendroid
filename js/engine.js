@@ -586,11 +586,13 @@ function waryFoe(key, lv){
   const t = waryTier(key, lv) || {at:lv};
   const id = key + '!' + lv; if(waryCache[id]) return waryCache[id];
   const f = Object.assign({}, D.foes[key]);
-  for(const [k, v] of Object.entries(t)){
+  // 0.44.1: 「++」(at:2)は「+」(at:1)を重ねた姿の上に重ねる(工房でも + を基準に編集する)
+  const W = D.foes[key].wary || [], p1 = (t.at || 1) >= 2 ? W.find(w => (w.at || 1) === 1) : null;
+  for(const [k, v] of (p1 && p1 !== t ? [p1, t] : [t]).flatMap(x => Object.entries(x))){
     if(k === 'at') continue;
     // 0.38.0: 書いた欄は丸ごと置き換える(工房で警戒版を全体の姿で編集し、変わった欄を丸ごと書くため。パッシブも一覧ごと)。patAdd だけは足す(古い書き方)
     if(k === 'patAdd') f.pat = f.pat.concat(v);
-    else if(k === 'pat') f.pat = v.map((a, i) => a.n || !D.foes[key].pat[i] ? a : Object.assign({n:D.foes[key].pat[i].n}, a)); // 名前が無ければ通常の同じ番号の行動の名前
+    else if(k === 'pat'){ const P = f.pat; f.pat = v.map((a, i) => a.n || !P[i] ? a : Object.assign({n:P[i].n}, a)); } // 名前が無ければ通常の同じ番号の行動の名前
     else f[k] = v;
   }
   delete f.wary; f.waryAt = lv;

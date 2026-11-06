@@ -373,10 +373,14 @@ const VAR = {
     skip: ['wary', 'appear', 'say', 'pool'],
     tabs: o => (o.wary || []).map((t, i) => ({i, label: '+'.repeat(Math.min(2, t.at || 1))})), // 0.44.0: 警戒+1 で「+」、+2 で「++」
     add: o => { const W = (o.wary = o.wary || []); if(W.length >= 2) return W.length - 1; const at = W.some(t => t.at === 1) ? 2 : 1; W.push({at}); W.sort((a, b) => a.at - b.at); return W.findIndex(t => t.at === at); },
-    del: (o, i) => { o.wary.splice(i, 1); if(!o.wary.length) delete o.wary; },
-    make(o, i){ const t = (o.wary || [])[i]; const V = clone(o); delete V.wary; if(!t) return V; for(const [k, v] of Object.entries(t)) if(k !== 'at' && k !== 'patAdd') V[k] = v === null ? undefined : clone(v); if(t.patAdd) V.pat = (V.pat || []).concat(clone(t.patAdd)); for(const k of Object.keys(V)) if(V[k] === undefined) delete V[k]; return V; },
-    store(o, i, V){ const base = clone(o); delete base.wary; const d = {at: o.wary[i].at}; for(const k of new Set([...Object.keys(V), ...Object.keys(base)])){ if(this.skip.includes(k)) continue; if(JSON.stringify(V[k]) !== JSON.stringify(base[k])) d[k] = V[k] === undefined ? null : clone(V[k]); } o.wary[i] = d; },
-    head: (o, i) => `<div class="ar vhead"><b>${'+'.repeat(Math.min(2, (o.wary[i] || {}).at || 1))}</b><button type="button" class="btn quiet sm" data-vdel="1">この警戒版を消す</button></div><div class="note">警戒が+1のときは「+」、+2のときは「++」の姿で出る。通常から変えた欄だけが送られる。「++」が無ければ「+」に耐久+15%・攻撃+10%、どちらも無ければ素の姿に上乗せ(仮)して出る</div>`,
+    // + を消すときは、++ を通常からの差分に書き直す(++ の姿を変えないため)
+    del(o, i){ const W = o.wary, p2 = (W[i].at || 1) === 1 ? W.findIndex(w => (w.at || 1) >= 2) : -1, V2 = p2 >= 0 ? this.make(o, p2) : null; W.splice(i, 1); if(V2){ const j = W.findIndex(w => (w.at || 1) >= 2); this.store(o, j, V2); } if(!W.length) delete o.wary; },
+    // 0.44.1: 「++」は「+」の姿を基準にする(+ を重ねてから ++ を重ねる。+ が無ければ通常から)
+    lay(V, t){ for(const [k, v] of Object.entries(t)) if(k !== 'at' && k !== 'patAdd') V[k] = v === null ? undefined : clone(v); if(t.patAdd) V.pat = (V.pat || []).concat(clone(t.patAdd)); for(const k of Object.keys(V)) if(V[k] === undefined) delete V[k]; return V; },
+    under(o, i){ const W = o.wary || [], t = W[i], V = clone(o); delete V.wary; const p = t && (t.at || 1) >= 2 ? W.find(w => (w.at || 1) === 1) : null; return p ? this.lay(V, p) : V; },
+    make(o, i){ const t = (o.wary || [])[i]; const V = this.under(o, i); return t ? this.lay(V, t) : V; },
+    store(o, i, V){ const base = this.under(o, i); const d = {at: o.wary[i].at}; for(const k of new Set([...Object.keys(V), ...Object.keys(base)])){ if(this.skip.includes(k)) continue; if(JSON.stringify(V[k]) !== JSON.stringify(base[k])) d[k] = V[k] === undefined ? null : clone(V[k]); } o.wary[i] = d; },
+    head: (o, i) => `<div class="ar vhead"><b>${'+'.repeat(Math.min(2, (o.wary[i] || {}).at || 1))}</b><button type="button" class="btn quiet sm" data-vdel="1">この警戒版を消す</button></div><div class="note">警戒が+1のときは「+」、+2のときは「++」の姿で出る。「+」は通常から、「++」は「+」から変えた欄だけが送られる(「+」を直すと「++」にも効く)。「++」が無ければ「+」に耐久+15%・攻撃+10%、どちらも無ければ素の姿に上乗せ(仮)して出る</div>`,
   },
   parts: {
     skip: ['up', 'upText', 'rarity', 'name'],

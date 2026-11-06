@@ -55,9 +55,9 @@ DATA.rooms = {
 };
 DATA.alert = {max:10, per:4, gain:{battle:2, elite:3, boss:3, duct:-3}, enemy:{hp:0.02, d:0.015}, scrap:0.1, learnAt:5, partAt:8,
   // 0.41.0: ゴムひも。エリアごとの基準の段(区画を進むにつれ from → to)から離れるほど、戻る向きに補正する(仮の値)
-  //   上にいると上がる量が減り下がる量が増え、下にいると逆。倍率は 1 ∓ k×(段の差) を [min, max] に収める
+  //   上にいると上がる量が減り下がる量が増え、下にいると逆。倍率は 1 ∓ k×(段の差)(0.41.1 で k を 0.25 → 0.15。もう少し遊び方で振れるように) を [min, max] に収める
   //   エリアの移り目では、次のエリアの基準(from)に向けて差の carry 割だけ寄せる
-  band:{areas:[{from:1, to:4}, {from:4, to:6.5}, {from:6.5, to:9}], k:0.25, min:0.25, max:2, carry:0.5}};
+  band:{areas:[{from:1, to:4}, {from:4, to:6.5}, {from:6.5, to:9}], k:0.15, min:0.25, max:2, carry:0.5}};
 // restHeal: 整備で必ず回復する量(0.36.0。部位の損傷も直す) / boss: ボスを倒したときの報酬(回復と、属性付きのレアのカードを cards 枚から1枚。仮の値)
 DATA.rewards = {scrapStart:20, battle:12, elite:25, restHeal:15, boss:{heal:15, cards:3}};
 DATA.shop = {price:{0:18, 1:18, 2:26, 3:30, 4:36, 6:44}, defrag:30, repairCost:25, repairBody:12, offers:3};

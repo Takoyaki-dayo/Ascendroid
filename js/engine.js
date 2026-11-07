@@ -26,6 +26,7 @@ const RULE = {draw:3, handStart:5, handMax:7, view:18, freeWait:true, blockDecay
 //   punctual {n}       定刻(0.23.0): ディレイを受けない。ディレイを与えられるたび、代わりに増幅+n(0.35.0: n:0 なら増幅は得ない)
 //   pursuit {n}        追跡(0.23.0): こちらが手札を入れ替えるか待機するたび、次の行動が n サイクル早まる(最短1)
 //   loot / hoard       見せるだけ。盗んだスクラップ(steal)・飲み込んだカード(eat)は撃破すると戻る
+// 行動の窓(0.45.2): recPre は行動の前 recPre サイクルの隙(1.5倍)、counterAfter:{w, d} は行動の後 w サイクルの反撃
 //   cap {n}            耐久試験(0.41.3、案): カードの一撃で受けるダメージは n まで(ブロック・防壁を引いた後)
 //   improve {n, haste} 改善(0.41.3、案): ユニットが破壊されるたび、増幅 n と加速 haste を得る
 // ユニットの shelter(0.41.3、案): ほかのユニットが1つでも残っている間、ダメージを受けない(あふれたダメージも)
@@ -183,7 +184,7 @@ function hurtFoe(b, e, d, ev, uid){
   const take = Math.min(p.hp, d), over = d - take;
   p.hp -= take; ev.push({kind:'dmg', e:e.i, unit:uid, n:take});
   if(p.hp <= 0 && !p.broken){
-    p.broken = true; p.vuln = 0; ev.push({kind:'unitBreak', e:e.i, unit:uid});
+    p.broken = true; p.vuln = 0; p.ctrA = null; ev.push({kind:'unitBreak', e:e.i, unit:uid});
     // 持続(0.29.0): 壊れたユニットの持続は核へ移る(回数・威力とも足す)
     if(p.dot){ const c = coreUid(e); if(c && c !== uid && !e.units[c].broken) addDot(e.units[c], p.dot.n, p.dot.p); delete p.dot; }
     // パッシブ frenzy: ユニットが破壊されるたび攻撃力+
@@ -213,10 +214,11 @@ function hitFoe(st, e, n, ev, uid){
   const p = e.units[uid], onActor = !a.by || a.by === uid || !e.units[a.by];
   n += p.crack || 0; b.lastHit = n; // 写す(mimic)用に、こちらの最後の一撃
   let d = n;
-  if(p.vuln > 0){ d = Math.round(d * 1.5); b.vulnHits = (b.vulnHits || 0) + 1; ev.push({kind:'vulnHit', e:e.i, unit:uid}); }
+  if(p.vuln > 0 || (onActor && a.recPre && inWin(e, {w:a.recPre}))){ d = Math.round(d * 1.5); b.vulnHits = (b.vulnHits || 0) + 1; ev.push({kind:'vulnHit', e:e.i, unit:uid}); } /* 0.45.2: recPre は行動の前の隙 */
   if(onActor && inWin(e, a.guard) && e.sh > 0){ const ab = Math.min(e.sh, d); e.sh -= ab; d -= ab; b.guarded = (b.guarded || 0) + ab; ev.push({kind:'guarded', e:e.i, n:ab}); }
   if(p.armor > 0 && d > 0){ const ab = Math.min(p.armor, d); p.armor -= ab; d -= ab; b.guarded = (b.guarded || 0) + ab; ev.push({kind:'armored', e:e.i, unit:uid, n:ab}); }
   if(onActor && inWin(e, a.counter)){ const res = strike(st, e, {n:a.n, d:a.counter.d, p:a.p || 'dur'}, 0, true); afterHit(b); b.countered = (b.countered || 0) + 1; ev.push({kind:'counter', e:e.i, res}); }
+  else if(p.ctrA && p.ctrA.left > 0){ const res = strike(st, e, {n:p.ctrA.n, d:p.ctrA.d, p:p.ctrA.p}, 0, true); afterHit(b); b.countered = (b.countered || 0) + 1; ev.push({kind:'counter', e:e.i, res}); } /* 0.45.2: 行動の後の反撃 */
   const cp = pasN(e, 'cap'); if(cp && d > cp){ ev.push({kind:'capped', e:e.i, n:d - cp}); d = cp; } // 耐久試験(0.41.3)
   if(d > 0) hurtFoe(b, e, d, ev, uid);
   if(e.alive && onActor && cur(e) === a && inWin(e, a.wind) && n >= a.wind.poise){ const nm = a.n; skipMove(e); b.breaks = (b.breaks || 0) + 1; ev.push({kind:'break', e:e.i, name:nm}); }
@@ -413,6 +415,7 @@ function enemyAct(st, e, extra){ e.resist = 0;
   if(a.d > 0 && res.kind === 'hit') afterHit(st.b);
   const ap = e.units[actorUid(e, a)];
   if(a.rec) ap.vuln = a.rec + 1;
+  if(a.counterAfter) ap.ctrA = {left:a.counterAfter.w + 1, d:a.counterAfter.d, p:a.p || 'dur', n:a.n}; // 0.45.2: 行動の後 w サイクル、殴られるたび d を返す
   if(a.buff){ for(const f of (a.all ? st.b.foes.filter(f => f.alive) : [e])) f.str = (f.str || 0) + a.buff; res.buff = a.buff; }
   // 放置の代償になる行動
   const b = st.b;
@@ -478,7 +481,7 @@ function* spendGen(st, cost, k, ti, noInt){
     left--; b.cast.left = left;
     if(real){
       b.T++; out.elapsed++; b.drawIn--;
-      for(const e of b.foes) if(e.alive){ e.r--; if(e.reactIn != null) e.reactIn--; for(const k of e.uids) if(e.units[k].vuln > 0) e.units[k].vuln--; }
+      for(const e of b.foes) if(e.alive){ e.r--; if(e.reactIn != null) e.reactIn--; for(const k of e.uids){ const u = e.units[k]; if(u.vuln > 0) u.vuln--; if(u.ctrA && u.ctrA.left > 0) u.ctrA.left--; } }
       for(const z of b.zones){ z.from--; z.to--; }
       b.zones = b.zones.filter(z => z.to >= 0);
       decayBlock(b);

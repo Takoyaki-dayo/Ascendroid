@@ -1269,7 +1269,7 @@ body.hs *{animation-play-state:paused!important;transition:none!important}
 <script src="data/text.js"></script>
 <script src="js/engine.js"></script>
 <script>
-const APP_VERSION = '0.45.1';
+const APP_VERSION = '0.45.2';
 const $ = s => document.querySelector(s);
 const EN = ENGINE, RULE = EN.RULE;
 const VIEW = RULE.view, NOW = 170, PX = 34, xs = c => NOW + c * PX, STRIP_Y = 150, SWIFT_VIS = 3;
@@ -1871,12 +1871,21 @@ function renderMarks(){
         const on = pv && m.k === 0 && pv.fx.has((w === 'wind' ? 'break' : w === 'guard' ? 'guarded' : 'counter') + ':' + e.i);
         placeCells(bk, s0, s1, by, 'wb ' + w + (m.k > 0 ? ' later' : '') + (on ? ' on' : ''), `<span class="ic">${WIC[w]}</span>${val}`, {e:e.i, kind:'win', w, a, t:m.t, val});
       }
+      // 0.45.2(会話B): 行動の前の隙(recPre)と、行動の後の反撃(counterAfter)
+      if(a.recPre){ const s0 = m.t - a.recPre, s1 = m.t - 1; if(s1 >= 1){ const bk = 'b' + key + 'recPre'; seenB.add(bk); placeCells(bk, Math.max(1, s0), s1, by, 'wb vuln' + (m.k > 0 ? ' later' : '') + (pv && m.k === 0 && pv.fx.has('vulnHit:' + e.i) ? ' on' : ''), `<span class="ic">${IC.vuln}</span>`, {e:e.i, kind:'rec', a, t:m.t}); } }
+      if(a.counterAfter){
+        const t1 = m.t + m.left + 1, t2 = m.t + m.left + a.counterAfter.w;
+        if(t1 <= VIEW){ const bk = 'b' + key + 'ctrA'; seenB.add(bk); placeCells(bk, t1, t2, by, 'wb counter' + (m.k > 0 ? ' later' : ''), `<span class="ic">${WIC.counter}</span>${a.counterAfter.d}`, {e:e.i, kind:'win', w:'counter', a, t:m.t, val:a.counterAfter.d}); }
+      }
       // 行動の後の隙
       if(a.rec){
         const t1 = m.t + m.left + 1, t2 = m.t + m.left + a.rec;
         if(t1 <= VIEW){ const bk = 'b' + key + 'rec'; seenB.add(bk); placeCells(bk, t1, t2, by, 'wb vuln' + (m.k > 0 ? ' later' : '') + (pv && pv.fx.has('vulnHit:' + e.i) ? ' on' : ''), `<span class="ic">${IC.vuln}</span>`, {e:e.i, kind:'rec', a, t:m.t}); }
       }
     }
+    // 0.45.2: 今の反撃(行動の後の反撃の残り)
+    const ck = e.uids.find(k => e.units[k].ctrA && e.units[k].ctrA.left > 1);
+    if(ck){ const c = e.units[ck].ctrA, bk = 'c' + e.i; seenB.add(bk); placeCells(bk, 1, c.left - 1, by, 'wb counter', `<span class="ic">${WIC.counter}</span>${c.d}`, {e:e.i, kind:'win', w:'counter', a:{counter:{w:c.left - 1, d:c.d}}, t:0, val:c.d}); }
     // 今の隙
     const vk = e.uids.find(k => e.units[k].vuln > 1);
     if(vk){ const vv = e.units[vk].vuln, bk = 'v' + e.i; seenB.add(bk); placeCells(bk, 1, vv - 1, by, 'wb vuln' + (pv && pv.fx.has('vulnHit:' + e.i) ? ' on' : ''), `<span class="ic">${multi ? pIcon(e.units[vk]) : IC.vuln}</span>`, {e:e.i, kind:'vulnNow', uid:vk}); }
@@ -2886,6 +2895,8 @@ function moveLines(e, a){
   if(a.wind) L.push(fillUi('mv.wind', {w: a.wind.w, poise: a.wind.poise}));
   if(a.guard) L.push(fillUi('mv.guard', {w: a.guard.w, s: a.guard.s}));
   if(a.counter) L.push(fillUi('mv.counter', {w: a.counter.w, cd: a.counter.d}));
+  if(a.counterAfter) L.push(fillUi('mv.counterAfter', {w: a.counterAfter.w, cd: a.counterAfter.d}));
+  if(a.recPre) L.push(fillUi('mv.recPre', {n: a.recPre}));
   if(a.rec) L.push(fillUi('mv.rec', {rec: a.rec}));
   if(!L.length) L.push(fillUi('mv.none', {}));
   return L;

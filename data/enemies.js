@@ -131,18 +131,23 @@ DATA.foes = {
     pool:[]},
   // ---------- 0.41.3: エリア2・3 の敵の案(工房で相談中。名前は仮。encounters の draft:true で、どこにも出ない) ----------
   // エリア2 クロックポリス(機械が作る街): 街の設備と、街を作る機械。ボスは監視塔の尖兵
-  // 信号機: 赤の間は防壁で固く、青で連打、黄の後に隙。叩く時間を選ぶ敵
+  // 武装信号機: 赤の前は防壁、赤の後は反撃(触るな)。黄の前後が隙(殴り時)。0.45.2 で行動の後の反撃・行動の前の隙を使う形に
   signal:   {kind:'clock', hp:105, start:3,
-    pat:[{d:0, dl:4, guard:{w:4, s:30}}, {d:4, hits:3, dl:4, p:'mob'}, {d:13, dl:3, p:'out', rec:3}],
+    pat:[{d:0, dl:4, guard:{w:4, s:30}, counterAfter:{w:3, d:4}}, {d:4, hits:3, dl:4, p:'mob'}, {d:13, dl:3, p:'out', recPre:2, rec:3}],
+    wary:[{at:1, pat:[{d:0, dl:4, guard:{w:4, s:36}, counterAfter:{w:4, d:5}}, {d:5, hits:3, dl:4, p:'mob'}, {d:13, dl:3, p:'out', recPre:2, rec:3}]},
+          {at:2, pat:[{d:0, dl:4, guard:{w:4, s:36}, counterAfter:{w:4, d:5}}, {d:5, hits:3, dl:4, p:'mob'}, {d:13, dl:3, p:'out', recPre:1, rec:2}]}],
     pool:['rapid','parry','crackshot','careful']},
-  // 解体機: こちらのブロックを全て崩してから大振り。ブロックを貯めず、崩された後に張るか、大振りを崩す
+  // ビルディングクラッシャー(0.45.2 確定): こちらのブロックを全て剥がしてから振り下ろす。素の剥がすは不安定(JUST で止まる)。+ は不安定でなく速い、++ は体勢20
   demolisher:{kind:'crusher', hp:120, start:4,
-    pat:[{d:11, dl:4, p:'arm'}, {d:0, dl:4, shred:true, free:['こちらのブロックを全て失わせる。']}, {d:22, dl:3, p:'dur', wind:{w:2, poise:16}, rec:2}],
+    pat:[{d:11, dl:4, p:'arm'}, {d:0, dl:4, shred:true, ch:true}, {d:22, dl:3, p:'dur', wind:{w:2, poise:16}, rec:2}],
+    wary:[{at:1, hp:130, pat:[{d:11, dl:4, p:'arm'}, {d:0, dl:3, shred:true}, {d:22, dl:3, p:'dur', wind:{w:2, poise:16}, rec:2}]},
+          {at:2, hp:150, pat:[{d:11, dl:4, p:'arm'}, {d:0, dl:4, shred:true}, {d:22, dl:3, p:'dur', wind:{w:2, poise:20}, rec:2}]}],
     pool:['blow','wall','parry','crush']},
-  // 製造ライン: 作業人形を作り直し続ける。人形を払い続けるか、本体を急いで落とすか
+  // 住民生産ライン(0.45.2 確定): 作業人形を作り直し続ける。人形の耐久と組み立ての修復量は同じ(素18・+22・++25)
   factory:  {kind:'welder', start:3, look:{s:1.15, at:[0, -6]},
-    units:{core:{hp:100, vital:true, core:true, icon:'core', at:[0, 58], pt:[32, 32]}, w1:{hp:22, icon:'lead', spr:'trooper', s:.7, at:[-122, -14]}, w2:{hp:22, icon:'lead', spr:'trooper', s:.7, at:[122, -14]}, w3:{hp:22, icon:'lead', spr:'trooper', s:.7, at:[0, -84]}},
-    pat:[{by:'w1', d:7, dl:3, p:'arm'}, {by:'w2', d:7, dl:3, p:'out'}, {by:'w3', d:7, dl:3, p:'mob'}, {by:'core', d:0, dl:4, rebuild:22, wind:{w:3, poise:14}}, {by:'core', d:11, dl:4, p:'dur'}],
+    units:{core:{hp:100, vital:true, core:true, icon:'core', at:[0, 58], pt:[32, 32]}, w1:{hp:18, icon:'lead', spr:'trooper', s:.7, at:[-122, -14]}, w2:{hp:18, icon:'lead', spr:'trooper', s:.7, at:[122, -14]}, w3:{hp:18, icon:'lead', spr:'trooper', s:.7, at:[0, -84]}},
+    pat:[{by:'w1', d:7, dl:3, p:'arm'}, {by:'w2', d:7, dl:3, p:'out'}, {by:'w3', d:7, dl:3, p:'mob'}, {by:'core', d:0, dl:4, rebuild:18, wind:{w:3, poise:14}}, {by:'core', d:11, dl:4, p:'dur'}],
+    wary:[{at:1, units:{core:{hp:100, vital:true, core:true, icon:'core', at:[0, 58], pt:[32, 32]}, w1:{hp:22, icon:'lead', spr:'trooper', s:.7, at:[-122, -14]}, w2:{hp:22, icon:'lead', spr:'trooper', s:.7, at:[122, -14]}, w3:{hp:22, icon:'lead', spr:'trooper', s:.7, at:[0, -84]}}, pat:[{by:'w1', d:7, dl:3, p:'arm'}, {by:'w2', d:7, dl:3, p:'out'}, {by:'w3', d:7, dl:3, p:'mob'}, {by:'core', d:0, dl:4, rebuild:22, wind:{w:3, poise:14}}, {by:'core', d:11, dl:4, p:'dur'}]}, {at:2, units:{core:{hp:100, vital:true, core:true, icon:'core', at:[0, 58], pt:[32, 32]}, w1:{hp:25, icon:'lead', spr:'trooper', s:.7, at:[-122, -14]}, w2:{hp:25, icon:'lead', spr:'trooper', s:.7, at:[122, -14]}, w3:{hp:25, icon:'lead', spr:'trooper', s:.7, at:[0, -84]}}, pat:[{by:'w1', d:7, dl:3, p:'arm'}, {by:'w2', d:7, dl:3, p:'out'}, {by:'w3', d:7, dl:3, p:'mob'}, {by:'core', d:0, dl:4, rebuild:25, wind:{w:3, poise:14}}, {by:'core', d:11, dl:4, p:'dur'}]}],
     pool:['scatter','storm','slash','iterate']},
   // 監視カメラ網: カメラがこちらにクラックを重ね続ける(消えない)。先にカメラを潰すか、押し切るか
   camnet:   {kind:'drone', start:3,
@@ -152,9 +157,11 @@ DATA.foes = {
     wary:[{at:1, pat:[{by:'cam1', d:0, dl:3, crack:1, gain:1}, {by:'core', d:9, dl:3, p:'calc', gain:1}, {by:'cam2', d:0, dl:3, gain:3}, {by:'core', d:6, dl:4, p:'dur', spend:4, ch:true}]},
           {at:2, units:{core:{hp:110, vital:true, core:true, icon:'core', at:[0, 56], pt:[30, 36]}, cam1:{hp:24, icon:'eye', at:[-110, -30], pt:[6, 14]}, cam2:{hp:24, icon:'eye', at:[110, -30], pt:[54, 14]}}}],
     pool:['capacitor','coil','storm','cell','scatter']},
-  // 路面電車: 定刻どおりに走る(ディレイが効かない)。線路(射界)を敷き、止められない通過で轢く。受けるか、それまでに削り切るか
+  // 不可避のトラム(0.45.2 確定): 定刻。線路(射界)を敷き、通過100(不安定、体勢4/10)。止め損ねると本体がほぼ消える。+ は警笛で捨て札にノイズ
   tram:     {kind:'tank', hp:105, start:6, look:{s:1.1, at:[0, -8]}, passives:[{k:'punctual', n:0}],
-    pat:[{d:0, dl:3, zone:{at:2, len:2, d:8, p:'mob'}}, {d:14, dl:5, p:'dur'}, {d:6, dl:4, p:'out'}],
+    pat:[{d:0, dl:3, zone:{at:2, len:2, d:8, p:'mob'}}, {d:100, dl:5, p:'dur', ch:true, wind:{w:4, poise:10}}, {d:6, dl:3, p:'out'}],
+    wary:[{at:1, hp:120, pat:[{d:0, dl:3, zone:{at:2, len:2, d:8, p:'mob'}}, {d:100, dl:5, p:'dur', ch:true, wind:{w:4, poise:10}}, {d:6, dl:3, p:'out', junk:{k:'noise', n:1, to:'disc'}}]},
+          {at:2, hp:130}],
     pool:['wall','steel','blow','clockguard']},
   // エリート 起重機: 吊り荷の影(射界)の後に落とす(不安定・体勢16)。吊り具を壊せば落とせなくなる
   crane:    {kind:'tank', start:4, look:{s:1.15, at:[0, -8]},
@@ -251,10 +258,10 @@ DATA.encounters = {
   boss3:  {fam:'中枢', boss:true, foes:['warden'], scale:{hp:1.05, d:1}},
   // 0.41.3: エリア2・3 の敵の案(draft: 工房で相談中。地図にもエリートにも出ない。自動対戦では測れる)
   d2_signal:{fam:'信号', draft:true, foes:['signal']},
-  d2_demol: {fam:'解体', draft:true, foes:['demolisher']},
-  d2_fact:  {fam:'製造', draft:true, foes:['factory']},
+  n2_demol: {fam:'解体', foes:['demolisher']},
+  n2_fact:  {fam:'製造', foes:['factory']},
   d2_cam:   {fam:'監視', draft:true, foes:['camnet']},
-  d2_tram:  {fam:'軌道', draft:true, foes:['tram']},
+  n2_tram:  {fam:'軌道', foes:['tram']},
   d2e_crane:{fam:'重機', draft:true, elite:true, foes:['crane']},
   d2e_riot: {fam:'鎮圧', draft:true, elite:true, foes:['riot']},
   d2_boss:  {fam:'尖兵', draft:true, boss:true, foes:['vanguard']},

@@ -35,9 +35,10 @@ DATA.areas = [
            {from:4, enc:['n_scan', 'n_swarm', 'n_clock', 'n_weld', 'n_twin', 'n_crush', 'n_guard', 'n_def']},
            {from:8, enc:['n_hound', 'n_proc', 'n_accel', 'n_bomb', 'n_squad', 'n_net', 'n_guard', 'n_def']}]},
   {id:'a2', rooms:12, transfers:[3, 6, 9], last:'rest', fill:{battle:14, elite:5, event:5, shop:3, rest:1, duct:2}, scale:{hp:1, d:1}, boss:'boss2',
-    pools:[{from:0, enc:['n_scan', 'n_swarm', 'n_clock', 'n_weld', 'n_twin', 'n_crush']},
-           {from:4, enc:['n_proc', 'n_accel', 'n_bomb', 'n_squad', 'n_net', 'n_clock', 'n_weld']},
-           {from:8, enc:['n_hound', 'n_proc', 'n_bomb', 'n_squad', 'n_net', 'n_weld']}]},
+    // 0.45.2: クロックポリスの敵が入り始めた(ビルディングクラッシャー・住民生産ライン・不可避のトラム)。トラムは即死級なので区画4から
+    pools:[{from:0, enc:['n2_demol', 'n2_fact', 'n_scan', 'n_swarm', 'n_clock', 'n_weld']},
+           {from:4, enc:['n2_demol', 'n2_fact', 'n2_tram', 'n_accel', 'n_bomb', 'n_squad', 'n_net']},
+           {from:8, enc:['n2_demol', 'n2_fact', 'n2_tram', 'n_hound', 'n_bomb', 'n_squad']}]},
   {id:'a3', rooms:12, transfers:[3, 6, 9], last:'rest', fill:{battle:14, elite:5, event:5, shop:3, rest:1, duct:2}, scale:{hp:1.05, d:1}, boss:'boss3',
     pools:[{from:0, enc:['n_proc', 'n_accel', 'n_bomb', 'n_squad', 'n_net', 'n_clock', 'n_weld']},
            {from:6, enc:['n_hound', 'n_squad', 'n_bomb', 'n_net', 'n_proc']}]},

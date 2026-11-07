@@ -319,12 +319,12 @@ function fIn(p, o, orig, lab, kind, opts){
   return `<label class="ff${chg ? ' chg' : ''}${kind === 'bool' ? ' fb' : ''}${kind === 'str' || kind === 'arr' || kind === 'lines' ? ' fw' : ''}"><span>${esc(lab)}</span>${input}</label>`;
 }
 // 行動の属性: 道と表示名。窓のあるものは中の欄も
-const ACT_X = [['wind', '体勢', [['w', '窓'], ['poise', '一撃']]], ['guard', '防壁', [['w', '窓'], ['s', '量']]], ['counter', '反撃', [['w', '窓'], ['d', 'ダメージ']]],
-  ['zone', '射界', [['at', '何サイクル後'], ['len', '長さ'], ['d', 'ダメージ'], ['p', '部位']]], ['rec', '隙(サイクル)'], ['buff', '増幅'], ['armor', 'ブロック'], ['heal', '修復'], ['crack', 'こちらにクラック'],
+const ACT_X = [['wind', '体勢', [['w', '窓'], ['poise', '一撃']]], ['guard', '防壁', [['w', '窓'], ['s', '量']]], ['counter', '反撃', [['w', '窓'], ['d', 'ダメージ']]], ['counterAfter', '反撃(行動の後)', [['w', '窓'], ['d', 'ダメージ']]],
+  ['zone', '射界', [['at', '何サイクル後'], ['len', '長さ'], ['d', 'ダメージ'], ['p', '部位']]], ['rec', '隙(サイクル)'], ['recPre', '隙(行動の前、サイクル)'], ['buff', '増幅'], ['armor', 'ブロック'], ['heal', '修復'], ['crack', 'こちらにクラック'],
   ['noise', 'ノイズ(枚)'], ['haste', '加速'], ['steal', '盗むスクラップ'], ['eat', '飲み込む枚数'], ['rebuild', '直す耐久'], ['wt', '重み'], ['v', 'ディレイの量']];
 // 行動の短い文(データ一覧と同じ書き方)
 const actAttrs = (a, o) => [a.steal ? `スクラップを${a.steal}盗む` : '', a.eat ? `手札を${a.eat}枚飲み込む` : '', a.rebuild ? `ユニットを耐久${a.rebuild}で直す` : '', a.flee ? '逃げる' : '', a.hits > 1 ? `${a.hits}回` : '',
-  a.wind ? `体勢${a.wind.w}/${a.wind.poise}` : '', a.guard ? `防壁${a.guard.w}/${a.guard.s}` : '', a.counter ? `反撃${a.counter.w}/${a.counter.d}` : '', a.rec ? `隙${a.rec}` : '', a.buff ? `増幅+${a.buff}${a.all ? '(全員)' : ''}` : '',
+  a.wind ? `体勢${a.wind.w}/${a.wind.poise}` : '', a.guard ? `防壁${a.guard.w}/${a.guard.s}` : '', a.counter ? `反撃${a.counter.w}/${a.counter.d}` : '', a.rec ? `隙${a.rec}` : '', a.counterAfter ? `後の反撃${a.counterAfter.w}/${a.counterAfter.d}` : '', a.recPre ? `前の隙${a.recPre}` : '', a.buff ? `増幅+${a.buff}${a.all ? '(全員)' : ''}` : '',
   a.armor ? `ブロック+${a.armor}` : '', a.heal ? `修復${a.heal}` : '', a.crack ? `こちらにクラック+${a.crack}` : '', a.noise ? `ノイズ${a.noise}枚` : '', a.haste ? `加速${a.haste}` : '',
   a.zone ? `射界(${a.zone.at}後から${a.zone.len}、${a.zone.d}→${SLOTX[a.zone.p] || ''})` : '', a.summon ? `増援` : '', ...(a.free || [])].filter(Boolean);
 const actWho = (a, o) => a.by && o.units && o.units[a.by] ? (o.units[a.by].name || a.by) : '';
@@ -1424,7 +1424,7 @@ document.addEventListener('input', e => {
   if(t.dataset && t.dataset.vat && S.draft && S.draft.vv != null){ const v = Math.max(1, Math.min(10, Math.round(+t.value) || 1)); S.draft.obj.wary[S.draft.vv].at = v; later(); return; }
   // 敵のページ: 行動に属性を足す(値は0から)
   if(t.dataset && t.dataset.addx && S.draft && t.value){
-    const a = getPath(edObj(), t.dataset.addx), k = t.value, W = {wind:{w:0, poise:0}, guard:{w:0, s:0}, counter:{w:0, d:0}, zone:{at:0, len:0, d:0, p:'calc'}};
+    const a = getPath(edObj(), t.dataset.addx), k = t.value, W = {wind:{w:0, poise:0}, guard:{w:0, s:0}, counter:{w:0, d:0}, counterAfter:{w:0, d:0}, zone:{at:0, len:0, d:0, p:'calc'}};
     if(a && a[k] == null){ a[k] = W[k] ? clone(W[k]) : 0; }
     vvSync(); renderSide(); later(); return;
   }

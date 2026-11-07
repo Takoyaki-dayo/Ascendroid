@@ -26,6 +26,7 @@ const RULE = {draw:3, handStart:5, handMax:7, view:18, freeWait:true, blockDecay
 //   punctual {n}       定刻(0.23.0): ディレイを受けない。ディレイを与えられるたび、代わりに増幅+n(0.35.0: n:0 なら増幅は得ない)
 //   pursuit {n}        追跡(0.23.0): こちらが手札を入れ替えるか待機するたび、次の行動が n サイクル早まる(最短1)
 //   loot / hoard       見せるだけ。盗んだスクラップ(steal)・飲み込んだカード(eat)は撃破すると戻る
+// 開幕(0.45.3): 敵・段階変化(phase)・2段目(phase.next)に open:[行動…] を書くと、その並びに入ったときに1回だけ行い、その後 pat を繰り返す
 // 行動の窓(0.45.2): recPre は行動の前 recPre サイクルの隙(1.5倍)、counterAfter:{w, d} は行動の後 w サイクルの反撃
 //   cap {n}            耐久試験(0.41.3、案): カードの一撃で受けるダメージは n まで(ブロック・防壁を引いた後)
 //   improve {n, haste} 改善(0.41.3、案): ユニットが破壊されるたび、増幅 n と加速 haste を得る
@@ -48,11 +49,15 @@ const rollPat = pat => pat.some(a => a.p === 'rand' || a.rp) ? pat.map(a => a.p 
 const isJunk = c => !!(D.cards[c.k] && D.cards[c.k].junk); // 汚染のカード(0.41.3)
 const fades = c => !!(D.cards[c.k] && D.cards[c.k].fade);   // 区切りで手札から消える汚染
 const cur = e => e.pat[e.idx];
+// 開幕(0.45.3): 行動の並びの前に1回だけ行う並び open。並び(通常・段階変化・2段目)ごとに持てる。
+// e.pat は「開幕+ループ」をつないだもの、e.lf はループの始まりの番号(最後まで行くと e.lf に戻る)
+const setPat = (e, src) => { const op = src.open || []; e.pat = rollPat(op.concat(src.pat || [])); e.lf = op.length; e.idx = 0; };
+const nxt = (e, i) => i + 1 < e.pat.length ? i + 1 : (e.lf || 0);
 // 次の行動へ。ai:'rand' なら重み wt で選ぶ(同じ行動は3回続けない)。phase なら耐久が at 割を切った後に行動の並びが変わる
 // ランダムに選ぶ敵も、先の行動まで決めておく(0.18.3)。e.queue に今の行動(e.idx)の後の並びを QN 個持ち、予定にもそのまま出す
 const QN = 8;
 function pickMove(e, seq){
-  const h = seq || e.hist || [], n = h.length, ok = e.pat.map((m, i) => moveOk(e, m) && !(n >= 2 && h[n - 1] === i && h[n - 2] === i));
+  const h = seq || e.hist || [], n = h.length, ok = e.pat.map((m, i) => i >= (e.lf || 0) && moveOk(e, m) && !(n >= 2 && h[n - 1] === i && h[n - 2] === i));
   let tot = 0; e.pat.forEach((m, i) => { if(ok[i]) tot += m.wt || 1; });
   let x = rand() * tot;
   for(let i = 0; i < e.pat.length; i++){ if(!ok[i]) continue; x -= e.pat[i].wt || 1; if(x <= 0) return i; }
@@ -62,10 +67,11 @@ function pickMove(e, seq){
 function fillQueue(e){
   if(e.ai !== 'rand') return;
   e.queue = (e.queue || []).filter(i => moveOk(e, e.pat[i]));
+  if(e.idx < (e.lf || 0) - 1){ const rest = []; for(let i = e.idx + 1; i < e.lf; i++) rest.push(i); e.queue = rest.concat(e.queue.filter(i => i >= e.lf)); } // 開幕の残りを先に
   while(e.queue.length < QN) e.queue.push(pickMove(e, [...(e.hist || []), e.idx, ...e.queue]));
 }
 // 並びを決め直す(行動の並びそのものが変わったとき)
-function resetQueue(e){ if(e.ai !== 'rand') return; e.queue = []; e.idx = pickMove(e, e.hist || []); fillQueue(e); }
+function resetQueue(e){ if(e.ai !== 'rand') return; e.queue = []; if(!e.lf) e.idx = pickMove(e, e.hist || []); fillQueue(e); }
 // ブレイク・ユニットの破壊で行動を飛ばす(0.36.0): 飛ばした行動までの残りの時間はそのまま残す(後ろの予定を前に詰めない)
 // 立て直し(passive recover {n}): その敵だけ、残りを n サイクル縮める(最短1)
 // 連動(0.39.0、行動の link): ブレイクされると次の行動も一緒に飛ばす(飛ばした行動の間隔は残す)
@@ -76,13 +82,13 @@ function skipMove(e){
 }
 function advance(e){
   if(e.hist){ e.hist.push(e.idx); if(e.hist.length > 4) e.hist.shift(); }
-  if(e.phase && !e.phased && (e.phase.when === 'parts' ? e.uids.every(k => e.units[k].core || e.units[k].broken) : e.hp < e.maxHp * e.phase.at)){ e.phased = true; e.pat = rollPat(e.phase.pat); e.idx = 0; e.hist = []; resetQueue(e); }
+  if(e.phase && !e.phased && (e.phase.when === 'parts' ? e.uids.every(k => e.units[k].core || e.units[k].broken) : e.hp < e.maxHp * e.phase.at)){ e.phased = true; setPat(e, e.phase); e.hist = []; resetQueue(e); }
   // 2段目の段階変化(0.40.2、phase.next:{at, pat}): 1段目の後、耐久が next.at 割を切ると変わる
-  else if(e.phased && !e.phased2 && e.phase && e.phase.next && e.hp < e.maxHp * e.phase.next.at){ e.phased2 = true; e.pat = rollPat(e.phase.next.pat); e.idx = 0; e.hist = []; resetQueue(e); }
+  else if(e.phased && !e.phased2 && e.phase && e.phase.next && e.hp < e.maxHp * e.phase.next.at){ e.phased2 = true; setPat(e, e.phase.next); e.hist = []; resetQueue(e); }
   else if(e.ai === 'rand'){ fillQueue(e); e.idx = e.queue.shift(); fillQueue(e); }
-  else e.idx = (e.idx + 1) % e.pat.length;
+  else e.idx = nxt(e, e.idx);
   // 破壊されたユニットの行動は飛ばす
-  for(let k = 0; k < e.pat.length && !moveOk(e, e.pat[e.idx]); k++){ if(e.ai === 'rand'){ fillQueue(e); e.idx = e.queue.shift(); fillQueue(e); } else e.idx = (e.idx + 1) % e.pat.length; }
+  for(let k = 0; k < e.pat.length && !moveOk(e, e.pat[e.idx]); k++){ if(e.ai === 'rand'){ fillQueue(e); e.idx = e.queue.shift(); fillQueue(e); } else e.idx = nxt(e, e.idx); }
   const a = e.pat[e.idx];
   e.r = gap(e, a.dl); e.seq++; e.chain = 0; e.sh = a.guard ? a.guard.s : 0;
 }
@@ -164,8 +170,8 @@ function upcoming(e, view){
     if(e.ai === 'rand'){ // ランダムに選ぶ敵は、決めておいた並びのとおり
       const q = (e.queue || []).filter(i => moveOk(e, e.pat[i])); if(k >= q.length) break; idx = q[k];
     } else {
-      idx = (idx + 1) % e.pat.length;
-      for(let j = 0; j < e.pat.length && !moveOk(e, e.pat[idx]); j++) idx = (idx + 1) % e.pat.length;
+      idx = nxt(e, idx);
+      for(let j = 0; j < e.pat.length && !moveOk(e, e.pat[idx]); j++) idx = nxt(e, idx);
     }
     t += gap(e, e.pat[idx].dl); k++;
   }
@@ -192,7 +198,7 @@ function hurtFoe(b, e, d, ev, uid){
     for(const ps of e.pas || []) if(ps.k === 'improve' && e.alive){ e.str = (e.str || 0) + (ps.n || 0); e.haste = (e.haste || 0) + (ps.haste || 0); ev.push({kind:'frenzy', e:e.i, n:ps.n || 0}); } // 改善(0.41.3)
     // broke: このユニットが破壊されると行動の並びが変わる
     const nb = (D.foes[e.key].broke || {})[uid];
-    if(nb && e.alive){ e.pat = rollPat(nb); e.idx = 0; e.hist = []; e.sh = 0; e.chain = 0; resetQueue(e); ev.push({kind:'shift', e:e.i, unit:uid}); }
+    if(nb && e.alive){ e.pat = rollPat(nb); e.lf = 0; e.idx = 0; e.hist = []; e.sh = 0; e.chain = 0; resetQueue(e); ev.push({kind:'shift', e:e.i, unit:uid}); }
     else fillQueue(e); // 破壊されたユニットの行動を並びから除いて足す
     // 予定に入っていたこのユニットの行動は消える
     if(e.alive && !moveOk(e, cur(e)) && e.uids.some(k => !e.units[k].broken && e.units[k].vital)){ const nm = cur(e).n; skipMove(e); ev.push({kind:'cancel', e:e.i, name:nm}); }
@@ -401,7 +407,7 @@ function delayFoe(e, v, free){
   const a = Math.max(0, v - (e.resist || 0)); e.r += a; if(!free) e.resist = (e.resist || 0) + 1; return a;
 }
 function enemyAct(st, e, extra){ e.resist = 0;
-  const a = cur(e), mv = (e.phased ? 'phase:' : 'pat:') + e.idx;
+  const a = cur(e), mv = e.idx < (e.lf || 0) ? (e.phased ? 'phaseopen:' : 'open:') + e.idx : (e.phased ? 'phase:' : 'pat:') + (e.idx - (e.lf || 0));
   const res = a.kind === 'delay' ? {kind:'delay', name:a.n, v:a.v} : a.d > 0 ? strike(st, e, a, (extra || 0) + foeStr(e) + moveBonus(st.b, e, a)) : {kind:'move', name:a.n};
   res.by = actorUid(e, a); res.mv = mv;
   // 多段: 残りを1サイクルおきに撃つ
@@ -634,13 +640,14 @@ function scaledFoe(key, sc, lv){
 }
 function makeFoe(key, i, sc, lv){
   const f = scaledFoe(key, sc, lv);
-  const e = {key, i, wary:f.waryAt || 0, name:f.name, tag:'ABCDEF'[i], kind:f.kind, pat:rollPat(f.pat), idx:0, r:f.start, seq:0, alive:true,
+  const e = {key, i, wary:f.waryAt || 0, name:f.name, tag:'ABCDEF'[i], kind:f.kind, pat:null, idx:0, r:f.start, seq:0, alive:true,
     react:f.react || null, sync:f.sync || 0, reactIn:null, ai:f.ai || null, phase:f.phase || null, phased:false, hist:[], chain:0, sh:0, str:0, haste:0, pas:f.passives || []};
   // ユニット。書かなければ耐久 hp の核1つ
   const defs = f.units || {core:{hp:f.hp, vital:true, core:true}};
   e.uids = Object.keys(defs); e.units = {};
   for(const k of e.uids){ const d = defs[k]; e.units[k] = {name:d.name || '', hp:d.hp, max:d.hp, vital:!!d.vital, core:!!d.core, icon:d.icon || k, crack:0, vuln:0, armor:d.armor || 0, broken:false, shelter:!!d.shelter}; }
   syncHp(e);
+  setPat(e, f); // 0.45.3: 開幕があれば、その頭から
   if(e.ai === 'rand') resetQueue(e);
   const a = cur(e); e.sh = a.guard ? a.guard.s : 0;
   return e;

@@ -68,6 +68,9 @@ function apply(D, T){
     else if(where === 'pat'){ for(const w of f.wary || []) if(w.pat && w.pat[+i] && !w.pat[+i].n) w.pat[+i].n = n; }
     else if(where === 'phase' && f.phase && f.phase.pat[+i]) f.phase.pat[+i].n = n;
     else if(where === 'phase2' && f.phase && f.phase.next && f.phase.next.pat[+i]) f.phase.next.pat[+i].n = n; // 2段目の段階変化(0.40.2)
+    else if(where === 'open'){ if(f.open && f.open[+i]) f.open[+i].n = n; for(const w of f.wary || []) if(w.open && w.open[+i] && !w.open[+i].n) w.open[+i].n = n; } // 開幕(0.45.3)
+    else if(where === 'phaseopen' && f.phase && f.phase.open && f.phase.open[+i]) f.phase.open[+i].n = n;
+    else if(where === 'phase2open' && f.phase && f.phase.next && f.phase.next.open && f.phase.next.open[+i]) f.phase.next.open[+i].n = n;
     else if(where === 'react' && f.react) f.react.n = n;
     else if(where === 'unit' && f.units && f.units[i]) f.units[i].name = n;
     else if(where === 'passive') (f.pname = f.pname || {})[i] = n; // 番号は passives の何番目か。phase は段階変化の名前

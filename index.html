@@ -1349,6 +1349,41 @@ body.hs *{animation-play-state:paused!important;transition:none!important}
 .tt-b.main{background:linear-gradient(90deg,rgba(63,240,255,.16),rgba(63,240,255,.02) 80%),#0a1016!important;box-shadow:none!important}
 .tt-s{border-radius:0!important;clip-path:var(--cut-s)}
 .tt-logo{font-family:var(--f-num)!important;text-shadow:-2px 0 rgba(63,240,255,.6),2px 0 rgba(255,42,75,.6)!important}
+/* --- 0.49.0 動き: 効果の形 --- */
+.vburst{position:absolute;pointer-events:none}.vburst svg{width:100%;height:100%;overflow:visible}.vburst line{stroke:currentColor;stroke-width:1.3;stroke-linecap:round}
+.vchip{position:absolute;width:5px;height:2px;pointer-events:none}
+.vseat{position:absolute;width:34px;height:19px;border-left:3px solid var(--cy);border-right:1px solid var(--cy);transform-origin:left center;pointer-events:none}
+.vslash{position:absolute;pointer-events:none}.vslash svg{width:100%;height:100%;overflow:visible}
+.vslash path{fill:none;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:1}
+.vslash .a{stroke:#fff;stroke-width:6}.vslash .b{stroke:var(--cy);stroke-width:2.5}.vslash .c{stroke:rgba(255,255,255,.5);stroke-width:1}
+.vbeam{position:absolute;height:6px;transform-origin:0 50%;pointer-events:none;background:linear-gradient(90deg,rgba(63,240,255,0),var(--cy) 18%,#fff 55%,var(--cy));border-radius:3px}
+.vguard{position:absolute;width:34px;height:124px;pointer-events:none;border-right:3px solid var(--cy);border-radius:0 70% 70% 0/0 50% 50% 0;background:linear-gradient(90deg,transparent 30%,rgba(63,240,255,.22));transform-origin:0 50%}
+.vpkt{position:absolute;width:6px;height:6px;margin:-3px 0 0 -3px;background:var(--cy);pointer-events:none;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}
+.vcut{position:absolute;width:220px;height:4px;transform-origin:50% 50%;pointer-events:none;background:linear-gradient(90deg,transparent,var(--just2) 20%,#fff 50%,var(--just2) 80%,transparent)}
+.vcut.cy{background:linear-gradient(90deg,transparent,var(--cy) 20%,#fff 50%,var(--cy) 80%,transparent)}
+.vcut.red{width:160px;background:linear-gradient(90deg,transparent,var(--foe2) 20%,#fff 50%,var(--foe2) 80%,transparent)}
+.vfrag{position:absolute;height:9px;background:var(--cy);pointer-events:none}
+#dim{position:absolute;inset:0;background:rgba(3,4,9,.66);opacity:0;pointer-events:none}
+.ktype{position:absolute;left:422px;top:128px;transform:translate(-50%,-50%);font-family:var(--f-num);font-weight:700;font-size:40px;letter-spacing:.16em;white-space:nowrap;pointer-events:none;z-index:31;color:#fff;
+  text-shadow:-3px 0 rgba(63,240,255,.85),3px 0 rgba(255,42,75,.85),0 3px 0 #000}
+.ktype.just{color:#efe6ff;text-shadow:-3px 0 rgba(63,240,255,.8),3px 0 var(--just),0 3px 0 #000}
+.ktype.cy{color:#dffcff}
+/* 手札: 選ぶ・配る・戻すは、少し行き過ぎてから止まる */
+#hand .card{transition:left .28s cubic-bezier(.2,1.3,.4,1),top .28s cubic-bezier(.2,1.3,.4,1),transform .28s cubic-bezier(.2,1.3,.4,1),opacity .2s,border-color .15s,box-shadow .2s}
+/* OSの層は段で刻まず、速く滑らかに(0.46.0 の steps をやめる) */
+.float.dm{animation:bNum2 .85s cubic-bezier(.2,.8,.2,1) forwards}
+@keyframes bNum2{0%{opacity:0;transform:translate(-50%,-50%) scale(2.2)}9%{opacity:1;transform:translate(-50%,-50%) scale(.9)}17%{transform:translate(-50%,-55%) scale(1.08)}26%{transform:translate(-50%,-56%) scale(1)}70%{opacity:1;transform:translate(-50%,-80%)}100%{opacity:0;transform:translate(-50%,-120%)}}
+#tl .mk.spawn{animation:bMarkIn2 .26s cubic-bezier(.16,1,.3,1)}
+@keyframes bMarkIn2{0%{opacity:0;transform:translateX(14px) scale(.85)}60%{opacity:1;transform:translateX(-2px) scale(1.04)}100%{transform:none}}
+#ov.enter .box,#ov2.enter .box,#ref.enter .box{animation:bWin2 .24s cubic-bezier(.16,1,.3,1)}
+@keyframes bWin2{0%{opacity:0;transform:translateY(12px) scale(.985)}100%{opacity:1;transform:none}}
+#ov.enter .box::after{animation:bBar .36s cubic-bezier(.16,1,.3,1)}
+@keyframes bBar{0%{width:0}100%{width:140px}}
+#roomScr.enter .rs-still{animation:bWin2 .3s cubic-bezier(.16,1,.3,1)}
+#roomScr.enter .rs-main>*{animation:bRise2 .28s cubic-bezier(.16,1,.3,1) backwards}
+@keyframes bRise2{0%{opacity:0;transform:translateX(14px)}100%{opacity:1;transform:none}}
+#tl.jolt{animation:bJolt2 .2s cubic-bezier(.16,1,.3,1)}
+@keyframes bJolt2{0%{transform:translateX(6px)}100%{transform:none}}
 /* 敵の詳細・自機の詳細 */
 #focus{background:linear-gradient(90deg,var(--bg) 0,rgba(6,8,12,.96) 74%,transparent)}
 .urow,.u-head{border-radius:0}
@@ -1438,7 +1473,7 @@ body.hs *{animation-play-state:paused!important;transition:none!important}
 <script src="data/text.js"></script>
 <script src="js/engine.js"></script>
 <script>
-const APP_VERSION = '0.48.0';
+const APP_VERSION = '0.49.0';
 const $ = s => document.querySelector(s);
 const EN = ENGINE, RULE = EN.RULE;
 const VIEW = RULE.view, NOW = 170, PX = 34, xs = c => NOW + c * PX, STRIP_Y = 150, SWIFT_VIS = 3;
@@ -2211,6 +2246,102 @@ function fxEl(cls, x, y, css){ const el = document.createElement('div'); el.clas
 const g2 = v => Math.round(v / 2) * 2;
 /* OSの層: 当たった点で照準が弾ける */
 function osHit(p){ const el = fxEl('oslock', g2(p.x), g2(p.y - 6)); setTimeout(() => el.remove(), 300); }
+
+/* ---------- 0.49.0 動き: 溜め → 決め → 余韻 ----------
+   決まり: (1) どの出来事も「溜め(短く逆へ)→ 決め(いちばん速い一瞬)→ 余韻(行き過ぎてから戻る)」の3拍で動く。
+   (2) 原因と結果を動きでつなぐ: カードはタイムラインの自分の帯に吸い込まれ、敵の予定は狙う部位へ線を飛ばしてから当たる。
+   (3) 当たりは「止まる・押される・局所の光・数字」が同じ瞬間に起きる。押される向きは攻撃の向き。
+   (4) 画面全体は光らせない。JUST は世界を暗く沈め、効果だけを明るく残す。
+   動きは Web Animations(transform・opacity 中心)で付け、端末の「動きを減らす」設定では付けない */
+const EZ = {out: 'cubic-bezier(.16,1,.3,1)', snap: 'cubic-bezier(.3,1.5,.45,1)', in: 'cubic-bezier(.55,0,.85,.35)'};
+function anim(el, kf, o){ if(!el || RM) return null; try{ return el.animate(kf, typeof o === 'number' ? {duration: o} : o); }catch(e){ return null; } }
+function fxNode(cls, x, y, css, ms){ const el = fxEl(cls, x, y, css); setTimeout(() => el.remove(), ms || 600); return el; }
+/* 一瞬の静止: いま動いているものを全部止め、ms 後に戻す。止めた後に始めた動き(JUST の斬線など)は止まらない */
+function freeze(ms){
+  if(RM) return; const list = document.getAnimations().filter(a => a.playState === 'running');
+  list.forEach(a => a.pause()); document.body.classList.add('hs');
+  /* 止めたものは、重なって呼ばれても必ず全部戻す */
+  freeze.held = (freeze.held || []).concat(list); clearTimeout(freeze.t);
+  freeze.t = setTimeout(() => { for(const a of freeze.held) try{ a.play(); }catch(e){} freeze.held = []; document.body.classList.remove('hs'); }, ms);
+}
+/* 当たりを、動きの「決め」の瞬間まで遅らせる(突きなら刃が届くまで)。cardMotion が決め、showEvent が使う */
+let IMPACT = 0;
+/* 押される: 白く光り、dx だけ飛ばされ、行き過ぎてから戻る */
+function knock(el, dx, ms){ anim(el, [{transform: 'none', filter: 'brightness(3)'}, {transform: `translateX(${dx}px)`, filter: 'brightness(1.6)', offset: .12}, {transform: `translateX(${dx * .35}px)`, filter: 'none', offset: .45}, {transform: `translateX(${-dx * .08}px)`, offset: .75}, {transform: 'none'}], {duration: ms || 340, easing: EZ.out}); }
+/* 放射の火花(線8本) */
+function burstFx(x, y, color, r){
+  r = r || 34; const el = fxNode('vburst', x - r, y - r, {width: r * 2 + 'px', height: r * 2 + 'px', color: color || '#fff'}, 320);
+  el.innerHTML = '<svg viewBox="-10 -10 20 20">' + Array.from({length: 8}, (_, k) => { const a = k * Math.PI / 4 + .2, l = k % 2 ? 6.5 : 9.5; return `<line x1="${(Math.cos(a) * 2.6).toFixed(2)}" y1="${(Math.sin(a) * 2.6).toFixed(2)}" x2="${(Math.cos(a) * l).toFixed(2)}" y2="${(Math.sin(a) * l).toFixed(2)}"/>`; }).join('') + '</svg>';
+  anim(el, [{transform: 'scale(.3) rotate(-10deg)', opacity: 1}, {transform: 'scale(1)', opacity: 1, offset: .35}, {transform: 'scale(1.3) rotate(6deg)', opacity: 0}], {duration: 280, easing: EZ.out});
+}
+/* 飛び散る小片(色は CSS の値で) */
+function chips(x, y, color, n, spread, up){
+  for(let k = 0; k < n; k++){
+    const el = fxNode('vchip', x, y, {background: color}, 620), a = (up ? -Math.PI / 2 : 0) + (Math.random() - .5) * (up ? 2 : 6.3), r = (spread || 40) * (.5 + Math.random() * .7);
+    anim(el, [{transform: 'translate(0,0) rotate(0)', opacity: 1}, {transform: `translate(${Math.cos(a) * r}px,${Math.sin(a) * r + (up ? 0 : 18)}px) rotate(${(Math.random() - .5) * 400}deg)`, opacity: 0}], {duration: 420 + Math.random() * 180, easing: EZ.out});
+  }
+}
+/* カードを使う: 持ち上がって(溜め)、タイムラインの自分の帯へ縮みながら吸い込まれ、帯の頭に括弧が噛む */
+function castFly(el){
+  if(!el) return; if(RM){ el.remove(); return; }
+  el.style.transition = 'none'; el.style.zIndex = 40;
+  const L = parseFloat(el.style.left) || 0, T = parseFloat(el.style.top) || 0, tf = el.style.transform && el.style.transform !== 'none' ? el.style.transform : 'translate(0,0)';
+  const dx = NOW + 6 - (L + 48), dy = 29 - (T + 136);
+  anim(el, [{transform: tf, opacity: 1}, {transform: 'translate(0,-18px) scale(1.08)', opacity: 1, offset: .26}, {transform: `translate(${dx}px,${dy}px) scale(.12,.04)`, opacity: .7}], {duration: 300, easing: EZ.in, fill: 'forwards'});
+  setTimeout(() => { el.remove(); const s = fxNode('vseat', NOW - 1, 20, {}, 380); anim(s, [{transform: 'scaleX(.15)', opacity: 1}, {transform: 'scaleX(1)', opacity: 1, offset: .3}, {transform: 'scaleX(1.5)', opacity: 0}], {duration: 360, easing: EZ.out}); }, 290);
+}
+/* 突き: 引いて(溜め)、一気に踏み込み、刃の弧が走る。当たりは踏み込みの頂点 */
+function slashArc(p, flip){
+  const s = 96, el = fxNode('vslash', p.x - s / 2, p.y - s / 2 - 6, {width: s + 'px', height: s + 'px', transform: flip ? 'scaleY(-1)' : ''}, 440);
+  el.innerHTML = '<svg viewBox="0 0 100 100"><path class="a" d="M10 76Q38 12 94 20" pathLength="1"/><path class="b" d="M6 88Q52 40 98 42" pathLength="1"/><path class="c" d="M0 52H100" pathLength="1"/></svg>';
+  anim(el.querySelector('.a'), [{strokeDashoffset: 1}, {strokeDashoffset: 0}], {duration: 80, easing: EZ.out, fill: 'forwards'});
+  anim(el.querySelector('.b'), [{strokeDashoffset: 1}, {strokeDashoffset: 0}], {duration: 100, delay: 25, easing: EZ.out, fill: 'forwards'});
+  anim(el.querySelector('.c'), [{strokeDashoffset: 1}, {strokeDashoffset: 0}], {duration: 60, easing: 'linear', fill: 'forwards'});
+  anim(el, [{opacity: 1}, {opacity: 1, offset: .4}, {opacity: 0, transform: `${flip ? 'scaleY(-1) ' : ''}translateX(12px)`}], {duration: 420, easing: EZ.out});
+}
+function meleeFx(pts){
+  anim($('#droid'), [{transform: 'none'}, {transform: 'translateX(-12px)', offset: .18, easing: EZ.in}, {transform: 'translateX(100px) skewX(-8deg)', offset: .36}, {transform: 'translateX(92px)', offset: .62, easing: EZ.out}, {transform: 'none'}], {duration: 460});
+  setTimeout(() => { pts.forEach((p, n) => { slashArc(p, n % 2); burstFx(p.x, p.y - 6, '#fff', 30); osHit(p); }); }, 150);
+  IMPACT = 160;
+}
+/* 射撃: 反動で下がり、銃口が光り、光線が一瞬で伸びてから細って消える */
+function shotFx(pts){
+  anim($('#droid'), [{transform: 'none'}, {transform: 'translateX(-14px)', offset: .12}, {transform: 'translateX(2px)', offset: .6}, {transform: 'none'}], {duration: 320, easing: EZ.out});
+  const f = {x: DROID.sx + 6, y: DROID.sy}; burstFx(f.x, f.y, 'var(--cy)', 16);
+  for(const p of pts){
+    const dx = p.x - f.x, dy = p.y - f.y, len = Math.hypot(dx, dy), ang = Math.atan2(dy, dx) * 180 / Math.PI;
+    const el = fxNode('vbeam', f.x, f.y - 3, {width: len + 'px'}, 340);
+    anim(el, [{transform: `rotate(${ang}deg) scaleX(0)`, opacity: 1}, {transform: `rotate(${ang}deg) scaleX(1)`, opacity: 1, offset: .2}, {transform: `rotate(${ang}deg) scale(1,.12)`, opacity: 0}], {duration: 320, easing: EZ.out, fill: 'forwards'});
+    setTimeout(() => { burstFx(p.x, p.y, '#fff', 30); osHit(p); }, 70);
+  }
+  IMPACT = 80;
+}
+/* 防御: 自機の前に弧の障壁が張られ、行き過ぎてから噛み合う */
+function guardFx(){ const el = fxNode('vguard', DROID.x + 14, DROID.y - 70, {}, 560); anim(el, [{transform: 'scale(.4,.7)', opacity: 0}, {transform: 'scale(1.15,1.05)', opacity: 1, offset: .28}, {transform: 'scale(1)', opacity: 1, offset: .5}, {transform: 'scale(1)', opacity: 0}], {duration: 540, easing: EZ.out}); }
+/* 妨害: 小さな札が弧を描いて敵へ流れ込む */
+function packetFx(pts){
+  for(const p of pts) for(let k = 0; k < 6; k++){
+    const el = fxNode('vpkt', DROID.sx, DROID.sy, {}, 560), mx = (DROID.sx + p.x) / 2 - DROID.sx, my = Math.min(DROID.sy, p.y) - 50 - k * 7 - DROID.sy;
+    anim(el, [{transform: 'translate(0,0) scale(.5)', opacity: 0}, {transform: `translate(${mx}px,${my}px) scale(1)`, opacity: 1, offset: .5}, {transform: `translate(${p.x - DROID.sx}px,${p.y - DROID.sy}px) scale(.6)`, opacity: .9}], {duration: 300, delay: k * 28, easing: EZ.in, fill: 'forwards'});
+  }
+  IMPACT = 240;
+}
+/* 大きな文字(JUST・崩し): 右から字間を詰めながら差し込み、止まって、左へ抜ける */
+function ktype(text, cls){
+  const el = document.createElement('div'); el.className = 'ktype ' + (cls || ''); el.textContent = text; $('#floats').appendChild(el); setTimeout(() => el.remove(), 760);
+  anim(el, [{opacity: 0, transform: 'translate(-50%,-50%) translateX(60px) skewX(-12deg)', letterSpacing: '.9em'}, {opacity: 1, transform: 'translate(-50%,-50%) skewX(-12deg)', letterSpacing: '.16em', offset: .2}, {opacity: 1, transform: 'translate(-50%,-50%) translateX(-6px) skewX(-12deg)', letterSpacing: '.18em', offset: .72}, {opacity: 0, transform: 'translate(-50%,-50%) translateX(-40px) skewX(-12deg)', letterSpacing: '.3em'}], {duration: 740, easing: EZ.out});
+}
+/* 撃破: 横に断たれ、上下に分かれて崩れる */
+function splitFx(i){
+  const el = foeEl(i); if(!el || RM) return; const p = foeCenter(i);
+  for(const [clip, dx, dy, rot] of [['inset(0 0 52% 0)', -16, -14, -7], ['inset(48% 0 0 0)', 14, 10, 6]]){
+    const c = el.cloneNode(true); c.classList.remove('tgt', 'dead', 'ehit', 'atk'); c.style.clipPath = clip; c.style.transition = 'none'; c.style.opacity = '1'; $('#fx').appendChild(c); setTimeout(() => c.remove(), 640);
+    anim(c, [{transform: 'none', filter: 'brightness(3)'}, {transform: `translate(${dx * .25}px,${dy * .25}px) rotate(${rot * .25}deg)`, filter: 'brightness(1.3)', offset: .2}, {transform: `translate(${dx}px,${dy + 20}px) rotate(${rot}deg)`, opacity: 0, filter: 'none'}], {duration: 620, easing: EZ.out});
+  }
+  el.style.transition = 'none'; el.style.opacity = '0';
+  const cut = fxNode('vcut red', p.x - 80, p.y - 2, {}, 420); anim(cut, [{transform: 'scaleX(0)', opacity: 1}, {transform: 'scaleX(1)', opacity: 1, offset: .25}, {transform: 'scaleX(1.1) scaleY(.2)', opacity: 0}], {duration: 400, easing: EZ.out});
+  chips(p.x, p.y, '#d3e2ee', 10, 60, true);
+}
 function floatAt(x, y, text, cls){ const el = document.createElement('div'); el.className = 'float ' + (cls || ''); el.textContent = text; el.style.left = x + 'px'; el.style.top = y + 'px'; $('#floats').appendChild(el); setTimeout(() => el.remove(), 950); }
 // ダメージの数字(0.40.0): 当たるたびに少し散らし、大きいほど数字を大きく。弾むように出る
 function dmgFloat(x, y, n, size){ const el = document.createElement('div'); el.className = 'float foe dm ' + size; el.textContent = '−' + n; el.style.left = x + 'px'; el.style.top = y + 'px'; el.style.fontSize = Math.min(34, 16 + n * .55) + 'px'; $('#floats').appendChild(el); setTimeout(() => el.remove(), 950); }
@@ -2287,18 +2418,18 @@ function afterimage(){
   el.getBoundingClientRect(); el.style.transform = 'translateX(-14px)'; el.style.opacity = '0';
   setTimeout(() => el.remove(), 320);
 }
-function shieldFx(){ const el = fxEl('shield', 92, 136); setTimeout(() => el.remove(), 560); }
+function shieldFx(){ guardFx(); }
 function cardMotion(k, ti){
   const c = CARDS[k], d = $('#droid'), t = cardType(c);
   // 当たる場所: 全体のカードは敵のすべてのユニット、単体は狙ったユニット
   const pts = c.all ? S.b.foes.filter(e => e.alive).flatMap(e => (GEOM.get(e.i) && GEOM.get(e.i).multi ? EN.liveUids(e) : [null]).map(k2 => unitCenter(e.i, k2)))
     : (c.tgt && ti != null ? [unitCenter(tFoe(ti), tUnit(ti) || EN.defaultUid(S.b.foes[tFoe(ti)]))] : []);
-  if(t === 'melee'){ pulse(d, 'lunge', 380); for(const p of pts){ const el = fxEl('slash', p.x, p.y - 10); setTimeout(() => el.remove(), 260); setTimeout(() => osHit(p), 90); } }
-  else if(t === 'ranged'){ pulse(d, 'recoil', 320); for(const p of pts){ beam(p); setTimeout(() => osHit(p), 70); } }
+  if(t === 'melee') meleeFx(pts);
+  else if(t === 'ranged') shotFx(pts);
   else if(t === 'block' || t === 'parry') shieldFx();
   else if(t === 'timer'){ pulse(d, 'recoil', 320); for(const p of pts){ const el = fxEl('pin', p.x - 6, p.y - 40); setTimeout(() => el.remove(), 600); } }
   else if(t === 'delay' || t === 'crack'){
-    pulse(d, 'glitch', 320);
+    pulse(d, 'glitch', 320); packetFx(pts); return;
     for(const p of pts){
       for(let k2 = 0; k2 < 5; k2++){
         const el = fxEl('noise', DROID.sx + k2 * 4, DROID.sy + (k2 % 2) * 8); el.getBoundingClientRect();
@@ -2314,9 +2445,9 @@ function cardMotion(k, ti){
 function unitTop(i, uid){ const g = GEOM.get(i); if(!g) return foeCenter(i); const u = g.units[g.multi ? uid : '*'] || g.units['*']; return u ? (u.lst ? {x: u.cx, y: u.cy - 18} : {x: u.x, y: u.y - 8}) : foeCenter(i); }
 function cardFx(x){
   switch(x.kind){
-    case 'dmg': { const p = unitTop(x.e, x.unit), big = x.n >= 20, mid = x.n >= 10; dmgFloat(p.x + (Math.random() - .5) * 34, p.y + (Math.random() - .5) * 16, x.n, big ? 'big' : mid ? 'mid' : ''); if(big) hitStop(70); else if(x.n >= 14) hitStop(40); pulse(unitEl(x.e, x.unit), 'flash', 260); pulse(unitSpr(x.e, x.unit), 'ehit', 280); break; }
-    case 'kill': { const p = foeCenter(x.e); shards(p.x, p.y, '#d3e2ee'); break; }
-    case 'unitBreak': { const p = unitCenter(x.e, x.unit); pulse(unitEl(x.e, x.unit), 'flash', 420); shards(p.x, p.y, '#ff8a9c'); pixels(p.x, p.y); flashFx('brk'); rescan('UNIT'); break; }
+    case 'dmg': { const p = unitTop(x.e, x.unit), big = x.n >= 20, mid = x.n >= 10; dmgFloat(p.x + (Math.random() - .5) * 34, p.y + (Math.random() - .5) * 16, x.n, big ? 'big' : mid ? 'mid' : ''); if(big) hitStop(70); else if(x.n >= 14) hitStop(40); pulse(unitEl(x.e, x.unit), 'flash', 260); knock(unitSpr(x.e, x.unit), 10 + Math.min(18, x.n * .7)); if(!big && x.n < 14) burstFx(p.x, p.y + 30, '#fff', 22); break; }
+    case 'kill': splitFx(x.e); freeze(90); break;
+    case 'unitBreak': { const p = unitCenter(x.e, x.unit); pulse(unitEl(x.e, x.unit), 'flash', 420); burstFx(p.x, p.y, 'var(--foe2)', 40); chips(p.x, p.y, 'var(--foe2)', 10, 50, false); flashFx('brk'); rescan('UNIT'); break; }
     case 'frenzy': { const p = foeCenter(x.e); floatAt(p.x, p.y - 70, '▲' + x.n, 'foe'); break; }
     case 'immune': { const p = unitTop(x.e, x.unit); floatAt(p.x, p.y, DATA.ui['fx.immune'], 'cy'); break; }
     case 'capped': { const p = unitTop(x.e, x.unit); floatAt(p.x + 24, p.y - 16, DATA.ui['fx.capped'], 'cy'); break; }
@@ -2347,7 +2478,7 @@ function cardFx(x){
     case 'guarded': { const p = foeCenter(x.e); const el = fxEl('fshield', p.x, p.y - 10); setTimeout(() => el.remove(), 520); floatAt(p.x + 26, p.y - 46, '防' + x.n, ''); break; }
     case 'armored': { const p = unitCenter(x.e, x.unit); floatAt(p.x + 26, p.y - 36, '装' + x.n, ''); break; }
     case 'vulnHit': { const p = unitCenter(x.e, x.unit); floatAt(p.x - 26, p.y - 36, '×1.5', 'cy'); break; }
-    case 'break': { justFx(x.e, 'BREAK'); const p = foeCenter(x.e); floatAt(p.x, p.y - 84, DATA.kwName.break, 'cy big'); break; }
+    case 'break': justFx(x.e, 'BREAK'); break;
     case 'counter': { const p = foeCenter(x.e); floatAt(p.x, p.y - 84, '返', 'foe'); beam({x: DROID.sx, y: DROID.sy}, {x: p.x, y: p.y - 10}); hitMeFx(x.res); break; }
   }
 }
@@ -2355,15 +2486,18 @@ function cardFx(x){
 function hitMeFx(r){
   const y = partY(r.part);
   if(r.blocked) pulse($('#stBlk'), 'flash', 360);
-  if(r.partLoss){ floatAt(70, y + 8, '−' + r.partLoss, 'foe'); pulse(document.querySelector(`.part[data-p="${r.part}"]`), 'flash', 320); }
+  if(r.partLoss){ floatAt(70, y + 8, '−' + r.partLoss, 'foe'); pulse(document.querySelector(`.part[data-p="${r.part}"]`), 'flash', 320); chips(70, y + 26, 'var(--foe)', Math.min(6, 2 + r.partLoss), 30, false); }
   if(r.broke) sparks(DROID.x, DROID.y - 30);
   if(r.bodyLoss) floatAt(150, 268, '−' + r.bodyLoss, 'foe');
-  if(r.hurt){ pulse($('#droid'), 'hit', 320); flashFx('hurt'); if(r.raw >= 10) shake(); }
-  else shieldFx();
+  if(r.hurt){ knock($('#droid'), -14 - Math.min(10, r.raw * .4), 360); burstFx(DROID.x + 4, DROID.y - 34, 'var(--foe2)', 30); flashFx('hurt');
+    if(r.raw >= 10){ freeze(Math.min(90, 30 + r.raw * 3)); anim($('#shaker'), [{transform: 'translateX(-8px)'}, {transform: 'translateX(5px)'}, {transform: 'translateX(-2px)'}, {transform: 'none'}], {duration: 260, easing: 'linear'}); } }
+  else { shieldFx(); burstFx(DROID.x + 30, DROID.y - 30, 'var(--cy)', 26); }
 }
 async function foeFx(i, r){
   const e = S.b.foes[i];
-  pulse(unitSpr(i, r.by), 'atk', 270);
+  /* 溜め: 狙う部位が赤く締まり、敵は一度引いてから踏み込む(決めは約130ms後 = 当たり) */
+  if(r.part){ const pe = document.querySelector(`.part[data-p="${r.part}"]`); anim(pe, [{boxShadow: 'inset 3px 0 0 var(--foe)', background: 'rgba(255,42,75,.22)'}, {boxShadow: 'inset 3px 0 0 var(--foe)', background: 'rgba(255,42,75,.22)', offset: .6}, {boxShadow: 'none', background: 'transparent'}], 420); }
+  anim(unitSpr(i, r.by), [{transform: 'none'}, {transform: 'translateX(10px)', offset: .3, easing: EZ.in}, {transform: 'translateX(-42px)', offset: .5}, {transform: 'translateX(-32px)', offset: .66, easing: EZ.out}, {transform: 'none'}], {duration: 280});
   if(r.mv && !(r.eat && !r.eat.length) && !(r.steal === 0)) foeSay(i, r.mv);
   if(r.steal){ const p = foeCenter(i); floatAt(p.x - 20, p.y - 60, '−' + r.steal, 'foe'); coinFx(p); }
   if(r.eat && r.eat.length) eatFx(i, r.eat);
@@ -2402,17 +2536,23 @@ async function foeFx(i, r){
   hitMeFx(r);
 }
 function justFx(i, tag){
-  /* 0.46.0: 時間が一瞬止まり(ヒットストップ)、紫の斬線が今の線を走る。画面全体は光らせない */
-  const el = fxEl('osjust', NOW, ROWY[i]); setTimeout(() => el.remove(), 400); hitStop(110);
-  shards(NOW, ROWY[i], null);
-  pulse(foeEl(i), 'ejust', 460);
-  flashFx(tag === 'BREAK' ? 'brk' : 'just'); rescan(tag || 'JUST');
+  /* 0.49.0: 時間が止まる。世界は暗く沈み、紫の斬線が予定を断ち、敵は大きく弾かれ、文字が差し込む。画面全体は光らせない */
+  freeze(160); const y = ROWY[i], br = tag === 'BREAK';
+  anim($('#dim'), [{opacity: 0}, {opacity: 1, offset: .12}, {opacity: 1, offset: .5}, {opacity: 0}], {duration: 560, easing: 'linear'});
+  const cut = fxNode('vcut' + (br ? ' cy' : ''), NOW - 110, y - 2, {}, 560); anim(cut, [{transform: 'rotate(-16deg) scaleX(0)', opacity: 1}, {transform: 'rotate(-16deg) scaleX(1)', opacity: 1, offset: .16}, {transform: 'rotate(-16deg) scaleX(1.05) scaleY(.3)', opacity: 0}], {duration: 520, easing: EZ.out});
+  chips(NOW, y, br ? 'var(--cy)' : 'var(--just2)', 12, 70, false);
+  knock(foeEl(i), 30, 520);
+  ktype(br ? DATA.kwName.break : DATA.kwName.just, br ? 'cy' : 'just');
+  flashFx(br ? 'brk' : 'just'); rescan(tag || 'JUST');
 }
 function interruptFx(){
   const bar = $('#selfBar'); bar.hidden = false; bar.className = 'np broken';
   setTimeout(() => bar.classList.remove('broken'), 400);
-  pulse($('#droid'), 'stagger', 420);
+  anim($('#droid'), [{transform: 'none'}, {transform: 'translateX(-14px) skewX(6deg)', offset: .15}, {transform: 'translateX(-4px)', offset: .5}, {transform: 'none'}], {duration: 420, easing: EZ.out});
   const ob = fxEl('osbreak', 0, 0); setTimeout(() => ob.remove(), 420);
+  /* 自分の帯が割れて落ちる */
+  const bl = parseFloat(bar.style.left) || NOW, bw = Math.max(16, parseFloat(bar.style.width) || 30);
+  for(let k = 0; k < 4; k++){ const f = fxNode('vfrag', bl + k * bw / 4, 25, {width: bw / 4 - 2 + 'px'}, 560); anim(f, [{transform: 'none', opacity: 1}, {transform: `translate(${(k - 1.5) * 10}px,${50 + k * 12}px) rotate(${(k - 1.5) * 40}deg)`, opacity: 0}], {duration: 520, delay: k * 20, easing: EZ.in, fill: 'forwards'}); }
   const g = fxEl('fxghost', DROID.x - 12, DROID.y - 40); g.getBoundingClientRect();
   g.style.left = '30px'; g.style.top = '350px'; g.style.opacity = '0'; g.style.transform = 'rotate(-30deg) scale(.6)';
   setTimeout(() => g.remove(), 420);
@@ -2535,10 +2675,10 @@ function phaseCheck(){ for(const e of S.b.foes){ if(e.phased && !e._phaseShown &
 async function showEvent(ev, k, ti){
   if(ev.type === 'card' || ev.type === 'timer' || ev.type === 'dot' || ev.type === 'foe') setTimeout(phaseCheck, 0);
   switch(ev.type){
-    case 'tick': if(!ev.real) afterimage(); renderAll(); await sleep(ev.real ? T_TICK : T_SWIFT); break;
+    case 'tick': if(!ev.real) afterimage(); else anim($('#nowLine'), [{transform: 'scaleX(2.6)', filter: 'brightness(1.8)'}, {transform: 'none', filter: 'none'}], {duration: 180, easing: EZ.out}); renderAll(); await sleep(ev.real ? T_TICK : T_SWIFT); break;
     case 'react': { const p = foeCenter(ev.e); floatAt(p.x, p.y - 70, '!', 'foe'); pulse(foeEl(ev.e), 'ehit', 200); renderAll(); await sleep(180); break; }
-    case 'just': justFx(ev.e, 'JUST'); { const p = foeCenter(ev.e); floatAt(p.x, p.y - 86, DATA.kwName.just, 'just2 big'); } renderAll(); await sleep(420); break;
-    case 'card': if(k) cardMotion(k, ti); for(const x of ev.ev) cardFx(x); renderAll(); await sleep(320); break;
+    case 'just': justFx(ev.e, 'JUST'); renderAll(); await sleep(460); break;
+    case 'card': { IMPACT = 0; if(k) cardMotion(k, ti); const hit = () => { for(const x of ev.ev) cardFx(x); renderAll(); }; if(IMPACT && !RM) setTimeout(hit, IMPACT); else hit(); await sleep(Math.max(320, IMPACT + 200)); IMPACT = 0; break; }
     case 'dot': for(const x of ev.ev) cardFx(x); renderAll(); await sleep(220); break;
     case 'timer': { const p = unitCenter(ev.t.e, ev.t.unit); const el = fxEl('burst', p.x, p.y - 10); setTimeout(() => el.remove(), 520); for(const x of ev.ev) cardFx(x); renderAll(); await sleep(320); break; }
     case 'turn': {
@@ -2559,8 +2699,7 @@ async function execute(pa){
   if(a.type === 'card'){
     if(a.t != null) lastTarget = a.t;
     for(const id of a.pick || []){ const el = cardEls.get(id); cardEls.delete(id); flyCard(el, 20, 344); }
-    const cd = b.hand[a.i], el = cardEls.get(cd.id); cardEls.delete(cd.id); flyCard(el, DROID.x - 48, DROID.y - 60);
-    setTimeout(() => { const g = fxEl('cardghost', DROID.x, DROID.y - 50); setTimeout(() => g.remove(), 420); }, 180);
+    const cd = b.hand[a.i], el = cardEls.get(cd.id); cardEls.delete(cd.id); castFly(el);
   } else if(a.type === 'swap' || a.type === 'reload'){
     b.hand.forEach((cd, n) => { const el = cardEls.get(cd.id); cardEls.delete(cd.id); setTimeout(() => flyCard(el, 20, 340), n * 30); });
   }
@@ -3575,7 +3714,8 @@ for(const el of [$('#wrap'), stage]) el.addEventListener('scroll', () => { el.sc
 fit();
 buildStatic();
 /* 0.46.0: 敵の列の軌条に、次の攻撃までの区間を刻む */
-{  const th = document.createElement('div'); th.id = 'threat'; th.className = 'np'; $('#tl').appendChild(th); }
+{  const dm = document.createElement('div'); dm.id = 'dim'; dm.className = 'np'; $('#world').insertBefore(dm, $('#fx'));
+  const th = document.createElement('div'); th.id = 'threat'; th.className = 'np'; $('#tl').appendChild(th); }
 dbgLoad(); applyEcon();
 showTitle();
 </script>

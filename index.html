@@ -1187,8 +1187,7 @@ body.hs *{animation-play-state:paused!important;transition:none!important}
 @media (prefers-reduced-motion:reduce){#stage *,#stage *::before,#stage *::after{transition:none!important;animation:none!important}}
 </style>
 <style>
-/* ===== 0.46.0 見た目「警告」=====
-   暗い施設。世界の層(自機・敵・床・物理の出来事)は2pxのドットの格子で段を踏んで動き、回さない・ゆがめない。
+/* ===== 0.46.0 見た目「警告」(0.48.0: ドット絵はやめ、絵は前の線画に戻した)=====
    OSの層(タイムライン・照準・読み取った数字・枠)は角を切った枠と強い二色で、滑らかに動く。操作の層(手札・ボタン)ははっきりした面。
    画面全体を光らせない(点滅・反転・全面の明滅はしない)。強い合図は縁と局所で出す */
 :root{
@@ -1196,64 +1195,9 @@ body.hs *{animation-play-state:paused!important;transition:none!important}
   --fg:#f2f6f9; --fg2:#b6c4d0; --dim:#7b8d9f; --dim2:#4a5b6c; --neutral:#e6eef5;
   --cy:#3ff0ff; --cy-dim:#1b7d8a; --foe:#ff2a4b; --foe2:#ff6b84; --just:#9b5cff; --just2:#c99bff;
   --f-num:"Oxanium","Chakra Petch","BIZ UDPGothic",system-ui,sans-serif;
-  --art-bg:linear-gradient(180deg,#0d141b,#091017);
   --cut:polygon(0 0,calc(100% - 9px) 0,100% 9px,100% 100%,9px 100%,0 calc(100% - 9px));
   --cut-s:polygon(0 0,calc(100% - 5px) 0,100% 5px,100% 100%,0 100%);
 }
-/* --- 世界の層 --- */
-#stage{background:var(--bg)!important;image-rendering:pixelated}
-#pxbg{position:absolute;left:0;top:0;width:844px;height:390px;background:var(--pxbg) 0 0/844px 390px no-repeat;will-change:transform;pointer-events:none}
-#floor{display:none}
-#droid{left:101px;top:170px;width:64px;height:100px}
-#droid img,.pxs{display:block;image-rendering:pixelated}
-#droid .droidpx.i1{position:absolute;left:0;top:0}
-#droid .droidpx.i0{animation:pxA 1.6s steps(1) infinite} #droid .droidpx.i1{animation:pxB 1.6s steps(1) infinite}
-.pxfoe{display:block;width:100%;height:100%;overflow:visible}
-.pxfoe image{image-rendering:pixelated}
-.pxfoe .f0{animation:pxA var(--fr,1.2s) steps(1) infinite}
-.pxfoe .f1{animation:pxB var(--fr,1.2s) steps(1) infinite}
-@keyframes pxA{0%{opacity:1}50%{opacity:0}}
-@keyframes pxB{0%{opacity:0}50%{opacity:1}}
-.pxfoe.k-drone{--fr:.22s;animation:pxHover 1.4s steps(1) infinite}
-.pxfoe.k-hacker,.pxfoe.k-warden{animation:pxHover 1.8s steps(1) infinite}
-.pxfoe.k-welder{--fr:.18s} .pxfoe.k-crusher{--fr:.9s} .pxfoe.k-clock{--fr:1s} .pxfoe.k-hound{--fr:.5s}
-@keyframes pxHover{0%{transform:none}50%{transform:translateY(2px)}}
-.sp-jaw,.sp-flame{animation:none}
-.foe.pxdie{animation:pxDie .45s steps(8) forwards}
-@keyframes pxDie{0%{clip-path:inset(0 0 0 0)}100%{clip-path:inset(100% 0 0 0)}}
-#droid.lunge{animation:pxLunge .36s steps(6)}
-@keyframes pxLunge{0%{transform:none}30%{transform:translateX(56px)}60%{transform:translateX(56px)}100%{transform:none}}
-#droid.recoil{animation:pxRecoil .3s steps(3)}
-@keyframes pxRecoil{0%{transform:translateX(-8px)}100%{transform:none}}
-#droid.hit{animation:pxHit .3s steps(1)}
-@keyframes pxHit{0%{filter:brightness(2.4);transform:translateX(-6px)}25%{filter:none;transform:translateX(4px)}50%{transform:translateX(-2px)}75%,100%{transform:none}}
-#droid.stagger{animation:pxStagger .4s steps(4)}
-@keyframes pxStagger{0%{transform:translateX(-10px)}100%{transform:none}}
-#droid.glitch{animation:pxGlitch .3s steps(3)}
-@keyframes pxGlitch{0%{transform:translateX(4px)}33%{transform:translateX(-4px)}66%{transform:translateX(2px)}100%{transform:none}}
-#droid.casting{filter:none}
-#droid.casting img{animation:pxCast .5s steps(1) infinite}
-@keyframes pxCast{50%{filter:brightness(1.2)}}
-.foe.atk{animation:pxFAtk .28s steps(4)}
-@keyframes pxFAtk{0%{transform:none}25%{transform:translateX(-28px)}100%{transform:none}}
-.foe.ehit{animation:pxFHit .28s steps(1)}
-@keyframes pxFHit{0%{filter:brightness(2.4);transform:translateX(6px)}33%{filter:none;transform:translateX(-2px)}66%,100%{transform:none}}
-.foe.ejust{animation:pxFJust .45s steps(1)}
-@keyframes pxFJust{0%{filter:brightness(2.4);transform:translateX(12px)}20%{filter:none;transform:translateX(10px)}50%{transform:translateX(4px)}100%{transform:none}}
-.foe.dead{transform:none}
-.cwm.px{left:0;right:0;top:50%;bottom:auto;transform:translateY(-50%);opacity:1;justify-content:center}
-.cwm.px img{width:88px;height:60px}
-.cart{background:var(--art-bg)!important;box-shadow:none!important}
-.pxfx{position:absolute;pointer-events:none;image-rendering:pixelated;background-repeat:no-repeat;animation-name:pxSheet;animation-timing-function:steps(4);animation-fill-mode:forwards}
-@keyframes pxSheet{from{background-position:0 0}to{background-position:calc(var(--fw) * -4) 0}}
-canvas.pxbeam{animation:pxBeam .28s steps(4) forwards}
-@keyframes pxBeam{0%{clip-path:inset(0 100% 0 0)}40%{clip-path:inset(0 0 0 0);opacity:1}100%{clip-path:inset(0 0 0 0);opacity:0}}
-.pxbit{position:absolute;width:2px;height:2px;pointer-events:none;transition:transform .6s steps(8),opacity .6s steps(4)}
-.spark,.shard,.pix{border-radius:0!important;width:2px!important;height:2px!important;box-shadow:none!important}
-.slash,.beam,.shield{display:none!important}
-.after img{display:block;width:64px;height:100px}
-.droidart{image-rendering:pixelated}
-.u-art .droidart,.rs-still.info .droidart{width:128px;height:200px} .tt-art .droidart{width:192px;height:300px}
 /* --- OSの層: タイムライン --- */
 #screen{border:0;border-radius:0;background:linear-gradient(180deg,rgba(9,14,20,.9),rgba(7,11,16,.84));clip-path:var(--cut)}
 #screen::before{content:"";position:absolute;inset:0;border:1px solid #233140;clip-path:var(--cut);pointer-events:none}
@@ -1394,32 +1338,22 @@ canvas.pxbeam{animation:pxBeam .28s steps(4) forwards}
 .abanner b{text-shadow:-2px 0 rgba(63,240,255,.7),2px 0 rgba(255,42,75,.7)!important;font-family:var(--f-num)}
 .hbanner .hb-t b{text-shadow:-2px 0 rgba(63,240,255,.7),2px 0 rgba(255,42,75,.7)}
 .hbanner .hb-ch{filter:none}
-/* 部屋: 左の一枚絵はドット絵(世界の層)。種類の札だけをOSの層として左上に重ねる */
+/* 部屋 */
 #roomScr{background:var(--bg)!important}
-.rs-still{border:0!important;border-radius:0!important;background:#06080c!important;clip-path:var(--cut);overflow:hidden}
-.rs-still::before,.rs-still::after{display:none!important}
-.rs-still.px{display:block;padding:0}
-.rs-still.px .pxscene{position:absolute;left:0;top:0}
-.rs-still.px .rs-glyph{position:absolute;left:10px;top:10px;filter:none;opacity:1;animation:none;padding:5px;background:rgba(4,6,9,.85);color:var(--cy);clip-path:var(--cut-s)}
-.rs-still.px .rs-glyph svg{width:16px;height:16px}
-.rs-still.px.event .rs-glyph{color:var(--just2)}
-.rs-still.info{background:#06080c!important}
+.rs-still{border:0!important;border-radius:0!important;clip-path:var(--cut)}
 #roomScr.enter .rs-still{animation:bWin .26s steps(4)}
 #roomScr.enter .rs-main>*{animation:bRise .22s steps(3) backwards}
 @keyframes bRise{0%{opacity:0;transform:translateX(8px)}50%{opacity:1;transform:translateX(-2px)}100%{transform:none}}
-/* タイトル: 背景も世界の層のドット絵 */
-#titleScr{background:linear-gradient(90deg,rgba(6,8,12,.2),rgba(6,8,12,.85) 55%),var(--pxbg) 0 0/844px 390px no-repeat,var(--bg)!important;image-rendering:pixelated}
+/* タイトル */
 .tt-b{border-radius:0!important;clip-path:var(--cut-s);border-left-width:3px!important}
 .tt-b.main{background:linear-gradient(90deg,rgba(63,240,255,.16),rgba(63,240,255,.02) 80%),#0a1016!important;box-shadow:none!important}
 .tt-s{border-radius:0!important;clip-path:var(--cut-s)}
 .tt-logo{font-family:var(--f-num)!important;text-shadow:-2px 0 rgba(63,240,255,.6),2px 0 rgba(255,42,75,.6)!important}
-.tt-tower{opacity:.5}
 /* 敵の詳細・自機の詳細 */
 #focus{background:linear-gradient(90deg,var(--bg) 0,rgba(6,8,12,.96) 74%,transparent)}
 .urow,.u-head{border-radius:0}
 .stdesc{border-left-width:3px}
 .cards .card{clip-path:var(--cut)}
-@media (prefers-reduced-motion: reduce){.pxfoe,.pxfoe image,#droid .droidpx{animation:none!important}#droid .droidpx.i1{display:none}}
 </style>
 </head>
 <body>
@@ -1503,17 +1437,15 @@ canvas.pxbeam{animation:pxBeam .28s steps(4) forwards}
 <script src="data/attrs.js"></script>
 <script src="data/text.js"></script>
 <script src="js/engine.js"></script>
-<script src="js/px.js"></script>
 <script>
-const APP_VERSION = '0.47.0';
+const APP_VERSION = '0.48.0';
 const $ = s => document.querySelector(s);
 const EN = ENGINE, RULE = EN.RULE;
 const VIEW = RULE.view, NOW = 170, PX = 34, xs = c => NOW + c * PX, STRIP_Y = 150, SWIFT_VIS = 3;
 // 敵の行の高さ。敵が1体なら大きな1本(0.17.0 から1対1が前提)
 let ROWY = [52, 86, 120];
 const solo = () => S && S.b && S.b.foes.length === 1;
-/* 自機の絵(0.46.0: ドット絵 32×50 = 64×100)の中心と、肩の砲の位置 */
-const DROID = {x: 133, y: 220, sx: 160, sy: 188};
+const DROID = {x: 133, y: 206, sx: 156, sy: 162};
 const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const sleep = ms => new Promise(r => setTimeout(r, RM ? Math.min(ms, 40) : ms));
 const T_TICK = 110, T_SWIFT = 70;
@@ -1612,8 +1544,6 @@ const SPR = {
   hound:'<svg width="90" height="100" viewBox="0 -4 60 66" aria-hidden="true"><path d="M22 41l-4 9l-4 1M28 42l0 9M41 41l3 9M47 38l5 10l-3 1" stroke="#4d6578" stroke-width="2.4" stroke-linecap="round" fill="none"/><path d="M51 31l8-5" stroke="#4d6578" stroke-width="1.8" stroke-linecap="round"/><path d="M28 25l2-6l2 6M35 24l2-6l2 6M42 25l2-5l2 5" fill="none" stroke="#6f8ea2" stroke-width="1.2"/><path d="M18 31q9-9 27-5l7 6q-4 9-14 9H24q-8-1-6-10z" fill="#152130" stroke="#4d6578" stroke-width="1.2" stroke-linejoin="round"/><path d="M20 29l-13 1l-5 5l7 2l12-2z" fill="#152130" stroke="#4d6578" stroke-width="1.2" stroke-linejoin="round"/><path d="M19 27l2-7l3 6" fill="#152130" stroke="#4d6578" stroke-width="1.2"/><path d="M7 36.5l8 0.5" stroke="#2c4152" stroke-width="1"/><path d="M7 32.5l9-1" stroke="#ff4d6a" stroke-width="1.6" stroke-linecap="round"/><path d="M3 35.5h4" stroke="#2c4152" stroke-width="1"/></svg>',
   warden:'<svg width="90" height="100" viewBox="0 -4 60 66" aria-hidden="true"><rect x="19" y="0" width="22" height="58" rx="4" fill="#152130" stroke="#4d6578" stroke-width="1.2"/><rect x="6" y="14" width="10" height="30" rx="2" fill="#152130" stroke="#4d6578" stroke-width="1.2"/><rect x="44" y="14" width="10" height="30" rx="2" fill="#152130" stroke="#4d6578" stroke-width="1.2"/><circle cx="30" cy="16" r="5" fill="#ff4d6a" opacity=".85"/><path d="M24 30h12M24 36h12M24 42h12" stroke="#253545" stroke-width="2"/></svg>',
 };
-/* 0.46.0: 敵の絵はドット絵(js/px.js)。描いてある種類はそちらで置き換える */
-for(const k of PXA.kinds()) SPR[k] = PXA.foeSvg(k);
 
 const SLOTS = DATA.slots;
 const SLOT_BY = Object.fromEntries(SLOTS.map(s => [s.id, s]));
@@ -1716,7 +1646,7 @@ function nameHTML(c){
 }
 function cardInner(k, st, count, refs, cd){
   const c = CARDS[k], co = cd ? EN.costOf(cd) : c.cost, dc = co - c.cost;
-  return `<i class="ck" data-ck="${k}" data-rar="${DATA.rarityOf(k)}" hidden></i><span class="chd"><span class="cost${co === 0 ? ' zero' : ''}${dc > 0 ? ' cup' : dc < 0 ? ' cdn' : ''}">${co}</span>${nameHTML(c)}</span><span class="cart t-${cardType(c)}"><span class="cwm px">${PXA.artImg(cardType(c))}</span>${c.atomic ? '<i class="atom"></i>' : ''}<span class="cval"><span class="ic">${IC[cardType(c)]}</span><b>${cardVal(k, st)}</b></span></span><span class="ctx${((CARDS[k].text || '') + (CARDS[k].attrText || '')).replace(/\{\w+\}/g, '00').length > 22 ? ' long' : ''}">${cardText(k, st, refs)}</span>${count > 1 ? `<span class="cnt">×${count}</span>` : ''}`;
+  return `<i class="ck" data-ck="${k}" data-rar="${DATA.rarityOf(k)}" hidden></i><span class="chd"><span class="cost${co === 0 ? ' zero' : ''}${dc > 0 ? ' cup' : dc < 0 ? ' cdn' : ''}">${co}</span>${nameHTML(c)}</span><span class="cart t-${cardType(c)}"><span class="cwm">${IC[cardType(c)]}</span>${c.atomic ? '<i class="atom"></i>' : ''}<span class="cval"><span class="ic">${IC[cardType(c)]}</span><b>${cardVal(k, st)}</b></span></span><span class="ctx${((CARDS[k].text || '') + (CARDS[k].attrText || '')).replace(/\{\w+\}/g, '00').length > 22 ? ' long' : ''}">${cardText(k, st, refs)}</span>${count > 1 ? `<span class="cnt">×${count}</span>` : ''}`;
 }
 // 長押しで説明を出すキーワード: カードの文に出てくるもの
 function cardKw(k){
@@ -1835,7 +1765,6 @@ function renderMe(){
   for(const w of S.b.wards || []) st += `<span class="st ward" title="${DATA.kwName.guard}"><span class="ic">${IC.block}</span>${w.left}<i>/${w.s}</i></span>`;
   if(S.b.crack) st += `<span class="st crack"><span class="ic">${IC.crack}</span>${S.b.crack}</span>`;
   $('#meSts').innerHTML = st;
-  drawDroid();
 }
 function incoming(){
   const res = {};
@@ -2279,41 +2208,9 @@ function renderInner(){
 
 /* ---------- fx ---------- */
 function fxEl(cls, x, y, css){ const el = document.createElement('div'); el.className = cls; el.style.left = x + 'px'; el.style.top = y + 'px'; if(css) Object.assign(el.style, css); $('#fx').appendChild(el); return el; }
-/* ---------- 世界の層の効果(0.46.0): ドット絵のコマの帯・光線・破片。2pxの格子に乗せる ---------- */
 const g2 = v => Math.round(v / 2) * 2;
-function sheetFx(kind, x, y, w, h, ms){
-  const el = fxEl('pxfx', g2(x - w / 2), g2(y - h / 2), {width: w + 'px', height: h + 'px', backgroundImage: `url(${PXA.sheet(kind)})`, backgroundSize: `${w * 4}px ${h}px`, '--fw': w + 'px', animationDuration: ms + 'ms'});
-  el.style.setProperty('--fw', w + 'px'); setTimeout(() => el.remove(), ms + 40); return el;
-}
-function pxBeam(to, from){
-  from = from || {x: DROID.sx + 4, y: DROID.sy};
-  const x0 = Math.round(from.x / 2), y0 = Math.round(from.y / 2), x1 = Math.round(to.x / 2), y1 = Math.round(to.y / 2);
-  const mx = Math.min(x0, x1) - 2, my = Math.min(y0, y1) - 2, w = Math.abs(x1 - x0) + 5, h = Math.abs(y1 - y0) + 5;
-  const cv = document.createElement('canvas'); cv.width = w; cv.height = h; const c = cv.getContext('2d');
-  const n = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0)) || 1;
-  for(let k = 0; k <= n; k++){ const x = Math.round(x0 + (x1 - x0) * k / n) - mx, y = Math.round(y0 + (y1 - y0) * k / n) - my;
-    c.fillStyle = PXA.col(10); c.fillRect(x, y - 2, 1, 5); c.fillStyle = PXA.col(11); c.fillRect(x, y - 1, 1, 3); c.fillStyle = PXA.col(20); c.fillRect(x, y, 1, 1); }
-  cv.className = 'pxfx pxbeam'; Object.assign(cv.style, {left: mx * 2 + 'px', top: my * 2 + 'px', width: w * 2 + 'px', height: h * 2 + 'px'});
-  $('#fx').appendChild(cv); setTimeout(() => cv.remove(), 300);
-}
-function debris(x, y, cols, n, up){
-  for(let k = 0; k < n; k++){
-    const el = fxEl('pxbit', g2(x + (Math.random() - .5) * 40), g2(y + (Math.random() - .5) * 40)); el.style.background = PXA.col(cols[k % cols.length]);
-    const dx = g2((Math.random() - .5) * 60), dy = g2(up ? -20 - Math.random() * 50 : (Math.random() - .5) * 60);
-    el.getBoundingClientRect(); el.style.transform = `translate(${dx}px,${dy}px)`; el.style.opacity = '0';
-    setTimeout(() => el.remove(), 620);
-  }
-}
 /* OSの層: 当たった点で照準が弾ける */
 function osHit(p){ const el = fxEl('oslock', g2(p.x), g2(p.y - 6)); setTimeout(() => el.remove(), 300); }
-/* 自機の絵: 壊れた部位と構え(攻撃・射撃・被弾)で描き分ける。待機は2コマ */
-let DPOSE = null, DSIG = '';
-function drawDroid(force){
-  const el = $('#droid'); if(!el) return;
-  const dmg = new Set(); if(S && S.b && S.b.parts) for(const k in S.b.parts) if(S.b.parts[k].cur <= 0) dmg.add(k);
-  const g = [...dmg].join() + '|' + (DPOSE || ''); if(!force && g === DSIG) return; DSIG = g;
-  el.innerHTML = PXA.droidImg(dmg, DPOSE);
-}
 function floatAt(x, y, text, cls){ const el = document.createElement('div'); el.className = 'float ' + (cls || ''); el.textContent = text; el.style.left = x + 'px'; el.style.top = y + 'px'; $('#floats').appendChild(el); setTimeout(() => el.remove(), 950); }
 // ダメージの数字(0.40.0): 当たるたびに少し散らし、大きいほど数字を大きく。弾むように出る
 function dmgFloat(x, y, n, size){ const el = document.createElement('div'); el.className = 'float foe dm ' + size; el.textContent = '−' + n; el.style.left = x + 'px'; el.style.top = y + 'px'; el.style.fontSize = Math.min(34, 16 + n * .55) + 'px'; $('#floats').appendChild(el); setTimeout(() => el.remove(), 950); }
@@ -2386,18 +2283,18 @@ function sparks(x, y){
   }
 }
 function afterimage(){
-  const src = $('#droid img'); if(!src) return; const el = fxEl('after', 101, 170); el.appendChild(src.cloneNode(true));
+  const src = $('#droid svg').cloneNode(true), el = fxEl('after', 108, 142); el.appendChild(src);
   el.getBoundingClientRect(); el.style.transform = 'translateX(-14px)'; el.style.opacity = '0';
   setTimeout(() => el.remove(), 320);
 }
-function shieldFx(){ sheetFx('shield', DROID.x + 22, DROID.y - 4, 90, 150, 420); }
+function shieldFx(){ const el = fxEl('shield', 92, 136); setTimeout(() => el.remove(), 560); }
 function cardMotion(k, ti){
   const c = CARDS[k], d = $('#droid'), t = cardType(c);
   // 当たる場所: 全体のカードは敵のすべてのユニット、単体は狙ったユニット
   const pts = c.all ? S.b.foes.filter(e => e.alive).flatMap(e => (GEOM.get(e.i) && GEOM.get(e.i).multi ? EN.liveUids(e) : [null]).map(k2 => unitCenter(e.i, k2)))
     : (c.tgt && ti != null ? [unitCenter(tFoe(ti), tUnit(ti) || EN.defaultUid(S.b.foes[tFoe(ti)]))] : []);
-  if(t === 'melee'){ pulse(d, 'lunge', 380); for(const p of pts) setTimeout(() => { sheetFx('slash', p.x, p.y - 6, 66, 66, 220); sheetFx('spark', p.x, p.y - 6, 34, 34, 200); osHit(p); }, 90); }
-  else if(t === 'ranged'){ DPOSE = 'shot'; drawDroid(); pulse(d, 'recoil', 320); for(const p of pts){ pxBeam(p); setTimeout(() => { sheetFx('spark', p.x, p.y, 34, 34, 200); osHit(p); }, 70); } }
+  if(t === 'melee'){ pulse(d, 'lunge', 380); for(const p of pts){ const el = fxEl('slash', p.x, p.y - 10); setTimeout(() => el.remove(), 260); setTimeout(() => osHit(p), 90); } }
+  else if(t === 'ranged'){ pulse(d, 'recoil', 320); for(const p of pts){ beam(p); setTimeout(() => osHit(p), 70); } }
   else if(t === 'block' || t === 'parry') shieldFx();
   else if(t === 'timer'){ pulse(d, 'recoil', 320); for(const p of pts){ const el = fxEl('pin', p.x - 6, p.y - 40); setTimeout(() => el.remove(), 600); } }
   else if(t === 'delay' || t === 'crack'){
@@ -2418,8 +2315,8 @@ function unitTop(i, uid){ const g = GEOM.get(i); if(!g) return foeCenter(i); con
 function cardFx(x){
   switch(x.kind){
     case 'dmg': { const p = unitTop(x.e, x.unit), big = x.n >= 20, mid = x.n >= 10; dmgFloat(p.x + (Math.random() - .5) * 34, p.y + (Math.random() - .5) * 16, x.n, big ? 'big' : mid ? 'mid' : ''); if(big) hitStop(70); else if(x.n >= 14) hitStop(40); pulse(unitEl(x.e, x.unit), 'flash', 260); pulse(unitSpr(x.e, x.unit), 'ehit', 280); break; }
-    case 'kill': { const p = foeCenter(x.e), el = foeEl(x.e); if(el) el.classList.add('pxdie'); shards(p.x, p.y, '#d3e2ee'); debris(p.x, p.y, [5, 4, 8, 14, 20], 18, true); break; }
-    case 'unitBreak': { const p = unitCenter(x.e, x.unit); pulse(unitEl(x.e, x.unit), 'flash', 420); shards(p.x, p.y, '#ff8a9c'); pixels(p.x, p.y); debris(p.x, p.y, [4, 8, 14], 10, false); flashFx('brk'); rescan('UNIT'); break; }
+    case 'kill': { const p = foeCenter(x.e); shards(p.x, p.y, '#d3e2ee'); break; }
+    case 'unitBreak': { const p = unitCenter(x.e, x.unit); pulse(unitEl(x.e, x.unit), 'flash', 420); shards(p.x, p.y, '#ff8a9c'); pixels(p.x, p.y); flashFx('brk'); rescan('UNIT'); break; }
     case 'frenzy': { const p = foeCenter(x.e); floatAt(p.x, p.y - 70, '▲' + x.n, 'foe'); break; }
     case 'immune': { const p = unitTop(x.e, x.unit); floatAt(p.x, p.y, DATA.ui['fx.immune'], 'cy'); break; }
     case 'capped': { const p = unitTop(x.e, x.unit); floatAt(p.x + 24, p.y - 16, DATA.ui['fx.capped'], 'cy'); break; }
@@ -2459,9 +2356,9 @@ function hitMeFx(r){
   const y = partY(r.part);
   if(r.blocked) pulse($('#stBlk'), 'flash', 360);
   if(r.partLoss){ floatAt(70, y + 8, '−' + r.partLoss, 'foe'); pulse(document.querySelector(`.part[data-p="${r.part}"]`), 'flash', 320); }
-  if(r.broke){ sparks(DROID.x, DROID.y - 30); debris(DROID.x, DROID.y - 20, [4, 8, 14, 20], 8, false); }
+  if(r.broke) sparks(DROID.x, DROID.y - 30);
   if(r.bodyLoss) floatAt(150, 268, '−' + r.bodyLoss, 'foe');
-  if(r.hurt){ pulse($('#droid'), 'hit', 320); sheetFx('hurt', DROID.x + 6, DROID.y - 28, 34, 34, 220); flashFx('hurt'); if(r.raw >= 10) shake(); }
+  if(r.hurt){ pulse($('#droid'), 'hit', 320); flashFx('hurt'); if(r.raw >= 10) shake(); }
   else shieldFx();
 }
 async function foeFx(i, r){
@@ -2850,7 +2747,7 @@ function topBar(title){
 function showRoom(kind, body, still){
   const fresh = $('#roomScr').hidden || $('#roomScr')._kind !== kind; $('#roomScr')._kind = kind;
   UI.screen = 'room'; hideOv(); hideOv2(); $('#titleScr').hidden = true;
-  const left = typeof still === 'string' ? `<div class="rs-still info ${kind}">${still}</div>` : still ? `<div class="rs-still px ${kind}">${PXA.sceneImg(kind)}<span class="rs-glyph">${IC[kind]}</span></div>` : '';
+  const left = typeof still === 'string' ? `<div class="rs-still info ${kind}">${still}</div>` : still ? `<div class="rs-still ${kind}"><span class="rs-glyph">${IC[kind]}</span><span class="rs-noise"></span></div>` : '';
   $('#roomScr').innerHTML = `${topBar(AREA().name)}${left}<div class="rs-main${still ? '' : ' full'}">${body}</div>`;
   $('#roomScr').hidden = false; $('#mapScr').hidden = true;
   if(fresh) enter($('#roomScr'));
@@ -3333,8 +3230,16 @@ function infoPart(id){
   showOv(`<h2>${d.name}</h2><div class="pinfo"><span class="ic">${IC[id]}</span><div><b>${p.fn}${p.pt ? '(' + p.pt + ')' : ''} ${st.cur}/${st.max}</b><div class="pips" style="margin-top:6px">${pipsHTML(st.max, st.cur, st.cur, worn ? Math.ceil(st.max / 2) : st.max, pipW(st.max, 150))}</div></div></div><p style="margin:0 0 12px;font-size:12px">${refText(d.text)}</p>${closeRow}`, true);
 }
 // 機体とデッキ(0.18.7): 地図・部屋・メニューから開く。上のタブで切り替える
-/* 自機の絵(0.46.0: ドット絵)。dmg = 傷んだ・壊れた部位 */
-function droidArt(dmg, hl){ return PXA.droidImg(dmg || new Set(), null, 'droidart'); }
+function droidArt(dmg, hl){
+  const c = id => 'dp' + (dmg.has(id) ? ' dmg' : '') + (hl === id ? ' hl' : '');
+  return `<svg class="droidart" viewBox="0 0 98 250" aria-hidden="true">
+    <g class="${c('out')}"><path d="M26 50L14 116" stroke-width="7" stroke-linecap="round"/><path d="M72 50L84 110" stroke-width="8" stroke-linecap="round"/><circle cx="85" cy="115" r="6"/></g>
+    <g class="${c('mob')}"><path d="M40 134L34 236M58 134L66 236" stroke-width="10" stroke-linecap="round"/><rect x="26" y="232" width="16" height="7" rx="2"/><rect x="60" y="232" width="16" height="7" rx="2"/><rect x="30" y="120" width="38" height="14" rx="3" class="sh"/></g>
+    <g class="${c('dur')}"><path d="M24 44H74L68 122H30Z" class="sh"/><path d="M34 64H64M36 84H62M38 104H60" class="ln"/></g>
+    <g class="${c('calc')}"><rect x="44" y="30" width="10" height="10"/><rect x="34" y="6" width="30" height="26" rx="8" class="sh"/><rect x="40" y="15" width="20" height="5" rx="2" class="eye"/></g>
+    <g class="${c('arm')}"><rect x="66" y="34" width="28" height="9" rx="2" class="sh"/></g>
+  </svg>`;
+}
 function unitParts(){
   const run = S.run, dmg = new Set(SLOTS.filter(p => run.parts[p.id].damaged).map(p => p.id));
   const rows = SLOTS.map(p => {
@@ -3669,14 +3574,8 @@ addEventListener('resize', fit);
 for(const el of [$('#wrap'), stage]) el.addEventListener('scroll', () => { el.scrollTop = 0; el.scrollLeft = 0; });
 fit();
 buildStatic();
-/* 0.46.0: 世界の層(背景・自機)をドット絵に。初めて使う瞬間に止まらないよう、効果の絵は先に作っておく */
-{ const bg = document.createElement('div'); bg.id = 'pxbg'; $('#world').prepend(bg); document.documentElement.style.setProperty('--pxbg', `url(${PXA.bgUrl()})`);
-  for(const k of ['slash', 'spark', 'hurt', 'shield']) PXA.sheet(k);
-  for(const p of [null, 'atk', 'shot', 'hurt']) PXA.droidImg(new Set(), p);
-  drawDroid(true);
-  /* 構え: 突き・反動の間は攻撃(射撃)、被弾・よろめきの間は被弾のコマ */
-  new MutationObserver(() => { const c = $('#droid').classList, p = c.contains('lunge') ? 'atk' : c.contains('recoil') ? (DPOSE === 'shot' ? 'shot' : 'atk') : c.contains('hit') || c.contains('stagger') ? 'hurt' : null; if(p !== DPOSE){ DPOSE = p; drawDroid(); } }).observe($('#droid'), {attributes: true, attributeFilter: ['class']});
-  const th = document.createElement('div'); th.id = 'threat'; th.className = 'np'; $('#tl').appendChild(th); }
+/* 0.46.0: 敵の列の軌条に、次の攻撃までの区間を刻む */
+{  const th = document.createElement('div'); th.id = 'threat'; th.className = 'np'; $('#tl').appendChild(th); }
 dbgLoad(); applyEcon();
 showTitle();
 </script>

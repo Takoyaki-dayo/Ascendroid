@@ -5,7 +5,7 @@ import re, os, sys, shutil
 import subprocess
 # 0.41.2: 構文の誤りがあれば作らない
 _R = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-if subprocess.call(['node', os.path.join(_R, 'tools/publish/check.js'), os.path.join(_R, 'index.html'), os.path.join(_R, 'js/engine.js')] + [os.path.join(_R, 'data', f) for f in sorted(os.listdir(os.path.join(_R, 'data'))) if f.endswith('.js')]) != 0:
+if subprocess.call(['node', os.path.join(_R, 'tools/publish/check.js'), os.path.join(_R, 'index.html'), os.path.join(_R, 'js/engine.js'), os.path.join(_R, 'js/px.js')] + [os.path.join(_R, 'data', f) for f in sorted(os.listdir(os.path.join(_R, 'data'))) if f.endswith('.js')]) != 0:
     sys.exit('構文の誤りがあるので止めました')
 R = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 out = sys.argv[1]
@@ -24,4 +24,5 @@ open(out + '/index.html', 'w').write(s)
 for f in os.listdir(R + '/data'):
     if f.endswith('.js'): shutil.copy(R + '/data/' + f, out + '/data/' + f)
 shutil.copy(R + '/js/engine.js', out + '/js/engine.js')
+shutil.copy(R + '/js/px.js', out + '/js/px.js')
 print('ok', ver)

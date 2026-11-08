@@ -71,7 +71,7 @@ const { chromium } = require('playwright');
   }
   console.log('rooms:', rooms.join(' > '));
   console.log('log:', log.join(', '), 'losses', losses);
-  console.log('run:', JSON.stringify(await p.evaluate(() => ({alert: S.run.alert, lv: EN.alertLevel(S.run), body: S.run.body, scrap: S.run.scrap, deck: S.run.deck.length, parts: Object.values(S.run.parts).map(x => x.id)}))));
+  console.log('run:', JSON.stringify(await p.evaluate(() => ({heat: S.run.heat, lv: EN.heatLevel(S.run), body: S.run.body, scrap: S.run.scrap, deck: S.run.deck.length, parts: Object.values(S.run.parts).map(x => x.id)}))));
   console.log('errors:', JSON.stringify(errs.slice(0, 10)));
   await b.close();
 })();

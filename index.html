@@ -1347,6 +1347,78 @@ canvas.pxbeam{animation:pxBeam .28s steps(4) forwards}
 .fm{border-radius:0;clip-path:var(--cut-s)} .fm.ch{clip-path:polygon(5px 0,100% 0,calc(100% - 5px) 100%,0 100%)}
 .fsp{border-radius:0;clip-path:var(--cut-s)}
 .stchip{border-radius:0}
+/* --- 0.47.0: 戦闘以外の画面にも同じ決まりを当てる --- */
+/* 重ねる窓: 角を切った黒い面、上辺のシアンの線。背景のぼかしはやめる(端末に重い) */
+#ov{background:rgba(3,5,8,.86)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+#ov2{background:rgba(3,5,8,.6)}
+.box{border:0!important;border-radius:0!important;background:#0a0f15!important;box-shadow:none!important;clip-path:var(--cut);position:relative}
+.box::after{content:"";position:absolute;left:0;top:0;width:140px;height:2px;background:var(--cy);pointer-events:none}
+.box>*{position:relative}
+.box{outline:1px solid #1f2a36;outline-offset:-1px}
+.box h2::before,.rs-main h2::before{width:4px;height:15px;background:var(--cy);box-shadow:none;clip-path:polygon(0 0,100% 3px,100% 100%,0 calc(100% - 3px))}
+#ov.enter .box,#ov2.enter .box,#ref.enter .box{animation:bWin .22s steps(4)}
+#ov.enter .box::before,#ov2.enter .box::before,#ref.enter .box::before{display:none}
+@keyframes bWin{0%{opacity:0;transform:translateX(10px);clip-path:polygon(0 0,0 0,0 100%,0 100%)}50%{opacity:1;transform:translateX(-3px)}100%{transform:none;clip-path:var(--cut)}}
+/* ボタン: 塊は角を切ったシアン、控えめは枠だけ */
+.btn{border-radius:0!important;letter-spacing:.08em}
+.btn:not(.ghost){clip-path:var(--cut-s)!important;background:var(--cy)!important;color:#041417!important;box-shadow:none!important;border-color:transparent}
+.btn:not(.ghost):disabled{background:#173840!important;color:#4f7f8c!important}
+.btn.ghost{border:1px solid var(--cy-dim)!important;background:transparent!important;clip-path:var(--cut-s)}
+.mbtn{border-radius:0;clip-path:var(--cut-s);background:#0c1218;border-color:#1f2a36}
+.tabs{border-radius:0;border-color:#1f2a36} .tabs button.on{background:var(--cy);color:#041417}
+.seg button{border-radius:0;clip-path:var(--cut-s)}
+/* 選択肢: 角を切った面。選ぶと左にシアンの帯 */
+.opt{border-radius:0!important;background:#0c1218!important;border-color:#1f2a36!important;clip-path:var(--cut-s)}
+.opt.picked,.opt.sel{border-color:var(--cy)!important;box-shadow:inset 3px 0 0 var(--cy)!important;background:#0b1a20!important;translate:0 0}
+.ptile{border-radius:0;clip-path:var(--cut-s)}
+.sitem.sold{border-radius:0}
+.price{font-family:var(--f-num)}
+/* 上の帯 */
+.mh-bar{background:linear-gradient(180deg,#0b1016,#090d13)!important;border-bottom:1px solid #1f2a36!important}
+.mh-bar::after{width:180px;height:2px;bottom:-1px;background:var(--cy)!important}
+.mh-bar b{font-family:var(--f-num)}
+/* 地図: OSが描く施設の経路図。部屋は角を切った札、ボスは菱形 */
+.mn{border-radius:0!important;clip-path:polygon(6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%,0 6px);background:#0c1218!important;border-width:1.5px}
+.mn.reach{background:#0d1a20!important;animation:bReach 1.6s ease-in-out infinite!important}
+@keyframes bReach{0%{border-color:var(--nc)}50%{border-color:#1f2a36}}
+.mn.reach::after{display:none}
+.mn.sel{background:var(--nc)!important;color:#05080c!important;box-shadow:none!important;transform:none}
+.mn.here{box-shadow:none!important;outline:2px solid var(--cy);outline-offset:3px;clip-path:none}
+.mn.done{background:#0a1016!important}
+.mn.boss{clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)!important;width:58px;height:58px;margin:-29px 0 0 -29px}
+.mn.go{animation:bGo .24s steps(3)}
+@keyframes bGo{0%{transform:scale(1.25)}100%{transform:none}}
+.lane{border-radius:0!important;clip-path:var(--cut-s)}
+.mi-ic{border-radius:0!important;clip-path:polygon(5px 0,100% 0,100% calc(100% - 5px),calc(100% - 5px) 100%,0 100%,0 5px)}
+.abanner{background:linear-gradient(90deg,transparent,rgba(4,6,9,.94) 22%,rgba(4,6,9,.94) 78%,transparent)!important;border-top:1px solid var(--cy-dim);border-bottom:1px solid var(--cy-dim)}
+.abanner b{text-shadow:-2px 0 rgba(63,240,255,.7),2px 0 rgba(255,42,75,.7)!important;font-family:var(--f-num)}
+.hbanner .hb-t b{text-shadow:-2px 0 rgba(63,240,255,.7),2px 0 rgba(255,42,75,.7)}
+.hbanner .hb-ch{filter:none}
+/* 部屋: 左の一枚絵はドット絵(世界の層)。種類の札だけをOSの層として左上に重ねる */
+#roomScr{background:var(--bg)!important}
+.rs-still{border:0!important;border-radius:0!important;background:#06080c!important;clip-path:var(--cut);overflow:hidden}
+.rs-still::before,.rs-still::after{display:none!important}
+.rs-still.px{display:block;padding:0}
+.rs-still.px .pxscene{position:absolute;left:0;top:0}
+.rs-still.px .rs-glyph{position:absolute;left:10px;top:10px;filter:none;opacity:1;animation:none;padding:5px;background:rgba(4,6,9,.85);color:var(--cy);clip-path:var(--cut-s)}
+.rs-still.px .rs-glyph svg{width:16px;height:16px}
+.rs-still.px.event .rs-glyph{color:var(--just2)}
+.rs-still.info{background:#06080c!important}
+#roomScr.enter .rs-still{animation:bWin .26s steps(4)}
+#roomScr.enter .rs-main>*{animation:bRise .22s steps(3) backwards}
+@keyframes bRise{0%{opacity:0;transform:translateX(8px)}50%{opacity:1;transform:translateX(-2px)}100%{transform:none}}
+/* タイトル: 背景も世界の層のドット絵 */
+#titleScr{background:linear-gradient(90deg,rgba(6,8,12,.2),rgba(6,8,12,.85) 55%),var(--pxbg) 0 0/844px 390px no-repeat,var(--bg)!important;image-rendering:pixelated}
+.tt-b{border-radius:0!important;clip-path:var(--cut-s);border-left-width:3px!important}
+.tt-b.main{background:linear-gradient(90deg,rgba(63,240,255,.16),rgba(63,240,255,.02) 80%),#0a1016!important;box-shadow:none!important}
+.tt-s{border-radius:0!important;clip-path:var(--cut-s)}
+.tt-logo{font-family:var(--f-num)!important;text-shadow:-2px 0 rgba(63,240,255,.6),2px 0 rgba(255,42,75,.6)!important}
+.tt-tower{opacity:.5}
+/* 敵の詳細・自機の詳細 */
+#focus{background:linear-gradient(90deg,var(--bg) 0,rgba(6,8,12,.96) 74%,transparent)}
+.urow,.u-head{border-radius:0}
+.stdesc{border-left-width:3px}
+.cards .card{clip-path:var(--cut)}
 @media (prefers-reduced-motion: reduce){.pxfoe,.pxfoe image,#droid .droidpx{animation:none!important}#droid .droidpx.i1{display:none}}
 </style>
 </head>
@@ -1433,7 +1505,7 @@ canvas.pxbeam{animation:pxBeam .28s steps(4) forwards}
 <script src="js/engine.js"></script>
 <script src="js/px.js"></script>
 <script>
-const APP_VERSION = '0.46.0';
+const APP_VERSION = '0.47.0';
 const $ = s => document.querySelector(s);
 const EN = ENGINE, RULE = EN.RULE;
 const VIEW = RULE.view, NOW = 170, PX = 34, xs = c => NOW + c * PX, STRIP_Y = 150, SWIFT_VIS = 3;
@@ -2778,7 +2850,7 @@ function topBar(title){
 function showRoom(kind, body, still){
   const fresh = $('#roomScr').hidden || $('#roomScr')._kind !== kind; $('#roomScr')._kind = kind;
   UI.screen = 'room'; hideOv(); hideOv2(); $('#titleScr').hidden = true;
-  const left = typeof still === 'string' ? `<div class="rs-still info ${kind}">${still}</div>` : still ? `<div class="rs-still ${kind}"><span class="rs-glyph">${IC[kind]}</span><span class="rs-noise"></span></div>` : '';
+  const left = typeof still === 'string' ? `<div class="rs-still info ${kind}">${still}</div>` : still ? `<div class="rs-still px ${kind}">${PXA.sceneImg(kind)}<span class="rs-glyph">${IC[kind]}</span></div>` : '';
   $('#roomScr').innerHTML = `${topBar(AREA().name)}${left}<div class="rs-main${still ? '' : ' full'}">${body}</div>`;
   $('#roomScr').hidden = false; $('#mapScr').hidden = true;
   if(fresh) enter($('#roomScr'));

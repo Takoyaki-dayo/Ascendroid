@@ -273,5 +273,40 @@ window.PXA = (() => {
     return P;
   }
   const bgUrl = () => url('bg', 422, 195, bgProg(), {bevel: false, outline: false});
-  return {SC, sheet: k => FX[k](), col: i => PAL[i], droidImg, droidUrl, foeSvg, artImg, bgUrl, has: k => !!FOE[k], kinds: () => Object.keys(FOE), url, draw};
+  /* ---------- 部屋の一枚絵(165×163 = 330×326)。保守通路・不明な部屋・中継区画 ---------- */
+  function sceneProg(kind){
+    const W = 165, H = 163, P = [['r', 0, 0, W, H, 6]];
+    if(kind === 'duct'){
+      /* 一点透視の狭い通路。壁の配管と、奥の細い光 */
+      const vx = 86, vy = 74;
+      for(let k = 0; k < 7; k++){ const t = k / 7, x0 = Math.round(t * vx), y0 = Math.round(t * vy), x1 = Math.round(W - t * (W - vx)), y1 = Math.round(H - t * (H - vy));
+        const c = k < 2 ? 8 : k < 5 ? 7 : 6; P.push(['l', x0, y0, x1, y0, c], ['l', x0, y1, x1, y1, c], ['l', x0, y0, x0, y1, c], ['l', x1, y0, x1, y1, c]); }
+      for(const [x, y] of [[0, 0], [W - 1, 0], [0, H - 1], [W - 1, H - 1]]) P.push(['l', x, y, vx, vy, 8]);
+      P.push(['l', 0, 30, vx - 6, vy - 3, 9, 3], ['l', 0, 44, vx - 6, vy, 8, 2], ['l', W - 1, 24, vx + 6, vy - 4, 9, 2]);
+      for(let k = 1; k < 6; k++){ const t = k / 6; P.push(['d', [[Math.round(t * (vx - 6)), Math.round(30 + t * (vy - 3 - 30)) - 2]], k % 2 ? 11 : 10]); }
+      for(let k = 0; k < 9; k++){ const t = k / 9; P.push(['l', Math.round(t * vx * .9) + 4, H - 1 - Math.round(t * (H - vy) * .9), W - 5 - Math.round(t * (W - vx) * .9), H - 1 - Math.round(t * (H - vy) * .9), 7]); }
+      P.push(['r', vx - 5, vy - 6, 10, 12, 7], ['r', vx - 1, vy - 5, 2, 10, 10], ['r', vx - 1, vy - 2, 2, 4, 11]);
+    } else if(kind === 'transit'){
+      /* 縦の昇降路。ケーブル、かご、階の表示灯 */
+      for(let x = 12; x < W; x += 28) P.push(['r', x, 0, 1, H, 7]);
+      P.push(['r', 40, 0, 2, 120, 8], ['r', 122, 0, 2, 120, 8], ['r', 70, 0, 1, 40, 9], ['r', 94, 0, 1, 40, 9]);
+      P.push(['r', 34, 40, 96, 4, 8], ['r', 34, 118, 96, 6, 8], ['r', 34, 44, 3, 74, 7], ['r', 127, 44, 3, 74, 7]);
+      for(let y = 48; y < 116; y += 10) P.push(['r', 38, y, 88, 1, 7]);
+      P.push(['r', 34, 124, 96, 3, 19], ['d', Array.from({length: 24}, (_, k) => [36 + k * 4, 125]), 18]);
+      for(let k = 0; k < 6; k++) P.push(['r', 146, 30 + k * 14, 6, 8, k === 2 ? 11 : 8], ['r', 147, 31 + k * 14, 4, 6, k === 2 ? 12 : 7]);
+      P.push(['r', 0, 136, W, 27, 7], ['r', 0, 136, W, 1, 9]);
+    } else {
+      /* 閉じた扉。中央の紫の隙間、上の赤いセンサー、足元の警告の縞 */
+      for(let x = 0; x < W; x += 33) P.push(['r', x, 0, 1, H, 7]);
+      P.push(['r', 0, 30, W, 1, 7], ['r', 0, 130, W, 33, 7], ['r', 0, 130, W, 1, 9]);
+      P.push(['r', 44, 26, 78, 106, 8], ['r', 48, 30, 70, 100, 6], ['r', 49, 31, 34, 98, 7], ['r', 84, 31, 33, 98, 7]);
+      P.push(['r', 82, 31, 3, 98, 16], ['r', 83, 31, 1, 98, 17], ['d', [[83, 70], [83, 71]], 20]);
+      P.push(['r', 78, 18, 10, 4, 8], ['r', 81, 19, 4, 2, 14], ['d', [[82, 19]], 15]);
+      for(let x = 48; x < 118; x += 6) P.push(['l', x, 136, x + 4, 132, 18], ['l', x + 1, 136, x + 5, 132, 19]);
+      P.push(['r', 54, 60, 6, 2, 9], ['r', 106, 60, 6, 2, 9]);
+    }
+    return P;
+  }
+  const sceneImg = kind => `<img class="pxs pxscene" alt="" src="${url('scene:' + kind, 165, 163, sceneProg(kind), {bevel: false, outline: false})}" width="330" height="326">`;
+  return {SC, sceneImg, sheet: k => FX[k](), col: i => PAL[i], droidImg, droidUrl, foeSvg, artImg, bgUrl, has: k => !!FOE[k], kinds: () => Object.keys(FOE), url, draw};
 })();

@@ -51,6 +51,14 @@ main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax
 .listwrap{min-width:0;display:flex;flex-direction:column;gap:8px;min-height:0}
 .tools{display:flex;gap:8px;align-items:center}
 .tools input{flex:1;min-width:0;border:1px solid var(--line);background:var(--panel);border-radius:6px;padding:6px 10px}
+/* 絞り込み(0.45.4): 観点の中は「どれか」、観点どうしは「すべて」 */
+.fbtn .fn{display:inline-block;min-width:16px;margin-left:4px;padding:0 5px;border-radius:8px;background:var(--cy);color:var(--bg);font-size:11px;line-height:16px}
+.fpanel{border:1px solid var(--line);border-radius:8px;background:var(--panel);padding:8px 10px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 10px;align-items:start;max-height:42vh;overflow:auto}
+.fpanel>i{font-style:normal;font-size:12px;color:var(--fg2);padding-top:2px;white-space:nowrap}
+.fpanel .chip em{font-style:normal;color:var(--fg2);margin-left:3px;font-size:11px}
+.fpanel .fend{grid-column:1/-1;display:flex;gap:8px;align-items:center}
+.factive{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.factive .chip::after{content:'×';margin-left:4px;color:var(--fg2)}
 .btn{border:1px solid var(--cy);background:var(--cy);color:var(--bg);font-weight:700;border-radius:6px;padding:6px 14px;white-space:nowrap}
 .btn.ghost{background:transparent;color:var(--cy)}
 .btn.quiet{border-color:var(--line);background:var(--panel);color:var(--fg2)}
@@ -234,7 +242,8 @@ tr.row.cut td{opacity:.45} tr.row.cut td.nm{text-decoration:line-through}
   </header>
   <main>
     <section class="listwrap" id="listwrap">
-      <div class="tools"><input id="q" type="search" placeholder="名前・キーで絞り込む" aria-label="絞り込み"><button class="btn ghost" id="addBtn" type="button">＋ 追加</button><button class="btn quiet" id="deckBtn" type="button" hidden>最初のデッキ</button><button class="btn" id="playBtn" type="button" hidden>試遊</button></div>
+      <div class="tools"><input id="q" type="search" placeholder="名前・キーで探す" aria-label="名前・キーで探す"><button class="btn quiet fbtn" id="fBtn" type="button" aria-expanded="false">絞り込み</button><button class="btn ghost" id="addBtn" type="button">＋ 追加</button><button class="btn quiet" id="deckBtn" type="button" hidden>最初のデッキ</button><button class="btn" id="playBtn" type="button" hidden>試遊</button></div>
+      <div id="fbar"></div>
       <div class="tbl" id="tbl"></div>
     </section>
     <aside class="side" id="side"></aside>
@@ -546,7 +555,7 @@ function groupLabel(o, parent){
 }
 
 /* ---------- 状態 ---------- */
-const S = {kind:'cards', sel:null, q:'', draft:null, json:false, jsonText:'', jsonErr:'', comment:'', reqFilter:'active', mobileOpen:false, wb:null, wbFilter:'all', wbDeckOpen:false, wbDeckDraft:null};
+const S = {kind:'cards', sel:null, q:'', draft:null, json:false, jsonText:'', jsonErr:'', comment:'', reqFilter:'active', mobileOpen:false, wb:null, wbFilter:'all', fct:{}, fOpen:false, wbDeckOpen:false, wbDeckDraft:null};
 let DB = null, REQ = [], dbState = 'wait';
 const openCount = (kind, key) => REQ.filter(r => r.kind === kind && r.key === key && (r.status === 'open' || r.status === 'discuss')).length;
 const kindOpen = kind => REQ.filter(r => r.kind === kind && (r.status === 'open' || r.status === 'discuss')).length;
@@ -668,12 +677,10 @@ function effHTML(c, wide){
 }
 function wbStatusBadge(st){ return st === 'base' ? '' : `<span class="badge w-${st}">${WST[st] || st}</span>`; }
 function wbListHTML(){
-  const q = S.q.trim().toLowerCase(), f = S.wbFilter || 'all';
-  const rows = wbRows().filter(r => (!q || (r.card.name || '').toLowerCase().includes(q) || r.key.includes(q)) &&
-    (f === 'all' || (f === 'changed' ? r.status !== 'base' : f === 'review' ? r.status === 'review' : f === 'reviewed' ? r.status === 'reviewed' : f === 'pool' ? r.status !== 'cut' : true)));
+  const q = S.q.trim().toLowerCase();
+  const rows = wbRows().filter(r => (!q || (r.card.name || '').toLowerCase().includes(q) || r.key.includes(q)) && fPass('cards', r));
   const deck = wbDeck(), cnt = k => deck.filter(x => x === k).length;
-  const fl = [['all', 'すべて'], ['changed', '工房で変えた'], ['review', '添削待ち'], ['reviewed', '添削済み']].map(([k, n]) => `<button type="button" class="btn ${f === k ? '' : 'quiet'} sm" data-wbf="${k}">${n}</button>`).join('');
-  return `<div class="wbbar">${fl}<span class="sp"></span><span class="note">1サイクルあたり(パーツ抜き)。<b class="up">水色</b>は初期カードより強い、<b class="dn">赤</b>は弱い</span></div>
+  return `<div class="wbbar"><span class="note">${rows.length}枚</span><span class="sp"></span><span class="note">1サイクルあたり(パーツ抜き)。<b class="up">水色</b>は初期カードより強い、<b class="dn">赤</b>は弱い</span></div>
   <table class="wbt"><thead><tr><th>レア度</th><th>コスト</th><th>名前</th><th>種類</th><th>効果(K-7)</th><th>1サイクルあたり</th><th>状態</th></tr></thead><tbody>${rows.map(r => {
     const th = r.doc && r.doc.thread ? r.doc.thread.length : 0, d = cnt(r.key);
     return `<tr class="row${S.sel === r.key ? ' sel' : ''}${r.status === 'cut' ? ' cut' : ''}${cardNeedsMe(r.doc) ? ' hl' : ''}" data-key="${esc(r.key)}" tabindex="0"><td><span class="rar r-${r.rarity || 'none'}">${RARITY[r.rarity] || '—'}</span></td><td class="num">${r.card.cost}</td>
@@ -983,7 +990,7 @@ const abText = a => withTmp(a, k => D.attrText(k));
 const abCards = a => withTmp(a, k => wbRows().filter(r => r.status !== 'cut' && !r.card.junk && D.attrOk(r.card, k)));
 function abNeedsMe(d){ return cardNeedsMe(d); }
 function abListHTML(){
-  const q = S.q.trim().toLowerCase(), rows = abRows().filter(r => !q || (r.attr.name || '').toLowerCase().includes(q) || r.key.includes(q));
+  const q = S.q.trim().toLowerCase(), rows = abRows().filter(r => (!q || (r.attr.name || '').toLowerCase().includes(q) || r.key.includes(q)) && fPass('attrs', r));
   if(!rows.length) return `<div class="note" style="padding:14px">属性はまだありません。「＋ 新しい属性」で作ります。カードに1つだけ付き、名前がカード名の頭に付きます(「〇〇された連撃」)。</div>`;
   return `<table class="wbt"><thead><tr><th>名前</th><th>いつ</th><th>効果</th><th>付けられるカード</th><th>状態</th></tr></thead><tbody>${rows.map(r => {
     const th = r.doc && r.doc.thread ? r.doc.thread.length : 0, n = abCards(r.attr).length, un = !!ABDRAFT[r.key] || !!(S.ab && S.ab.key === r.key && S.ab.dirty);
@@ -1087,7 +1094,74 @@ function renderTabs(){ bulkLabel();
   $('#tabs').innerHTML = KINDS.map(k => { const rp = kindReplies(k.id), n = k.wb ? 0 : kindOpen(k.id); return `<button class="tab${S.kind === k.id ? ' on' : ''}${rp ? ' hl' : ''}" type="button" data-tab="${k.id}">${k.label}${rp ? `<span class="n rp" title="Claude の返事">${rp}</span>` : n ? `<span class="n">${n}</span>` : ''}</button>`; }).join('')
     + (() => { const rp = REQ.filter(needsMe).length; return `<button class="tab${S.kind === 'requests' ? ' on' : ''}${rp ? ' hl' : ''}" type="button" data-tab="requests">依頼${rp ? `<span class="n rp" title="Claude の返事">${rp}</span>` : all ? `<span class="n">${all}</span>` : ''}</button>`; })();
 }
+/* 絞り込み(0.45.4、会話B): タブごとの観点。get は行から値の一覧を返す。値の並びは order があればその順、無ければ多い順 */
+const FSTATUS = {id:'st', label:'状態', get:r => [r.status || (r.doc && r.doc.status) || 'base'], name:v => WST[v] || v, order:Object.keys(WST)};
+const FREPLY = {id:'rp', label:'返事', get:(r, kind) => (cardNeedsMe(r.doc) || itemReplies(kind, r.key)) ? ['返事あり'] : []};
+const cardKinds = c => { const t = []; if(c.dmg || c.timer || (c.spend && c.spend.dmg) || c.all > 0) t.push('ダメージ'); if(c.block || (c.spend && c.spend.block != null) || c.blockBonus) t.push('ブロック'); if(c.ward) t.push('防壁');
+  if(c.delay) t.push('ディレイ'); if(c.draw || c.refDraw) t.push('ドロー'); if(c.dot || c.dotCut) t.push('侵食'); if(c.gain || c.spend) t.push('充電'); if(c.timer) t.push('時限'); if(c.crack || c.selfCrack) t.push('クラック');
+  if(c.amp || c.ampAll) t.push('増幅'); if(c.fort) t.push('堅固'); if(c.parry || c.justBreak || c.justWeak || c.breakNext) t.push('JUST・ブレイク'); if(c.exile || c.exileHand || c.discardExile) t.push('廃棄'); if(c.discard) t.push('捨てる'); if(c.shift) t.push('コスト減'); if(c.selfDmg) t.push('自傷'); return t; };
+const cardKw = c => { const tx = c.text || genText(c); return Object.keys(D.keywords || {}).filter(n => n && tx.includes(n)); };
+const FOEMECH = [['ch', '不安定'], ['wind', '体勢'], ['guard', '防壁'], ['counter', '反撃'], ['counterAfter', '反撃'], ['rec', '隙'], ['recPre', '隙'], ['zone', '射界'], ['haste', '加速'], ['noise', '汚染'], ['junk', '汚染'], ['shatter', '汚染'],
+  ['shred', '剥がす'], ['gain', '充電'], ['spend', '充電'], ['armor', 'ブロック'], ['fort', '堅固'], ['heal', '修理'], ['rebuild', '修理'], ['buff', '増幅'], ['crack', 'クラック'], ['eat', '飲み込む'], ['steal', '盗む'], ['flee', '逃走'], ['summon', '増援'],
+  ['mimic', '写し'], ['prime', '上乗せ'], ['armorDmg', 'ブロックで攻撃'], ['armorSpend', 'ブロックで攻撃'], ['link', '連動'], ['hits', '多段']];
+const foeActs = o => [...(o.open || []), ...(o.pat || []), ...((o.phase || {}).open || []), ...((o.phase || {}).pat || []), ...(((o.phase || {}).next || {}).pat || []), ...(o.wary || []).flatMap(w => [...(w.open || []), ...(w.pat || [])])];
+const foeMech = o => { const t = new Set(); for(const a of foeActs(o)){ for(const [k, n] of FOEMECH) if(a[k] && (k !== 'hits' || a.hits > 1)) t.add(n); if(a.p === 'rand') t.add('ランダムの部位'); if(a.kind === 'delay') t.add('自分にディレイ'); }
+  if(o.open) t.add('開幕'); if(o.phase) t.add('段階変化'); if(o.wary && o.wary.length) t.add('警戒版'); if(o.ai === 'rand') t.add('行動がランダム'); if(o.react) t.add('反応'); if(o.broke) t.add('壊れると変わる');
+  if(o.units && Object.values(o.units).some(u => u.shelter)) t.add('無敵の本体'); return [...t]; };
+const foeHp = o => o.units ? Object.values(o.units).reduce((a, u) => a + (u.hp || 0), 0) : (o.hp || 0);
+const FACETS = {
+  cards:[FSTATUS, {id:'ra', label:'レア度', get:r => [r.rarity || ''], name:v => RARITY[v] || v, order:Object.keys(RARITY)},
+    {id:'co', label:'コスト', get:r => [r.card.cost >= 5 ? '5+' : String(r.card.cost ?? '?')], order:['0', '1', '2', '3', '4', '5+']},
+    {id:'ki', label:'効果', get:r => cardKinds(r.card)}, {id:'kw', label:'キーワード', get:r => cardKw(r.card)},
+    {id:'tg', label:'対象', get:r => [r.card.all ? '全体' : r.card.tgt ? '単体' : '自分'], order:['単体', '全体', '自分']},
+    {id:'tn', label:'間合い', get:r => r.card.dmg && r.card.dmg.t ? [TNAME[r.card.dmg.t] || r.card.dmg.t] : []},
+    {id:'ex', label:'ほか', get:r => [wbDeck().includes(r.key) ? '最初のデッキ' : '', r.card.up ? '強化の形あり' : '', r.isNew ? '新しいカード' : '', wbUnsaved(r.key) ? '未保存' : ''].filter(Boolean)}, FREPLY],
+  attrs:[FSTATUS, {id:'ra', label:'レア度', get:r => [r.rarity || ''], name:v => RARITY[v] || v, order:Object.keys(RARITY)},
+    {id:'on', label:'いつ', get:r => [r.attr.on || ''], name:v => ({hit:'ヒットごと', cast:'発動したとき', just:'JUST のとき', break:'ブレイクしたとき', mod:'カードを変える'})[v] || v},
+    {id:'fx', label:'効果', get:r => Object.keys(r.attr.fx || {}), name:v => ({crack:'クラック', delay:'ディレイ', gain:'充電', block:'ブロック', draw:'ドロー', again:'もう1回', dotn:'侵食の回数', dotp:'侵食の威力', heal:'回復', all:'全体', exile:'廃棄', dmgUp:'ダメージ+', atomic:'アトミック'})[v] || v}, FREPLY],
+  foes:[{id:'ap', label:'出るところ', get:it => { const a = foeAppear(it.key).map(x => x === 'エリート' ? 'エリート' : /ボス/.test(x) ? x.split(' ')[0] + ' ボス' : x.split(' ')[0]); return a.length ? [...new Set(a)] : ['出ない(案)']; }},
+    FSTATUS, {id:'sh', label:'形', get:it => [it.obj.units && Object.keys(it.obj.units).length > 1 ? 'ユニット複数' : 'ユニット1つ']},
+    {id:'me', label:'仕組み', get:it => foeMech(it.obj)},
+    {id:'pa', label:'パッシブ', get:it => (it.obj.passives || []).map((p, j) => (it.obj.pname || {})[j] || p.k)},
+    {id:'hp', label:'耐久', get:it => { const h = foeHp(it.obj); return [h <= 80 ? '〜80' : h <= 120 ? '81〜120' : h <= 180 ? '121〜180' : '181〜']; }, order:['〜80', '81〜120', '121〜180', '181〜']}, FREPLY],
+  parts:[{id:'sl', label:'部位', get:it => [it.obj.slot], name:v => SLOT[v] || v, order:D.slots.map(x => x.id)}, {id:'ra', label:'レア度', get:it => [it.obj.rarity || ''], name:v => RARITY[v] || v, order:Object.keys(RARITY)}, FREPLY],
+  encounters:[{id:'kd', label:'区分', get:it => [it.obj.boss ? 'ボス' : it.obj.elite ? 'エリート' : it.obj.draft ? '案' : '通常'], order:['通常', 'エリート', 'ボス', '案']},
+    {id:'ar', label:'エリア', get:it => (D.areas || []).map((A, i) => (A.pools || []).some(p => p.enc.includes(it.key)) || A.boss === it.key ? 'エリア' + (i + 1) : '').filter(Boolean)}],
+};
+const fSel = kind => (S.fct[kind] = S.fct[kind] || {});
+const fCount = kind => Object.values(S.fct[kind] || {}).reduce((a, v) => a + ((v && v.length) || 0), 0);
+const fRowsAll = kind => kind === 'cards' ? wbRows() : kind === 'attrs' ? abRows() : curItems();
+function fPass(kind, r){
+  const sel = S.fct[kind]; if(!sel) return true;
+  for(const F of FACETS[kind] || []){ const want = sel[F.id]; if(!want || !want.length) continue; const have = F.get(r, kind); if(!want.some(v => have.includes(v))) return false; }
+  return true;
+}
+// 選択肢は、ほかの観点の絞り込みを掛けた残りで数える(0件の値は出すが薄くする)
+function fbarHTML(kind){
+  const Fs = FACETS[kind]; if(!Fs){ return ''; }
+  const sel = fSel(kind), all = fRowsAll(kind);
+  if(!S.fOpen){
+    const on = Fs.flatMap(F => (sel[F.id] || []).map(v => `<button type="button" class="chip on" data-fx-f="${F.id}" data-fx-v="${esc(v)}" title="外す">${esc(F.label)}: ${esc(F.name ? F.name(v) : v)}</button>`));
+    return on.length ? `<div class="factive">${on.join('')}<button type="button" class="btn quiet sm" data-fx-clear="1">解除</button></div>` : '';
+  }
+  const body = Fs.map(F => {
+    const keep = sel[F.id]; delete sel[F.id]; const rest = all.filter(r => fPass(kind, r)); if(keep) sel[F.id] = keep;
+    const cnt = {}; for(const r of all) for(const v of F.get(r, kind)) cnt[v] = cnt[v] || 0;
+    for(const r of rest) for(const v of F.get(r, kind)) cnt[v]++;
+    const vals = Object.keys(cnt).filter(v => cnt[v] || (sel[F.id] || []).includes(v)); if(!vals.length) return ''; /* 当てはまるものが無い値は出さない(選んでいるものは残す) */
+    vals.sort((a, b) => F.order ? ((F.order.indexOf(a) + 1 || 999) - (F.order.indexOf(b) + 1 || 999)) : (cnt[b] - cnt[a]) || a.localeCompare(b, 'ja'));
+    return `<i>${esc(F.label)}</i><div class="chips">${vals.map(v => `<button type="button" class="chip${(sel[F.id] || []).includes(v) ? ' on' : ''}" data-fx-f="${F.id}" data-fx-v="${esc(v)}">${esc(F.name ? F.name(v) : v)}<em>${cnt[v]}</em></button>`).join('')}</div>`;
+  }).join('');
+  const n = all.filter(r => fPass(kind, r)).length;
+  return `<div class="fpanel">${body}<div class="fend"><span class="note">${n}件 / ${all.length}件。同じ行の中はどれか、行どうしはすべてに当てはまるもの</span><span class="sp" style="flex:1"></span><button type="button" class="btn quiet sm" data-fx-clear="1">解除</button><button type="button" class="btn sm" data-fx-close="1">閉じる</button></div></div>`;
+}
+function renderFbar(){
+  const has = !!FACETS[S.kind] && S.kind !== 'requests', n = fCount(S.kind), b = $('#fBtn');
+  b.hidden = !has; b.innerHTML = `絞り込み${n ? `<span class="fn">${n}</span>` : ''}`; b.setAttribute('aria-expanded', S.fOpen ? 'true' : 'false');
+  $('#fbar').innerHTML = has ? fbarHTML(S.kind) : '';
+}
 function renderList(){
+  renderFbar();
   const req = S.kind === 'requests';
   $('#listwrap').querySelector('.tools').hidden = req;
   if(req){ $('#tbl').innerHTML = `<div class="reqpane" style="padding:10px">${renderReqPane()}</div>`; return; }
@@ -1096,7 +1170,7 @@ function renderList(){
   if(wbm){ $('#tbl').innerHTML = wbListHTML(); return; }
   if(abm){ $('#tbl').innerHTML = abListHTML(); return; }
   const K = KBY[S.kind], q = S.q.trim().toLowerCase();
-  const items = curItems().filter(it => !q || (it.name || '').toLowerCase().includes(q) || it.key.toLowerCase().includes(q));
+  const items = curItems().filter(it => (!q || (it.name || '').toLowerCase().includes(q) || it.key.toLowerCase().includes(q)) && fPass(S.kind, it));
   // 追加の依頼(0.34.1): このタブから送った新しい項目は本体に入るまで一覧に無いので、上に並べる(押すと依頼のタブへ)
   const nr = REQ.filter(r => r.kind === S.kind && r.type === 'new' && (r.status === 'open' || r.status === 'discuss'));
   const nrh = nr.length ? `<div class="newreq">追加の依頼: ${nr.map(r => `<button type="button" class="btn quiet sm" data-tab="requests">${esc(r.label || r.key)}</button>`).join('')}</div>` : '';
@@ -1364,6 +1438,10 @@ document.addEventListener('click', e => {
   const pl = t.closest('[data-pool]'); if(pl && S.draft){ const k = pl.dataset.pool, a = (edObj().pool = (edObj().pool || []).slice()), i = a.indexOf(k); if(i >= 0) a.splice(i, 1); else a.push(k); renderSide(); later(); return; }
   // カード工房
   const wf = t.closest('[data-wbf]'); if(wf){ S.wbFilter = wf.dataset.wbf; renderList(); return; }
+  if(t.closest('#fBtn')){ S.fOpen = !S.fOpen; renderList(); return; }
+  const fc = t.closest('[data-fx-f]'); if(fc){ const sel = fSel(S.kind), F = fc.dataset.fxF, v = fc.dataset.fxV, a = sel[F] = sel[F] || []; const i = a.indexOf(v); if(i < 0) a.push(v); else a.splice(i, 1); renderList(); return; }
+  if(t.closest('[data-fx-clear]')){ S.fct[S.kind] = {}; renderList(); return; }
+  if(t.closest('[data-fx-close]')){ S.fOpen = false; renderList(); return; }
   const wt = t.closest('[data-wbtext]'); if(wt && S.wb){ S.wb.custom = wt.dataset.wbtext === 'custom'; if(S.wb.custom && !wbEd().text) wbEd().text = genText(wbEd()); upSync(); S.wb.dirty = true; renderSide(); return; }
   // カードの強化版の切り替え(0.38.0)
   const wv = t.closest('[data-wbview]'); if(wv && S.wb && !wv.disabled){ const m = wv.dataset.wbview; if(m === 'auto'){ delete S.wb.card.up; S.wb.dirty = true; } S.wb.view = m === 'base' ? 'base' : 'up'; if(S.wb.view === 'up') S.wb.upEd = upEdOf(S.wb.card, S.wb.key); S.wb.foldUp = null; renderSide(); if(m === 'auto') renderList(); return; }

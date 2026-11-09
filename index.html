@@ -234,6 +234,11 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 /* 文が長いカードは絵を低くして5行まで入れる */
 .card:has(.ctx.long) .cart{height:36px}
 .ctx.long{font-size:9.5px;line-height:1.35}
+/* 0.51.0: さらに長い文(6行)は絵をもっと低くし、字を少し小さく。下と横に余白を残し、二重の縁(内側4px)や選択の線に文字が掛からないように */
+.card:has(.ctx.xlong) .cart{height:24px}
+.card:has(.ctx.xlong) .cwm{display:none}
+.ctx.xlong{font-size:9px;line-height:1.3}
+.card .ctx{padding:4px 8px 8px}
 .cnt{position:absolute;right:5px;bottom:5px;font-family:var(--f-num);font-size:11px;font-weight:700;color:var(--cy)}
 #redraw{position:absolute;left:742px;top:302px;width:92px;height:80px;border:1px solid #233446;border-radius:8px;background:var(--panel);color:var(--fg2);display:flex;align-items:center;justify-content:center;gap:8px;transition:top .15s,border-color .15s,box-shadow .15s,opacity .25s,transform .25s}
 #redraw svg{width:20px;height:20px}
@@ -1358,7 +1363,7 @@ body.hs *{animation-play-state:paused!important;transition:none!important}
 .vslash .a{stroke:#fff;stroke-width:6}.vslash .b{stroke:var(--cy);stroke-width:2.5}.vslash .c{stroke:rgba(255,255,255,.5);stroke-width:1}
 .vbeam{position:absolute;height:6px;transform-origin:0 50%;pointer-events:none;background:linear-gradient(90deg,rgba(63,240,255,0),var(--cy) 18%,#fff 55%,var(--cy));border-radius:3px}
 .vguard{position:absolute;width:34px;height:124px;pointer-events:none;border-right:3px solid var(--cy);border-radius:0 70% 70% 0/0 50% 50% 0;background:linear-gradient(90deg,transparent 30%,rgba(63,240,255,.22));transform-origin:0 50%}
-.vpkt{position:absolute;width:6px;height:6px;margin:-3px 0 0 -3px;background:var(--cy);pointer-events:none;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}
+.vpkt{position:absolute;width:9px;height:9px;margin:-4.5px 0 0 -4.5px;box-shadow:0 0 6px var(--cy);background:var(--cy);pointer-events:none;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}
 .vcut{position:absolute;width:220px;height:4px;transform-origin:50% 50%;pointer-events:none;background:linear-gradient(90deg,transparent,var(--just2) 20%,#fff 50%,var(--just2) 80%,transparent)}
 .vcut.cy{background:linear-gradient(90deg,transparent,var(--cy) 20%,#fff 50%,var(--cy) 80%,transparent)}
 .vcut.red{width:160px;background:linear-gradient(90deg,transparent,var(--foe2) 20%,#fff 50%,var(--foe2) 80%,transparent)}
@@ -1468,6 +1473,48 @@ body.hs *{animation-play-state:paused!important;transition:none!important}
 .rs-ring::after{content:"";position:absolute;inset:26px;border-radius:50%;border:2px solid transparent;border-top-color:color-mix(in srgb,currentColor 70%,transparent);border-bottom-color:color-mix(in srgb,currentColor 30%,transparent);animation:spin 7s linear infinite reverse}
 .rs-still.event{--rk:var(--just2)} .rs-still.duct{--rk:#8fc6d9} .rs-still.elite,.rs-still.boss{--rk:var(--red,#ff2a4b)}
 .rs-still .rs-glyph{position:relative}
+/* 0.51.0 ブロック: 自機の前に障壁(ある間ずっと)、その上に大きな札。帯の横の小さな札(状態)は窓に切られないように外へ */
+#meWall{position:absolute;left:154px;top:150px;width:24px;height:116px;pointer-events:none;border-right:2px solid rgba(63,240,255,.6);border-radius:0 70% 70% 0/0 50% 50% 0;background:linear-gradient(90deg,transparent 30%,rgba(63,240,255,.14));box-shadow:8px 0 14px -10px rgba(63,240,255,.7)}
+#meBlk{position:absolute;left:166px;top:186px;display:flex;align-items:center;gap:3px;height:24px;padding:0 8px 0 6px;pointer-events:none;background:rgba(5,12,18,.88);box-shadow:inset 0 0 0 1px var(--cy),inset 0 0 0 3px rgba(5,12,18,.88),inset 0 0 0 4px rgba(63,240,255,.28);clip-path:var(--cut-s);color:#fff;font-family:var(--f-num);font-size:16px;font-weight:700;line-height:1;white-space:nowrap}
+#meBlk .ic svg{width:14px;height:14px;display:block;color:var(--cy)}
+#meBlk.pv b{color:var(--cy)}
+#meWall[hidden],#meBlk[hidden]{display:none}
+#meInfo{clip-path:none}
+#meSts{left:calc(100% + 4px)!important;top:1px!important}
+#shaker.focus #meBlk,#shaker.focus #meWall{opacity:0;transition:opacity .25s}
+#shaker.peek #meBlk,#shaker.peek #meWall{opacity:.1}
+/* 0.51.0 カードを使う動き: 自機は構え(腕・脚・上体の角度)を1コマで切り替え、間は滑らかに動かさず効果と残像で埋める */
+#droid svg,.vghost svg{overflow:visible}
+#droid svg g,.vghost svg g{transform-box:view-box}
+.k-up{transform-origin:49px 124px}.k-af{transform-origin:72px 50px}.k-ab{transform-origin:26px 50px}.k-lf{transform-origin:58px 134px}.k-lb{transform-origin:40px 134px}
+.k-blade{opacity:0}
+.p-ready .k-up{transform:rotate(-10deg)}.p-ready .k-af{transform:rotate(55deg)}.p-ready .k-ab{transform:rotate(25deg)}.p-ready .k-lf{transform:rotate(-22deg)}.p-ready .k-lb{transform:rotate(18deg)}
+.p-strike .k-up{transform:rotate(14deg)}.p-strike .k-af{transform:rotate(-92deg)}.p-strike .k-ab{transform:rotate(48deg)}.p-strike .k-lf{transform:rotate(-28deg)}.p-strike .k-lb{transform:rotate(28deg)}
+.p-ready .k-blade,.p-strike .k-blade{opacity:1}
+.p-aim .k-up{transform:rotate(-3deg)}.p-aim .k-af{transform:rotate(-72deg)}.p-aim .k-ab{transform:rotate(15deg)}.p-aim .k-lf{transform:rotate(-12deg)}.p-aim .k-lb{transform:rotate(14deg)}
+.p-recoil .k-up{transform:rotate(-11deg)}.p-recoil .k-af{transform:rotate(-90deg)}.p-recoil .k-ab{transform:rotate(28deg)}.p-recoil .k-lf{transform:rotate(-16deg)}.p-recoil .k-lb{transform:rotate(20deg)}
+.p-guard .k-up{transform:rotate(7deg)}.p-guard .k-af{transform:rotate(-46deg)}.p-guard .k-ab{transform:rotate(-84deg)}.p-guard .k-lf{transform:rotate(-16deg)}.p-guard .k-lb{transform:rotate(16deg)}
+.p-cast .k-up{transform:rotate(-4deg)}.p-cast .k-af{transform:rotate(-102deg)}.p-cast .k-ab{transform:rotate(20deg)}.p-cast .k-lf{transform:rotate(-10deg)}.p-cast .k-lb{transform:rotate(10deg)}
+.p-cast .k-hand,.p-aim .k-hand{fill:var(--cy)}
+/* 構えている間は輪郭にシアンの光(暗い体でも形が読めるように) */
+/* (ぼかしの光は端末に重いので、線の色を明るくするだけ) */
+:is(.p-ready,.p-strike,.p-aim,.p-recoil,.p-guard,.p-cast) svg [stroke="#4d6578"]{stroke:#62d4e6}
+:is(.p-ready,.p-strike,.p-aim,.p-recoil,.p-guard,.p-cast) svg [stroke="#33495d"]{stroke:#3f7890}
+:is(.p-ready,.p-strike,.p-aim,.p-recoil,.p-guard,.p-cast) svg [stroke="#253545"]{stroke:#35677c}
+/* 残像: 自機の形をシアンの線だけで写し、すぐ消える */
+.vghost{position:absolute;width:50px;height:128px;pointer-events:none;transform-origin:50% 100%}
+.vghost svg *{fill:rgba(63,240,255,.08)!important;stroke:rgba(120,246,255,.9)!important}
+.vghost svg .k-blade{opacity:1}
+/* 踏み込みの速度線: 出た瞬間に全長、当たる点へ向けて縮む */
+.vspeed{position:absolute;height:2px;pointer-events:none;transform-origin:100% 50%;background:linear-gradient(90deg,transparent,rgba(160,250,255,.9) 40%,#fff)}
+/* 斬撃: 三日月の面。一瞬で出て、細りながら流れる */
+.vcres{position:absolute;pointer-events:none}.vcres svg{width:100%;height:100%;overflow:visible}
+.vcres .m{fill:#fff}.vcres .e{fill:none;stroke:var(--cy);stroke-width:2.5}.vcres .t{fill:none;stroke:rgba(255,255,255,.6);stroke-width:1.2}
+/* 当たりの星: 長い横の棘と短い縦の棘(形は鋭く) */
+.vstar{position:absolute;pointer-events:none}.vstar svg{width:100%;height:100%;overflow:visible}.vstar path{fill:#fff}
+.vring{position:absolute;border-radius:50%;border:2px solid var(--cy);pointer-events:none}
+/* 溜め: 銃口へ線が集まる */
+.vconv{position:absolute;height:1.5px;pointer-events:none;transform-origin:0 50%;background:linear-gradient(90deg,#fff,rgba(63,240,255,0))}
 /* 上の帯: 数字の札も硝子の札に */
 .mh-bar [data-v]{display:inline-flex;align-items:center;gap:3px}
 /* 敵の詳細・自機の詳細 */
@@ -1500,19 +1547,22 @@ body.hs *{animation-play-state:paused!important;transition:none!important}
       <div id="floor" class="np"></div>
       <div id="droid" class="np">
         <svg width="50" height="128" viewBox="0 0 98 250" role="img" aria-label="アンドロイド K-7">
-          <path d="M26 50L14 116" stroke="#253545" stroke-width="7" stroke-linecap="round"/>
-          <path d="M40 134L34 236M58 134L66 236" stroke="#33495d" stroke-width="10" stroke-linecap="round"/>
-          <rect x="26" y="232" width="16" height="7" rx="2" fill="#33495d"/><rect x="60" y="232" width="16" height="7" rx="2" fill="#33495d"/>
+          <g class="k-lb"><path d="M40 134L34 236" stroke="#33495d" stroke-width="10" stroke-linecap="round"/><rect x="26" y="232" width="16" height="7" rx="2" fill="#33495d"/></g>
+          <g class="k-lf"><path d="M58 134L66 236" stroke="#33495d" stroke-width="10" stroke-linecap="round"/><rect x="60" y="232" width="16" height="7" rx="2" fill="#33495d"/></g>
           <rect x="30" y="120" width="38" height="14" rx="3" fill="#152130" stroke="#4d6578" stroke-width="2"/>
-          <path d="M24 44H74L68 122H30Z" fill="#152130" stroke="#4d6578" stroke-width="2"/>
-          <rect x="44" y="30" width="10" height="10" fill="#253545"/>
-          <rect x="34" y="6" width="30" height="26" rx="8" fill="#152130" stroke="#4d6578" stroke-width="2"/>
-          <rect x="40" y="15" width="20" height="5" rx="2" fill="#38d3ff" opacity=".8"/>
-          <rect x="66" y="34" width="28" height="9" rx="2" fill="#152130" stroke="#4d6578" stroke-width="2"/>
-          <path d="M72 50L84 110" stroke="#33495d" stroke-width="8" stroke-linecap="round"/>
-          <circle cx="85" cy="115" r="6" fill="#33495d"/>
+          <g class="k-up">
+            <g class="k-ab"><path d="M26 50L14 116" stroke="#253545" stroke-width="7" stroke-linecap="round"/></g>
+            <path d="M24 44H74L68 122H30Z" fill="#152130" stroke="#4d6578" stroke-width="2"/>
+            <rect x="44" y="30" width="10" height="10" fill="#253545"/>
+            <rect x="34" y="6" width="30" height="26" rx="8" fill="#152130" stroke="#4d6578" stroke-width="2"/>
+            <rect x="40" y="15" width="20" height="5" rx="2" fill="#38d3ff" opacity=".8"/>
+            <rect x="66" y="34" width="28" height="9" rx="2" fill="#152130" stroke="#4d6578" stroke-width="2"/>
+            <g class="k-af"><path class="k-blade" d="M86 120L101 198" stroke="#dffcff" stroke-width="4" stroke-linecap="round"/><path d="M72 50L84 110" stroke="#33495d" stroke-width="8" stroke-linecap="round"/><circle class="k-hand" cx="85" cy="115" r="6" fill="#33495d"/></g>
+          </g>
         </svg>
       </div>
+      <div id="meWall" class="np" hidden></div>
+      <div id="meBlk" class="np" hidden><span class="ic"></span><b></b></div>
       <div class="cinfo" id="meInfo" style="left:100px">
         <span class="frow"><span class="hpb me" id="meBar"><i></i><s></s></span><span class="hpt" id="meNum"></span></span>
         <span class="sts" id="meSts"></span>
@@ -1559,7 +1609,7 @@ body.hs *{animation-play-state:paused!important;transition:none!important}
 <script src="data/text.js"></script>
 <script src="js/engine.js"></script>
 <script>
-const APP_VERSION = '0.50.0';
+const APP_VERSION = '0.51.0';
 const $ = s => document.querySelector(s);
 const EN = ENGINE, RULE = EN.RULE;
 const VIEW = RULE.view, NOW = 170, PX = 34, xs = c => NOW + c * PX, STRIP_Y = 150, SWIFT_VIS = 3;
@@ -1706,7 +1756,7 @@ function computePreview(){
   const react = new Set();
   if(a.type === 'card' && cost > 0) for(const e of S.b.foes) if(e.alive && e.react && cost >= e.react.min && e.reactIn == null) react.add(e.i);
   return {k:a.k || null, cost, completeAt: P.out.completeAt ?? P.out.elapsed, free: a.type === 'wait' ? 0 : Math.min(S.b.swift, cost),
-    justSet: new Set(A.out.justs.map(j => j.i)), parts: A.c.b.parts, body: A.c.run.body, foeHp: A.c.b.foes.map(e => e.hp), foeUnits: A.c.b.foes.map(e => Object.fromEntries(e.uids.map(k => [k, e.units[k].hp]))), react, fx,
+    justSet: new Set(A.out.justs.map(j => j.i)), parts: A.c.b.parts, body: A.c.run.body, block: A.c.b.block, foeHp: A.c.b.foes.map(e => e.hp), foeUnits: A.c.b.foes.map(e => Object.fromEntries(e.uids.map(k => [k, e.units[k].hp]))), react, fx,
     // 使う前に、新しく置かれる時限の発動位置を見せる
     timers: A.c.b.timers.filter(t => !S.b.timers.some(o => o.id === t.id)).map(t => ({at: A.out.elapsed + t.left, e: t.e}))};
 }
@@ -1772,9 +1822,11 @@ function nameHTML(c){
   const b = `<span class="cnb" style="font-size:${fitPx(bn, 10.5, 7)}px">${bn}</span>`;
   return `<span class="cname${an ? ' stk' : ''}${c.upgraded ? ' cu' : ''}">${an ? `<span class="cna" style="font-size:${fitPx(an, 8, 6)}px">${an}</span>` : ''}${b}</span>`;
 }
+/* 文の長さ(改行は1行の残りを使い切るので、6字ぶりに数える) */
+const ctxLen = k => ((CARDS[k].text || '') + (CARDS[k].attrText || '')).replace(/\{\w+\}/g, '00').replace(/\n|<br>/g, '      ').length;
 function cardInner(k, st, count, refs, cd){
   const c = CARDS[k], co = cd ? EN.costOf(cd) : c.cost, dc = co - c.cost;
-  return `<i class="ck" data-ck="${k}" data-rar="${DATA.rarityOf(k)}" hidden></i><span class="chd"><span class="cost${co === 0 ? ' zero' : ''}${dc > 0 ? ' cup' : dc < 0 ? ' cdn' : ''}">${co}</span>${nameHTML(c)}</span><span class="cart t-${cardType(c)}"><span class="cwm">${IC[cardType(c)]}</span>${c.atomic ? '<i class="atom"></i>' : ''}<span class="cval"><span class="ic">${IC[cardType(c)]}</span><b>${cardVal(k, st)}</b></span></span><span class="ctx${((CARDS[k].text || '') + (CARDS[k].attrText || '')).replace(/\{\w+\}/g, '00').length > 22 ? ' long' : ''}">${cardText(k, st, refs)}</span>${count > 1 ? `<span class="cnt">×${count}</span>` : ''}`;
+  return `<i class="ck" data-ck="${k}" data-rar="${DATA.rarityOf(k)}" hidden></i><span class="chd"><span class="cost${co === 0 ? ' zero' : ''}${dc > 0 ? ' cup' : dc < 0 ? ' cdn' : ''}">${co}</span>${nameHTML(c)}</span><span class="cart t-${cardType(c)}"><span class="cwm">${IC[cardType(c)]}</span>${c.atomic ? '<i class="atom"></i>' : ''}<span class="cval"><span class="ic">${IC[cardType(c)]}</span><b>${cardVal(k, st)}</b></span></span><span class="ctx${ctxLen(k) > 33 ? ' long xlong' : ctxLen(k) > 22 ? ' long' : ''}">${cardText(k, st, refs)}</span>${count > 1 ? `<span class="cnt">×${count}</span>` : ''}`;
 }
 // 長押しで説明を出すキーワード: カードの文に出てくるもの
 function cardKw(k){
@@ -1886,7 +1938,13 @@ function renderMe(){
   const s = $('#meBar s'); s.style.left = (after / max * 100) + '%'; s.style.width = ((body - after) / max * 100) + '%';
   const n = $('#meNum'); n.textContent = after < body ? `${body}→${after}` : String(body); n.classList.toggle('pv', after < body);
   let st = '';
-  if(S.b.block) st += `<span class="st blk" id="stBlk"><span class="ic">${IC.block}</span>${S.b.block}</span>`;
+  /* 0.51.0: ブロックは自機の前の障壁と大きな札で見せる(帯の横の小さな札は、窓の縁に切られて見えないことがあった) */
+  const blk = S.b.block, bAfter = PV && PV.block != null ? PV.block : blk, mb = $('#meBlk');
+  mb.hidden = !(blk || bAfter); $('#meWall').hidden = !blk;
+  if(!mb.firstChild.innerHTML) mb.firstChild.innerHTML = IC.block;
+  mb.lastChild.textContent = bAfter !== blk ? `${blk}→${bAfter}` : blk; mb.classList.toggle('pv', bAfter !== blk);
+  if(UI.blkPrev != null && blk > UI.blkPrev) anim(mb, [{transform: 'scale(1.35)', filter: 'brightness(1.8)'}, {transform: 'none', filter: 'none'}], {duration: 260, easing: EZ.snap});
+  UI.blkPrev = blk;
   if(S.b.swift) st += `<span class="st swf"><span class="ic">${IC.swift}</span>${S.b.swift}</span>`;
   if(S.b.charge) st += `<span class="st chg"><span class="ic">${IC.charge}</span>${S.b.charge}</span>`;
   for(const [t, n] of Object.entries(S.b.amp || {})) if(n) st += `<span class="st amp" title="${DATA.kwName.str}"><span class="ic">${IC[t]}</span>+${n}</span>`;
@@ -2376,25 +2434,25 @@ function tickBar(){
   for(const el of document.querySelectorAll('.mh-bar [data-v]')){
     if(!el.offsetParent) continue;
     const k = el.dataset.v, v = +el.dataset.n; cur[k] = v;
-    if(prev[k] != null && prev[k] !== v && !RM){ el.querySelector('.n').textContent = prev[k]; setTimeout(() => countUp(el.querySelector('.n'), prev[k], v), 380); setTimeout(() => anim(el, [{transform: 'scale(1.22)', filter: 'brightness(2)'}, {transform: 'none', filter: 'none'}], {duration: 460, easing: EZ.snap}), 380); }
+    if(prev[k] != null && prev[k] !== v && !RM){ el.querySelector('.n').textContent = prev[k]; setTimeout(() => countUp(el.querySelector('.n'), prev[k], v), 240); setTimeout(() => anim(el, [{filter: 'brightness(1.7)'}, {filter: 'none'}], {duration: 300, easing: EZ.out}), 240); }
   }
   UI.barPrev = Object.assign(prev, cur);
 }
-/* 手に入れた物が、入る所へ飛ぶ。持ち上がってから行き先を探す(画面の切り替えの後に見えている所へ行く) */
+/* 手に入れた物が、入る所へ飛ぶ(0.51.0: 短く控えめに)。行き先が見えていればすぐ飛ぶ。画面の切り替えを挟むときは、その場で小さく畳んでから、切り替わった先へ飛ぶ */
 function flyGain(src, toSel){
   if(RM || !src) return; const st = $('#stage').getBoundingClientRect(), sc = st.width / 844, r = src.getBoundingClientRect();
   const c = src.cloneNode(true); c.classList.remove('picked', 'sel'); c.removeAttribute('data-act');
   Object.assign(c.style, {position: 'absolute', left: (r.left - st.left) / sc + 'px', top: (r.top - st.top) / sc + 'px', width: r.width / sc + 'px', height: r.height / sc + 'px', margin: '0', zIndex: 97, pointerEvents: 'none', transition: 'none', transform: 'none'});
   $('#stage').appendChild(c);
-  const up = 'translateY(-18px) scale(1.06)';
-  anim(c, [{transform: 'none', filter: 'brightness(1)'}, {transform: up, filter: 'brightness(1.5)'}], {duration: 170, easing: EZ.out, fill: 'forwards'});
-  setTimeout(() => {
-    const tgt = [...document.querySelectorAll(toSel)].find(e => e.offsetParent);
-    if(!tgt){ anim(c, [{transform: up, opacity: 1}, {transform: 'translateY(-40px) scale(1.06)', opacity: 0}], {duration: 220, fill: 'forwards'}); setTimeout(() => c.remove(), 230); return; }
+  const vis = () => [...document.querySelectorAll(toSel)].find(e => e.offsetParent);
+  const go = (from) => {
+    const tgt = vis(); if(!tgt){ c.remove(); return; }
     const q = tgt.getBoundingClientRect(), dx = (q.left + q.width / 2 - r.left - r.width / 2) / sc, dy = (q.top + q.height / 2 - r.top - r.height / 2) / sc;
-    anim(c, [{transform: up, opacity: 1}, {transform: `translate(${dx}px,${dy}px) scale(.12)`, opacity: .6}], {duration: 330, easing: EZ.in, fill: 'forwards'});
-    setTimeout(() => { c.remove(); anim(tgt, [{transform: 'scale(1.35)', filter: 'brightness(2.2)'}, {transform: 'none', filter: 'none'}], {duration: 380, easing: EZ.snap}); }, 330);
-  }, 210);
+    anim(c, [{transform: from, opacity: .9}, {transform: `translate(${dx}px,${dy}px) scale(.08)`, opacity: .25}], {duration: 240, easing: EZ.in, fill: 'forwards'});
+    setTimeout(() => { c.remove(); anim(tgt, [{transform: 'scale(1.12)', filter: 'brightness(1.6)'}, {transform: 'none', filter: 'none'}], {duration: 200, easing: EZ.out}); }, 240);
+  };
+  if(vis() && !WIPING) go('none');
+  else { anim(c, [{transform: 'none', opacity: 1}, {transform: 'scale(.3)', opacity: .9}], {duration: 170, easing: EZ.out, fill: 'forwards'}); setTimeout(() => go('scale(.3)'), 190); }
 }
 /* デッキから消す(デフラグ): 横の線に裂けて消える */
 function dissolve(src){
@@ -2440,9 +2498,10 @@ function skipNow(){
   $('#fx').replaceChildren(); $('#floats').replaceChildren();
   const f = $('#flashFx'); if(f) f.className = 'np';
   for(const el of document.querySelectorAll('.foe,.ew,#droid')) el.classList.remove('atk', 'ehit', 'ejust', 'lunge', 'recoil', 'hit', 'stagger', 'glitch');
+  resetDroid();
 }
 /* 当たりを、動きの「決め」の瞬間まで遅らせる(突きなら刃が届くまで)。cardMotion が決め、showEvent が使う */
-let IMPACT = 0;
+let IMPACT = 0, MOT = null;
 /* 押される: 白く光り、dx だけ飛ばされ、行き過ぎてから戻る */
 function knock(el, dx, ms){ anim(el, [{transform: 'none', filter: 'brightness(3)'}, {transform: `translateX(${dx}px)`, filter: 'brightness(1.6)', offset: .12}, {transform: `translateX(${dx * .35}px)`, filter: 'none', offset: .45}, {transform: `translateX(${-dx * .08}px)`, offset: .75}, {transform: 'none'}], {duration: ms || 340, easing: EZ.out}); }
 /* 放射の火花(線8本) */
@@ -2596,12 +2655,135 @@ function afterimage(){
   el.getBoundingClientRect(); el.style.transform = 'translateX(-14px)'; el.style.opacity = '0';
   setTimeout(() => el.remove(), 320);
 }
+/* ---------- 0.51.0 カードを使う動き ----------
+   調べたこと(要件定義の文書の「動きの決まり」に書いた): 体は滑らかに動かさず、決めの構えから構えへ1コマで切り替える。間の動きは
+   効果(斬撃・速度線・残像)が描く。溜めと戻りは短く、重い技だけ溜めの構えと決めの構えを長く止める。当たりの瞬間は体を止め(ヒットストップ)、
+   効果だけを動かす。効果は「出るのは一瞬・消えるのはゆっくり」。重さ(コスト)で、止める長さ・踏み込みの溜め・効果の大きさを3段に分ける */
+const POSES = ['ready', 'strike', 'aim', 'recoil', 'guard', 'cast'];
+function setPose(p){ const d = $('#droid'); d.classList.remove(...POSES.map(x => 'p-' + x)); if(p) d.classList.add('p-' + p); }
+function resetDroid(){ const d = $('#droid'); for(const a of d.getAnimations()) try{ a.cancel(); }catch(e){} setPose(null); }
+/* 1段を動かし、終わるのを待つ(ヒットストップで止まった分も待つ)。打ち切られたら false */
+async function step(kf, ms, ez, id){
+  /* 前の段の残り(fill)は消す。消さないと、指定しなかった値(踏み込みで薄くした透明度など)が残る */
+  const d = $('#droid'); for(const a0 of d.getAnimations()) try{ a0.cancel(); }catch(e){}
+  const a = anim(d, kf, {duration: ms, easing: ez || 'linear', fill: 'forwards'});
+  if(a) try{ await a.finished; }catch(e){}
+  return id === EXEC_ID && !SKIP;
+}
+/* 残像: いまの構えのまま dx の位置に写し、ms で消える。dir の向きへ少し流れる */
+function ghost(p, dx, o, ms, dir){
+  if(RM) return; const g = fxNode('vghost' + (p ? ' p-' + p : ''), 108 + dx, 142, {}, (ms || 200) + 30);
+  g.appendChild($('#droid svg').cloneNode(true));
+  anim(g, [{opacity: o || .75, transform: 'none'}, {opacity: 0, transform: `translateX(${(dir || 0) * 10}px) scaleX(${dir ? 1.08 : 1})`}], {duration: ms || 200, easing: EZ.out, fill: 'forwards'});
+}
+function speedLines(x0, x1, w){
+  for(let k = 0; k < 4 + w * 2; k++){
+    const y = 160 + Math.random() * 96, len = (x1 - x0) * (.55 + Math.random() * .45), el = fxNode('vspeed', x1 - len, y, {width: len + 'px', opacity: .5 + Math.random() * .5}, 260);
+    anim(el, [{transform: 'scaleX(1)'}, {transform: 'scaleX(0)'}], {duration: 150 + Math.random() * 90, delay: k * 12, easing: EZ.in, fill: 'forwards'});
+  }
+}
+/* 斬撃: 三日月の面が一瞬で出て(40ms)、細りながら流れて消える */
+function crescent(p, w, flip){
+  const s = [130, 170, 220][w], el = fxNode('vcres', p.x - s * .55, p.y - s * .5, {width: s + 'px', height: s + 'px'}, 380);
+  el.innerHTML = '<svg viewBox="0 0 100 100"><path class="m" d="M0 88Q24 -2 102 8Q50 34 0 88Z"/><path class="e" d="M0 88Q24 -2 102 8"/><path class="t" d="M8 98Q54 40 108 36"/></svg>';
+  const f = flip ? ' scaleY(-1)' : '';
+  /* (切り抜きの動きは端末に重いので、左を軸に横へ伸ばして出す) */
+  el.style.transformOrigin = '0 80%';
+  anim(el, [{transform: `rotate(-10deg) scaleX(.15)${f}`, opacity: 1}, {transform: `rotate(0deg) scaleX(1)${f}`, opacity: 1, offset: .12}, {transform: `rotate(4deg) translateX(10px) scaleY(.35)${f}`, opacity: 0}], {duration: 360, easing: EZ.out, fill: 'forwards'});
+}
+/* 当たりの星: 横に長い棘。一瞬で最大、ゆっくり細る。重いと輪が遅れて広がる(速さの対比) */
+function star(p, w, color){
+  const s = [70, 96, 130][w], el = fxNode('vstar', p.x - s / 2, p.y - s / 2, {width: s + 'px', height: s + 'px'}, 300);
+  el.innerHTML = `<svg viewBox="-50 -50 100 100"><path d="M-50 0L-4 -3L0 -50L4 -3L50 0L4 3L0 50L-4 3Z" style="fill:${color || '#fff'}"/><path d="M-22 -22L-1.5 -1.5L-22 -22ZM-2 -1L-20 -20L1 -2Z" style="fill:${color || '#fff'}"/></svg>`;
+  anim(el, [{transform: 'scale(.2,.6) rotate(-6deg)', opacity: 1}, {transform: 'scale(1) rotate(0)', opacity: 1, offset: .14}, {transform: 'scale(1.15,.15) rotate(3deg)', opacity: 0}], {duration: 280, easing: EZ.out, fill: 'forwards'});
+  if(w >= 1){ const r = [0, 30, 44][w], ring = fxNode('vring', p.x - r, p.y - r, {width: r * 2 + 'px', height: r * 2 + 'px'}, 420); anim(ring, [{transform: 'scale(.3)', opacity: 1}, {transform: 'scale(1.6)', opacity: 0}], {duration: 400, easing: EZ.out, fill: 'forwards'}); }
+}
+/* 重い当たりは、当たった敵を1コマだけ白い影にする(画面全体は光らせない) */
+function whiteFrame(els){ for(const el of els) if(el) anim(el, [{filter: 'brightness(0) invert(1)'}, {filter: 'brightness(0) invert(1)', offset: .99}, {filter: 'none'}], {duration: 50}); }
+function targetEls(c, ti){ return c.all ? S.b.foes.filter(e => e.alive).map(e => foeEl(e.i)) : ti != null ? [foeEl(tFoe(ti))] : []; }
+/* 近接: (重い・中)溜めの構えへ1コマで下がる → 加速して踏み込む(体は薄く伸び、速度線と残像が主役)→ 決めの構えで止まる(ヒットストップ)→ 1コマで戻る */
+async function meleeMove(c, ti, pts, w, hit){
+  const id = EXEC_ID, W = [{hold: 0, dash: 50, hs: 50, kime: 80, back: 0}, {hold: 55, dash: 60, hs: 80, kime: 100, back: -10}, {hold: 90, dash: 70, hs: 120, kime: 130, back: -18}][w];
+  const tx = pts.length ? Math.min(...pts.map(p => p.x)) : 560, D = Math.max(60, Math.min(430, tx - 225));
+  if(W.hold){ ghost(null, 0, .6, 180, 1); setPose('ready'); if(!await step([{transform: `translate(${W.back}px,3px)`}, {transform: `translate(${W.back - 3}px,3px)`}], W.hold, EZ.out, id)) return; }
+  else setPose('ready');
+  speedLines(160 + W.back, tx - 24, w);
+  if(!await step([{transform: `translate(${W.back}px,3px)`, opacity: 1}, {transform: `translate(${D}px,5px) skewX(-16deg) scaleX(1.35)`, opacity: .3}], W.dash, EZ.in, id)) return;
+  setPose('strike');
+  for(let k = 1; k <= 2; k++) ghost('ready', W.back + (D - W.back) * k / 3, .18 * k, 160, 1);
+  const kime = step([{transform: `translate(${D + 10}px,6px)`}, {transform: `translate(${D + 3}px,6px)`, offset: .25}, {transform: `translate(${D}px,6px)`}], W.hs + W.kime, EZ.out, id);
+  freeze(W.hs);
+  pts.forEach((p, n) => { crescent(p, w, n % 2); star({x: p.x, y: p.y - 4}, w); });
+  hit(); if(w === 2) whiteFrame(targetEls(c, ti));
+  if(!await kime) return;
+  ghost('strike', D, .7, 220, 1); setPose(null);
+  await step([{transform: 'translateY(4px) scale(1.04,.94)'}, {transform: 'none'}], 110, EZ.out, id);
+}
+/* 遠隔: 構える(重いと銃口へ光が集まる)→ 光線は出た瞬間に全長 → 反動で1コマ下がる(残像)→ 止めて → 戻る */
+async function shotMove(c, ti, pts, w, hit){
+  const id = EXEC_ID, W = [{ch: 0, hs: 45, kime: 70, rc: -10}, {ch: 60, hs: 70, kime: 90, rc: -16}, {ch: 120, hs: 110, kime: 120, rc: -24}][w];
+  setPose('aim'); const f = {x: DROID.sx + 6, y: DROID.sy};
+  if(W.ch){
+    for(let k = 0; k < 6; k++){ const a = k * Math.PI / 3 + .3, el = fxNode('vconv', f.x, f.y, {width: '34px'}, W.ch + 20); anim(el, [{transform: `rotate(${a}rad) translateX(30px) scaleX(1)`, opacity: .2}, {transform: `rotate(${a}rad) translateX(0) scaleX(.2)`, opacity: 1}], {duration: W.ch, easing: EZ.in, fill: 'forwards'}); }
+    const ring = fxNode('vring', f.x - 16, f.y - 16, {width: '32px', height: '32px'}, W.ch + 20); anim(ring, [{transform: 'scale(1.4)', opacity: .2}, {transform: 'scale(.2)', opacity: 1}], {duration: W.ch, easing: EZ.in, fill: 'forwards'});
+    if(!await step([{transform: 'translateX(-4px)'}, {transform: 'translateX(-6px)'}], W.ch, 'linear', id)) return;
+  }
+  ghost('aim', W.ch ? -6 : 0, .7, 200, -1); setPose('recoil');
+  const kime = step([{transform: `translateX(${W.rc}px)`}, {transform: `translateX(${W.rc * .6}px)`}], W.hs + W.kime, EZ.out, id);
+  freeze(W.hs);
+  star(f, 0, 'var(--cy)');
+  for(const p of pts){
+    const dx = p.x - f.x, dy = p.y - f.y, len = Math.hypot(dx, dy), ang = Math.atan2(dy, dx) * 180 / Math.PI, th = [1, 1.5, 2.2][w];
+    const el = fxNode('vbeam', f.x, f.y - 3, {width: len + 'px'}, 300);
+    anim(el, [{transform: `rotate(${ang}deg) scale(1,${th})`, opacity: 1}, {transform: `rotate(${ang}deg) scale(1,${th * 1.2})`, opacity: 1, offset: .15}, {transform: `rotate(${ang}deg) scale(1,.1)`, opacity: 0}], {duration: 280, easing: EZ.out, fill: 'forwards'});
+    star(p, w);
+  }
+  hit(); if(w === 2) whiteFrame(targetEls(c, ti));
+  if(!await kime) return;
+  setPose(null);
+  await step([{transform: 'translateX(-3px)'}, {transform: 'none'}], 110, EZ.out, id);
+}
+/* 防御: 構えへ1コマ → 障壁は出た瞬間に最大で、輪がゆっくり広がる → 止めて → 戻る */
+async function guardMove(hit){
+  const id = EXEC_ID; setPose('guard');
+  const el = fxNode('vguard', DROID.x + 14, DROID.y - 70, {}, 520);
+  anim(el, [{transform: 'scale(1.12,1.04)', opacity: 1, filter: 'brightness(2)'}, {transform: 'scale(1)', opacity: 1, filter: 'none', offset: .25}, {transform: 'scale(1)', opacity: 0}], {duration: 500, easing: EZ.out, fill: 'forwards'});
+  const ring = fxNode('vring', DROID.x + 2 - 40, DROID.y - 50 - 40, {width: '80px', height: '80px'}, 460); anim(ring, [{transform: 'scale(.5)', opacity: 1}, {transform: 'scale(1.5)', opacity: 0}], {duration: 440, easing: EZ.out, fill: 'forwards'});
+  hit();
+  if(!await step([{transform: 'translateY(3px) scale(1.03,.97)'}, {transform: 'translateY(2px) scale(1.02,.98)'}], 200, EZ.out, id)) return;
+  setPose(null); await step([{transform: 'translateY(2px)'}, {transform: 'none'}], 100, EZ.out, id);
+}
+/* 加速: 1コマで後ろへ跳び(残像)、1コマで戻る */
+async function swiftMove(hit){
+  const id = EXEC_ID; ghost(null, 0, .65, 180, -1); hit();
+  if(!await step([{transform: 'translateX(-16px)'}, {transform: 'translateX(-13px)'}], 100, EZ.out, id)) return;
+  ghost(null, -13, .5, 180, 1); await step([{transform: 'translateX(3px)'}, {transform: 'none'}], 90, EZ.out, id);
+}
+/* 妨害: 手をかざす構えへ1コマ → 札が加速して敵へ流れ込む → 当たった敵が乱れる → 戻る */
+async function castMove(c, ti, pts, hit){
+  const id = EXEC_ID; setPose('cast'); const f = {x: DROID.sx + 2, y: DROID.sy + 22};
+  for(const p of pts) for(let k = 0; k < 6; k++){
+    const el = fxNode('vpkt', f.x, f.y, {}, 260), mx = (f.x + p.x) / 2 - f.x, my = Math.min(f.y, p.y) - 40 - k * 7 - f.y;
+    anim(el, [{transform: 'translate(0,0) scale(.6)', opacity: 1}, {transform: `translate(${mx}px,${my}px) scale(1)`, opacity: 1, offset: .45}, {transform: `translate(${p.x - f.x}px,${p.y - f.y}px) scale(.5)`, opacity: .9}], {duration: 170, delay: k * 14, easing: EZ.in, fill: 'forwards'});
+  }
+  if(!await step([{transform: 'translateX(-4px)'}, {transform: 'translateX(-6px)'}], 230, 'linear', id)) return;
+  for(const p of pts) star(p, 0, 'var(--just2)');
+  for(const el of targetEls(c, ti)) if(el){ el.classList.remove('glitch'); void el.offsetWidth; el.classList.add('glitch'); setTimeout(() => el.classList.remove('glitch'), 300); }
+  hit();
+  if(!await step([{transform: 'translateX(-6px)'}, {transform: 'translateX(-5px)'}], 120, 'linear', id)) return;
+  setPose(null); await step([{transform: 'translateX(-2px)'}, {transform: 'none'}], 90, EZ.out, id);
+}
 function shieldFx(){ guardFx(); }
 function cardMotion(k, ti){
   const c = CARDS[k], d = $('#droid'), t = cardType(c);
   // 当たる場所: 全体のカードは敵のすべてのユニット、単体は狙ったユニット
   const pts = c.all ? S.b.foes.filter(e => e.alive).flatMap(e => (GEOM.get(e.i) && GEOM.get(e.i).multi ? EN.liveUids(e) : [null]).map(k2 => unitCenter(e.i, k2)))
     : (c.tgt && ti != null ? [unitCenter(tFoe(ti), tUnit(ti) || EN.defaultUid(S.b.foes[tFoe(ti)]))] : []);
+  const w = c.cost >= 3 ? 2 : c.cost >= 2 ? 1 : 0;
+  if(MOT && !RM){
+    const run = t === 'melee' ? meleeMove(c, ti, pts, w, MOT.hit) : t === 'ranged' ? shotMove(c, ti, pts, w, MOT.hit) : t === 'block' || t === 'parry' ? guardMove(MOT.hit) : t === 'delay' || t === 'crack' || t === 'dot' ? castMove(c, ti, pts, MOT.hit) : t === 'swift' ? swiftMove(MOT.hit) : null;
+    if(run) return run.catch(() => {}).finally(() => { if(!SKIP) resetDroid(); });
+  }
   if(t === 'melee') meleeFx(pts);
   else if(t === 'ranged') shotFx(pts);
   else if(t === 'block' || t === 'parry') shieldFx();
@@ -2663,7 +2845,7 @@ function cardFx(x){
 // 自分が撃たれたときの演出(敵の攻撃と反撃で共通)
 function hitMeFx(r){
   const y = partY(r.part);
-  if(r.blocked) pulse($('#stBlk'), 'flash', 360);
+  if(r.blocked){ anim($('#meBlk'), [{transform: 'translateX(-5px)', filter: 'brightness(2.2)'}, {transform: 'translateX(3px)', offset: .35}, {transform: 'none', filter: 'none'}], {duration: 280, easing: EZ.out}); anim($('#meWall'), [{opacity: 1, filter: 'brightness(2.5)'}, {opacity: 1, filter: 'none'}], {duration: 300, easing: EZ.out}); }
   if(r.partLoss){ floatAt(70, y + 8, '−' + r.partLoss, 'foe'); pulse(document.querySelector(`.part[data-p="${r.part}"]`), 'flash', 320); chips(70, y + 26, 'var(--foe)', Math.min(6, 2 + r.partLoss), 30, false); }
   if(r.broke) sparks(DROID.x, DROID.y - 30);
   if(r.bodyLoss) floatAt(150, 268, '−' + r.bodyLoss, 'foe');
@@ -2856,7 +3038,14 @@ async function showEvent(ev, k, ti){
     case 'tick': if(!ev.real) afterimage(); else anim($('#nowLine'), [{transform: 'scaleX(2.6)', filter: 'brightness(1.8)'}, {transform: 'none', filter: 'none'}], {duration: 180, easing: EZ.out}); renderAll(); await sleep(ev.real ? T_TICK : T_SWIFT); break;
     case 'react': { const p = foeCenter(ev.e); floatAt(p.x, p.y - 70, '!', 'foe'); pulse(foeEl(ev.e), 'ehit', 200); renderAll(); await sleep(180); break; }
     case 'just': justFx(ev.e, 'JUST'); renderAll(); await sleep(460); break;
-    case 'card': { IMPACT = 0; if(k) cardMotion(k, ti); const hit = () => { for(const x of ev.ev) cardFx(x); renderAll(); }; if(IMPACT && !RM) later(hit, IMPACT); else hit(); await sleep(Math.max(320, IMPACT + 200)); IMPACT = 0; break; }
+    case 'card': {
+      /* 0.51.0: 動きのあるカードは、動きが当たりの瞬間に hit を呼び、終わるまで待つ(ヒットストップで延びた分も)。動きのないカードはすぐ当たる */
+      const hit = () => { if(hit.done || SKIP) return; hit.done = true; for(const x of ev.ev) cardFx(x); renderAll(); };
+      IMPACT = 0; MOT = {hit}; const run = k ? cardMotion(k, ti) : null; MOT = null;
+      if(run){ await Promise.race([run, sleep(2000)]); hit(); await sleep(40); }
+      else { if(IMPACT && !RM) later(hit, IMPACT); else hit(); await sleep(Math.max(320, IMPACT + 200)); }
+      IMPACT = 0; break;
+    }
     case 'dot': for(const x of ev.ev) cardFx(x); renderAll(); await sleep(220); break;
     case 'timer': { const p = unitCenter(ev.t.e, ev.t.unit); const el = fxEl('burst', p.x, p.y - 10); setTimeout(() => el.remove(), 520); for(const x of ev.ev) cardFx(x); renderAll(); await sleep(320); break; }
     case 'turn': {

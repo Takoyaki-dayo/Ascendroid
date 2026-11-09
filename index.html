@@ -1384,6 +1384,92 @@ body.hs *{animation-play-state:paused!important;transition:none!important}
 @keyframes bRise2{0%{opacity:0;transform:translateX(14px)}100%{opacity:1;transform:none}}
 #tl.jolt{animation:bJolt2 .2s cubic-bezier(.16,1,.3,1)}
 @keyframes bJolt2{0%{transform:translateX(6px)}100%{transform:none}}
+/* --- 0.50.0 質感: 硝子の面・二重の縁・角の目盛り・走査線 ---
+   面は半透明の暗い硝子(後ろの施設が透ける)。縁は外の細い線と、4px内側のもう1本の淡い線。
+   角を切らない2つの角(左上・右下)に目盛りの括弧。面の上に細かい走査線。強い色は目盛りと選んだ縁だけ */
+:root{
+  --tk:rgba(140,180,205,.55); --edge:rgba(110,150,180,.34); --edge2:rgba(63,240,255,.20);
+  --ticks:linear-gradient(var(--tk),var(--tk)) left top/10px 1.5px no-repeat,linear-gradient(var(--tk),var(--tk)) left top/1.5px 10px no-repeat,linear-gradient(var(--tk),var(--tk)) right bottom/10px 1.5px no-repeat,linear-gradient(var(--tk),var(--tk)) right bottom/1.5px 10px no-repeat;
+  --scan:repeating-linear-gradient(180deg,rgba(255,255,255,.028) 0 1px,transparent 1px 3px);
+  --glass:linear-gradient(180deg,rgba(18,29,42,.80),rgba(6,10,16,.88));
+}
+/* 施設の奥行き(世界の層の背景。とても淡く): 奥の光の柱、床の透視の目地 */
+#stage{background:
+  radial-gradient(ellipse 520px 160px at 420px 250px,rgba(63,240,255,.06),transparent 70%),
+  repeating-linear-gradient(90deg,rgba(63,240,255,.035) 0 1px,transparent 1px 106px),
+  linear-gradient(180deg,#070a0f 0,#090e15 56%,#05070b 57%,#070b10 100%)!important}
+#floor{display:block;top:222px;height:60px;background:repeating-linear-gradient(90deg,rgba(63,240,255,.07) 0 1px,transparent 1px 44px),linear-gradient(180deg,rgba(63,240,255,.10),transparent 2px,transparent);transform:perspective(220px) rotateX(58deg);transform-origin:50% 0;opacity:.7}
+/* タイムライン: 透ける硝子の画面 */
+#screen{background:var(--ticks),var(--scan),linear-gradient(180deg,rgba(8,14,22,.74),rgba(5,9,14,.58))!important;--tk:rgba(63,240,255,.8);
+  box-shadow:inset 0 0 0 1px var(--edge),inset 0 1px 0 rgba(255,255,255,.05),inset 0 0 36px rgba(63,240,255,.05)!important;outline:1px solid var(--edge2);outline-offset:-4px}
+#screen::before{display:none}
+/* 手札・報酬のカード: 不透明の面に二重の縁。レアリティは縁の色・角の目盛り・上辺の帯で見せる */
+.card{--ce:#33475a;--rc:transparent;--tk:rgba(150,180,200,.45);border:0!important;
+  background:linear-gradient(var(--rc),var(--rc)) left top/100% 2px no-repeat,var(--ticks),var(--scan),linear-gradient(180deg,#131c27,#0a1017)!important;
+  box-shadow:inset 0 0 0 1px var(--ce),inset 0 1px 0 rgba(255,255,255,.06)!important;outline:1px solid rgba(255,255,255,.045);outline-offset:-4px}
+.card::before{display:none}
+.card:has(>.ck[data-rar="uncommon"]){--ce:#3f86c8;--rc:#5aa6ef;--tk:#7fbfff;
+  background:linear-gradient(225deg,transparent 7px,#5aa6ef 7px 10px,transparent 10px) right top/24px 24px no-repeat,linear-gradient(#5aa6ef,#5aa6ef) left top/100% 2px no-repeat,var(--ticks),var(--scan),linear-gradient(180deg,#121d2b,#0a1018)!important}
+.card:has(>.ck[data-rar="rare"]){--ce:#d6a443;--rc:#ffd36b;--tk:#ffd36b;
+  background:linear-gradient(225deg,transparent 7px,#ffd36b 7px 10px,transparent 10px 12px,#d6a443 12px 14px,transparent 14px) right top/28px 28px no-repeat,linear-gradient(90deg,#8a5d12,#ffd36b,#8a5d12) left top/100% 2px no-repeat,var(--ticks),var(--scan),radial-gradient(ellipse 80% 40% at 50% 0,rgba(255,200,90,.13),transparent),linear-gradient(180deg,#191a1e,#0d0f13)!important;
+  box-shadow:inset 0 0 0 1px var(--ce),inset 0 0 18px rgba(255,200,90,.12)!important;outline-color:rgba(255,211,107,.34)}
+/* レア度は名前の帯の色でも分かる(青 = アンコモン、金 = レア)。選んでも外の縁はレア度の色のまま、内側にシアンの線が足される(二重の縁) */
+.card:has(>.ck[data-rar="uncommon"]) .chd{background:linear-gradient(90deg,rgba(90,166,239,.30),rgba(90,166,239,.07) 75%,transparent)}
+.card:has(>.ck[data-rar="rare"]) .chd{background:linear-gradient(90deg,rgba(255,200,90,.34),rgba(255,200,90,.08) 75%,transparent)}
+.card:has(>.ck[data-rar="rare"]) .cname:not(.cu) .cnb{color:#ffe2a0}
+.card.sel.sel.sel,.card.picked.picked.picked{--tk:var(--cy);box-shadow:inset 0 0 0 1px var(--ce),inset 0 0 0 3px #05080c,inset 0 0 0 5px var(--cy),inset 0 0 22px rgba(63,240,255,.16)!important}
+.card.sel:not(.pk)::after,.cards .card.picked::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(105deg,transparent 38%,rgba(255,255,255,.10) 50%,transparent 62%) -120px 0/240px 100% no-repeat;animation:sheen 1.8s linear infinite}
+@keyframes sheen{0%{background-position:-160px 0}60%,100%{background-position:160px 0}}
+/* 絵の欄は小さな表示面: 斜線の板をやめ、細かい格子の画面に種類の色の光。上の縁に影を落として一段奥に見せる */
+.cart{background:radial-gradient(ellipse 70% 90% at 30% 70%,var(--tt),transparent 75%),linear-gradient(rgba(63,240,255,.05) 1px,transparent 1px) 0 0/100% 6px,linear-gradient(90deg,rgba(63,240,255,.05) 1px,transparent 1px) 0 0/6px 100%,linear-gradient(180deg,#0b141d,#0a1118);box-shadow:inset 0 0 0 1px rgba(120,170,200,.16),inset 0 12px 16px -12px rgba(0,0,0,.8)}
+.card{outline:1px solid color-mix(in srgb,var(--ce) 60%,transparent)!important;outline-offset:-4px}
+.chd{box-shadow:0 1px 0 rgba(255,255,255,.05)}
+/* 大きめの札(選択肢・地図の案内・タイムラインの列名)も縁を二重に */
+.opt,.minfo,.lane{outline:1px solid var(--edge2)!important;outline-offset:-4px}
+/* 窓: 半透明の硝子に二重の縁と目盛り */
+.box{background:var(--ticks),var(--scan),var(--glass)!important;--tk:rgba(63,240,255,.8);box-shadow:inset 0 0 0 1px var(--edge),inset 0 0 44px rgba(63,240,255,.045)!important;outline:1px solid var(--edge2)!important;outline-offset:-5px!important}
+#ov{background:radial-gradient(ellipse 60% 70% at 50% 50%,rgba(3,5,8,.72),rgba(3,5,8,.9))!important}
+/* 選択肢・ボタン・山・小さな窓 */
+.opt,.pile,#redraw,#waitBtn,#menuBtn,.minfo,.lane,.tt-s,#mvpop,#chooseBar,.fsp{background:var(--ticks),var(--glass)!important;border:0!important;box-shadow:inset 0 0 0 1px var(--edge)!important}
+.opt.picked,.opt.sel,#redraw.sel,#waitBtn.sel,.minfo.has{--tk:var(--cy);box-shadow:inset 0 0 0 1px var(--cy),inset 3px 0 0 var(--cy),inset 0 0 24px rgba(63,240,255,.10)!important}
+.opt:not(:disabled):active{box-shadow:inset 0 0 0 1px var(--cy),inset 0 0 30px rgba(63,240,255,.18)!important}
+.btn:not(.ghost){outline:1px solid rgba(4,20,23,.45);outline-offset:-4px;background:linear-gradient(180deg,#6ff6ff,var(--cy) 45%,#22c6db)!important}
+.btn.ghost{background:var(--glass)!important;box-shadow:inset 0 0 0 1px var(--cy-dim)!important;border:0!important}
+.tt-b{background:var(--ticks),var(--glass)!important;box-shadow:inset 0 0 0 1px var(--edge)!important;border:0!important;border-left:3px solid var(--cy)!important}
+.tt-b.main{--tk:var(--cy);background:var(--ticks),linear-gradient(90deg,rgba(63,240,255,.18),rgba(63,240,255,.03) 80%),var(--glass)!important}
+/* 上の帯: 硝子の帯に、下の縁を二重に */
+.mh-bar{background:linear-gradient(rgba(63,240,255,.12),rgba(63,240,255,.12)) left bottom 3px/100% 1px no-repeat,var(--scan),var(--glass)!important;border-bottom:1px solid var(--edge)!important}
+/* 地図の部屋: 硝子の札に、種類の色の淡い光 */
+.mn{background:radial-gradient(circle at 50% 40%,var(--nb),transparent 70%),var(--glass)!important;outline:1px solid rgba(255,255,255,.07);outline-offset:-4px}
+.mn.reach{outline-color:color-mix(in srgb,var(--nc) 45%,transparent)}
+.rs-still{background:var(--ticks),var(--scan),radial-gradient(ellipse at 50% 45%,rgba(63,240,255,.06),transparent 65%),var(--glass)!important;--tk:rgba(63,240,255,.8);box-shadow:inset 0 0 0 1px var(--edge)!important}
+/* 戦闘の左の部位の列と、敵の耐久の札にも硝子の面 */
+#parts::before{content:"";position:absolute;left:4px;top:6px;width:86px;height:262px;pointer-events:none;clip-path:var(--cut);--tk:rgba(63,240,255,.6);background:var(--ticks),var(--scan),linear-gradient(180deg,rgba(10,16,24,.66),rgba(6,10,16,.5));box-shadow:inset 0 0 0 1px var(--edge)}
+.cinfo{padding:3px 5px;margin-left:-5px;background:linear-gradient(180deg,rgba(12,19,28,.72),rgba(6,10,16,.6));box-shadow:inset 0 0 0 1px var(--edge);clip-path:var(--cut-s)}
+/* --- 0.50.0 戦闘の外の動き --- */
+/* 切り替え: 暗い硝子の面が斜めに横切る。先頭にシアンの線(二重) */
+#wipe{position:absolute;left:-14%;top:0;width:128%;height:100%;z-index:95;pointer-events:auto;transform:translateX(-112%) skewX(-14deg);
+  background:repeating-linear-gradient(0deg,rgba(63,240,255,.05) 0 1px,transparent 1px 3px),linear-gradient(90deg,#05080c 0,#08111a 70%,#0b1a24);
+  box-shadow:inset -3px 0 0 var(--cy),inset -9px 0 0 rgba(4,8,12,.9),inset -10px 0 0 rgba(63,240,255,.45)}
+#wipe[hidden]{display:none}
+/* 地図: 選んだ部屋への道だけ光が流れる。決めると菱形の印がその道を走る */
+.ed.route{stroke:#9ff8ff;stroke-width:3.5;stroke-dasharray:10 4;animation:edFlow .4s linear infinite;opacity:1;filter:drop-shadow(0 0 5px rgba(63,240,255,.95))}
+.medges:has(.route) .ed.nx:not(.route){opacity:.35}
+.mcur{position:absolute;width:14px;height:14px;z-index:6;pointer-events:none;background:var(--cy);box-shadow:0 0 0 2px #05080c,0 0 0 3px var(--cy),0 0 16px var(--cy);transform:translate(-50%,-50%) rotate(45deg)}
+/* 文の打ち出し: 1字ずつ現れる。押せば全部 */
+.typing .tch{animation:tchIn .18s steps(2) backwards}
+@keyframes tchIn{0%{opacity:0;color:var(--cy)}50%{opacity:1;color:var(--cy)}}
+.rs-text:not(.typing) .tch{animation:none}
+/* 部屋の左の面: 印の周りに照準の輪(外は点線でゆっくり回る、内は弧が逆へ回る) */
+.rs-ring{position:absolute;left:50%;top:50%;width:176px;height:176px;margin:-88px 0 0 -88px;border-radius:50%;pointer-events:none;color:var(--rk,var(--cy));
+  border:1px solid color-mix(in srgb,currentColor 22%,transparent);
+  background:linear-gradient(currentColor,currentColor) 50% 0/1px 12px no-repeat,linear-gradient(currentColor,currentColor) 50% 100%/1px 12px no-repeat,linear-gradient(currentColor,currentColor) 0 50%/12px 1px no-repeat,linear-gradient(currentColor,currentColor) 100% 50%/12px 1px no-repeat,radial-gradient(circle,color-mix(in srgb,currentColor 9%,transparent),transparent 62%)}
+.rs-ring::before{content:"";position:absolute;inset:-16px;border-radius:50%;border:1.5px dashed color-mix(in srgb,currentColor 40%,transparent);animation:spin 28s linear infinite}
+.rs-ring::after{content:"";position:absolute;inset:26px;border-radius:50%;border:2px solid transparent;border-top-color:color-mix(in srgb,currentColor 70%,transparent);border-bottom-color:color-mix(in srgb,currentColor 30%,transparent);animation:spin 7s linear infinite reverse}
+.rs-still.event{--rk:var(--just2)} .rs-still.duct{--rk:#8fc6d9} .rs-still.elite,.rs-still.boss{--rk:var(--red,#ff2a4b)}
+.rs-still .rs-glyph{position:relative}
+/* 上の帯: 数字の札も硝子の札に */
+.mh-bar [data-v]{display:inline-flex;align-items:center;gap:3px}
 /* 敵の詳細・自機の詳細 */
 #focus{background:linear-gradient(90deg,var(--bg) 0,rgba(6,8,12,.96) 74%,transparent)}
 .urow,.u-head{border-radius:0}
@@ -1455,7 +1541,7 @@ body.hs *{animation-play-state:paused!important;transition:none!important}
       <div id="flashFx" class="np"></div>
       <div id="toast"></div>
     </div>
-    <div id="titleScr" hidden></div>
+    <div id="titleScr"></div>
     <div id="mapScr" hidden></div>
     <div id="roomScr" hidden></div>
     <div id="ov" hidden><div class="box" id="ovbox"></div></div>
@@ -1473,7 +1559,7 @@ body.hs *{animation-play-state:paused!important;transition:none!important}
 <script src="data/text.js"></script>
 <script src="js/engine.js"></script>
 <script>
-const APP_VERSION = '0.49.0';
+const APP_VERSION = '0.50.0';
 const $ = s => document.querySelector(s);
 const EN = ENGINE, RULE = EN.RULE;
 const VIEW = RULE.view, NOW = 170, PX = 34, xs = c => NOW + c * PX, STRIP_Y = 150, SWIFT_VIS = 3;
@@ -1482,7 +1568,12 @@ let ROWY = [52, 86, 120];
 const solo = () => S && S.b && S.b.foes.length === 1;
 const DROID = {x: 133, y: 206, sx: 156, sy: 162};
 const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
-const sleep = ms => new Promise(r => setTimeout(r, RM ? Math.min(ms, 40) : ms));
+/* 演出の待ち。SKIP(0.50.0: 演出中に次の入力があった)なら待たずに進み、待っている途中のものもすぐ起こす */
+const SLEEPS = new Set();
+let SKIP = false, EXEC_ID = 0, QUEUED = null;
+const sleep = ms => new Promise(r => { if(SKIP) return r(); const o = {r}; o.t = setTimeout(() => { SLEEPS.delete(o); r(); }, RM ? Math.min(ms, 40) : ms); SLEEPS.add(o); });
+/* 演出の後から起きる効果は、同じ行動の演出中で、打ち切られていないときだけ出す */
+const later = (fn, ms) => { const id = EXEC_ID; setTimeout(() => { if(id === EXEC_ID && !SKIP) fn(); }, ms); };
 const T_TICK = 110, T_SWIFT = 70;
 const CARD = {W: 96, H: 136, gap: 8, x0: 84, low: 302, up: 248, right: 734};
 
@@ -1607,7 +1698,9 @@ function computePreview(){
     let r; while(!(r = g.next()).done){ const v = r.value; if(v.type === 'card' || v.type === 'timer' || v.type === 'dot') evs.push(...v.ev); }
     return {c, out:r.value, evs};
   };
-  const A = sim(false), P = sim(true);
+  /* 0.50.0: 見込みの計算では本物の乱数を使わない(選び直すたびに、この先の引きが変わらないように) */
+  const rnd0 = EN.getRandom(); EN.setRandom(() => Math.random());
+  let A, P; try{ A = sim(false); P = sim(true); } finally{ EN.setRandom(rnd0); }
   // ブレイク・防壁・反撃・隙に当たるか(帯を光らせる)
   const fx = new Set(A.evs.filter(x => ['break','guarded','counter','vulnHit'].includes(x.kind)).map(x => x.kind + ':' + x.e));
   const react = new Set();
@@ -2158,7 +2251,7 @@ function renderHand(){
       el.style.left = '20px'; el.style.top = '330px'; el.style.transform = 'scale(.3) rotate(-10deg)'; el.style.opacity = '0';
       $('#hand').appendChild(el); cardEls.set(cd.id, el); fresh = true;
     }
-    el.dataset.i = i; el.disabled = busy; el.classList.toggle('off', EN.spendShort(b, CARDS[cd.k]) || EN.needShort(b, CARDS[cd.k])); el.classList.toggle('pk', !!PICK && PICK.ids.includes(cd.id));
+    el.dataset.i = i; el.disabled = false; el.classList.toggle('busy', busy); el.classList.toggle('off', EN.spendShort(b, CARDS[cd.k]) || EN.needShort(b, CARDS[cd.k])); el.classList.toggle('pk', !!PICK && PICK.ids.includes(cd.id));
     const html = cardInner(cd.k, S, 0, false, cd);
     if(el._h !== html){ el.innerHTML = html; el._h = html; }
     el.classList.toggle('sel', i === selI);
@@ -2188,8 +2281,8 @@ function renderSide(){
   rd.setAttribute('aria-label', kind === 'pass' ? '区切りまで待つ' : kind === 'reload' ? 'リフレッシュ' : asWait ? '待機' : '入れ替え');
   rd.classList.toggle('wait', asWait || kind === 'pass');
   rd.classList.toggle('sel', !!sel && (sel.kind === kind || (!fw && sel.kind === 'wait')));
-  rd.disabled = busy || (!ec && fw && empty);
-  const wb = $('#waitBtn'); wb.classList.toggle('sel', fw && !!sel && sel.kind === 'wait'); wb.disabled = busy;
+  rd.disabled = !ec && fw && empty;
+  const wb = $('#waitBtn'); wb.classList.toggle('sel', fw && !!sel && sel.kind === 'wait'); wb.disabled = false;
   $('#nDraw').textContent = b.draw.length; $('#nDisc').textContent = b.disc.length;
   { const ca = !!(RULE.econ && RULE.econ.cache), sh = $('#shaker'), was = +($('#nCache').textContent || 0), n = (b.cache || []).length;
     sh.classList.toggle('cached', ca); $('#nCache').textContent = n;
@@ -2247,6 +2340,80 @@ const g2 = v => Math.round(v / 2) * 2;
 /* OSの層: 当たった点で照準が弾ける */
 function osHit(p){ const el = fxEl('oslock', g2(p.x), g2(p.y - 6)); setTimeout(() => el.remove(), 300); }
 
+/* ---------- 0.50.0 戦闘の外の動き ----------
+   画面の切り替えは1つの型(暗い面が斜めに横切り、その陰で入れ替わる)。手に入れた物は、それが入る所(デッキ・山)へ飛んで行き、数字が数え上がる。
+   地図は今いる部屋から選んだ部屋への道が光り、決めると印がその道を走る。イベントの文は打ち出すように出る(押せばすぐ全部) */
+let WIPING = false;
+function wipe(fn){
+  if(RM || WIPING){ fn(); return; }
+  WIPING = true; let w = $('#wipe'); if(!w){ w = document.createElement('div'); w.id = 'wipe'; $('#stage').appendChild(w); }
+  w.hidden = false;
+  anim(w, [{transform: 'translateX(-112%) skewX(-14deg)'}, {transform: 'translateX(0) skewX(-14deg)'}], {duration: 170, easing: EZ.in, fill: 'forwards'});
+  setTimeout(() => {
+    try{ fn(); } finally {
+      anim(w, [{transform: 'translateX(0) skewX(-14deg)'}, {transform: 'translateX(112%) skewX(-14deg)'}], {duration: 240, easing: EZ.out, fill: 'forwards'});
+      setTimeout(() => { w.hidden = true; WIPING = false; }, 250);
+    }
+  }, 175);
+}
+function travel(key, done){
+  const c = document.querySelector('#mapScr .mcanvas'), from = c && c.querySelector('.mn.here'), to = c && c.querySelector(`.mn[data-arg="${key}"]`);
+  if(RM || !from || !to){ done(); return; }
+  const fx = parseFloat(from.style.left), fy = parseFloat(from.style.top), tx = parseFloat(to.style.left), ty = parseFloat(to.style.top);
+  const cur = document.createElement('i'); cur.className = 'mcur'; cur.style.left = fx + 'px'; cur.style.top = fy + 'px'; c.appendChild(cur);
+  anim(cur, [{transform: 'translate(-50%,-50%) rotate(45deg) scale(.5)', opacity: 0}, {transform: 'translate(-50%,-50%) rotate(45deg) scale(1)', opacity: 1, offset: .2}, {transform: `translate(calc(-50% + ${tx - fx}px),calc(-50% + ${ty - fy}px)) rotate(45deg) scale(1)`, opacity: 1}], {duration: 300, easing: EZ.in, fill: 'forwards'});
+  anim(to, [{transform: 'none'}, {transform: 'none', offset: .8}, {transform: 'scale(1.25)'}, {transform: 'scale(1.1)'}], {duration: 340, easing: EZ.out, fill: 'forwards'});
+  setTimeout(done, 320);
+}
+/* 上の帯の数字: 前に見せた値と違えば、数え上げて跳ねる */
+function countUp(el, a, b){
+  if(!el) return; const t0 = performance.now(), d = 420;
+  const step = t => { const k = Math.min(1, (t - t0) / d), e = 1 - Math.pow(1 - k, 3); el.textContent = Math.round(a + (b - a) * e); if(k < 1) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
+}
+function tickBar(){
+  const prev = UI.barPrev || {}, cur = {};
+  for(const el of document.querySelectorAll('.mh-bar [data-v]')){
+    if(!el.offsetParent) continue;
+    const k = el.dataset.v, v = +el.dataset.n; cur[k] = v;
+    if(prev[k] != null && prev[k] !== v && !RM){ el.querySelector('.n').textContent = prev[k]; setTimeout(() => countUp(el.querySelector('.n'), prev[k], v), 380); setTimeout(() => anim(el, [{transform: 'scale(1.22)', filter: 'brightness(2)'}, {transform: 'none', filter: 'none'}], {duration: 460, easing: EZ.snap}), 380); }
+  }
+  UI.barPrev = Object.assign(prev, cur);
+}
+/* 手に入れた物が、入る所へ飛ぶ。持ち上がってから行き先を探す(画面の切り替えの後に見えている所へ行く) */
+function flyGain(src, toSel){
+  if(RM || !src) return; const st = $('#stage').getBoundingClientRect(), sc = st.width / 844, r = src.getBoundingClientRect();
+  const c = src.cloneNode(true); c.classList.remove('picked', 'sel'); c.removeAttribute('data-act');
+  Object.assign(c.style, {position: 'absolute', left: (r.left - st.left) / sc + 'px', top: (r.top - st.top) / sc + 'px', width: r.width / sc + 'px', height: r.height / sc + 'px', margin: '0', zIndex: 97, pointerEvents: 'none', transition: 'none', transform: 'none'});
+  $('#stage').appendChild(c);
+  const up = 'translateY(-18px) scale(1.06)';
+  anim(c, [{transform: 'none', filter: 'brightness(1)'}, {transform: up, filter: 'brightness(1.5)'}], {duration: 170, easing: EZ.out, fill: 'forwards'});
+  setTimeout(() => {
+    const tgt = [...document.querySelectorAll(toSel)].find(e => e.offsetParent);
+    if(!tgt){ anim(c, [{transform: up, opacity: 1}, {transform: 'translateY(-40px) scale(1.06)', opacity: 0}], {duration: 220, fill: 'forwards'}); setTimeout(() => c.remove(), 230); return; }
+    const q = tgt.getBoundingClientRect(), dx = (q.left + q.width / 2 - r.left - r.width / 2) / sc, dy = (q.top + q.height / 2 - r.top - r.height / 2) / sc;
+    anim(c, [{transform: up, opacity: 1}, {transform: `translate(${dx}px,${dy}px) scale(.12)`, opacity: .6}], {duration: 330, easing: EZ.in, fill: 'forwards'});
+    setTimeout(() => { c.remove(); anim(tgt, [{transform: 'scale(1.35)', filter: 'brightness(2.2)'}, {transform: 'none', filter: 'none'}], {duration: 380, easing: EZ.snap}); }, 330);
+  }, 210);
+}
+/* デッキから消す(デフラグ): 横の線に裂けて消える */
+function dissolve(src){
+  if(RM || !src) return; const st = $('#stage').getBoundingClientRect(), sc = st.width / 844, r = src.getBoundingClientRect();
+  const x = (r.left - st.left) / sc, y = (r.top - st.top) / sc, w = r.width / sc, h = r.height / sc;
+  for(let k = 0; k < 6; k++){
+    const c = src.cloneNode(true); c.classList.remove('picked', 'sel');
+    Object.assign(c.style, {position: 'absolute', left: x + 'px', top: y + 'px', width: w + 'px', height: h + 'px', margin: '0', zIndex: 97, pointerEvents: 'none', transition: 'none', transform: 'none', clipPath: `inset(${k * h / 6}px 0 ${h - (k + 1) * h / 6}px 0)`});
+    $('#stage').appendChild(c); setTimeout(() => c.remove(), 520);
+    anim(c, [{transform: 'none', opacity: 1, filter: 'brightness(1.6)'}, {transform: `translateX(${(k % 2 ? 1 : -1) * (30 + k * 8)}px)`, opacity: 0, filter: 'none'}], {duration: 460, delay: k * 25, easing: EZ.in, fill: 'forwards'});
+  }
+}
+/* 文を打ち出す(タグの中の文字も1字ずつ)。押すとすぐ全部出る */
+function typeIn(el){
+  if(RM || !el) return; const ts = []; const walk = n => { for(const c of [...n.childNodes]){ if(c.nodeType === 3){ const f = document.createDocumentFragment(); for(const ch of c.textContent){ const sp = document.createElement('span'); sp.className = 'tch'; sp.textContent = ch; f.appendChild(sp); ts.push(sp); } c.replaceWith(f); } else walk(c); } };
+  walk(el); const n = ts.length, per = Math.min(16, 700 / Math.max(1, n));
+  ts.forEach((sp, i) => { sp.style.animationDelay = Math.round(i * per) + 'ms'; });
+  el.classList.add('typing'); const done = () => el.classList.remove('typing'); $('#roomScr').addEventListener('pointerdown', done, {once: true}); setTimeout(done, n * per + 300);
+}
 /* ---------- 0.49.0 動き: 溜め → 決め → 余韻 ----------
    決まり: (1) どの出来事も「溜め(短く逆へ)→ 決め(いちばん速い一瞬)→ 余韻(行き過ぎてから戻る)」の3拍で動く。
    (2) 原因と結果を動きでつなぐ: カードはタイムラインの自分の帯に吸い込まれ、敵の予定は狙う部位へ線を飛ばしてから当たる。
@@ -2263,6 +2430,16 @@ function freeze(ms){
   /* 止めたものは、重なって呼ばれても必ず全部戻す */
   freeze.held = (freeze.held || []).concat(list); clearTimeout(freeze.t);
   freeze.t = setTimeout(() => { for(const a of freeze.held) try{ a.play(); }catch(e){} freeze.held = []; document.body.classList.remove('hs'); }, ms);
+}
+/* 0.50.0: 演出を打ち切る。待ちをすべて起こし、動いている演出を終わりまで飛ばし、残った効果を消す。状態(エンジン)は演出と関係なく進んでいるので触らない */
+function skipNow(){
+  if(!busy || SKIP) return; SKIP = true;
+  for(const o of SLEEPS){ clearTimeout(o.t); o.r(); } SLEEPS.clear();
+  clearTimeout(freeze.t); freeze.held = []; clearTimeout(hitStop.t); document.body.classList.remove('hs');
+  for(const a of document.getAnimations()){ try{ if(a.effect && a.effect.getComputedTiming().iterations !== Infinity) a.finish(); else a.play(); }catch(e){} }
+  $('#fx').replaceChildren(); $('#floats').replaceChildren();
+  const f = $('#flashFx'); if(f) f.className = 'np';
+  for(const el of document.querySelectorAll('.foe,.ew,#droid')) el.classList.remove('atk', 'ehit', 'ejust', 'lunge', 'recoil', 'hit', 'stagger', 'glitch');
 }
 /* 当たりを、動きの「決め」の瞬間まで遅らせる(突きなら刃が届くまで)。cardMotion が決め、showEvent が使う */
 let IMPACT = 0;
@@ -2288,7 +2465,8 @@ function castFly(el){
   const L = parseFloat(el.style.left) || 0, T = parseFloat(el.style.top) || 0, tf = el.style.transform && el.style.transform !== 'none' ? el.style.transform : 'translate(0,0)';
   const dx = NOW + 6 - (L + 48), dy = 29 - (T + 136);
   anim(el, [{transform: tf, opacity: 1}, {transform: 'translate(0,-18px) scale(1.08)', opacity: 1, offset: .26}, {transform: `translate(${dx}px,${dy}px) scale(.12,.04)`, opacity: .7}], {duration: 300, easing: EZ.in, fill: 'forwards'});
-  setTimeout(() => { el.remove(); const s = fxNode('vseat', NOW - 1, 20, {}, 380); anim(s, [{transform: 'scaleX(.15)', opacity: 1}, {transform: 'scaleX(1)', opacity: 1, offset: .3}, {transform: 'scaleX(1.5)', opacity: 0}], {duration: 360, easing: EZ.out}); }, 290);
+  setTimeout(() => el.remove(), 290);
+  later(() => { const s = fxNode('vseat', NOW - 1, 20, {}, 380); anim(s, [{transform: 'scaleX(.15)', opacity: 1}, {transform: 'scaleX(1)', opacity: 1, offset: .3}, {transform: 'scaleX(1.5)', opacity: 0}], {duration: 360, easing: EZ.out}); }, 290);
 }
 /* 突き: 引いて(溜め)、一気に踏み込み、刃の弧が走る。当たりは踏み込みの頂点 */
 function slashArc(p, flip){
@@ -2301,7 +2479,7 @@ function slashArc(p, flip){
 }
 function meleeFx(pts){
   anim($('#droid'), [{transform: 'none'}, {transform: 'translateX(-12px)', offset: .18, easing: EZ.in}, {transform: 'translateX(100px) skewX(-8deg)', offset: .36}, {transform: 'translateX(92px)', offset: .62, easing: EZ.out}, {transform: 'none'}], {duration: 460});
-  setTimeout(() => { pts.forEach((p, n) => { slashArc(p, n % 2); burstFx(p.x, p.y - 6, '#fff', 30); osHit(p); }); }, 150);
+  later(() => { pts.forEach((p, n) => { slashArc(p, n % 2); burstFx(p.x, p.y - 6, '#fff', 30); osHit(p); }); }, 150);
   IMPACT = 160;
 }
 /* 射撃: 反動で下がり、銃口が光り、光線が一瞬で伸びてから細って消える */
@@ -2312,7 +2490,7 @@ function shotFx(pts){
     const dx = p.x - f.x, dy = p.y - f.y, len = Math.hypot(dx, dy), ang = Math.atan2(dy, dx) * 180 / Math.PI;
     const el = fxNode('vbeam', f.x, f.y - 3, {width: len + 'px'}, 340);
     anim(el, [{transform: `rotate(${ang}deg) scaleX(0)`, opacity: 1}, {transform: `rotate(${ang}deg) scaleX(1)`, opacity: 1, offset: .2}, {transform: `rotate(${ang}deg) scale(1,.12)`, opacity: 0}], {duration: 320, easing: EZ.out, fill: 'forwards'});
-    setTimeout(() => { burstFx(p.x, p.y, '#fff', 30); osHit(p); }, 70);
+    later(() => { burstFx(p.x, p.y, '#fff', 30); osHit(p); }, 70);
   }
   IMPACT = 80;
 }
@@ -2678,7 +2856,7 @@ async function showEvent(ev, k, ti){
     case 'tick': if(!ev.real) afterimage(); else anim($('#nowLine'), [{transform: 'scaleX(2.6)', filter: 'brightness(1.8)'}, {transform: 'none', filter: 'none'}], {duration: 180, easing: EZ.out}); renderAll(); await sleep(ev.real ? T_TICK : T_SWIFT); break;
     case 'react': { const p = foeCenter(ev.e); floatAt(p.x, p.y - 70, '!', 'foe'); pulse(foeEl(ev.e), 'ehit', 200); renderAll(); await sleep(180); break; }
     case 'just': justFx(ev.e, 'JUST'); renderAll(); await sleep(460); break;
-    case 'card': { IMPACT = 0; if(k) cardMotion(k, ti); const hit = () => { for(const x of ev.ev) cardFx(x); renderAll(); }; if(IMPACT && !RM) setTimeout(hit, IMPACT); else hit(); await sleep(Math.max(320, IMPACT + 200)); IMPACT = 0; break; }
+    case 'card': { IMPACT = 0; if(k) cardMotion(k, ti); const hit = () => { for(const x of ev.ev) cardFx(x); renderAll(); }; if(IMPACT && !RM) later(hit, IMPACT); else hit(); await sleep(Math.max(320, IMPACT + 200)); IMPACT = 0; break; }
     case 'dot': for(const x of ev.ev) cardFx(x); renderAll(); await sleep(220); break;
     case 'timer': { const p = unitCenter(ev.t.e, ev.t.unit); const el = fxEl('burst', p.x, p.y - 10); setTimeout(() => el.remove(), 520); for(const x of ev.ev) cardFx(x); renderAll(); await sleep(320); break; }
     case 'turn': {
@@ -2695,7 +2873,7 @@ async function showEvent(ev, k, ti){
 async function execute(pa){
   // インスタントで手札を捨てるカード(0.35.0): 先に捨てるカードを選ぶ(ほかに手札があるときだけ)
   if(!pa){ const a0 = selAction(), c0 = a0 && a0.type === 'card' && CARDS[a0.k]; if(c0 && c0.instant && c0.discard && S.b.hand.length > 1){ PICK = {kind:'discard', n:c0.discard, ids:[], a:a0, cid:S.b.hand[a0.i].id}; recalc(); return; } }
-  const s = sel, b = S.b, a = pa || selAction(); sel = null; PV = null; busy = true; UI.view = 'normal'; setPeek(false); hideMovePop();
+  const s = sel, b = S.b, a = pa || selAction(); sel = null; PV = null; busy = true; EXEC_ID++; SKIP = false; QUEUED = null; UI.view = 'normal'; setPeek(false); hideMovePop();
   if(a.type === 'card'){
     if(a.t != null) lastTarget = a.t;
     for(const id of a.pick || []){ const el = cardEls.get(id); cardEls.delete(id); flyCard(el, 20, 344); }
@@ -2708,14 +2886,19 @@ async function execute(pa){
   $('#droid').classList.add('casting');
   renderAll();
   const g = EN.spendGen(S, p.cost, p.k, p.t, false); let r;
-  while(!(r = g.next()).done) await showEvent(r.value, p.k, p.t);
+  /* 打ち切られたら(SKIP)、残りの出来事は演出せずに進める(状態はエンジンが進める) */
+  while(!(r = g.next()).done){ if(!SKIP) await showEvent(r.value, p.k, p.t); else if(r.value.type === 'foe' && r.value.res && r.value.res.summon != null) buildFoes(); }
+  if(SKIP) setTimeout(phaseCheck, 0);
   $('#droid').classList.remove('casting');
   const out = r.value;
   EN.endAction(S, p, out);
-  if(out.dead){ renderAll(); await sleep(350); onLose(); busy = false; return; }
-  if(out.won){ b.over = true; renderAll(); await sleep(500); onWin(); busy = false; return; }
-  busy = false;
+  if(out.dead){ renderAll(); await sleep(350); SKIP = false; QUEUED = null; onLose(); busy = false; return; }
+  if(out.won){ b.over = true; renderAll(); await sleep(500); SKIP = false; QUEUED = null; onWin(); busy = false; return; }
+  busy = false; SKIP = false;
   renderAll();
+  /* 演出中に押されたもの(カード・入れ替え・待機)を、いまの手札で受け付け直す */
+  const q = QUEUED; QUEUED = null;
+  if(q && inBattle() && S.b === b && !b.over && !PICK && !b.choose){ if(q.kind === 'card'){ const i = b.hand.findIndex(c => c.id === q.id); if(i >= 0) onCard(i); } else if(q.kind === 'redraw') onRedraw(); else if(q.kind === 'wait') onWait(); }
 }
 
 /* ---------- run & map ---------- */
@@ -2731,7 +2914,7 @@ function clearSave(){ try{ localStorage.removeItem(SAVE_KEY); }catch(e){} }
 function resumeRun(){
   const o = loadSave(); if(!o){ showTitle(); return; }
   hideOv(); $('#titleScr').hidden = true;
-  S = {run: o.run, b: null}; UI.mapSel = null; UI.node = null; UI.pick = null; if(S.run.heat == null) S.run.heat = 0;
+  S = {run: o.run, b: null}; UI.barPrev = null; UI.mapSel = null; UI.node = null; UI.pick = null; if(S.run.heat == null) S.run.heat = 0;
   if(o.pending === 'transit'){ UI.node = {type:'transit'}; UI.eventId = transitId(); UI.healed = null; showEventRoom(); }
   else if(o.pending){ const n = findNode(o.pending); if(n) enterRoom(n); else showMap(); }
   else showMap();
@@ -2769,7 +2952,7 @@ function showTitle(){
 function newRun(){
   hideOv(); $('#titleScr').hidden = true;
   const seed = Math.floor(Math.random() * 1e9);
-  S = {run: EN.newRun(seed), b: null};
+  S = {run: EN.newRun(seed), b: null}; UI.barPrev = null;
   UI.mapSel = null; UI.node = null; UI.areaShown = -1;
   showMap();
 }
@@ -2789,7 +2972,7 @@ function showMap(){
   let lines = '';
   const ln = (a, c, cls) => { lines += `<line x1="${a.x}" y1="${a.y}" x2="${c.x}" y2="${c.y}" class="${cls}"/>`; };
   // 今いる部屋から次に行ける部屋への線は光らせる
-  const nx = (fromK, to) => fromK === atKey && reach.has(nodeKey(to)) ? ' nx' : '';
+  const nx = (fromK, to) => fromK === atKey && reach.has(nodeKey(to)) ? ' nx' + (UI.mapSel === nodeKey(to) ? ' route' : '') : '';
   const st = {x: mapX(0), y: MAPY[1]};
   for(const row of m.nodes){
     const n0 = row[0]; ln(st, nodePos(n0), (visited.has(nodeKey(n0)) ? 'ed vis' : 'ed') + nx('start', n0));
@@ -2830,6 +3013,7 @@ function showMap(){
   if(fresh) enter($('#mapScr'));
   saveRun(null);
   // 新しいエリアに入ったら、エリアの名前を大きく出す
+  tickBar();
   if(UI.areaShown !== S.run.area){ UI.areaShown = S.run.area; UI.heatChange = 0; UI.heatMove = 0; areaBanner(); }
   else if(UI.heatChange){ const d = UI.heatChange; UI.heatChange = 0; UI.heatMove = 0; heatBanner(d); }
   else if(UI.heatMove){ const d = UI.heatMove; UI.heatMove = 0; setTimeout(() => heatNudge(d), 250); }
@@ -2880,16 +3064,17 @@ function infoAlert(){
 function topBar(title){
   const run = S.run, partsMini = SLOTS.map(p => `<span class="pm${run.parts[p.id].damaged ? ' dmg' : ''}" title="${p.fn}"><span class="ic">${IC[p.id]}</span></span>`).join('');
   const apr = `<span class="apr">${DATA.areas.map((A, i) => `<i class="${i < run.area ? 'done' : i === run.area ? 'on' : ''}"></i>`).join('')}</span>`;
-  return `<div class="mh-bar"><b>${title}</b>${apr}<button class="mbtn alb" type="button" data-act="alert" aria-label="${DATA.ui.heat}">${heatChip()}</button><span class="mb"><span class="ic">${IC.core}</span>${run.body}/${run.bodyMax}</span><button class="mbtn pms" type="button" data-act="unit" aria-label="機体">${partsMini}</button><span class="mb"><span class="ic">${IC.scrap}</span>${run.scrap}</span><span class="sp"></span><button class="mbtn" type="button" data-act="deck"><span class="ic">${IC.deck}</span>${EN.battleDeck(run).length}</button><button class="mbtn" type="button" data-act="menu" aria-label="メニュー">${IC.menu}</button></div>`;
+  return `<div class="mh-bar"><b>${title}</b>${apr}<button class="mbtn alb" type="button" data-act="alert" aria-label="${DATA.ui.heat}">${heatChip()}</button><span class="mb" data-v="body" data-n="${run.body}"><span class="ic">${IC.core}</span><span class="n">${run.body}</span>/${run.bodyMax}</span><button class="mbtn pms" type="button" data-act="unit" aria-label="機体">${partsMini}</button><span class="mb" data-v="scrap" data-n="${run.scrap}"><span class="ic">${IC.scrap}</span><span class="n">${run.scrap}</span></span><span class="sp"></span><button class="mbtn" type="button" data-act="deck" data-v="deck" data-n="${EN.battleDeck(run).length}"><span class="ic">${IC.deck}</span><span class="n">${EN.battleDeck(run).length}</span></button><button class="mbtn" type="button" data-act="menu" aria-label="メニュー">${IC.menu}</button></div>`;
 }
 // 整備・ショップ・イベントは画面ごと切り替える(左はいずれスチルを置く枠)。still なしは全幅
 function showRoom(kind, body, still){
   const fresh = $('#roomScr').hidden || $('#roomScr')._kind !== kind; $('#roomScr')._kind = kind;
   UI.screen = 'room'; hideOv(); hideOv2(); $('#titleScr').hidden = true;
-  const left = typeof still === 'string' ? `<div class="rs-still info ${kind}">${still}</div>` : still ? `<div class="rs-still ${kind}"><span class="rs-glyph">${IC[kind]}</span><span class="rs-noise"></span></div>` : '';
+  const left = typeof still === 'string' ? `<div class="rs-still info ${kind}">${still}</div>` : still ? `<div class="rs-still ${kind}"><span class="rs-ring"></span><span class="rs-glyph">${IC[kind]}</span><span class="rs-noise"></span></div>` : '';
   $('#roomScr').innerHTML = `${topBar(AREA().name)}${left}<div class="rs-main${still ? '' : ' full'}">${body}</div>`;
   $('#roomScr').hidden = false; $('#mapScr').hidden = true;
   if(fresh) enter($('#roomScr'));
+  tickBar(); if(fresh) typeIn($('#roomScr .rs-text'));
 }
 function findNode(k){ const m = S.run.map; if(k === 'boss') return m.boss; const [l, i] = k.split('-').map(Number); return m.nodes[l][i]; }
 function enterRoom(n){
@@ -2903,7 +3088,8 @@ function enterRoom(n){
   else if(n.type === 'event'){ UI.pick = null; UI.eventId = n.ev; showEventRoom(); }
   else if(n.type === 'duct') showDuct();
 }
-function completeRoom(){
+function completeRoom(){ wipe(completeRoomNow); }
+function completeRoomNow(){
   const n = UI.node, run = S.run;
   if(n && n.type === 'transit'){ UI.node = null; UI.pick = null; hideOv(); hideOv2(); $('#roomScr').hidden = true; showMap(); return; }
   run.at = n.type === 'boss' ? {boss:true} : {lane:n.lane, idx:n.idx};
@@ -3588,17 +3774,18 @@ function act(a, arg, el){
     case 'dbgCls': DBG.cls = arg; dbgSave(); applyEcon(); showDebugNums(); break;
     case 'dbgWait': DBG.wait = arg === 'c' ? null : arg === '1'; dbgSave(); applyEcon(); showDebugNums(); break;
     case 'dbgSlot': { const [i, k] = arg.split(':'); DBG.custom[+i] = k || null; dbgSave(); showDebugCustom(); break; }
-    case 'restart': UI.pick = null; UI.learnOpts = []; newRun(); break;
+    case 'restart': UI.pick = null; UI.learnOpts = []; wipe(newRun); break;
     case 'title': UI.pick = null; UI.learnOpts = []; showTitle(); break;
-    case 'continue': resumeRun(); break;
+    case 'continue': wipe(resumeRun); break;
     case 'reload': reloadApp(); break;
-    case 'newGame': if(loadSave() && UI.titleConfirm !== true){ UI.titleConfirm = true; showTitle(); break; } UI.titleConfirm = false; clearSave(); newRun(); break;
+    case 'newGame': if(loadSave() && UI.titleConfirm !== true){ UI.titleConfirm = true; showTitle(); break; } UI.titleConfirm = false; clearSave(); wipe(newRun); break;
     case 'retry': S = {run: JSON.parse(snapshot), b: null}; hideOv(); startBattle(UI.node); break;
     case 'node': UI.mapSel = UI.mapSel === arg ? null : arg; showMap(); break;
     case 'go': { const n = findNode(UI.mapSel); if(UI.going || !EN.nextNodes(S.run).some(x => nodeKey(x) === UI.mapSel)) break;
       // 選んだ部屋が光ってから、地図が引いて部屋へ
-      UI.going = true; const el = document.querySelector(`.mn[data-arg="${UI.mapSel}"]`); if(el) el.classList.add('go'); $('#mapScr').classList.add('leave');
-      setTimeout(() => { UI.going = false; enterRoom(n); }, RM ? 0 : 230); break; }
+      UI.going = true; const el = document.querySelector(`.mn[data-arg="${UI.mapSel}"]`); if(el) el.classList.add('go');
+      /* 0.50.0: 今いる部屋から選んだ部屋へ印が走り、画面が切り替わって部屋へ */
+      travel(UI.mapSel, () => wipe(() => { UI.going = false; enterRoom(n); })); break; }
     case 'afterWin': UI.pick = null; hideOv(); afterWin(); break;
     case 'pick': {
       UI.pick = UI.pick === arg ? null : arg;
@@ -3606,7 +3793,7 @@ function act(a, arg, el){
       ({learn:showLearn, rest:showRest, defrag:showDefrag, shop:showShop, event:showEventRoom, part:showPartOffer, attach:showAttach, up:showUpgrade})[v]();
       break;
     }
-    case 'learn': if(UI.pick){ S.run.deck.push(UI.pick); afterLearn(); } break;
+    case 'learn': if(UI.pick){ flyGain(document.querySelector('#ov .cards .card.picked'), inBattle() ? '#pileDraw' : '.mh-bar [data-v="deck"]'); S.run.deck.push(UI.pick); afterLearn(); } break;
     case 'skipLearn': afterLearn(); break;
     case 'takePart': if(UI.pick && UI.pick.startsWith('up:')){ const sl = UI.pick.slice(3); S.run.slotLv = Object.assign({}, S.run.slotLv, {[sl]: slotLv(sl) + 1}); UI.pick = null; completeRoom(); } else if(UI.pick) showSwap(); break;
     case 'swapBack': hideOv2(); break;
@@ -3620,10 +3807,10 @@ function act(a, arg, el){
     case 'backAttach': UI.pick = null; hideOv(); showShop(); break;
     case 'attach': { const k = UI.pick, a = UI.attachA, run = S.run; if(!k || !a || run.scrap < DATA.attrRule.price) break; const i = run.deck.indexOf(k); if(i < 0) break; const key = k + '@' + a; DATA.regAttrCard(CARDS, key); run.deck[i] = key; run.scrap -= DATA.attrRule.price; UI.attrOffers[UI.attachI] = null; UI.pick = null; hideOv(); showShop(); break; }
     case 'backDefrag': UI.pick = null; if(UI.back === 'shop') showShop(); else if(UI.back === 'event') showEventRoom(); else { UI.pick = 'defrag'; showRest(); } break;
-    case 'del': if(UI.pick){ const i = S.run.deck.indexOf(UI.pick); if(i >= 0) S.run.deck.splice(i, 1); UI.pick = null; if(UI.back === 'shop'){ S.run.scrap -= DATA.shop.defrag; showShop(); } else completeRoom(); } break;
+    case 'del': if(UI.pick){ dissolve(document.querySelector('.card.picked')); const i = S.run.deck.indexOf(UI.pick); if(i >= 0) S.run.deck.splice(i, 1); UI.pick = null; if(UI.back === 'shop'){ S.run.scrap -= DATA.shop.defrag; showShop(); } else completeRoom(); } break;
     case 'buy': {
       const pk = UI.pick, sh = DATA.shop, run = S.run; if(!pk) break;
-      if(pk[0] === 'c'){ const i = +pk.slice(1), k = UI.offers[i]; if(!k || run.scrap < price(k)) break; run.scrap -= price(k); run.deck.push(k); UI.offers[i] = null; UI.pick = null; showShop(); }
+      if(pk[0] === 'c'){ const i = +pk.slice(1), k = UI.offers[i]; if(!k || run.scrap < price(k)) break; flyGain(document.querySelector('.shop .card.picked'), '.mh-bar [data-v="deck"]'); run.scrap -= price(k); run.deck.push(k); UI.offers[i] = null; UI.pick = null; showShop(); }
       else if(pk === 'repair'){ if(run.scrap < sh.repairCost) break; run.scrap -= sh.repairCost; run.body = Math.min(run.bodyMax, run.body + sh.repairBody); for(const p of SLOTS) run.parts[p.id].damaged = false; UI.pick = null; showShop(); }
       else if(pk === 'defrag'){ if(run.scrap < sh.defrag) break; UI.pick = null; UI.back = 'shop'; showDefrag(); }
       else if(pk[0] === 'a'){ const i = +pk.slice(1), a = UI.attrOffers[i]; if(!a || run.scrap < DATA.attrRule.price) break; UI.attachA = a; UI.attachI = i; UI.pick = null; showAttach(); }
@@ -3677,6 +3864,8 @@ stage.addEventListener('contextmenu', e => e.preventDefault());
 stage.addEventListener('click', ev => {
   if(longFired){ longFired = false; return; }
   if(swallow){ swallow = false; return; }
+  /* 0.50.0: 画面の切り替え中(印が走る・面が横切る)は押しても何もしない(二度押しで部屋を2回終えないように) */
+  if(WIPING || UI.going) return;
   const t = ev.target, a = t.closest('[data-act]');
   if(a && !a.disabled){ act(a.dataset.act, a.dataset.arg, a); return; }
   if(!$('#ref').hidden){ if(t === $('#ref')) popRef(); return; }
@@ -3686,6 +3875,13 @@ stage.addEventListener('click', ev => {
   if(UI.focus){ if(!t.closest('#focus')) closeFocus(); return; }
   // 地図: 部屋を選んだあと、何もないところを押すと選ぶ前に戻る
   if(!$('#mapScr').hidden && UI.mapSel && !t.closest('.minfo,.mh-bar')){ UI.mapSel = null; showMap(); return; }
+  /* 0.50.0: 演出中に手札・入れ替え・待機を押したら、演出を打ち切って、終わったらその入力を受け付ける */
+  if(busy && inBattle() && UI.view !== 'self'){
+    const qc = t.closest('#hand .card[data-i]'), qid = qc ? [...cardEls].find(([, el]) => el === qc) : null;
+    const q = qid ? {kind: 'card', id: qid[0]} : t.closest('#redraw') ? {kind: 'redraw'} : t.closest('#waitBtn') ? {kind: 'wait'} : null;
+    if(q){ QUEUED = q; skipNow(); }
+    return;
+  }
   if(!inBattle() || busy || UI.view === 'self') return;
   // タイムラインを押すと透かす(何も選んでいないとき)。透かしている間は、ほかを押すと戻る
   const mk = t.closest('.mk[data-mk]'); if(mk){ if(UI.mvKey === mk.dataset.mk) hideMovePop(); else showMovePop(mk.dataset.mk, mk); return; }

@@ -41,6 +41,7 @@ function rngFrom(seed){
 }
 let rand = Math.random;
 function setRandom(fn){ rand = fn || Math.random; }
+const getRandom = () => rand;
 function shuffle(a, r){ const R = r || rand; for(let i = a.length - 1; i > 0; i--){ const j = Math.floor(R() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 function pick(a, r){ return a[Math.floor((r || rand)() * a.length)]; }
 const clone = o => JSON.parse(JSON.stringify(o));
@@ -876,7 +877,7 @@ function nextNodes(run){
   return [m.nodes[at.lane][at.idx + 1]];
 }
 
-const API = {RULE, makeFoe, defaultUid, liveUids, actorUid, parseT, gap, reloadCost, rngFrom, setRandom, shuffle, pick, clone, cur, advance, partOf, fx, partCards, battleDeck, partMax, dmgOf, blockOf,
+const API = {RULE, makeFoe, defaultUid, liveUids, actorUid, parseT, gap, reloadCost, rngFrom, setRandom, getRandom, shuffle, pick, clone, cur, advance, partOf, fx, partCards, battleDeck, partMax, dmgOf, blockOf,
   drawOne, drawN, upcoming, arrivals, applyCard, enemyAct, spendGen, runGen, newBattle, actions, actionCost, beginAction, endAction, doAction,
   newRun, nextArea, delayFoe, addDot, tickDots, growOf, waryTier, lootBack, fledAll, pasN, attrOf, costOf, baseKey, spendShort, dotShort, needShort, foeStr, moveBonus, regDeck, genMap, nextNodes, reachAfter, scaledFoe, heatLevel, addHeat, roomHeat, heatDelta, heatScrap, heatCards, heatBoost, encFor, poolIndex};
 root.ENGINE = API;

@@ -9,6 +9,7 @@
 | check.js | `node tools/publish/check.js <html や js>…`。中に書いたスクリプトの構文を確かめる。stage.sh と mkapp.py は最初にこれを走らせ、誤りがあれば止まる(0.41.2) |
 | csvedit.py | text/*.csv(BOM+CRLF)をキーで書き換える: setcol(path, key, 列, 値) / delrow / addrow。書き換えたら `node tools/text.js` |
 | play19.js | Playwright で試遊版を自動で遊ぶ。`WEAK=1` で敵を弱くして流れだけ見る |
+| fuzz.js | `node tools/publish/fuzz.js <mkapp の出力>/index.html <遭遇,...> [種の数]`。演出の打ち切り(0.50.0)の検査。同じ乱数で「ふつうに遊ぶ」と「演出中に連打する」を比べ、行動ごとの状態が一致するか、画面に取り残し(止まった動き・効果の要素・手札の数・消えた敵)がないかを見る。演出やその待ちを足したら走らせる |
 | wbmock.js | 工房を mock の共有データベースで動かす例(Playwright) |
 
 - 公開し直すときは、試遊版・工房の両方を作り直す(工房の中の試遊も data を使うため)。

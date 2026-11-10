@@ -335,7 +335,7 @@ const ACT_X = [['wind', '体勢', [['w', '窓'], ['poise', '一撃']]], ['guard'
 const actAttrs = (a, o) => [a.steal ? `スクラップを${a.steal}盗む` : '', a.eat ? `手札を${a.eat}枚飲み込む` : '', a.rebuild ? `ユニットを耐久${a.rebuild}で直す` : '', a.flee ? '逃げる' : '', a.hits > 1 ? `${a.hits}回` : '',
   a.wind ? `体勢${a.wind.w}/${a.wind.poise}` : '', a.guard ? `防壁${a.guard.w}/${a.guard.s}` : '', a.counter ? `反撃${a.counter.w}/${a.counter.d}` : '', a.rec ? `隙${a.rec}` : '', a.counterAfter ? `後の反撃${a.counterAfter.w}/${a.counterAfter.d}` : '', a.recPre ? `前の隙${a.recPre}` : '', a.buff ? `増幅+${a.buff}${a.all ? '(全員)' : ''}` : '',
   a.armor ? `ブロック+${a.armor}` : '', a.heal ? `修復${a.heal}` : '', a.crack ? `こちらにクラック+${a.crack}` : '', a.noise ? `ノイズ${a.noise}枚` : '', a.haste ? `加速${a.haste}` : '',
-  a.zone ? `射界(${a.zone.at}後から${a.zone.len}、${a.zone.d}→${SLOTX[a.zone.p] || ''})` : '', a.summon ? `増援` : '', ...(a.free || [])].filter(Boolean);
+  a.zone ? `射界(${a.zone.at}後から${a.zone.len}、${a.zone.d}→${SLOTX[a.zone.p] || ''})` : '', ...(a.free || [])].filter(Boolean);
 const actWho = (a, o) => a.by && o.units && o.units[a.by] ? (o.units[a.by].name || a.by) : '';
 // 行動のタイル(ゲームのタイムラインに近い見た目)。押すとその行動の欄を開く
 function actTile(a, o, base){
@@ -545,7 +545,7 @@ const LB = {up:'強化', rep:'くり返す回数', rarity:'レア度', heavyRang
   pname:'パッシブの名前', broke:'破壊で変わる行動', sync:'連携', unit:'ユニット', slot:'部位', max:'耐久', fx:'効果の中身', cards:'カード', desc:'説明', title:'タイトル', choices:'選択肢', label:'選択肢の名前', rooms:'部屋数', transfers:'乗り換えの場所', last:'ボスの手前の部屋', scale:'敵の強さの倍率', pools:'警戒度ごとの敵の組', enc:'遭遇', boss:'ボス', heal:'回復(最大の割合)', per:'1段の目盛り', gain:'区画ごとの増減', enemy:'1段ごとの敵の上乗せ', scrap:'1段ごとのスクラップの上乗せ', learnAt:'学習の候補が増える段', partAt:'鹵獲の候補が増える段', alert:'警戒の増減',
   sub:'選択肢の説明', fam:'系統', tier:'段階', elite:'エリート', boss:'ボス', foes:'敵', econ:'補給', r:'サイクル', hand:'枚数', blockReset:'ブロック消去', wait:'待機', sys:'補給の名前', id:'キー',
   melee:'近接+', ranged:'遠隔+', quickMelee:'コスト2以下の近接+', heavyMelee:'コスト4以上の近接+', justCrack:'JUSTでクラック', justDelay:'JUSTでディレイ', handMax:'手札の上限+',
-  steal:'盗むスクラップ', eat:'飲み込む枚数', rebuild:'直すユニットの耐久', flee:'逃げる', say:'ひとこと', startBlock:'開始時ブロック', startHand:'開始時に引く', startDelay:'開始時ディレイ', delayedDelay:'ディレイされたらディレイ', zeroDelay:'コスト0でディレイ', v:'量', summon:'増援', type:'種類', keep:'手札を残す', heat:'回数ごとの追加', eject:'排莢', cap:'上限'};
+  steal:'盗むスクラップ', eat:'飲み込む枚数', rebuild:'直すユニットの耐久', flee:'逃げる', say:'ひとこと', startBlock:'開始時ブロック', startHand:'開始時に引く', startDelay:'開始時ディレイ', delayedDelay:'ディレイされたらディレイ', zeroDelay:'コスト0でディレイ', v:'量', type:'種類', keep:'手札を残す', heat:'回数ごとの追加', eject:'排莢', cap:'上限'};
 const segLabel = s => /^\d+$/.test(s) ? String(+s + 1) : (LB[s] || s);
 function groupLabel(o, parent){
   if(!parent) return '基本';

@@ -2,13 +2,13 @@
 // 使い方: node tools/sim.js [打ち方 greedy|expert|master|guard|random] [回数] [run]
 //   master(0.40.4): 2手先まで読み、これから来る攻撃(受けられない分)を減らす手を選ぶ。いちばん人に近い。guard はその1手先版
 //   遭遇ごとに、最初のデッキ・無傷の状態から戦わせて、勝率や被ダメージを出す
-//   キャラは環境変数 CLS で選ぶ(data/classes.js のキー。省略時は常時供給の war = data/cards.js の数値そのまま)。例: CLS=k7 node tools/sim.js greedy 40
+//   キャラは環境変数 CLS で選ぶ(data/classes.js のキー。省略時はゲームと同じ DATA.defaultClass = K-7。war は data/cards.js の数値そのまま)。例: CLS=k7 node tools/sim.js greedy 40
 const fs = require('fs'), vm = require('vm'), path = require('path');
 const ctx = {console}; ctx.window = ctx; ctx.globalThis = ctx; vm.createContext(ctx);
 const base = path.join(__dirname, '..');
 for(const f of ['data/parts.js','data/cards.js','data/enemies.js','data/map.js','data/classes.js','data/attrs.js','data/text.js','js/engine.js']) vm.runInContext(fs.readFileSync(path.join(base, f), 'utf8'), ctx, {filename:f});
 const E = ctx.ENGINE, D = ctx.DATA;
-{ const C = D.classes[process.env.CLS || 'war']; E.RULE.econ = C.econ ? {...C.econ} : null; E.RULE.freeWait = !!C.wait;
+{ const C = D.classes[process.env.CLS || D.defaultClass]; E.RULE.econ = C.econ ? {...C.econ} : null; E.RULE.freeWait = !!C.wait;
   for(const [k, o] of Object.entries(C.cards)) D.classCard(D.cards[k], o); }
 
 function threat(st){ let s = 0; for(const e of st.b.foes) if(e.alive){ s += e.pat.reduce((a, x) => a + (x.d || 0), 0) / e.pat.reduce((a, x) => a + x.dl, 0); } return s; }

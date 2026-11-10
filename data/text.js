@@ -949,7 +949,6 @@ window.DATA = window.DATA || {};
   "ui.mv.heal": "耐久を{heal}回復する。",
   "ui.mv.crack": "こちらにクラック{crack}を与える。こちらが受ける攻撃すべてのダメージ+{crack}。重なる。",
   "ui.mv.noise": "山札に《ノイズ》{noise}枚を混ぜる。",
-  "ui.mv.summon": "{name}を呼ぶ。",
   "ui.mv.link": "ブレイクされると、次の行動も飛ばされる。",
   "ui.mv.none": "攻撃はしない。",
   "ui.foe.react": "反応：コスト{min}以上のカードを使い始めると、1サイクル後に{part}に{d}ダメージを与える。",

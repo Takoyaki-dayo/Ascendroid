@@ -71,7 +71,6 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 .ic{display:inline-flex;flex:none}
 .ic svg{width:12px;height:12px;display:block}
 .np{pointer-events:none}
-
 /* timeline */
 #tl{position:absolute;inset:0;transition:opacity .2s}
 #shaker.executing #tl{opacity:.62}
@@ -86,11 +85,6 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 .rowline{position:absolute;left:170px;height:1px;width:612px;background:rgba(169,188,203,.1)}
 .rowline.tgt{background:rgba(56,211,255,.5)}
 .rowline.dead{opacity:.3}
-.rowtag.trk{background:transparent;color:var(--dim)} .rowtag.trk svg{width:11px;height:11px}
-.rowtag{position:absolute;left:788px;width:15px;height:15px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-family:var(--f-num);font-size:10px;font-weight:700;background:#1e2c3a;color:var(--fg)}
-.rowtag.tgt{background:var(--cy);color:var(--bg)}
-.rowtag.dead{opacity:.3}
-.rowhit{position:absolute;left:170px;width:620px;height:34px}
 #pvRegion{position:absolute;left:171px;top:24px;height:144px;background:linear-gradient(90deg,rgba(56,211,255,.05),rgba(56,211,255,.15));border-top:1px solid rgba(56,211,255,.35);border-bottom:1px solid rgba(56,211,255,.35)}
 #pvLine{position:absolute;top:22px;width:2px;height:146px;background:var(--cy);box-shadow:0 0 8px rgba(56,211,255,.8)}
 #selfBar{position:absolute;top:25px;height:9px;border-radius:3px;transition:left .13s linear,width .13s linear}
@@ -109,7 +103,6 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 .mk.just{background:var(--just);color:#1a1030;box-shadow:0 0 16px rgba(177,140,255,.85)}
 .mk.fire{transform:scale(1.35);box-shadow:0 0 14px rgba(255,77,106,.8)}
 .mk.out{opacity:0!important;transform:scale(1.6)}
-
 /* stage */
 #floor{position:absolute;left:0;top:214px;width:844px;height:80px;background:linear-gradient(180deg,transparent,rgba(56,211,255,.035))}
 #droid{position:absolute;left:108px;top:142px;width:50px;height:128px;transform-origin:50% 100%}
@@ -121,8 +114,6 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 @keyframes recoil{25%{transform:translateX(-7px) rotate(-3deg)}100%{transform:none}}
 #droid.hit{animation:dhit .3s linear}
 @keyframes dhit{0%{filter:brightness(2.2) drop-shadow(0 0 6px rgba(255,77,106,.9))}25%{transform:translateX(-5px)}50%{transform:translateX(4px)}75%{transform:translateX(-2px)}100%{transform:none;filter:none}}
-#droid.stagger{animation:stagger .4s ease-out}
-@keyframes stagger{30%{transform:rotate(-10deg) translateX(-6px)}100%{transform:none}}
 #droid.glitch{animation:glitch .3s steps(4)}
 @keyframes glitch{25%{transform:translateX(3px)}50%{transform:translateX(-3px);filter:hue-rotate(60deg)}75%{transform:translateX(2px)}100%{transform:none}}
 .foe{position:absolute;top:170px;width:90px;height:100px;transition:opacity .4s,transform .4s,filter .3s}
@@ -152,8 +143,6 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 .cinfo{position:absolute;top:272px;width:110px;display:flex;flex-direction:column;gap:3px;transition:opacity .4s}
 .cinfo.dead{opacity:.25}
 .frow{display:flex;gap:4px;align-items:center}
-.ftag{width:15px;height:15px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-family:var(--f-num);font-size:10px;font-weight:700;background:#1e2c3a;flex:none}
-.ftag.tgt{background:var(--cy);color:var(--bg)}
 .hpb{position:relative;display:block;width:58px;height:5px;background:#1c2937;border-radius:2px;overflow:hidden}
 .hpb i{position:absolute;left:0;top:0;bottom:0;background:var(--neutral);transition:width .25s}
 /* 手応え(0.40.0): 減った分の跡。いったん白く光り、少し遅れて縮む */
@@ -169,7 +158,6 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 .st.crack{color:var(--foe2)} .st.blk{color:var(--fg)} .st.swf{color:var(--cy)} .st.chg{color:var(--cy)}
 .st.flash{animation:stflash .35s}
 @keyframes stflash{0%{filter:drop-shadow(0 0 6px #fff);color:#fff}100%{filter:none}}
-
 /* parts */
 .part{position:absolute;left:8px;width:76px;display:block;padding:2px 0;transition:background .2s;border-radius:4px}
 .ph{display:flex;align-items:center;gap:4px}
@@ -189,7 +177,6 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 .part.broken .pico::after{content:"";position:absolute;left:-2px;top:5px;width:16px;height:2px;background:var(--foe);transform:rotate(-40deg)}
 .part.flash{background:rgba(255,77,106,.22)}
 #menuBtn{position:absolute;left:806px;top:8px;width:28px;height:22px;border:1px solid var(--line);border-radius:4px;background:var(--panel);color:var(--dim);display:flex;align-items:center;justify-content:center}
-
 /* hand: tall cards peek from the bottom edge */
 #handShade{position:absolute;left:0;top:170px;width:844px;height:220px;background:linear-gradient(180deg,rgba(10,15,21,0),rgba(10,15,21,.88) 40%);opacity:0;transition:opacity .2s;pointer-events:none}
 #handShade.on{opacity:1}
@@ -256,7 +243,6 @@ button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 #redraw b{font-family:var(--f-num);font-size:24px;color:var(--cy)}
 #redraw.sel{top:292px;border:1.5px solid var(--cy);box-shadow:0 10px 22px rgba(56,211,255,.22)}
 #redraw:disabled{opacity:.4;cursor:default}
-
 /* fx */
 #fx,#floats{position:absolute;inset:0;pointer-events:none}
 .float{position:absolute;transform:translate(-50%,-50%);font-family:var(--f-num);font-weight:700;font-size:17px;white-space:nowrap;text-shadow:-1.5px 0 rgba(56,211,255,.75),1.5px 0 rgba(255,77,106,.75),0 0 6px #000;animation:rise .9s ease-out forwards;color:#fff}
@@ -275,14 +261,12 @@ body.hs *{animation-play-state:paused!important;transition:none!important}
 @keyframes slash{0%{opacity:0;transform:rotate(-35deg) scaleX(.2)}40%{opacity:1;transform:rotate(-35deg) scaleX(1)}100%{opacity:0;transform:rotate(-35deg) scaleX(1.2)}}
 .shield{position:absolute;left:92px;top:136px;width:82px;height:140px;border:1.5px solid rgba(214,246,255,.8);border-radius:40% 40% 46% 46%;box-shadow:0 0 14px rgba(56,211,255,.35),inset 0 0 14px rgba(56,211,255,.2);animation:shield .55s ease-out forwards}
 @keyframes shield{0%{opacity:0;transform:scale(.7)}35%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.06)}}
-.noise{position:absolute;width:6px;height:6px;background:var(--cy);transition:left .32s ease-in,top .32s ease-in,opacity .32s}
 .fxghost{position:absolute;width:24px;height:34px;border:1.5px solid var(--foe);border-radius:4px;background:var(--raised);transition:left .4s ease-in,top .4s ease-in,opacity .4s,transform .4s}
 .spark{position:absolute;width:4px;height:4px;border-radius:2px;background:#ffd28a;transition:transform .4s ease-out,opacity .4s}
 .after{position:absolute;opacity:.35;transition:opacity .3s,transform .3s;filter:drop-shadow(0 0 4px rgba(56,211,255,.8))}
 #toast{position:absolute;left:0;right:0;top:120px;text-align:center;font-size:18px;font-weight:700;letter-spacing:.14em;opacity:0;pointer-events:none;text-shadow:0 0 10px #000}
 #toast.show{animation:toast 1.6s ease-out}
 @keyframes toast{0%{opacity:0;clip-path:inset(0 50% 0 50%);letter-spacing:.5em}12%{opacity:1;clip-path:inset(0 0 0 0);letter-spacing:.14em}16%{transform:translateX(3px);text-shadow:-2px 0 rgba(56,211,255,.8),2px 0 rgba(255,77,106,.8)}20%{transform:none;text-shadow:0 0 10px #000}70%{opacity:1}100%{opacity:0}}
-
 /* overlay */
 #ov{position:absolute;inset:0;background:rgba(5,9,14,.84);display:flex;align-items:center;justify-content:center;z-index:50;padding:12px}
 .box{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 18px;max-width:640px;width:100%;max-height:366px;overflow:auto}
@@ -313,18 +297,8 @@ body.hs *{animation-play-state:paused!important;transition:none!important}
 .bodyline{display:flex;align-items:center;gap:6px;color:var(--fg2);font-family:var(--f-num);font-size:12px;margin:-4px 0 6px}
 /* enemy info */
 .ei{display:flex;gap:16px}
-.ei-l{width:150px;flex:none;display:flex;flex-direction:column;gap:6px}
-.ei-spr{height:110px;display:flex;align-items:center;justify-content:center;border-radius:8px;background:radial-gradient(circle at 50% 60%,rgba(56,211,255,.06),transparent 70%)}
-.ei-name{display:flex;gap:6px;align-items:center;font-size:12px;font-weight:700}
-.ei-hp{font-family:var(--f-num);font-weight:700;font-size:24px;line-height:1}
-.ei-hp span{font-size:13px;color:var(--dim)}
 .ei-bar{position:relative;height:6px;border-radius:3px;background:#1c2937;overflow:hidden}
 .ei-bar i{position:absolute;left:0;top:0;bottom:0;background:var(--neutral)}
-.ei-st{display:flex;gap:6px;flex-wrap:wrap}
-.stchip{display:inline-flex;align-items:center;gap:3px;border:1px solid rgba(255,77,106,.5);border-radius:4px;padding:2px 6px;color:var(--foe2);font-family:var(--f-num);font-weight:700;font-size:12px}
-.stchip .ic svg{width:12px;height:12px}
-.stdesc{font-size:10.5px;color:var(--fg2);border-left:2px solid var(--foe);padding-left:6px}
-.ei-r{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center}
 .seq{display:flex;align-items:center;gap:0;flex-wrap:nowrap;overflow-x:auto;padding:22px 0 6px}
 .at{position:relative;width:76px;height:104px;flex:none;border:1.5px solid var(--foe);border-radius:8px;background:#1d1220;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
 .at .ty{position:absolute;left:6px;top:6px;color:var(--foe2)}
@@ -340,8 +314,6 @@ body.hs *{animation-play-state:paused!important;transition:none!important}
 .at.dl .ty{color:var(--fg2)}
 .at.cur{box-shadow:0 0 0 2px var(--bg),0 0 0 3.5px var(--cy)}
 .at .nx{position:absolute;top:-20px;left:0;right:0;display:flex;justify-content:center;align-items:center;gap:3px;color:var(--cy);font-family:var(--f-num);font-weight:700;font-size:12px}
-.conn{width:34px;flex:none;display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--cy-dim);font-family:var(--f-num);font-weight:700;font-size:12px}
-.conn b{color:var(--fg2)}
 .loop{width:40px;flex:none;display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--cy-dim);font-family:var(--f-num);font-weight:700;font-size:12px}
 .loop b{color:var(--fg2)}
 .pinfo{display:flex;gap:14px;align-items:center;margin-bottom:12px}
@@ -408,18 +380,10 @@ body.hs *{animation-play-state:paused!important;transition:none!important}
 .mk.unk{border:1px dashed #3d5163;background:transparent;color:var(--dim);opacity:.7}
 .mk.multi b{font-size:11px}
 .st.str{color:var(--foe2)}
-.at .atr{display:flex;flex-wrap:wrap;justify-content:center;gap:2px;margin-bottom:8px}
 .chip{display:inline-flex;align-items:center;padding:0 3px;border-radius:3px;font-size:9px;font-weight:700;line-height:13px;white-space:nowrap}
 .chip.wind{background:rgba(255,184,77,.16);color:#ffcf85} .chip.guard{background:rgba(143,176,196,.18);color:#cfe3ef}
 .chip.counter{background:rgba(255,77,106,.16);color:var(--foe2)} .chip.vuln{background:rgba(56,211,255,.14);color:var(--cy)}
 .chip.buff{background:rgba(255,77,106,.16);color:var(--foe2)} .chip.multi{background:#22303d;color:var(--fg2)}
-.seqh{font-size:10px;color:var(--dim);margin:6px 0 -14px}
-.ei-r.two .seq{padding:18px 0 2px}
-.ei-r.two .at{height:86px}
-.ei-r.two .at .v{font-size:22px}
-.ei-r.two .seqh{margin:2px 0 -14px}
-.ei-r.two .traits{gap:3px;margin-top:4px}
-.conn.alt{width:18px;color:var(--dim)}
 .at.mv{border:1px solid #33495d;background:var(--raised)}
 .at.mv .ty{color:var(--fg2)}
 .box.wide{max-width:800px}
@@ -480,7 +444,6 @@ body.hs *{animation-play-state:paused!important;transition:none!important}
 .fhead b{font-size:18px;letter-spacing:.04em}
 .fhp{display:flex;align-items:center;gap:4px;font-family:var(--f-num)}
 .fhp b{font-size:24px;line-height:1} .fhp>span:not(.ei-bar){color:var(--dim);font-size:12px;margin:5px 10px 0 0}
-.fsts{display:flex;gap:6px;flex-wrap:wrap}
 .fsp{display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 9px;border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--fg2);font-size:11px;font-weight:700}
 .fsp b{font-family:var(--f-num);font-size:13px;color:var(--fg)}
 .fsp .ic svg{width:12px;height:12px}
@@ -490,8 +453,6 @@ body.hs *{animation-play-state:paused!important;transition:none!important}
 .fsp.on{box-shadow:0 0 0 2px var(--cy)}
 .fdet.stx{border-left-color:#3a5064} .fdet.stx.bad{border-left-color:var(--foe)} .fdet.stx.good{border-left-color:var(--cy)}
 .fm-v .ic.big svg{width:17px;height:17px}
-.fst{display:inline-flex;align-items:center;gap:3px;font-family:var(--f-num);font-weight:700;font-size:12px;color:var(--fg2);padding:1px 6px;border:1px solid var(--line);border-radius:4px;margin-right:4px}
-.fst.f{color:var(--foe2)} .fst .g{font-family:var(--f-body);font-size:10px} .fst .ic svg{width:11px;height:11px}
 #focus .ei-bar{display:block;width:180px;margin-right:10px}
 .fmoves{display:flex;flex-direction:column;gap:6px}
 .frow-m{display:flex;align-items:center;gap:0;padding-top:12px}
@@ -513,10 +474,8 @@ body.hs *{animation-play-state:paused!important;transition:none!important}
 .fdet{margin-top:6px;border-left:2px solid var(--cy-dim);padding:2px 0 2px 10px;max-width:400px}
 .fdet.ch{border-left-color:var(--just)}
 .fdn{font-weight:700;font-size:14px;margin-bottom:3px}
-.fdet p,.ftr p{margin:0;font-size:11.5px;line-height:1.55;color:var(--fg2)}
-.fdet b,.ftr b{color:var(--fg)}
-.ftr{max-width:400px;padding-top:4px;border-top:1px solid var(--line)}
-.ftr p{font-size:10.5px}
+.fdet p{margin:0;font-size:11.5px;line-height:1.55;color:var(--fg2)}
+.fdet b{color:var(--fg)}
 .fclose{margin-left:auto;padding:4px 14px}
 /* ユニットの在りか(0.18.2): 絵を持たないユニットは、本体の絵の中に印を置き、耐久バーと線で結ぶ */
 .ulines{position:absolute;left:0;top:0;width:844px;height:390px;pointer-events:none;overflow:visible;transition:opacity .3s}
@@ -558,8 +517,8 @@ body.hs *{animation-play-state:paused!important;transition:none!important}
 @keyframes nodeGo{0%{box-shadow:0 0 0 0 rgba(56,211,255,.7)}100%{box-shadow:0 0 0 14px rgba(56,211,255,0)}}
 @keyframes battleIn{from{opacity:0;transform:scale(1.03)}to{opacity:1;transform:none}}
 .btn,.mbtn,.seg button,.dcard button{transition:scale .1s,filter .12s,opacity .15s}
-.btn:active:not(:disabled),.mbtn:active,.seg button:active,.dcard button:active,.opt:active,.fm:active,.fu:active,.fsp:active,.pile:active,#menuBtn:active,.ref:active{scale:.95}
-.opt:active,.fm:active,.fu:active,.fsp:active{filter:brightness(1.15)}
+.btn:active:not(:disabled),.mbtn:active,.seg button:active,.dcard button:active,.opt:active,.fm:active,.fsp:active,.pile:active,#menuBtn:active,.ref:active{scale:.95}
+.opt:active,.fm:active,.fsp:active{filter:brightness(1.15)}
 #redraw:active:not(:disabled),#waitBtn:active:not(:disabled){scale:.96}
 .cards .card{transition:border-color .15s,box-shadow .2s,transform .2s,translate .15s}
 .cards .card:active{scale:.97}
@@ -604,7 +563,7 @@ body.hs *{animation-play-state:paused!important;transition:none!important}
 #shaker.enter #world{animation:battleIn .4s cubic-bezier(.2,.8,.2,1)}
 #shaker.enter #parts .part{animation:slideIn .35s cubic-bezier(.2,.8,.2,1) backwards}
 #mvpop:not([hidden]){animation:popIn .16s cubic-bezier(.2,.8,.2,1)}
-.fdet,.ftr{animation:riseIn .18s ease-out}
+.fdet{animation:riseIn .18s ease-out}
 /* サイバーパンクの演出(0.18.6) */
 /* 画面全体の走査線と、タイムラインをゆっくり走る光 */
 #stage::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:90;background:repeating-linear-gradient(0deg,rgba(180,230,255,.028) 0 1px,transparent 1px 3px)}
@@ -635,15 +594,12 @@ body.hs *{animation-play-state:paused!important;transition:none!important}
 .float.big{font-size:26px;letter-spacing:.06em}
 .float.just2{color:#efe6ff;text-shadow:-2px 0 rgba(56,211,255,.8),2px 0 rgba(255,77,106,.8),0 0 14px rgba(177,140,255,.9)}
 /* ユニットが壊れるときの破片(四角い画素) */
-.pix{position:absolute;width:5px;height:5px;transition:transform .5s cubic-bezier(.2,.8,.3,1),opacity .5s}
 /* 自機が撃たれたときの色ずれ */
 @keyframes dhit{0%{filter:brightness(2.2) drop-shadow(-3px 0 #38d3ff) drop-shadow(3px 0 #ff4d6a)}25%{transform:translateX(-5px) skewX(4deg)}50%{transform:translateX(4px)}75%{transform:translateX(-2px)}100%{transform:none;filter:none}}
 /* 光線と斬撃の色ずれ */
 .beam::after{content:"";position:absolute;left:0;right:0;top:3px;height:2px;background:linear-gradient(90deg,transparent,rgba(255,77,106,.7));filter:blur(.5px)}
 .slash::after{content:"";position:absolute;inset:0;transform:translate(2px,2px);background:rgba(56,211,255,.8);filter:blur(.6px)}
 /* カードを使ったとき、自機に吸い込まれる光の輪 */
-.cardghost{position:absolute;width:36px;height:50px;margin:-25px 0 0 -18px;border:1.5px solid var(--cy);border-radius:5px;box-shadow:0 0 12px rgba(56,211,255,.7);animation:cghost .4s ease-out forwards}
-@keyframes cghost{0%{opacity:1;transform:scale(.6)}100%{opacity:0;transform:scale(1.8)}}
 /* 重ねる画面は開くときに走査線が上から下へ */
 .box{position:relative;box-shadow:0 0 0 1px rgba(56,211,255,.06),0 0 30px rgba(56,211,255,.05)}
 #ov.enter .box::before,#ov2.enter .box::before,#ref.enter .box::before{content:"";position:absolute;left:0;right:0;top:0;height:40px;pointer-events:none;background:linear-gradient(180deg,transparent,rgba(56,211,255,.16),transparent);animation:boxScan .5s ease-out forwards}
@@ -662,7 +618,6 @@ body.hs *{animation-play-state:paused!important;transition:none!important}
 .czoom .card .ref{font:inherit;background:none;border:0;padding:0;text-decoration:underline dotted;text-underline-offset:2px;cursor:pointer}
 .czoom .ckw{font-size:11.5px;max-width:240px}
 /* 拡大したカードの説明(0.38.1): 拡大しても文の大きさが手札と同じ割合だと大きすぎて切れるので、元の大きさを小さくする(拡大後でおよそ12〜13px) */
-
 .rdesc{margin:0 0 12px;font-size:12px;line-height:1.6;color:var(--fg2)}
 .ref{display:inline;padding:0;margin:0;border:0;background:none;color:var(--fg);font:inherit;font-weight:700;text-decoration:underline dotted;text-underline-offset:3px;cursor:pointer}
 .ref.u{color:var(--foe2)}
@@ -695,14 +650,6 @@ body.hs *{animation-play-state:paused!important;transition:none!important}
 .fsk-n{font-size:10px;color:var(--dim);margin-top:6px}
 .fm.mini{width:34px;height:34px;border-radius:5px;flex:none;pointer-events:none} .fm.mini .fm-v b{font-size:14px} .fm.mini .fm-v i{font-size:8.5px} .fm.mini .fm-p{height:10px} .fm.mini .fm-p .ic svg{width:9px;height:9px} .fm.mini .fm-v .ic.big svg{width:13px;height:13px}
 /* 敵の詳細: ユニットとパッシブ(古い札) */
-.funits{display:flex;gap:5px;flex-wrap:wrap}
-.fu{display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 8px;border:1px solid var(--line);border-radius:5px;background:var(--panel);color:var(--fg);font-size:11px;font-weight:700}
-.fu b{font-family:var(--f-num);font-size:12px;color:var(--fg2)}
-.fu .ic{color:var(--fg2)} .fu .ic svg{width:11px;height:11px}
-.fu .ic.s-good{color:var(--cy)} .fu .ic.s-arm{color:#cfe3ef} .fu .ic.s-bad{color:var(--foe2)}
-.fu.act>.ic:first-child{color:var(--foe2)}
-.fu.on{box-shadow:0 0 0 2px var(--cy)}
-.fu.broken{opacity:.4;text-decoration:line-through}
 .fsp.pas{color:var(--foe2);border-color:rgba(255,77,106,.35);border-style:dashed}
 .fsp.pas.off{opacity:.45}
 .fdet.pas{border-left-color:var(--foe)}
@@ -735,7 +682,6 @@ body.hs *{animation-play-state:paused!important;transition:none!important}
 #tl.solo .mk.ch{border-radius:20px}
 #tl.solo .mk.multi b{font-size:16px}
 #tl.solo .mk .mby{width:15px;height:15px;left:-7px;top:-8px} #tl.solo .mk .mby svg{width:9px;height:9px}
-#tl.solo .rowtag{display:none}
 #tl.solo .rowline{background:rgba(169,188,203,.14)}
 #tl.solo .wb{height:16px;font-size:10.5px}
 #tl.solo .wb .ic svg{width:10px;height:10px}
@@ -773,7 +719,6 @@ body.hs *{animation-play-state:paused!important;transition:none!important}
 .fdn .fby{display:inline-flex;align-items:center;gap:4px;margin-left:10px;font-size:11px;font-weight:400;color:var(--fg2)} .fdn .fby .ic svg{width:11px;height:11px}
 /* 敵の部位と危険域 */
 .fnote.trk{display:flex;align-items:center;gap:5px;color:var(--fg2);margin-top:4px} .fnote.trk .ic svg{width:11px;height:11px} .fnote.trk span:last-child:not(.ic){color:var(--dim);margin-left:6px}
-.fsleep{opacity:.4}
 #focus{overflow-y:auto}
 #focus.many{gap:4px} #focus.many .fhp b{font-size:20px} #focus.many .frow-m{padding-top:11px}
 #focus.many .fm{width:40px;height:40px} #focus.many .fm-v b{font-size:16px} #focus.many .fdet{margin-top:2px} #focus.many .fdet p{font-size:11px;line-height:1.45}
@@ -834,12 +779,12 @@ body.hs *{animation-play-state:paused!important;transition:none!important}
 .minfo{position:absolute;left:12px;right:12px;bottom:10px;height:44px;display:flex;align-items:center;gap:10px;padding:0 6px 0 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
 .minfo .ic svg{width:16px;height:16px}
 .minfo b{font-size:12px}
-.mi-f{font-size:11px;color:var(--fg)} .mi-d{font-size:10.5px;color:var(--dim)} .mi-l{font-size:10.5px;color:var(--fg2)} .mi-h{color:var(--dim)}
+.mi-d{font-size:10.5px;color:var(--dim)} .mi-l{font-size:10.5px;color:var(--fg2)} 
 .minfo .sp{flex:1}
 /* ===== 見た目の作り込み(0.18.7): 戦術端末の画面。角の括弧・細い光の線・色は意味だけ ===== */
 :root{--hud:#1f3346; --hud2:#2a465e; --rest:#6fe3a8; --shop:#ffcf85}
 /* 角の括弧(パネル共通) */
-.hud,.box,.minfo,.rs-still,.rs-opts .opt,.urow,.u-art{--bk:var(--cy-dim)}
+.box,.minfo,.rs-still,.rs-opts .opt,.urow,.u-art{--bk:var(--cy-dim)}
 .box{border:1px solid var(--hud);border-radius:4px;padding:16px 20px;
   background:linear-gradient(var(--bk),var(--bk)) left top/16px 2px no-repeat,linear-gradient(var(--bk),var(--bk)) left top/2px 16px no-repeat,
   linear-gradient(var(--bk),var(--bk)) right bottom/16px 2px no-repeat,linear-gradient(var(--bk),var(--bk)) right bottom/2px 16px no-repeat,
@@ -1118,37 +1063,12 @@ body.hs *{animation-play-state:paused!important;transition:none!important}
 #foes.aim .upt.lic i{width:17px;height:17px} .upt.lic.tgt i{background:var(--cy);border-color:var(--cy);color:#04121a}
 /* 自機の状態は耐久の数字の右(下に置くと手札にかかる) */
 #meSts{position:absolute;left:94px;top:-3px;flex-wrap:nowrap}
-/* ===== 警戒度(0.20.0) ===== */
+/* ===== 警戒(色の変数と、警戒の窓) ===== */
 :root{--al1:var(--cy); --al2:#ffb84d; --al3:#ff7a59; --al4:var(--foe)}
-.aring{position:relative;display:inline-flex;align-items:center;justify-content:center;flex:none}
-.aring svg{display:block;overflow:visible}
-/* 輪は段 I〜X の10区切り(0.23.0)。済んだ段は段ごとの色、今の段はゲージの進み、印はこのエリアで敵の組が変わる段 */
-.aring .sg{fill:none;stroke-linecap:butt}
-.aring .sg.e{stroke:#1a2c3d} .achip .aring .sg.e{stroke:color-mix(in srgb,var(--ac) 22%,#0d1720)}
-.aring .sg.f{filter:drop-shadow(0 0 2px currentColor)}
-.aring .sg.c{stroke:#24394c}
-.aring .bm{stroke:var(--fg2);stroke-width:1.4;stroke-linecap:round}
-.aring .bm.on{stroke:var(--ac)}
-.aring .ai{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--ac)} .aring .ai svg{width:11px;height:11px}
-.aring b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--f-num);font-weight:700;color:var(--ac);font-size:22px;text-shadow:0 0 10px var(--ac)}
-.aring b.long{font-size:18px;letter-spacing:-.04em}
-/* 上の帯のチップ: 輪+ローマ数字。段が上がるほど光が強くなり、VII からは脈打つ */
-.achip{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 10px 0 4px;border:1px solid color-mix(in srgb,var(--ac) 55%,transparent);border-radius:4px;
-  background:linear-gradient(90deg,color-mix(in srgb,var(--ac) 16%,transparent),color-mix(in srgb,var(--ac) 4%,transparent));box-shadow:0 0 10px color-mix(in srgb,var(--ac) 22%,transparent),inset 0 0 8px color-mix(in srgb,var(--ac) 10%,transparent)}
 .t1{--ac:var(--al1)} .t2{--ac:var(--al2)} .t3{--ac:var(--al3)} .t4{--ac:var(--al4)}
-.achip .an{display:flex;flex-direction:column;align-items:flex-start;line-height:1;min-width:30px}
-.achip .an i{font-style:normal;font-size:8.5px;letter-spacing:.14em;color:color-mix(in srgb,var(--ac) 75%,#fff)}
-.achip .an b{font-family:var(--f-num);font-weight:700;font-size:16px;letter-spacing:.02em;color:var(--ac);text-shadow:0 0 8px color-mix(in srgb,var(--ac) 60%,transparent);margin-top:1px}
-.achip.t3,.achip.t4{animation:alGlow 1.6s ease-in-out infinite}
-.achip.t4{animation-duration:.9s}
 @keyframes alGlow{50%{box-shadow:0 0 18px color-mix(in srgb,var(--ac) 55%,transparent),inset 0 0 12px color-mix(in srgb,var(--ac) 22%,transparent)}}
 .mbtn.alb{padding:0;height:32px;border-color:transparent;background:transparent;margin-left:-2px}
-.alv{display:flex;align-items:center;gap:16px;margin:0 0 10px}
-.adesc{margin:0 0 4px;font-size:11.5px;line-height:1.6;color:var(--fg2)} .anext{margin:0;font-family:var(--f-num);font-size:12px;font-weight:700;color:var(--fg)}
-.aeff{list-style:none;margin:0 0 10px;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:5px 14px}
-.aeff li{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--fg)} .aeff li::before{content:"";width:6px;height:6px;flex:none;background:var(--al2);transform:rotate(45deg)}
-.aeff li.off{color:var(--dim)} .aeff li.off::before{background:#2a465e}
-.aeff li i{font-style:normal;font-family:var(--f-num);font-size:10px;color:var(--dim);margin-left:auto}
+.adesc{margin:0 0 4px;font-size:11.5px;line-height:1.6;color:var(--fg2)}
 .again{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}
 .ag{display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border:1px solid var(--hud);border-radius:3px;font-size:10.5px;color:var(--fg2)} .ag .ic{display:flex} .ag .ic svg{width:11px;height:11px}
 .ag b{font-family:var(--f-num);color:var(--al2)} .ag b.dn{color:var(--cy)}
@@ -1223,7 +1143,6 @@ body.hs *{animation-play-state:paused!important;transition:none!important}
 .tn.hit{background:var(--cy);color:#041417;border-radius:0;clip-path:var(--cut-s);box-shadow:none}
 #nowTri path{fill:var(--cy)}
 #nowLine{width:4px;margin-left:-1px;background:linear-gradient(90deg,rgba(63,240,255,.3),var(--cy) 25%,var(--cy) 75%,rgba(63,240,255,.3));box-shadow:none}
-.rowtag{border-radius:0;clip-path:var(--cut-s)} .rowtag.tgt{background:var(--cy);color:#041417}
 /* 敵の列は1本(0.46.0)。列を太い軌条にして、次の攻撃までの区間を赤く刻む */
 #tl.solo .rowline{height:2px;background:#1d2a37}
 #threat{position:absolute;left:171px;height:2px;background:repeating-linear-gradient(90deg,var(--foe) 0 6px,transparent 6px 9px);pointer-events:none;transition:width .13s linear,opacity .2s}
@@ -1263,7 +1182,6 @@ body.hs *{animation-play-state:paused!important;transition:none!important}
 .hpb{border-radius:0;background:#18222d}
 .hpb::before{box-shadow:none}
 .eu.tgt{border-radius:0;border-color:var(--cy);background:rgba(63,240,255,.08)}
-.ftag{border-radius:0;clip-path:var(--cut-s)} .ftag.tgt{background:var(--cy);color:#041417}
 .reticle{border-radius:0}
 /* --- 操作の層 --- */
 .card{border-radius:0;border:1px solid #2a3847;background:#0d131a;clip-path:var(--cut)}
@@ -1275,7 +1193,6 @@ body.hs *{animation-play-state:paused!important;transition:none!important}
 .cval{border-radius:0;background:rgba(4,6,9,.85)}
 .pile,#redraw,#waitBtn,#menuBtn{border-radius:0;clip-path:var(--cut)}
 #redraw b{color:var(--cy)}
-.cardghost{border:2px solid var(--cy);border-radius:0;box-shadow:none;clip-path:var(--cut-s)}
 /* 数字: 色ずれを伴って叩きつける(影はぼかさない) */
 .float{text-shadow:-2px 0 rgba(63,240,255,.85),2px 0 rgba(255,42,75,.85),0 2px 0 #000}
 .float.dm{animation:bNum .8s steps(10) forwards}
@@ -1285,11 +1202,6 @@ body.hs *{animation-play-state:paused!important;transition:none!important}
 .oslock{position:absolute;width:26px;height:26px;margin:-13px 0 0 -13px;border:2px solid var(--cy);transform:rotate(45deg);pointer-events:none;animation:bLock .26s steps(4) forwards}
 @keyframes bLock{0%{transform:rotate(45deg) scale(.4);opacity:1}100%{transform:rotate(45deg) scale(1.9);opacity:0}}
 /* JUST: 紫の斬線が今の線を走る。画面は光らせず、縁だけ紫に締まる */
-.osjust{position:absolute;width:0;height:0;pointer-events:none}
-.osjust::before{content:"";position:absolute;left:-2px;top:-80px;width:4px;height:160px;background:var(--just2);transform:rotate(24deg);animation:bCut .34s steps(4) forwards}
-.osjust::after{content:"";position:absolute;left:-40px;top:-2px;width:80px;height:4px;background:var(--just);animation:bCut2 .34s steps(4) forwards}
-@keyframes bCut{0%{clip-path:inset(0 0 100% 0)}50%{clip-path:inset(0 0 0 0);opacity:1}100%{clip-path:inset(0 0 0 0);opacity:0}}
-@keyframes bCut2{0%{transform:scaleX(0)}50%{transform:scaleX(1);opacity:1}100%{transform:scaleX(1.6);opacity:0}}
 #flashFx{background:none!important}
 #flashFx.just,#flashFx.brk,#flashFx.hurt{animation:bEdge .42s ease-out}
 #flashFx.just{box-shadow:inset 0 0 0 3px var(--just),inset 0 0 40px rgba(155,92,255,.28)}
@@ -1306,7 +1218,6 @@ body.hs *{animation-play-state:paused!important;transition:none!important}
 #mvpop{border-radius:0;clip-path:var(--cut)}
 .fm{border-radius:0;clip-path:var(--cut-s)} .fm.ch{clip-path:polygon(5px 0,100% 0,calc(100% - 5px) 100%,0 100%)}
 .fsp{border-radius:0;clip-path:var(--cut-s)}
-.stchip{border-radius:0}
 /* --- 0.47.0: 戦闘以外の画面にも同じ決まりを当てる --- */
 /* 重ねる窓: 角を切った黒い面、上辺のシアンの線。背景のぼかしはやめる(端末に重い) */
 #ov{background:rgba(3,5,8,.86)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
@@ -1494,7 +1405,7 @@ body.hs *{animation-play-state:paused!important;transition:none!important}
 #meSts{left:calc(100% + 4px)!important;top:1px!important}
 #shaker.focus #meBlk,#shaker.focus #meWall{opacity:0;transition:opacity .25s}
 #shaker.peek #meBlk,#shaker.peek #meWall{opacity:.1}
-/* 0.51.0 カードを使う動き: 自機は構え(腕・脚・上体の角度)を1コマで切り替え、間は滑らかに動かさず効果と残像で埋める */
+/* 0.51.0 カードを使う動き: 自機は構えを1コマで切り替え、間は滑らかに動かさず効果と残像で埋める(構えの絵は 0.52.0 から poseSVG) */
 #droid svg,.vghost svg{overflow:visible}
 #droid svg g,.vghost svg g{transform-box:view-box}
 .k-blade{opacity:0}.k-blade.on{opacity:1}
@@ -1525,7 +1436,6 @@ body.hs *{animation-play-state:paused!important;transition:none!important}
 /* 敵の詳細・自機の詳細 */
 #focus{background:linear-gradient(90deg,var(--bg) 0,rgba(6,8,12,.96) 74%,transparent)}
 .urow,.u-head{border-radius:0}
-.stdesc{border-left-width:3px}
 .cards .card{clip-path:var(--cut)}
 </style>
 </head>
@@ -1535,7 +1445,7 @@ body.hs *{animation-play-state:paused!important;transition:none!important}
   <div id="stage">
     <div id="shaker">
       <div id="world">
-      <div id="tl">
+      <div id="tl" class="solo">
         <div id="screen"></div>
         <div id="swiftBand" class="np" hidden></div>
         <div id="ticks" class="np"></div>
@@ -1552,18 +1462,16 @@ body.hs *{animation-play-state:paused!important;transition:none!important}
       <div id="floor" class="np"></div>
       <div id="droid" class="np">
         <svg class="dmain" width="50" height="128" viewBox="0 0 98 250" role="img" aria-label="アンドロイド K-7">
-          <g class="k-lb"><path d="M40 134L34 236" stroke="#33495d" stroke-width="10" stroke-linecap="round"/><rect x="26" y="232" width="16" height="7" rx="2" fill="#33495d"/></g>
-          <g class="k-lf"><path d="M58 134L66 236" stroke="#33495d" stroke-width="10" stroke-linecap="round"/><rect x="60" y="232" width="16" height="7" rx="2" fill="#33495d"/></g>
+          <path d="M40 134L34 236" stroke="#33495d" stroke-width="10" stroke-linecap="round"/><rect x="26" y="232" width="16" height="7" rx="2" fill="#33495d"/>
+          <path d="M58 134L66 236" stroke="#33495d" stroke-width="10" stroke-linecap="round"/><rect x="60" y="232" width="16" height="7" rx="2" fill="#33495d"/>
           <rect x="30" y="120" width="38" height="14" rx="3" fill="#152130" stroke="#4d6578" stroke-width="2"/>
-          <g class="k-up">
-            <g class="k-ab"><path d="M26 50L14 116" stroke="#253545" stroke-width="7" stroke-linecap="round"/></g>
-            <path d="M24 44H74L68 122H30Z" fill="#152130" stroke="#4d6578" stroke-width="2"/>
-            <rect x="44" y="30" width="10" height="10" fill="#253545"/>
-            <rect x="34" y="6" width="30" height="26" rx="8" fill="#152130" stroke="#4d6578" stroke-width="2"/>
-            <rect x="40" y="15" width="20" height="5" rx="2" fill="#38d3ff" opacity=".8"/>
-            <rect x="66" y="34" width="28" height="9" rx="2" fill="#152130" stroke="#4d6578" stroke-width="2"/>
-            <g class="k-af"><path class="k-blade" d="M86 120L101 198" stroke="#dffcff" stroke-width="4" stroke-linecap="round"/><path d="M72 50L84 110" stroke="#33495d" stroke-width="8" stroke-linecap="round"/><circle class="k-hand" cx="85" cy="115" r="6" fill="#33495d"/></g>
-          </g>
+          <path d="M26 50L14 116" stroke="#253545" stroke-width="7" stroke-linecap="round"/>
+          <path d="M24 44H74L68 122H30Z" fill="#152130" stroke="#4d6578" stroke-width="2"/>
+          <rect x="44" y="30" width="10" height="10" fill="#253545"/>
+          <rect x="34" y="6" width="30" height="26" rx="8" fill="#152130" stroke="#4d6578" stroke-width="2"/>
+          <rect x="40" y="15" width="20" height="5" rx="2" fill="#38d3ff" opacity=".8"/>
+          <rect x="66" y="34" width="28" height="9" rx="2" fill="#152130" stroke="#4d6578" stroke-width="2"/>
+          <path class="k-blade" d="M86 120L101 198" stroke="#dffcff" stroke-width="4" stroke-linecap="round"/><path d="M72 50L84 110" stroke="#33495d" stroke-width="8" stroke-linecap="round"/><circle class="k-hand" cx="85" cy="115" r="6" fill="#33495d"/>
         </svg>
       </div>
       <div id="meWall" class="np" hidden></div>
@@ -1614,13 +1522,13 @@ body.hs *{animation-play-state:paused!important;transition:none!important}
 <script src="data/text.js"></script>
 <script src="js/engine.js"></script>
 <script>
-const APP_VERSION = '0.52.0';
+const APP_VERSION = '0.53.0';
 const $ = s => document.querySelector(s);
 const EN = ENGINE, RULE = EN.RULE;
 const VIEW = RULE.view, NOW = 170, PX = 34, xs = c => NOW + c * PX, STRIP_Y = 150, SWIFT_VIS = 3;
 // 敵の行の高さ。敵が1体なら大きな1本(0.17.0 から1対1が前提)
-let ROWY = [52, 86, 120];
-const solo = () => S && S.b && S.b.foes.length === 1;
+/* 敵の行動の列の高さ(敵は常に1体なので列も1本) */
+const ROW_Y = 86;
 const DROID = {x: 133, y: 206, sx: 156, sy: 162};
 const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
 /* 演出の待ち。SKIP(0.50.0: 演出中に次の入力があった)なら待たずに進み、待っている途中のものもすぐ起こす */
@@ -1728,7 +1636,6 @@ const SPR = {
 
 const SLOTS = DATA.slots;
 const SLOT_BY = Object.fromEntries(SLOTS.map(s => [s.id, s]));
-const AB = {calc:'演', arm:'武', out:'出', dur:'耐', mob:'機'};
 const pIcon = p => IC['pt_' + p.icon] || IC.pt_core;
 // 対象の文字列 '番号.ユニット' と敵の番号の対応
 const tFoe = t => t == null ? null : typeof t === 'string' && t.includes('.') ? +t.split('.')[0] : +t;
@@ -1827,8 +1734,6 @@ function nameHTML(c){
   const b = `<span class="cnb" style="font-size:${fitPx(bn, 10.5, 7)}px">${bn}</span>`;
   return `<span class="cname${an ? ' stk' : ''}${c.upgraded ? ' cu' : ''}">${an ? `<span class="cna" style="font-size:${fitPx(an, 8, 6)}px">${an}</span>` : ''}${b}</span>`;
 }
-/* 文の長さ(改行は1行の残りを使い切るので、6字ぶりに数える) */
-const ctxLen = k => ((CARDS[k].text || '') + (CARDS[k].attrText || '')).replace(/\{\w+\}/g, '00').replace(/\n|<br>/g, '      ').length;
 function cardInner(k, st, count, refs, cd){
   const c = CARDS[k], co = cd ? EN.costOf(cd) : c.cost, dc = co - c.cost;
   return `<i class="ck" data-ck="${k}" data-rar="${DATA.rarityOf(k)}" hidden></i><span class="chd"><span class="cost${co === 0 ? ' zero' : ''}${dc > 0 ? ' cup' : dc < 0 ? ' cdn' : ''}">${co}</span>${nameHTML(c)}</span><span class="cart t-${cardType(c)}"><span class="cwm">${IC[cardType(c)]}</span>${c.atomic ? '<i class="atom"></i>' : ''}<span class="cval"><span class="ic">${IC[cardType(c)]}</span><b>${cardVal(k, st)}</b></span></span><span class="ctx">${cardText(k, st, refs)}</span>${count > 1 ? `<span class="cnt">×${count}</span>` : ''}`;
@@ -1848,10 +1753,9 @@ function buildStatic(){
   $('#icDeck').innerHTML = IC.deck; $('#icDisc').innerHTML = IC.disc; $('#icCache').innerHTML = IC.cache; $('#icHand').innerHTML = IC.hand;
   $('#menuBtn').innerHTML = IC.menu; $('#icWait').innerHTML = IC.wait;
 }
-function foeX(n, i){ return (n === 1 ? [620] : n === 2 ? [560, 690] : [494, 600, 706])[i]; }
 // 敵の置き場所(0.18.0): 敵は本体の絵(なくてもよい)と、ユニットごとの耐久バーでできている。ユニット自身の絵を持つこともある。
-//   位置は data/enemies.js の look・units の at(本体の絵の中心から)。敵が1体なら右の広いところに置く
-//   ユニットが1つの敵(と、複数の敵がいるとき)は、バーは1本(キー '*')
+//   位置は data/enemies.js の look・units の at(本体の絵の中心から)。敵は右の広いところに置く
+//   ユニットが1つの敵は、バーは1本(キー '*')
 const ANCHOR = {x: 665, y: 222};
 const LIST = {x: 756, y: 184, w: 27}; // 部位型の敵の、部位の縦のゲージ(0.23.5)の左上と1本の幅
 const GEOM = new Map();
@@ -1862,12 +1766,12 @@ function sprPoint(main, pt){ const z = sprSize(main.kind, main.s), vb = sprVB(ma
 // 耐久バーから在りかへの線の端(バーの枠の、在りかに向いた辺)
 function barEdge(u){ const w = 46, h = 28, p = u.pt; if(p.x < u.x - w) return {x: u.x - w, y: u.y + 9}; if(p.x > u.x + w) return {x: u.x + w, y: u.y + 9}; return {x: u.x, y: p.y < u.y ? u.y : u.y + h}; }
 function foeGeom(e){
-  const f = FOES[e.key], so = solo(), U = f.units || {};
+  const f = FOES[e.key], U = f.units || {};
   // 部位型(0.23.4): 1つの体にユニットが付いている敵(ユニット自身の絵がない)は、核のバーだけを体の下に出し、
   //   ほかのユニットは右端に控えめな一覧(アイコン・細いバー・数字)。体の上の印にも同じアイコン。詳しくは敵の詳細で
-  const list = so && e.uids.length > 1 && !!f.kind && !Object.values(U).some(u => u.spr);
-  const A = so ? (list ? {x: ANCHOR.x - 58, y: ANCHOR.y} : ANCHOR) : {x: foeX(S.b.foes.length, e.i) + 45, y: 220};
-  const multi = so && e.uids.length > 1, look = (so && f.look) || {s: 1, at: [0, 0]};
+  const list = e.uids.length > 1 && !!f.kind && !Object.values(U).some(u => u.spr);
+  const A = list ? {x: ANCHOR.x - 58, y: ANCHOR.y} : ANCHOR;
+  const multi = e.uids.length > 1, look = f.look || {s: 1, at: [0, 0]};
   const kind = f.kind || (!multi ? (Object.values(U).find(u => u.spr) || {}).spr || 'drone' : null);
   const main = kind ? {kind, s: look.s, x: A.x + look.at[0], y: A.y + look.at[1]} : null;
   const units = {};
@@ -1880,14 +1784,11 @@ function foeGeom(e){
     else if(d.pt && main){ const q = sprPoint(main, d.pt); units[k] = {x, y, cx: q.x, cy: q.y, pt: q}; }
     else units[k] = {x, y, cx: d.core && main ? main.x : x, cy: d.core && main ? main.y : y - 6};
   }); }
-  // side: 敵全体の状態とパッシブを、ユニットのバーではなくタイムラインの列の頭に出す(敵が1体のとき)
-  return {A, main, units, multi, side: so, list};
+  return {A, main, units, multi, list};
 }
 function buildFoes(){
-  const b = S.b, so = solo();
-  ROWY = so ? [86] : [52, 86, 120];
-  $('#tl').classList.toggle('solo', so);
-  $('#rows').innerHTML = b.foes.map(e => `${so ? `<div class="lh" data-f="${e.i}"></div>` : ''}<div class="rowline" data-r="${e.i}" style="top:${ROWY[e.i]}px"></div><div class="rowtag" data-r="${e.i}" style="top:${ROWY[e.i] - 8}px">${e.tag}</div>${so ? '' : `<div class="rowhit" data-f="${e.i}" style="top:${ROWY[e.i] - 17}px"></div>`}`).join('');
+  const b = S.b;
+  $('#rows').innerHTML = b.foes.map(e => `<div class="lh" data-f="${e.i}"></div><div class="rowline" data-r="${e.i}" style="top:${ROW_Y}px"></div>`).join('');
   let h = '';
   GEOM.clear();
   for(const e of b.foes){
@@ -1901,7 +1802,7 @@ function buildFoes(){
       if(u.spr) h += `<div class="foe us" data-f="${e.i}" data-u="${k}" style="left:${u.sx}px;top:${u.sy}px;width:${u.w}px;height:${u.h}px">${SPR[u.spr]}<span class="reticle"></span></div>`;
       if(u.lst){ h += `<div class="eu m lst" data-f="${e.i}" data-u="${k}" style="left:${u.x}px;top:${u.y}px"><span class="hpt"></span><span class="segs"></span><span class="uic">${pIcon(e.units[k])}</span><i class="dt"></i><span class="sts"></span></div>`; continue; }
       const plate = (g.list && u.core) || k === '*';
-      h += `<div class="eu${g.multi ? ' m' : ''}${u.y > 250 ? ' up' : ''}" data-f="${e.i}" data-u="${k}" style="left:${u.x}px;top:${u.y}px"><span class="frow">${g.multi ? `<span class="uic">${pIcon(e.units[k])}</span>` : so ? '' : `<span class="ftag">${e.tag}</span>`}${plate && so ? '<span class="armb"></span>' : ''}<span class="hpb"><i></i><s></s></span><span class="hpt"></span></span><span class="sts"></span></div>`;
+      h += `<div class="eu${g.multi ? ' m' : ''}${u.y > 250 ? ' up' : ''}" data-f="${e.i}" data-u="${k}" style="left:${u.x}px;top:${u.y}px"><span class="frow">${g.multi ? `<span class="uic">${pIcon(e.units[k])}</span>` : ''}${plate ? '<span class="armb"></span>' : ''}<span class="hpb"><i></i><s></s></span><span class="hpt"></span></span><span class="sts"></span></div>`;
     }
     // 部位型の敵: 部位のゲージをまとめる枠
     if(g.list){ const n = Object.values(g.units).filter(u => u.lst).length; h += `<div class="lpanel" data-f="${e.i}" style="left:${LIST.x - 7}px;top:${LIST.y - 7}px;width:${n * LIST.w + 9}px"></div>`; }
@@ -2094,7 +1995,7 @@ function renderFoes(){
       // ユニットに結び付くパッシブ(統率など)は、そのユニットのバーに
       const tied = one || broken ? '' : passives(e).filter(x => pasUnit(x) === k && x.k !== 'broke').map(x => `<span class="st trait"><span class="ic">${PAS_IC[x.k]}</span></span>`).join('');
       // 状態(0.23.6): 部位型の敵と1体の敵は、体の下(核のバー)にまとめる。部位の状態は札の頭にその部位のアイコン。装甲はバーの左の盾に
-      const plate = (g.list && u.core) || (one && g.side);
+      const plate = (g.list && u.core) || one;
       const pu = one ? e.units[e.uids[0]] : p, ab = el.querySelector('.armb');
       if(ab){ const av = plate && pu && !pu.broken ? pu.armor : 0; ab.classList.toggle('on', !!av); ab.innerHTML = av ? `<span class="ic">${IC.armor}</span>${av}` : ''; }
       let stH;
@@ -2193,15 +2094,14 @@ function placeBand(key, x0, x1, y, cls, html){
   if(el._h !== html){ el.innerHTML = html; el._h = html; }
   el.style.left = x0 + 'px'; el.style.width = Math.max(10, x1 - x0) + 'px'; el.style.top = y + 'px'; el.style.opacity = '';
 }
-const WIN = {wind:'構', guard:'防', counter:'返'};
 // 帯は文字を使わずアイコンと数字で: 体勢(★ ブレイクに要る一撃)・防壁(盾)・反撃(返し矢印)・隙(照準)
 const WIC = {wind:IC.poise, guard:IC.block, counter:IC.counterIc};
-function moveIcon(a){ return a.flee ? `<span class="ic">${IC.flee}</span>` : a.eat ? `<span class="ic">${IC.eat}</span>` : a.rebuild ? `<span class="ic">${IC.rest}</span>` : a.buff ? `<span class="ic">${IC.str}</span><b>${a.buff}</b>` : a.shred ? `<span class="ic">${IC.shred}</span>` : a.junk || a.shatter ? `<span class="ic">${IC.junk}</span>` : a.armor ? `<span class="ic">${IC.armor}</span><b>${a.armor}</b>` : a.heal ? `<b>+${a.heal}</b>` : a.crack ? `<span class="ic">${IC.crack}</span>` : a.noise ? `<span class="ic">${IC.junk}</span>` : a.zone ? `<span class="ic">${IC.zone}</span>` : a.haste ? `<span class="ic">${IC.swift}</span>` : a.summon ? `<b>援</b>` : a.guard ? `<span class="ic">${IC.block}</span>` : '<b>·</b>'; }
+function moveIcon(a){ return a.flee ? `<span class="ic">${IC.flee}</span>` : a.eat ? `<span class="ic">${IC.eat}</span>` : a.rebuild ? `<span class="ic">${IC.rest}</span>` : a.buff ? `<span class="ic">${IC.str}</span><b>${a.buff}</b>` : a.shred ? `<span class="ic">${IC.shred}</span>` : a.junk || a.shatter ? `<span class="ic">${IC.junk}</span>` : a.armor ? `<span class="ic">${IC.armor}</span><b>${a.armor}</b>` : a.heal ? `<b>+${a.heal}</b>` : a.crack ? `<span class="ic">${IC.crack}</span>` : a.noise ? `<span class="ic">${IC.junk}</span>` : a.zone ? `<span class="ic">${IC.zone}</span>` : a.haste ? `<span class="ic">${IC.swift}</span>` : a.guard ? `<span class="ic">${IC.block}</span>` : '<b>·</b>'; }
 function renderMarks(){
   const b = S.b, seen = new Set(), seenB = new Set(), syn = syncTimes(), pv = PV && !busy ? PV : null;
   for(const e of b.foes){
     if(!e.alive) continue;
-    const so = solo(), y = ROWY[e.i] - (so ? 21 : 11), by = ROWY[e.i] + (so ? 27 : 12), list = EN.upcoming(e), multi = e.uids.length > 1;
+    const y = ROW_Y - 21, by = ROW_Y + 27, list = EN.upcoming(e), multi = e.uids.length > 1;
     let lastT = 0;
     for(const m of list){
       const key = e.i + '-' + (e.seq + m.k) + '-' + m.left; seen.add(key);
@@ -2219,7 +2119,7 @@ function renderMarks(){
       // 増幅・連携で上がった攻撃は、数字の右上に ▲ を付ける
       const plus = atk ? EN.foeStr(e) + (sy ? e.sync : 0) + EN.moveBonus(S.b, e, a) : 0, up = atk && plus > 0, dn = atk && plus < 0;
       const html = by_ + (a.kind === 'delay' ? `<span class="ic">${IC.delay}</span><b>${a.v}</b>` : atk ? `<b${up ? ' class="up"' : dn ? ' class="dn"' : ''}>${Math.max(0, a.d + plus)}</b>${up ? '<i class="mup">▲</i>' : dn ? '<i class="mdn">▼</i>' : ''}<span class="ic tp">${IC[a.p]}</span>` : moveIcon(a));
-      placeMark(key, xs(m.t) - (so ? 20 : 13), y, cls, html, {e:e.i, kind:'pat', a, t:m.t});
+      placeMark(key, xs(m.t) - 20, y, cls, html, {e:e.i, kind:'pat', a, t:m.t});
       lastT = Math.max(lastT, m.t);
       if(m.hit) continue;
       // 行動の前の窓: その間にカードが完了すると効く
@@ -2253,7 +2153,7 @@ function renderMarks(){
     const rt = e.reactIn != null ? e.reactIn : (pv && pv.react.has(e.i) ? 1 : null);
     if(rt != null && rt > 0){
       const key = 'r' + e.i; seen.add(key);
-      placeMark(key, xs(rt) - (so ? 20 : 13), y, 'mk react' + (e.reactIn == null ? ' ghost' : ' danger'), `<b>${e.react.d}</b><span class="ic tp">${IC[e.react.p]}</span>`, {e:e.i, kind:'react', t:rt});
+      placeMark(key, xs(rt) - 20, y, 'mk react' + (e.reactIn == null ? ' ghost' : ' danger'), `<b>${e.react.d}</b><span class="ic tp">${IC[e.react.p]}</span>`, {e:e.i, kind:'react', t:rt});
     }
   }
   for(const [key, el] of markEls){
@@ -2269,7 +2169,7 @@ function threatRail(){
   const el = $('#threat'); if(!el || !S || !S.b) return;
   let t = null; for(const e of S.b.foes){ if(!e.alive) continue; for(const m of EN.upcoming(e)){ if(m.a.kind === 'delay' || !(m.a.d > 0)) continue; if(t == null || m.t < t) t = m.t; break; } }
   if(t == null || t > VIEW){ el.style.opacity = '0'; return; }
-  el.style.opacity = '1'; el.style.top = (ROWY[0] - 1) + 'px'; el.style.width = Math.max(0, xs(t) - NOW - 1) + 'px'; el.classList.toggle('near', t <= 2);
+  el.style.opacity = '1'; el.style.top = (ROW_Y - 1) + 'px'; el.style.width = Math.max(0, xs(t) - NOW - 1) + 'px'; el.classList.toggle('near', t <= 2);
 }
 function renderStrip(){
   const b = S.b, seen = new Set(), room = b.handMax - b.hand.length;
@@ -2292,9 +2192,9 @@ function renderStrip(){
   // 危険域: 帯の中でカードを使い終えると被弾
   for(const z of b.zones){ const f = Math.max(1, z.from), to = Math.min(VIEW, z.to); if(f > to) continue; const key = 'z' + z.id; MKINFO.set(key, {kind:'zone', z, t0:f, t1:to}); put(key, xs(f) - (PX - 6) / 2, 'sm zone' + (UI.mvKey === key ? ' pick' : ''), cellsHTML(f, to, z.d + (S.b.crack || 0))); const ze = stripEls.get(key); ze.dataset.bk = key; ze.style.width = ((to - f) * PX + PX - 6) + 'px'; }
   // 持続(0.29.0): 尽きるサイクル
-  for(const e of b.foes) if(e.alive) for(const k of e.uids){ const u = e.units[k]; if(u.dot && !u.broken && u.dot.n <= VIEW) put('d' + e.i + k, xs(u.dot.n), 'sm dote', `<span class="ic">${IC.dot}</span>${e.tag || ''}`); }
-  for(const t of b.timers){ if(t.left <= VIEW) put('t' + t.id, xs(t.left), 'sm tmr', `<span class="ic">${IC.timer}</span>${b.foes[t.e] && b.foes[t.e].alive ? b.foes[t.e].tag : ''}`); }
-  if(PV && PV.timers && !busy) PV.timers.forEach((t, n) => { if(t.at <= VIEW) put('pvt' + n, xs(t.at), 'sm tmr pv', `<span class="ic">${IC.timer}</span>${b.foes[t.e] ? b.foes[t.e].tag : ''}`); });
+  for(const e of b.foes) if(e.alive) for(const k of e.uids){ const u = e.units[k]; if(u.dot && !u.broken && u.dot.n <= VIEW) put('d' + e.i + k, xs(u.dot.n), 'sm dote', `<span class="ic">${IC.dot}</span>`); }
+  for(const t of b.timers){ if(t.left <= VIEW) put('t' + t.id, xs(t.left), 'sm tmr', `<span class="ic">${IC.timer}</span>`); }
+  if(PV && PV.timers && !busy) PV.timers.forEach((t, n) => { if(t.at <= VIEW) put('pvt' + n, xs(t.at), 'sm tmr pv', `<span class="ic">${IC.timer}</span>`); });
   for(const [key, el] of stripEls){ if(!seen.has(key)){ stripEls.delete(key); el.style.opacity = '0'; el.style.left = (parseFloat(el.style.left) - 10) + 'px'; setTimeout(() => el.remove(), 220); } }
 }
 function handLayout(n, i, ex){
@@ -2623,15 +2523,6 @@ function shake(){ pulse($('#shaker'), 'shake', 300); }
 // 再走査: 敵の予定が変わったことを、タイムラインを光が走って描き直すように見せる
 function rescan(tag){ pulse($('#tl'), 'jolt', 200); pulse($('#rescan'), 'go', 640); pulse($('#marks'), 'rescan', 600); pulse($('#screen'), 'rescan', 600); if(tag){ const t = $('#rescanTag'); t.textContent = 'RESCAN\n// ' + tag; pulse(t, 'go', 950); } }
 function flashFx(kind){ const el = $('#flashFx'); el.className = 'np'; void el.offsetWidth; el.className = 'np ' + kind; setTimeout(() => { el.className = 'np'; }, 340); }
-// 四角い画素の破片(ユニットが壊れたとき)
-function pixels(x, y){
-  for(let k = 0; k < 12; k++){
-    const el = fxEl('pix', x - 2, y - 2); el.style.background = ['#38d3ff', '#ff4d6a', '#e6eef5', '#b18cff'][k % 4];
-    const a = Math.random() * Math.PI * 2, r = 20 + Math.random() * 34; el.getBoundingClientRect();
-    el.style.transform = `translate(${Math.cos(a) * r}px,${Math.sin(a) * r}px)`; el.style.opacity = '0';
-    setTimeout(() => el.remove(), 540);
-  }
-}
 function toast(t){ const el = $('#toast'); el.textContent = t; el.classList.remove('show'); void el.offsetWidth; el.classList.add('show'); }
 const partY = id => 10 + SLOTS.findIndex(p => p.id === id) * 48;
 function beam(to, from){
@@ -2639,15 +2530,6 @@ function beam(to, from){
   const dx = to.x - f.x, dy = to.y - f.y, len = Math.hypot(dx, dy), ang = Math.atan2(dy, dx) * 180 / Math.PI;
   const el = fxEl('beam', f.x, f.y, {width: len + 'px', transform: `rotate(${ang}deg)`});
   setTimeout(() => el.remove(), 320);
-}
-function shards(x, y, color){
-  for(let k = 0; k < 6; k++){
-    const el = fxEl('shard', x - 4, y - 1); if(color) el.style.background = color;
-    const a = Math.random() * Math.PI * 2, r = 26 + Math.random() * 16;
-    el.getBoundingClientRect();
-    el.style.transform = `translate(${Math.cos(a) * r}px,${Math.sin(a) * r}px) rotate(${a * 57}deg)`; el.style.opacity = '0';
-    setTimeout(() => el.remove(), 480);
-  }
 }
 function sparks(x, y){
   for(let k = 0; k < 7; k++){
@@ -2664,7 +2546,7 @@ function afterimage(){
 /* ---------- 0.51.0 カードを使う動き ----------
    調べたこと(要件定義の文書の「動きの決まり」に書いた): 体は滑らかに動かさず、決めの構えから構えへ1コマで切り替える。間の動きは
    効果(斬撃・速度線・残像)が描く。溜めと戻りは短く、重い技だけ溜めの構えと決めの構えを長く止める。当たりの瞬間は体を止め(ヒットストップ)、
-   効果だけを動かす。効果は「出るのは一瞬・消えるのはゆっくり」。重さ(コスト)で、止める長さ・踏み込みの溜め・効果の大きさを3段に分ける */
+   効果だけを動かす。効果は「出るのは一瞬・消えるのはゆっくり」。重さ(0.52.0 から weightOf = コストの対数で連続)で、止める長さ・踏み込みの溜め・効果の大きさを変える */
 /* 0.52.0 自機の構えを、関節(肩・肘・手・腰・膝・足首)の位置から1枚ずつ描く。角度は向き(0 = 前、90 = 真下)。足は自動で床へ下ろす */
 const POSE_DEF = {
   ready:  {lean: -12, tilt: 6, aF: [140, 172], aB: [52, 14], lF: [58, 104], lB: [122, 98], blade: 1},
@@ -2836,7 +2718,6 @@ async function castMove(c, ti, pts, hit){
   if(!await step([{transform: 'translateX(-6px)'}, {transform: 'translateX(-5px)'}], 120, 'linear', id)) return;
   setPose(null); await step([{transform: 'translateX(-2px)'}, {transform: 'none'}], 90, EZ.out, id);
 }
-function shieldFx(){ guardFx(); }
 function cardMotion(k, ti){
   const c = CARDS[k], d = $('#droid'), t = cardType(c);
   // 当たる場所: 全体のカードは敵のすべてのユニット、単体は狙ったユニット
@@ -2849,17 +2730,10 @@ function cardMotion(k, ti){
   }
   if(t === 'melee') meleeFx(pts);
   else if(t === 'ranged') shotFx(pts);
-  else if(t === 'block' || t === 'parry') shieldFx();
+  else if(t === 'block' || t === 'parry') guardFx();
   else if(t === 'timer'){ pulse(d, 'recoil', 320); for(const p of pts){ const el = fxEl('pin', p.x - 6, p.y - 40); setTimeout(() => el.remove(), 600); } }
   else if(t === 'delay' || t === 'crack'){
-    pulse(d, 'glitch', 320); packetFx(pts); return;
-    for(const p of pts){
-      for(let k2 = 0; k2 < 5; k2++){
-        const el = fxEl('noise', DROID.sx + k2 * 4, DROID.sy + (k2 % 2) * 8); el.getBoundingClientRect();
-        setTimeout(() => { el.style.left = (p.x + (k2 - 2) * 6) + 'px'; el.style.top = (p.y - 20 + k2 * 5) + 'px'; el.style.opacity = '0'; }, k2 * 30);
-        setTimeout(() => el.remove(), 420);
-      }
-    }
+    pulse(d, 'glitch', 320); packetFx(pts);
   }
   else if(t === 'swift'){ afterimage(); setTimeout(afterimage, 90); }
   else if(t === 'draw') pulse($('#pileDraw'), 'flash', 360);
@@ -2874,8 +2748,8 @@ function cardFx(x){
     case 'frenzy': { const p = foeCenter(x.e); floatAt(p.x, p.y - 70, '▲' + x.n, 'foe'); break; }
     case 'immune': { const p = unitTop(x.e, x.unit); floatAt(p.x, p.y, DATA.ui['fx.immune'], 'cy'); break; }
     case 'capped': { const p = unitTop(x.e, x.unit); floatAt(p.x + 24, p.y - 16, DATA.ui['fx.capped'], 'cy'); break; }
-    case 'cancel': floatAt(xs(1), ROWY[x.e] - 20, '×', 'cy'); rescan('VOID'); break;
-    case 'shift': floatAt(xs(1), ROWY[x.e] - 20, '!!', 'foe'); rescan('SHIFT'); break;
+    case 'cancel': floatAt(xs(1), ROW_Y - 20, '×', 'cy'); rescan('VOID'); break;
+    case 'shift': floatAt(xs(1), ROW_Y - 20, '!!', 'foe'); rescan('SHIFT'); break;
     case 'crack': { const p = unitCenter(x.e, x.unit); floatAt(p.x + 30, p.y - 30, '+' + x.n, 'foe'); break; }
     case 'dotAdd': { const p = unitCenter(x.e, x.unit); floatAt(p.x + 30, p.y - 44, '+' + x.n + '/' + x.p, 'dot'); break; }
     case 'dot': pulse(unitSpr(x.e, x.unit), 'ehit', 200); break;
@@ -2890,7 +2764,7 @@ function cardFx(x){
     case 'grow': floatAt(150, 236, '▲' + x.n, 'cy'); break;
     case 'delay':
       if(x.anger){ const p = foeCenter(x.e); floatAt(p.x, p.y - 70, '▲' + x.anger, 'foe'); pulse(foeEl(x.e), 'ehit', 280); foeSay(x.e, 'anger'); }
-      else floatAt(xs(2), ROWY[x.e] - 14, x.n > 0 ? '+' + x.n : DATA.kwName.resist, x.n > 0 ? 'cy' : 'dim');
+      else floatAt(xs(2), ROW_Y - 14, x.n > 0 ? '+' + x.n : DATA.kwName.resist, x.n > 0 ? 'cy' : 'dim');
       break;
     case 'spit': { const p = foeCenter(x.e); floatAt(p.x, p.y - 60, '+' + x.cards.length, 'cy'); pulse($('#pileDisc'), 'flash', 360); break; }
     case 'block': floatAt(130, 262, '+' + x.n, ''); break;
@@ -2914,7 +2788,7 @@ function hitMeFx(r){
   if(r.bodyLoss) floatAt(150, 268, '−' + r.bodyLoss, 'foe');
   if(r.hurt){ knock($('#droid'), -14 - Math.min(10, r.raw * .4), 360); burstFx(DROID.x + 4, DROID.y - 34, 'var(--foe2)', 30); flashFx('hurt');
     if(r.raw >= 10){ freeze(Math.min(90, 30 + r.raw * 3)); anim($('#shaker'), [{transform: 'translateX(-8px)'}, {transform: 'translateX(5px)'}, {transform: 'translateX(-2px)'}, {transform: 'none'}], {duration: 260, easing: 'linear'}); } }
-  else { shieldFx(); burstFx(DROID.x + 30, DROID.y - 30, 'var(--cy)', 26); }
+  else { guardFx(); burstFx(DROID.x + 30, DROID.y - 30, 'var(--cy)', 26); }
 }
 async function foeFx(i, r){
   const e = S.b.foes[i];
@@ -2941,9 +2815,8 @@ async function foeFx(i, r){
     if(r.heal) floatAt(p.x, p.y - 70, '+' + r.heal, 'cy');
     if(r.crack){ floatAt(DROID.x + 10, DROID.y - 92, DATA.kwName.crack + '+' + r.crack, 'foe'); pulse($('#droid'), 'glitch', 320); }
     if(r.noise){ floatAt(41, 300, 'ノイズ+' + r.noise, 'foe'); pulse($('#pileDraw'), 'flash', 360); }
-    if(r.haste) floatAt(xs(1), ROWY[i] - 14, '»' + r.haste, 'foe');
+    if(r.haste) floatAt(xs(1), ROW_Y - 14, '»' + r.haste, 'foe');
     if(r.zone) floatAt(xs(r.zone.at) + 10, 128, '!', 'foe');
-    if(r.summon != null){ buildFoes(); floatAt(foeCenter(r.summon).x, 150, '増援', 'foe'); }
     return;
   }
   if(r.kind === 'delay'){
@@ -2951,7 +2824,7 @@ async function foeFx(i, r){
     return;
   }
   if(r.kind === 'parried'){
-    shieldFx(); const p = foeCenter(i); beam(p, {x: DROID.sx + 10, y: DROID.sy + 20});
+    guardFx(); const p = foeCenter(i); beam(p, {x: DROID.sx + 10, y: DROID.sy + 20});
     for(const x of r.ev) cardFx(x);
     floatAt(DROID.x + 10, DROID.y - 92, DATA.kwName.just, 'cy');
     return;
@@ -2960,7 +2833,7 @@ async function foeFx(i, r){
 }
 function justFx(i, tag){
   /* 0.49.0: 時間が止まる。世界は暗く沈み、紫の斬線が予定を断ち、敵は大きく弾かれ、文字が差し込む。画面全体は光らせない */
-  freeze(160); const y = ROWY[i], br = tag === 'BREAK';
+  freeze(160); const y = ROW_Y, br = tag === 'BREAK';
   anim($('#dim'), [{opacity: 0}, {opacity: 1, offset: .12}, {opacity: 1, offset: .5}, {opacity: 0}], {duration: 560, easing: 'linear'});
   const cut = fxNode('vcut' + (br ? ' cy' : ''), NOW - 110, y - 2, {}, 560); anim(cut, [{transform: 'rotate(-16deg) scaleX(0)', opacity: 1}, {transform: 'rotate(-16deg) scaleX(1)', opacity: 1, offset: .16}, {transform: 'rotate(-16deg) scaleX(1.05) scaleY(.3)', opacity: 0}], {duration: 520, easing: EZ.out});
   chips(NOW, y, br ? 'var(--cy)' : 'var(--just2)', 12, 70, false);
@@ -3135,7 +3008,7 @@ async function execute(pa){
     b.hand.forEach((cd, n) => { const el = cardEls.get(cd.id); cardEls.delete(cd.id); setTimeout(() => flyCard(el, 20, 340), n * 30); });
   }
   const p = EN.beginAction(S, a);
-  if(p.pursuit) for(const x of p.pursuit){ floatAt(xs(1), ROWY[x.e] - 14, '»' + x.n, 'foe'); pulse(foeEl(x.e), 'atk', 270); }
+  if(p.pursuit) for(const x of p.pursuit){ floatAt(xs(1), ROW_Y - 14, '»' + x.n, 'foe'); pulse(foeEl(x.e), 'atk', 270); }
   $('#droid').classList.add('casting');
   renderAll();
   const g = EN.spendGen(S, p.cost, p.k, p.t, false); let r;
@@ -3277,8 +3150,7 @@ function areaBanner(){
   el.innerHTML = `<i>AREA ${String(S.run.area + 1).padStart(2, '0')} / ${String(DATA.areas.length).padStart(2, '0')}</i><b>${AREA().name}</b>`;
   $('#mapScr').appendChild(el); setTimeout(() => el.remove(), 2100);
 }
-/* ---------- 警戒度(0.20.0) ---------- */
-const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
+/* ---------- 警戒 ---------- */
 // 警戒(0.44.0): 相対値の5段(−2〜+2)。0 以外は上向き・下向きの折れ線(シェブロン)を重ねて見せる。色は熱い側が橙〜赤、冷たい側が青
 const hLv = () => EN.heatLevel(S.run);
 const hName = lv => DATA.ui['heat.' + lv] || '';
@@ -3645,7 +3517,6 @@ function moveLines(e, a){
   if(a.shred) L.push(a.shred === true ? fillUi('mv.shredAll', {}) : fillUi('mv.shred', {n: a.shred}));
   if(a.junk) L.push(fillUi('mv.junk.' + (a.junk.to || 'draw'), {card: '《' + (CARDS[a.junk.k] ? CARDS[a.junk.k].name : a.junk.k) + '》', n: a.junk.n || 1}));
   if(a.shatter) L.push(fillUi('mv.shatter', {n: a.shatter, card: '《' + CARDS.shard.name + '》'}));
-  if(a.summon) L.push(fillUi('mv.summon', {name: FOES[a.summon].name}));
   if(a.steal) L.push(fillUi('mv.steal', {n: a.steal}));
   if(a.eat) L.push(fillUi('mv.eat', {n: a.eat}));
   if(a.rebuild) L.push(fillUi('mv.rebuild', {n: a.rebuild, h: Math.ceil(a.rebuild / 2)}));
@@ -3667,7 +3538,7 @@ function moveGlyph(e, a){
   if(a.d > 0) return `<b>${foeDmg(e, a)}</b>${a.hits > 1 ? `<i>×${a.hits}</i>` : ''}`;
   const ic = a.flee ? IC.flee : a.eat ? IC.eat : a.rebuild ? IC.rest : a.shred ? IC.shred : a.junk || a.shatter ? IC.junk : a.armor ? IC.armor : a.crack ? IC.crack : a.buff ? IC.str : a.noise ? IC.junk : a.zone ? IC.zone : a.haste ? IC.swift : a.guard ? IC.block : null;
   if(ic) return `<span class="ic big">${ic}</span>`;
-  const g = a.heal ? '修' : a.summon ? '援' : '·';
+  const g = a.heal ? '修' : '·';
   return `<b class="g">${g}</b>`;
 }
 // hlUnit: ユニットの詳細を見ているとき、そのユニットの行動を目立たせる(ほかは薄く)
@@ -3940,7 +3811,6 @@ function showDebugCustom(){
   const rows = [0, 1, 2].map(i => `<div class="dslot"><span class="dn">${'ABC'[i]}</span><div class="seg" style="margin:0"><button type="button" class="${DBG.custom[i] ? '' : 'on'}" data-act="dbgSlot" data-arg="${i}:">なし</button>${keys.map(k => `<button type="button" class="${DBG.custom[i] === k ? 'on' : ''}" data-act="dbgSlot" data-arg="${i}:${k}">${FOES[k].name}${['drone2','linkB'].includes(k) ? '′' : ''}</button>`).join('')}</div></div>`).join('');
   showOv(`<h2>自由に組む</h2>${rows}<div class="row"><button class="btn" type="button" data-act="dbgBack">戻る</button></div>`, false, true);
 }
-function dbgRedraw(){ ({top:showDebug, deck:showDebugDeck, parts:showDebugParts, nums:showDebugNums, custom:showDebugCustom})[UI.dbgView || 'top'](); }
 // 選んだ設定で1戦だけ始める
 function startDebugBattle(enc){
   const run = EN.newRun(Math.floor(Math.random() * 1e9));

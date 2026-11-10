@@ -440,7 +440,6 @@ function enemyAct(st, e, extra){ e.resist = 0;
   if(a.shred){ const v = a.shred === true ? b.block : Math.min(b.block, a.shred); b.block -= v; res.shred = v; }
   if(a.junk){ const j = a.junk; for(let i = 0; i < (j.n || 1); i++){ const c = {k:j.k, id:b.uid++}; if(j.to === 'hand' && b.hand.length < (b.handMax || 10)) b.hand.push(c); else if(j.to === 'disc' || j.to === 'hand') b.disc.push(c); else b.draw.splice(Math.floor(rand() * (b.draw.length + 1)), 0, c); } res.junk = j; }
   if(a.shatter){ res.shatter = []; for(let n = 0; n < a.shatter; n++){ const hs = b.hand.filter(c => !isJunk(c)); if(!hs.length) break; const pk = pick(hs), i = b.hand.indexOf(pk); b.hand[i] = {k:'shard', id:b.uid++, was:pk}; res.shatter.push(pk); } }
-  if(a.summon && b.foes.filter(f => f.alive).length < 3){ const nf = makeFoe(a.summon, b.foes.length); b.foes.push(nf); res.summon = nf.i; } // 増援
   // 0.23.0: 盗む(スクラップ。撃破すると戻る) / 飲み込む(手札のいちばんコストの高いカード。撃破すると捨て札に戻る) / 再溶接(破壊されたユニットを直す) / 逃げる
   if(a.steal){ const t = Math.min(st.run.scrap || 0, a.steal); st.run.scrap -= t; e.loot = (e.loot || 0) + t; res.steal = t; }
   if(a.eat){
@@ -641,7 +640,7 @@ function scaledFoe(key, sc, lv){
 }
 function makeFoe(key, i, sc, lv){
   const f = scaledFoe(key, sc, lv);
-  const e = {key, i, wary:f.waryAt || 0, name:f.name, tag:'ABCDEF'[i], kind:f.kind, pat:null, idx:0, r:f.start, seq:0, alive:true,
+  const e = {key, i, wary:f.waryAt || 0, name:f.name, kind:f.kind, pat:null, idx:0, r:f.start, seq:0, alive:true,
     react:f.react || null, sync:f.sync || 0, reactIn:null, ai:f.ai || null, phase:f.phase || null, phased:false, hist:[], chain:0, sh:0, str:0, haste:0, pas:f.passives || []};
   // ユニット。書かなければ耐久 hp の核1つ
   const defs = f.units || {core:{hp:f.hp, vital:true, core:true}};

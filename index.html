@@ -346,7 +346,7 @@ function layout(){
   LAY.s = s; LAY.W = Math.round(Math.max(844, Math.min(1040, w.clientWidth / s))); LAY.H = Math.round(Math.max(390, Math.min(540, w.clientHeight / s)));
   const ex = LAY.H - 390;
   document.documentElement.style.setProperty('--s', s); st.style.width = LAY.W + 'px'; st.style.height = LAY.H + 'px';
-  LAY.x0 = 152; LAY.x1 = LAY.W - 186; NOW = LAY.x0; PX = (LAY.x1 - LAY.x0) / VIEW;
+  LAY.x0 = 164; LAY.x1 = LAY.W - 186; NOW = LAY.x0; PX = (LAY.x1 - LAY.x0) / VIEW;
   LAY.yE = Math.round(56 + ex * .14); LAY.dy = Math.round((26 + ex * .1) * 2) / 2; LAY.y0 = LAY.yE + 40; LAY.yS = LAY.y0 + 4 * LAY.dy + 30; LAY.floor = LAY.H - 126;
   ROW_Y = LAY.yE; STRIP_Y = LAY.yS;
   const dh = Math.min(200, LAY.floor - (LAY.y0 - 26)), dw = dh * 98 / 250;   // 自機は部位の見出しに掛からない幅まで
@@ -492,7 +492,7 @@ function renderParts(){
     const num = el.querySelector('.pnum');
     num.textContent = after < st.cur ? `${st.cur}→${after}` : String(st.cur); num.classList.toggle('pv', after < st.cur);
     const start = worn ? Math.ceil(st.max / 2) : st.max;
-    el.querySelector('.pips').innerHTML = pipsHTML(st.max, st.cur, after, start, Math.max(2, Math.min(7, Math.floor((41 - (st.max - 1)) / st.max))));
+    el.querySelector('.pips').innerHTML = pipsHTML(st.max, st.cur, after, start, st.max > 10 ? 1.5 : Math.max(2, Math.min(5, Math.floor((31 - (st.max - 1)) / st.max))));
   });
 }
 function renderRows(){

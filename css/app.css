@@ -200,11 +200,11 @@ b{font-weight:700}
 #droid.glitch{animation:glitch .3s steps(4)}
 /* 部位の見出し: 線路の左端。記号・残りの数・目盛り */
 #parts{position:absolute;inset:0;pointer-events:none;transition:opacity .25s,transform .25s}
-.part{position:absolute;left:calc(var(--x0) - 64px);width:58px;height:22px;margin-top:-11px;display:grid;grid-template-columns:13px 1fr;grid-template-rows:12px 8px;column-gap:4px;align-items:center;color:var(--ash);pointer-events:auto;border-radius:2px}
+.part{position:absolute;left:calc(var(--x0) - 78px);width:72px;height:22px;margin-top:-11px;display:grid;grid-template-columns:13px 21px 1fr;grid-template-rows:12px 8px;column-gap:3px;align-items:center;color:var(--ash);pointer-events:auto;border-radius:2px}
 .part .ph{display:contents}
 .part .pico{grid-row:1/3;display:grid;place-items:center}
 .part .pico svg{width:13px;height:13px;display:block}
-.part .pname{display:none}
+.part .pname{grid-row:1/3;font-size:9.5px;font-weight:700;letter-spacing:0;white-space:nowrap;color:inherit}
 .part .pnum{font:800 13px/12px var(--f-num);color:var(--bone)}
 .part .pnum.pv{color:var(--flame)}
 .part .pips{display:flex;gap:1px;height:5px;align-self:start}
@@ -218,7 +218,7 @@ b{font-weight:700}
 .part.broken .pico{color:var(--ember)}
 .part.flash{animation:flashB .3s ease-out}
 #meWall{position:absolute;left:calc(var(--x0) - 7px);top:calc(var(--y0) - 14px);width:4px;height:calc(var(--dy) * 4 + 28px);border-radius:2px;background:linear-gradient(180deg,transparent,var(--frost) 14%,var(--frost) 86%,transparent);box-shadow:0 0 16px rgba(205,239,230,.75)}
-#meBlk{position:absolute;left:calc(var(--x0) - 64px);top:calc(var(--yS) - 12px);height:24px;display:flex;align-items:center;gap:3px;font:800 20px/1 var(--f-num);color:var(--frost);white-space:nowrap}
+#meBlk{position:absolute;left:calc(var(--x0) - 78px);top:calc(var(--yS) - 12px);height:24px;display:flex;align-items:center;gap:3px;font:800 20px/1 var(--f-num);color:var(--frost);white-space:nowrap}
 #meBlk .ic svg{width:14px;height:14px}
 #meBlk.pv{color:var(--bone)}
 .cinfo{position:absolute;display:flex;flex-direction:column;gap:4px;transition:opacity .4s}

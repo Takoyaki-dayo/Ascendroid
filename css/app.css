@@ -1,0 +1,483 @@
+/* Ascendroid の見た目(案A「白熱」)。決まりは docs/visual-guide.md。
+   配置: 844×390 を基準にした舞台(#stage)を画面に合わせて拡大する。余った分は横 1040・縦 540 まで舞台を広げる(index.html の layout())。
+   色は意味だけ: 冷たい白緑 = 自分と操作 / 熱(赤→橙→白)= 脅威 / 溶接の光(紫白)= 不安定と JUST / 鋼色 = 敵の守り。枠や窓は置かず、暗がりの中の光で読ませる。 */
+@font-face{font-family:"Big Shoulders Display";font-style:normal;font-weight:100 900;font-display:swap;src:url(../assets/fonts/BigShouldersDisplay-latin.woff2) format("woff2")}
+:root{
+  color-scheme:dark;
+  --soot:#070605;   /* 地。煤の黒 */
+  --iron:#15120f;   /* 鋼板(持ち上がった面) */
+  --iron2:#221d19;
+  --seam:#332b24;   /* 継ぎ目の線 */
+  --ash:#958b80;    /* 副の文字 */
+  --ash2:#5f574f;
+  --bone:#f1e8da;   /* 主の文字 */
+  --frost:#cdefe6;  /* 自分と操作: 焼き入れた鋼の冷たさ */
+  --frost-d:#2f9c90;
+  --ember:#b8321a;  /* 脅威(遠い) */
+  --flame:#ff7a1f;  /* 脅威(近い) */
+  --glow:#ffe6ae;   /* 白熱 */
+  --arc:#b7a0ff;    /* 不安定と JUST: 溶接の光 */
+  --arc2:#e2d8ff;
+  --steel:#8f9aa3;  /* 敵の守り(ブロック・防壁) */
+  --gold:#e9c46a;   /* レア・スクラップ */
+  --f-num:"Big Shoulders Display","Barlow Condensed","Arial Narrow",sans-serif;
+  --f-body:"Hiragino Kaku Gothic ProN","Hiragino Sans","Noto Sans JP","Noto Sans CJK JP","Yu Gothic","Meiryo",system-ui,sans-serif;
+  /* 前の版の名前(スクリプトの中の style="color:var(--cy)" など)を今の色に当てる */
+  --bg:var(--soot); --panel:var(--iron); --raised:var(--iron2); --line:var(--seam); --grid:#1c1814;
+  --fg:var(--bone); --fg2:#c9bdae; --dim:var(--ash); --dim2:var(--ash2); --neutral:var(--bone);
+  --cy:var(--frost); --cy-dim:var(--frost-d); --foe:var(--flame); --foe2:#ffa25c; --just:var(--arc); --just2:var(--arc2);
+  --ez-out:cubic-bezier(.16,1,.3,1); --ez-snap:cubic-bezier(.3,1.5,.45,1); --ez-in:cubic-bezier(.55,0,.85,.35);
+}
+html,body{height:100%}
+body{margin:0;background:var(--soot);color:var(--bone);font-family:var(--f-body);overflow:hidden;overflow:clip;box-sizing:border-box;
+  padding-left:max(0px,env(safe-area-inset-left,0px));padding-right:max(0px,env(safe-area-inset-right,0px));padding-block:0;
+  -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}
+[hidden]{display:none!important}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;margin:0;cursor:pointer;text-align:inherit}
+button:disabled{cursor:default}
+button:focus{outline:none}
+button:focus-visible{outline:2px solid var(--frost);outline-offset:2px}
+#wrap{position:relative;width:100%;height:100%;overflow:hidden;overflow:clip;background:
+  radial-gradient(120% 80% at 80% 100%,rgba(184,50,26,.16),transparent 60%),linear-gradient(180deg,#0e0b09,var(--soot) 70%)}
+#rot{display:none;position:absolute;left:0;right:0;top:10px;text-align:center;color:var(--ash);font-size:13px;z-index:2}
+@media (orientation:portrait){#rot{display:block}}
+#stage{position:absolute;left:50%;top:50%;width:844px;height:390px;transform:translate(-50%,-50%) scale(var(--s,1));overflow:hidden;overflow:clip;background:var(--soot);font-size:11px;line-height:1.35;touch-action:none}
+#stage *{box-sizing:border-box}
+#shaker,#world{position:absolute;inset:0}
+#world{transform-origin:50% 50%;transition:transform .32s var(--ez-out),filter .32s}
+.np{pointer-events:none}
+.ic{display:inline-flex;flex:none}
+.ic svg{width:12px;height:12px;display:block}
+.sp{flex:1}
+b{font-weight:700}
+
+/* ================= 塔の中(戦闘の背景) ================= */
+#bg{position:absolute;inset:0}
+#bg i{position:absolute;display:block}
+#bg .ribs{inset:0;background:repeating-linear-gradient(90deg,transparent 0 86px,rgba(255,236,214,.026) 86px 88px,transparent 88px 174px),linear-gradient(180deg,#0e0b09 0%,var(--soot) 72%)}
+#bg .col{top:0;bottom:0;background:linear-gradient(90deg,#040303,#0b0908 70%,#131009);box-shadow:1px 0 0 rgba(255,220,190,.05)}
+#bg .gantry{left:0;right:0;top:0;height:22px;background:repeating-linear-gradient(90deg,transparent 0 30px,rgba(0,0,0,.55) 30px 34px),repeating-linear-gradient(60deg,rgba(255,236,214,.035) 0 2px,transparent 2px 26px),linear-gradient(180deg,#0a0807,#050404);box-shadow:0 1px 0 rgba(255,220,190,.06)}
+#bg .cold{left:-14%;bottom:30px;width:46%;height:95%;background:radial-gradient(closest-side at 36% 78%,rgba(160,232,220,.12),transparent 72%)}
+#bg .haze{right:-16%;bottom:20px;width:70%;height:130%;background:radial-gradient(closest-side at 74% 78%,rgba(255,104,30,.4),rgba(184,50,26,.14) 46%,transparent 76%);opacity:calc(.3 + var(--threat,0)*.7);transition:opacity .5s}
+#bg .under{left:0;right:0;top:calc(var(--floor) + 1px);bottom:0;background:linear-gradient(180deg,#0d0a09,#040303 60%)}
+#bg .floor{left:0;right:0;top:var(--floor);height:1px;background:linear-gradient(90deg,transparent,rgba(205,239,230,.32) 8%,rgba(241,232,218,.12) 40%,rgba(255,140,70,.45) 86%,transparent)}
+#bg .vig{inset:0;background:radial-gradient(120% 90% at 50% 45%,transparent 55%,rgba(0,0,0,.7))}
+#embers{position:absolute;inset:0;width:100%;height:100%}
+#floor{display:none}
+
+/* ================= 線路(タイムライン) ================= */
+#tl{position:absolute;inset:0;transition:opacity .2s}
+#screen{position:absolute;left:var(--x0);top:calc(var(--yE) - 26px);width:calc(var(--x1) - var(--x0) + 14px);height:calc(var(--yS) - var(--yE) + 44px);cursor:pointer}
+#lanes{position:absolute;inset:0}
+.lane{position:absolute;left:var(--x0);width:calc(var(--x1) - var(--x0) + 10px);height:1px;background:linear-gradient(90deg,rgba(205,239,230,.5),rgba(241,232,218,.16) 22%,rgba(255,122,31,.2))}
+.lane.e{background:linear-gradient(90deg,transparent,rgba(255,122,31,.26) 20%,rgba(255,122,31,.36));height:1px}
+.lane.s{background:linear-gradient(90deg,rgba(205,239,230,.75),rgba(205,239,230,.16) 60%,transparent)}
+.lane.aim{background:linear-gradient(90deg,var(--glow),rgba(255,122,31,.5) 30%,rgba(255,122,31,.24))}
+.lanelb{position:absolute;left:calc(var(--x0) - 34px);width:28px;text-align:right;font-size:8.5px;font-weight:700;letter-spacing:.06em;color:var(--ash2);transform:translateY(-50%)}
+.lanelb.s{color:var(--frost-d)}
+#ticks{position:absolute;inset:0}
+.tl{position:absolute;top:calc(var(--yE) - 8px);width:1px;height:calc(var(--yS) - var(--yE) + 16px);background:rgba(241,232,218,.045)}
+.tl.tl5{background:rgba(241,232,218,.1)}
+.tn{position:absolute;top:calc(var(--yE) - 25px);width:20px;margin-left:-10px;text-align:center;font:600 11px/13px var(--f-num);color:#6d655d;transition:color .12s}
+.tn.tl5{color:var(--ash)}
+.tn.hit{color:#06110f;background:var(--frost);box-shadow:0 0 10px rgba(205,239,230,.6);font-weight:800}
+#nowLine{position:absolute;left:calc(var(--x0) - 1px);top:calc(var(--yE) - 12px);width:2px;height:calc(var(--yS) - var(--yE) + 24px);background:linear-gradient(180deg,transparent,var(--frost) 12%,var(--frost) 88%,transparent);box-shadow:0 0 10px rgba(205,239,230,.65);transform-origin:50% 50%}
+#nowTri{position:absolute;left:calc(var(--x0) - 5px);top:calc(var(--yS) - 5px);width:10px;height:10px;transform:rotate(45deg);background:var(--frost);box-shadow:0 0 10px rgba(205,239,230,.8)}
+#rows{position:absolute;inset:0;pointer-events:none}
+.rowline{display:none}
+#threat{position:absolute;left:var(--x0);height:3px;margin-top:-1.5px;border-radius:2px;background:linear-gradient(90deg,rgba(255,230,174,.0),var(--flame));opacity:0;pointer-events:none;transition:width .13s linear,opacity .2s,top .2s}
+#threat.near{background:linear-gradient(90deg,rgba(255,230,174,.3),var(--glow));box-shadow:0 0 10px rgba(255,170,90,.7)}
+#swiftBand{position:absolute;top:calc(var(--yS) - 6px);height:12px;background:repeating-linear-gradient(135deg,rgba(205,239,230,.5) 0 3px,transparent 3px 7px)}
+
+/* 選んだ行動の予想: 冷たい帯が線路に伸びる。帯の中の熱は発動の前に当たる */
+#pvRegion{position:absolute;left:var(--x0);top:calc(var(--yE) - 12px);height:calc(var(--yS) - var(--yE) + 24px);background:linear-gradient(90deg,rgba(205,239,230,.015),rgba(205,239,230,.13));border-top:1px solid rgba(205,239,230,.35);border-bottom:1px solid rgba(205,239,230,.35);transition:width .1s var(--ez-out)}
+#pvRegion.cut{background:linear-gradient(90deg,rgba(255,122,31,.015),rgba(255,122,31,.16));border-color:rgba(255,122,31,.5)}
+#pvLine{position:absolute;top:calc(var(--yE) - 12px);width:2px;height:calc(var(--yS) - var(--yE) + 24px);background:var(--frost);box-shadow:0 0 12px var(--frost);transition:left .1s var(--ez-out)}
+#pvLine.cut{background:repeating-linear-gradient(180deg,rgba(205,239,230,.5) 0 4px,transparent 4px 8px);box-shadow:none}
+#selfBar{position:absolute;top:calc(var(--yS) - 5px);height:10px;border-radius:2px;transition:left .13s linear,width .13s linear}
+#selfBar.pre{background:repeating-linear-gradient(135deg,var(--frost) 0 4px,rgba(205,239,230,.5) 4px 8px);box-shadow:0 0 10px rgba(205,239,230,.45)}
+#selfBar.cast{background:var(--frost);box-shadow:0 0 12px rgba(205,239,230,.75)}
+#selfBar.broken{background:var(--flame);animation:barbreak .38s ease-out forwards}
+#pvCut{position:absolute;top:calc(var(--yS) - 9px);width:18px;height:18px;margin-left:-9px;color:var(--flame);filter:drop-shadow(0 0 4px rgba(255,122,31,.8))}
+#pvCut svg{width:18px;height:18px;display:block}
+#pvGo{position:absolute;z-index:26;top:calc(var(--yS) + 13px);height:30px;min-width:44px;padding:0 12px 0 9px;transform:translateX(-50%);border-radius:15px;background:var(--frost);color:#06110f;display:flex;align-items:center;justify-content:center;gap:7px;white-space:nowrap;font:800 21px/1 var(--f-num);box-shadow:0 0 18px rgba(205,239,230,.5)}
+#pvGo span{display:flex;align-items:center;gap:3px}
+#pvGo .ic svg{width:13px;height:13px}
+#pvGo .pl svg{width:11px;height:11px;opacity:.75}
+#pvGo small{font:800 11px var(--f-body);letter-spacing:.06em}
+#pvGo.cut{background:var(--flame);box-shadow:0 0 18px rgba(255,122,31,.5)}
+#wards{position:absolute;inset:0}
+.wardb{position:absolute;left:var(--x0);top:calc(var(--y0) - 14px);height:calc(var(--dy) * 4 + 28px);background:linear-gradient(90deg,rgba(205,239,230,.16),rgba(205,239,230,.05));border-right:2px solid rgba(205,239,230,.7);transition:width .13s linear}
+.wardb b{position:absolute;right:4px;bottom:2px;font:800 13px/1 var(--f-num);color:var(--frost)}
+
+/* 敵の予定: 熱の塊。--hc が熱の色(遠い赤 → 近い白)、--hg が明るさ。--up は敵の行までの高さ */
+#marks{position:absolute;inset:0;clip-path:inset(0 0 0 calc(var(--x0) - 16px))}
+.mk{position:absolute;left:0;top:0;width:0;height:0;transform:translate(var(--x),var(--y)) scale(var(--sc,1));transition:transform .13s linear,opacity .2s;pointer-events:auto;cursor:pointer;--hc:#b8321a;--hg:0;--up:0px;will-change:transform}
+.mk::before{content:"";position:absolute;left:-15px;top:calc(var(--up) * -1 - 12px);width:30px;height:calc(var(--up) + 26px)}
+.mk .halo{position:absolute;left:-36px;top:-36px;width:72px;height:72px;border-radius:50%;background:radial-gradient(closest-side,var(--hc),transparent 72%);opacity:calc(.08 + var(--hg) * .5);pointer-events:none}
+.mk .stem{position:absolute;left:-.5px;bottom:0;width:1px;height:var(--up);background:linear-gradient(0deg,var(--hc),transparent 130%);opacity:.75}
+.mk .by{position:absolute;left:-8px;top:calc(var(--up) * -1 - 8px);width:16px;height:16px;display:grid;place-items:center;background:#0e0a08;border:1px solid var(--hc);color:var(--hc);border-radius:2px}
+.mk .by svg{width:10px;height:10px;display:block}
+.mk .by.dot{left:-3px;top:calc(var(--up) * -1 - 3px);width:6px;height:6px;border:0;background:var(--hc);transform:rotate(45deg)}
+.mk .dk{position:absolute;left:-13px;top:-13px;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:#0e0a08;border:1.5px solid var(--hc);color:var(--hc);font:800 17px/1 var(--f-num)}
+.mk.near .dk{background:var(--hc);color:#1c0e06}
+.mk .lk{position:absolute;right:11px;top:-1px;height:2px;width:calc(var(--px) - 22px);background:var(--hc);opacity:.6}
+.mk.sub .dk{left:-10px;top:-10px;width:20px;height:20px;font-size:13px}
+.mk .mup,.mk .mdn{position:absolute;left:8px;top:-17px;font:800 9px/1 var(--f-num);font-style:normal;padding:1px 2px;border-radius:2px}
+.mk .mup{background:var(--flame);color:#1c0e06}
+.mk .mdn{background:var(--frost);color:#06110f}
+.mk.ch .dk{border-color:var(--arc);box-shadow:0 0 0 2px rgba(183,160,255,.2),0 0 16px rgba(183,160,255,.55)}
+.mk.ch .ring{position:absolute;left:-20px;top:-20px;width:40px;height:40px;border-radius:50%;border:1.5px dashed var(--arc);animation:spin 7s linear infinite;pointer-events:none}
+.mk.move .dk,.mk.dl .dk{width:auto;min-width:22px;height:20px;left:0;top:-10px;transform:translateX(-50%);padding:0 4px;border-radius:3px;display:flex;align-items:center;gap:2px;font-size:13px;border-color:var(--steel);color:#c6d0d6;background:#0b0d0e}
+.mk.dl .dk{border-color:var(--flame);color:var(--flame)}
+.mk.move .dk svg,.mk.dl .dk svg{width:11px;height:11px}
+.mk.react .dk{border-style:dashed}
+.mk.ghost{opacity:.55}
+.mk.sync .dk{box-shadow:0 0 0 2px rgba(255,122,31,.35)}
+.mk.danger .dk{box-shadow:0 0 0 2px var(--glow),0 0 18px var(--flame);animation:pulse .7s ease-in-out infinite alternate}
+.mk.just .dk{border-color:#fff;color:#fff;background:#3b2f6b;box-shadow:0 0 0 3px rgba(183,160,255,.5),0 0 26px var(--arc)}
+.mk.just .ring{border-color:#fff;border-style:solid;opacity:.8}
+.mk.pick .dk{outline:2px solid var(--bone);outline-offset:2px}
+.mk.fire{--sc:1.3;filter:brightness(1.6)}
+.mk.spawn .dk{animation:mkIn .26s var(--ez-out)}
+.mk.out{opacity:0;--sc:.6}
+#marks.rescan .mk .dk{animation:mkScan .3s steps(3)}
+/* 窓: 敵の行の下。体勢・防壁・反撃(行動の前)と、隙(行動の後) */
+.wb{position:absolute;left:0;top:0;height:13px;transform:translate(var(--x),var(--y));font:700 9px/13px var(--f-body);white-space:nowrap;pointer-events:auto;cursor:pointer;transition:transform .13s linear,width .13s linear,opacity .2s,filter .15s}
+.wb .bar{position:absolute;inset:4px 0;border-radius:1px}
+.wb .tk{position:absolute;top:3px;width:1px;height:7px;background:rgba(0,0,0,.6)}
+.wb .hit{position:absolute;top:1px;height:11px;border-radius:2px;background:var(--frost);box-shadow:0 0 8px rgba(205,239,230,.7)}
+.wb .lb{position:absolute;left:0;top:0;height:13px;padding:0 4px 0 2px;display:flex;align-items:center;gap:1px;background:#0b0908;border-radius:2px;font:800 11px/13px var(--f-num)}
+.wb .lb svg{width:9px;height:9px}
+.wb.wind .bar{background:repeating-linear-gradient(115deg,var(--arc) 0 3px,transparent 3px 6px)} .wb.wind .lb{color:var(--arc)}
+.wb.guard .bar{background:repeating-linear-gradient(90deg,var(--steel) 0 2px,transparent 2px 4px)} .wb.guard .lb{color:var(--steel)}
+.wb.counter .bar{background:repeating-linear-gradient(90deg,var(--flame) 0 5px,transparent 5px 8px);opacity:.8} .wb.counter .lb{color:var(--flame)}
+.wb.vuln .bar{background:var(--frost);opacity:.7} .wb.vuln .lb{color:var(--frost)}
+.wb.later{opacity:.62}
+.wb.on{filter:brightness(1.5)}
+.wb.on .lb{background:var(--bone);color:#14100c}
+.wb.pick .lb{outline:1px solid var(--bone)}
+.wb.out{opacity:0}
+/* 自機の行: 時限・射界・届く手札 */
+#strip{position:absolute;inset:0}
+#stripLine{display:none}
+.sm{position:absolute;left:0;top:0;transform:translate(var(--x),var(--y));transition:transform .13s linear,opacity .2s;color:var(--frost)}
+.sm .ic svg{width:12px;height:12px}
+.sm.tmr,.sm.dote,.sm.arr,.sm.tb{width:0;height:0}
+.sm.tmr .ic,.sm.dote .ic{position:absolute;left:-8px;top:-8px;width:16px;height:16px;display:grid;place-items:center;background:#0b1211;border:1px solid var(--frost);border-radius:50%}
+.sm.tmr .ic svg,.sm.dote .ic svg{width:10px;height:10px}
+.sm.tmr.pv{opacity:.6}
+.sm.dote{color:#ffb766} .sm.dote .ic{border-color:#ffb766;background:#120c06}
+.sm.arr::before{content:"";position:absolute;left:-3px;top:-3px;width:6px;height:6px;background:var(--frost);transform:rotate(45deg)}
+.sm.arr.over::before{background:var(--flame)}
+.sm.tb::before{content:"";position:absolute;left:-1px;top:-10px;width:2px;height:20px;background:var(--frost)}
+.sm.zone{height:13px;pointer-events:auto;cursor:pointer;font:800 11px/13px var(--f-num);color:var(--flame)}
+.sm.zone .bar{position:absolute;inset:0;border-radius:2px;background:repeating-linear-gradient(135deg,rgba(255,122,31,.55) 0 4px,rgba(255,122,31,.18) 4px 8px);box-shadow:inset 0 0 0 1px rgba(255,122,31,.7)}
+.sm.zone .tk{display:none}
+.sm.zone .hit{position:absolute;top:0;height:13px;background:var(--glow);opacity:.8}
+.sm.zone .lb{position:absolute;left:0;top:0;height:13px;padding:0 4px;display:flex;align-items:center;gap:2px;background:#170b05;color:var(--glow)}
+.sm.zone .lb svg{width:9px;height:9px}
+.sm.zone.pick{outline:1px solid var(--bone)}
+#rescan{position:absolute;left:var(--x0);top:calc(var(--yE) - 12px);width:2px;height:calc(var(--yS) - var(--yE) + 24px);opacity:0;background:var(--bone);box-shadow:0 0 12px var(--glow)}
+#rescan::before{content:"";position:absolute;right:2px;top:0;bottom:0;width:110px;background:linear-gradient(90deg,transparent,rgba(255,230,174,.14))}
+#rescan.go{animation:rescan .6s cubic-bezier(.45,.1,.55,.9)}
+#rescanTag{display:none}
+#tl.jolt{animation:jolt .2s var(--ez-out)}
+
+/* ================= 自機 ================= */
+#droid{position:absolute;transform-origin:50% 100%}
+#droid::before{content:"";position:absolute;left:-90%;right:-60%;top:-12%;bottom:-8%;background:radial-gradient(closest-side at 50% 55%,rgba(150,225,212,.17),transparent 78%);pointer-events:none}
+#droid svg{position:relative;display:block;width:100%;height:100%;overflow:visible}
+#droid svg g,.vghost svg g{transform-box:view-box}
+#droid .dpose{display:none;position:absolute;left:0;top:0}
+#droid.p-ready .pz-ready,#droid.p-strike .pz-strike,#droid.p-smear .pz-smear,#droid.p-aim .pz-aim,#droid.p-recoil .pz-recoil,#droid.p-guard .pz-guard,#droid.p-cast .pz-cast{display:block}
+#droid:is(.p-ready,.p-strike,.p-smear,.p-aim,.p-recoil,.p-guard,.p-cast) .dmain{visibility:hidden}
+#droid .k-blade{filter:drop-shadow(0 0 4px rgba(205,239,230,.9))}
+#droid.casting{filter:drop-shadow(0 0 6px rgba(205,239,230,.5))}
+#droid.lunge{animation:lunge .36s ease-out}
+#droid.recoil{animation:recoil .3s ease-out}
+#droid.hit{animation:dhit .3s linear}
+#droid.glitch{animation:glitch .3s steps(4)}
+/* 部位の見出し: 線路の左端。記号・残りの数・目盛り */
+#parts{position:absolute;inset:0;pointer-events:none;transition:opacity .25s,transform .25s}
+.part{position:absolute;left:calc(var(--x0) - 64px);width:58px;height:22px;margin-top:-11px;display:grid;grid-template-columns:13px 1fr;grid-template-rows:12px 8px;column-gap:4px;align-items:center;color:var(--ash);pointer-events:auto;border-radius:2px}
+.part .ph{display:contents}
+.part .pico{grid-row:1/3;display:grid;place-items:center}
+.part .pico svg{width:13px;height:13px;display:block}
+.part .pname{display:none}
+.part .pnum{font:800 13px/12px var(--f-num);color:var(--bone)}
+.part .pnum.pv{color:var(--flame)}
+.part .pips{display:flex;gap:1px;height:5px;align-self:start}
+.pip{display:block;height:5px;background:#2b2520;flex:none}
+.pip.full{background:var(--bone)}
+.pip.loss{background:var(--flame);animation:blink .5s steps(2) infinite}
+.pip.worn{background:repeating-linear-gradient(135deg,#4a2014 0 2px,#1d1512 2px 4px)}
+.part.th-hit{color:var(--flame)}
+.part.th-ch{color:var(--arc)}
+.part.broken{opacity:.5}
+.part.broken .pico{color:var(--ember)}
+.part.flash{animation:flashB .3s ease-out}
+#meWall{position:absolute;left:calc(var(--x0) - 7px);top:calc(var(--y0) - 14px);width:4px;height:calc(var(--dy) * 4 + 28px);border-radius:2px;background:linear-gradient(180deg,transparent,var(--frost) 14%,var(--frost) 86%,transparent);box-shadow:0 0 16px rgba(205,239,230,.75)}
+#meBlk{position:absolute;left:calc(var(--x0) - 64px);top:calc(var(--yS) - 12px);height:24px;display:flex;align-items:center;gap:3px;font:800 20px/1 var(--f-num);color:var(--frost);white-space:nowrap}
+#meBlk .ic svg{width:14px;height:14px}
+#meBlk.pv{color:var(--bone)}
+.cinfo{position:absolute;display:flex;flex-direction:column;gap:4px;transition:opacity .4s}
+.cinfo.dead{opacity:.25}
+#meInfo{left:8px;top:calc(var(--floor) + 8px);width:132px}
+.frow{display:flex;align-items:center;gap:6px}
+.hpb{position:relative;flex:1;height:4px;background:#2b2520}
+.hpb i{position:absolute;left:0;top:0;bottom:0;background:var(--bone);transition:width .2s}
+.hpb::before{content:"";position:absolute;left:0;top:0;bottom:0;width:var(--tr,0%);background:rgba(255,230,174,.45);transition:width .5s .25s}
+.hpb s{position:absolute;top:0;bottom:0;background:var(--flame);animation:blink .5s steps(2) infinite}
+.hpb.me i{background:var(--bone)}
+.hpt{font:800 16px/1 var(--f-num);min-width:26px;text-align:right;white-space:nowrap}
+.hpt.pv{color:var(--flame)}
+.sts{display:flex;gap:5px;flex-wrap:wrap;min-height:0}
+.st{display:inline-flex;align-items:center;gap:2px;font:800 13px/1 var(--f-num);color:var(--bone);white-space:nowrap}
+.st .ic svg{width:10px;height:10px}
+.st i{font-style:normal;font-size:10px;color:var(--ash)}
+.st.swf,.st.chg,.st.amp,.st.ward,.st.blk{color:var(--frost)}
+.st.crack{color:var(--flame)}
+.st.vul{color:#06110f;background:var(--frost);padding:1px 3px;border-radius:2px}
+.st.ecrk,.st.edot{color:var(--frost)}
+.st.arm{color:var(--steel)}
+.st.str{color:var(--flame)}
+.st.res{color:var(--frost)}
+.st.trait{color:var(--ash)}
+.st.trait.off{opacity:.4;text-decoration:line-through}
+.st.trait.on{color:var(--glow)}
+.st.more{color:var(--ash);font-size:11px}
+.st .sp{display:inline-flex;flex:none;opacity:.8}
+.st .sp svg{width:8px;height:8px}
+.stsep{width:1px;height:10px;background:var(--seam)}
+
+/* ================= 敵 ================= */
+#foes{position:absolute;inset:0}
+.foe{position:absolute;transition:opacity .4s,transform .4s,filter .3s;cursor:pointer}
+.foe::before{content:"";position:absolute;left:-55%;right:-45%;top:-45%;bottom:-25%;background:radial-gradient(closest-side at 55% 58%,rgba(255,120,40,calc(.3 + var(--threat,0) * .3)),rgba(184,50,26,.13) 55%,transparent 80%);pointer-events:none}
+.foe.us::before{left:-30%;right:-30%;top:-25%;bottom:-15%;opacity:.7}
+.foe svg{position:relative;display:block;width:100%;height:100%;overflow:visible}
+.foe.dead{opacity:0;pointer-events:none}
+.foe.fled{opacity:0;transform:translateX(60px)}
+.foe .reticle{position:absolute;inset:6% 4%;border:1.5px solid var(--frost);border-left-color:transparent;border-right-color:transparent;border-radius:50%;opacity:0;pointer-events:none;filter:drop-shadow(0 0 4px rgba(205,239,230,.7))}
+.foe.tgt .reticle{opacity:.9;animation:spin 6s linear infinite}
+.foe.atk{animation:foeAtk .28s ease-out}
+.foe.ehit{animation:ehit .2s linear}
+.foe.ejust{animation:ejust .46s ease-out}
+.foe.glitch{animation:glitch .3s steps(4)}
+.ulines{display:none}
+.upt{display:none}
+/* ユニット: 体の上の輪(残りが弧、中に数字)。急所は二重の輪 */
+.eu{position:absolute;width:0;height:0;white-space:nowrap;transition:opacity .3s;cursor:pointer}
+.eu .rg{position:absolute;left:-17px;top:-17px;width:34px;height:34px;transform:rotate(-90deg);overflow:visible}
+.eu .rg circle{fill:none;stroke-width:3}
+.eu .rg .bk{fill:rgba(8,6,5,.82);stroke:#2a211c}
+.eu .rg .gh{stroke:var(--bone);opacity:0}
+.eu .rg .hp{stroke:var(--flame);transition:stroke-dashoffset .25s}
+.eu.pvd .rg .gh{opacity:1;animation:blink .5s steps(2) infinite}
+.eu .hpt{position:absolute;left:-17px;top:-8px;width:34px;text-align:center;min-width:0;font:800 15px/16px var(--f-num);color:var(--bone)}
+.eu .hpt.pv{color:var(--bone)}
+.eu .uic{position:absolute;left:-6px;top:-30px;width:12px;height:12px;color:var(--ash)}
+.eu .uic svg{width:11px;height:11px;display:block}
+.eu.vital::after{content:"";position:absolute;left:-21px;top:-21px;width:42px;height:42px;border-radius:50%;border:1px solid rgba(255,122,31,.55);pointer-events:none}
+.eu .armb{position:absolute;left:10px;top:8px;display:none;align-items:center;gap:1px;padding:1px 3px;border-radius:2px;background:#0c0a09;font:800 12px/1 var(--f-num);color:var(--steel)}
+.eu .armb.on{display:flex}
+.eu .armb svg{width:9px;height:9px}
+.eu .sts{position:absolute;left:-30px;top:19px;width:60px;justify-content:center;gap:3px;flex-wrap:nowrap}
+.eu .sts .st{font-size:11px;background:rgba(8,6,5,.85);padding:0 2px;border-radius:2px}
+.eu .to{position:absolute;left:-30px;top:-33px;width:60px;text-align:center;font:800 12px/1 var(--f-num);color:var(--bone);text-shadow:0 1px 4px #000;display:none}
+.eu.pvd .to{display:block}
+.eu.pvd .uic{display:none}
+.eu.tgt .tg{position:absolute;left:-24px;top:-24px;width:48px;height:48px;border-radius:50%;border:1.5px solid var(--frost);border-left-color:transparent;border-right-color:transparent;animation:spin 5s linear infinite;filter:drop-shadow(0 0 4px rgba(205,239,230,.7));pointer-events:none}
+.eu.act .rg .bk{stroke:var(--flame)}
+.eu.ch .rg .bk{stroke:var(--arc)}
+.eu.broken{opacity:.28;pointer-events:none}
+.eu.broken .rg .hp{stroke:#3a2c25}
+.eu.flash{animation:flashB .26s ease-out}
+.eu.fled{opacity:0}
+/* 敵全体の耐久: 足元の帯 */
+.eu.one{width:150px;height:auto;display:flex;flex-direction:column;gap:4px;transform:translateX(-50%)}
+.eu.one .frow{gap:6px}
+.eu.one .hpb i{background:var(--flame)}
+.eu.one .hpt{position:static;width:auto;min-width:30px;font-size:18px;text-align:left}
+.eu.one .hpt.pv{color:var(--bone)}
+.eu.one .armb{position:static;display:none}
+.eu.one .armb.on{display:flex}
+.eu.one .sts{position:static;width:auto;justify-content:flex-start;flex-wrap:wrap}
+.eu.one .sts .st{font-size:13px;background:none;padding:0}
+.eu.one.tgt .hpb{box-shadow:0 0 0 1px var(--frost)}
+#foeName{position:absolute;right:46px;top:9px;max-width:230px;font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--ash);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right}
+.lh{position:absolute;right:10px;top:26px;max-width:176px;display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:3px 7px;pointer-events:auto;cursor:pointer;transition:opacity .3s}
+.lh.dead{opacity:.3}
+.lh .lhs{font-size:13px}
+.lh .lhs i{font:700 9px var(--f-body);color:inherit;opacity:.8;margin-right:1px}
+.lh .lhp{display:inline-flex;gap:5px}
+.say{position:absolute;transform:translate(-50%,-100%);max-width:240px;padding:5px 10px 6px;background:rgba(10,7,6,.94);box-shadow:inset 0 0 0 1px rgba(255,122,31,.5);font-size:12px;line-height:1.4;color:#ffe9d6;white-space:nowrap;pointer-events:none;z-index:6;animation:sayIn 2.5s ease-out forwards}
+.say::after{content:"";position:absolute;left:50%;bottom:-4px;width:8px;height:8px;background:rgb(10,7,6);box-shadow:inset -1px -1px 0 rgba(255,122,31,.5);transform:translateX(-50%) rotate(45deg)}
+
+/* ================= 手札と下の操作 ================= */
+#handShade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(7,6,5,.3),rgba(7,6,5,.9) 45%);opacity:0;transition:opacity .2s;pointer-events:none}
+#handShade.on{opacity:1}
+#hand{position:absolute;inset:0;pointer-events:none;transition:opacity .25s,transform .25s}
+#hand .card{position:absolute;pointer-events:auto;transition:left .26s var(--ez-snap),top .26s var(--ez-snap),transform .26s var(--ez-snap),opacity .2s,box-shadow .2s}
+.card{width:96px;height:136px;transform-origin:50% 100%;overflow:hidden;border-radius:2px;display:flex;flex-direction:column;padding:6px 8px 7px;text-align:left;color:var(--bone);
+  background:linear-gradient(172deg,#27221d 0%,#17130f 40%,#0f0c0a 100%);box-shadow:0 0 0 1px #000,inset 0 1px 0 rgba(255,240,220,.1);--rar:#5d554c}
+.card::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:var(--rar)}
+.card:has(.ck[data-rar="uncommon"]){--rar:linear-gradient(90deg,#6d5fd0,#3d8fd8)}
+.card:has(.ck[data-rar="rare"]){--rar:linear-gradient(90deg,#e9c46a,#b8752a)}
+.card:has(.ck[data-rar="special"]){--rar:linear-gradient(90deg,#ffe6ae,#ff7a1f)}
+.card .chd{display:flex;align-items:center;gap:6px;height:25px;flex:none}
+.card .cost{font:900 27px/1 var(--f-num);color:var(--frost);min-width:13px}
+.card .cost.cup{color:var(--flame)} .card .cost.cdn{color:var(--glow)}
+.card .clen{display:flex;gap:2px;flex-wrap:wrap;max-width:54px}
+.card .clen i{width:8px;height:4px;background:var(--frost);opacity:.85}
+.card .clen.zero{font:700 9px var(--f-body);color:var(--frost);opacity:.8}
+.card .cname{display:flex;flex-direction:column;justify-content:flex-end;flex:none;height:27px;line-height:1.12;font-weight:900;white-space:nowrap}
+.card .cna{color:var(--arc);font-weight:700;letter-spacing:.02em}
+.card .cnb{letter-spacing:.01em}
+.card .cname.cu .cnb{color:var(--glow)}
+.card .cart{position:relative;flex:none;height:30px;display:flex;align-items:center}
+.card .cwm{position:absolute;right:-2px;top:-22px;color:var(--bone);opacity:.08;pointer-events:none}
+.card .cwm svg{width:46px;height:46px;display:block}
+.card .cwm svg *{stroke-width:.9}
+.card .atom{position:absolute;right:0;top:9px;width:9px;height:9px;border:1.5px solid var(--arc);transform:rotate(45deg)}
+.card .cval{display:flex;align-items:center;gap:4px;font:900 25px/1 var(--f-num)}
+.card .cval .ic{color:var(--ash)}
+.card .cval .ic svg{width:14px;height:14px}
+.card .ctx{flex:1;min-height:0;overflow:hidden;font-size:9.5px;line-height:1.4;color:#b9afa3}
+.card .ctx b{color:var(--bone);font-weight:700}
+.card.trunc .ctx{-webkit-mask-image:linear-gradient(180deg,#000 60%,transparent);mask-image:linear-gradient(180deg,#000 60%,transparent)}
+.kw{color:var(--bone);font-weight:700} .kw-f{color:var(--frost);font-weight:700} .kwp{color:var(--arc);font-weight:700} .kw-j{color:var(--arc);font-weight:700}
+.card .cnt{position:absolute;right:6px;top:7px;font:800 14px/1 var(--f-num);color:var(--ash)}
+#hand .card.sel{box-shadow:0 0 0 1px var(--frost),0 0 22px rgba(205,239,230,.35),inset 0 1px 0 rgba(255,240,220,.1)}
+#hand .card.off{filter:brightness(.55)}
+#hand .card.busy{filter:brightness(.8)}
+#hand .card.pk{box-shadow:0 0 0 2px var(--gold),0 0 18px rgba(233,196,106,.4)}
+#hand .card.pk::after{content:"";position:absolute;right:6px;top:8px;width:12px;height:12px;border-radius:50%;background:var(--gold)}
+#hand.choosing .card:not(.pk){box-shadow:0 0 0 1px var(--ash)}
+@media (hover:hover){#hand .card:hover:not(.sel){filter:brightness(1.25)} .pile:hover,#redraw:hover,#waitBtn:hover,#menuBtn:hover{filter:brightness(1.3)}}
+#chooseBar{position:absolute;left:50%;bottom:150px;transform:translateX(-50%);z-index:25;display:flex;align-items:center;gap:12px;padding:6px 8px 6px 14px;background:rgba(21,18,15,.96);box-shadow:inset 0 0 0 1px var(--gold);font-size:12px;font-weight:700}
+#chooseBar button{height:28px;padding:0 16px;background:var(--bone);color:#14100c;font-weight:900;font-size:12px;border-radius:2px}
+#chooseBar button:disabled{opacity:.35}
+#handCnt{position:absolute;left:10px;bottom:52px;display:flex;align-items:center;gap:5px;color:var(--ash);font:800 14px/1 var(--f-num);transition:opacity .25s}
+#handCnt .ic svg{width:13px;height:13px}
+#handCnt.full{color:var(--flame)}
+.pile{position:absolute;bottom:10px;width:40px;height:34px;display:flex;align-items:center;justify-content:center;gap:3px;background:var(--iron);border-radius:2px;color:var(--ash);font:800 15px/1 var(--f-num);transition:opacity .25s,transform .25s}
+.pile b{color:var(--bone)}
+.pile .ic svg{width:13px;height:13px}
+#pileDraw{left:8px} #pileCache{left:52px;display:none} #pileDisc{left:52px}
+#shaker.cached #pileCache{display:flex} #shaker.cached #pileDisc{left:96px}
+.pile.flash{animation:flashB .36s ease-out}
+#redraw,#waitBtn{position:absolute;display:grid;place-items:center;border-radius:50%;background:var(--iron);color:var(--bone);box-shadow:inset 0 1px 0 rgba(255,240,220,.08);transition:opacity .25s,transform .25s,box-shadow .15s}
+#redraw{right:10px;bottom:10px;width:58px;height:58px}
+#waitBtn{right:76px;bottom:10px;width:42px;height:42px;display:none}
+#shaker.fw #waitBtn{display:grid}
+#redraw svg{width:22px;height:22px;display:block} #waitBtn svg{width:17px;height:17px;display:block}
+#redraw b,#waitBtn b{position:absolute;right:-2px;top:-4px;min-width:18px;height:18px;border-radius:9px;background:var(--frost);color:#0b1513;font:900 14px/18px var(--f-num);text-align:center}
+#redraw.sel,#waitBtn.sel{box-shadow:0 0 0 1.5px var(--frost),0 0 18px rgba(205,239,230,.4)}
+#redraw:disabled{opacity:.35}
+#menuBtn{position:absolute;right:6px;top:4px;width:34px;height:28px;display:grid;place-items:center;color:var(--ash);z-index:24}
+#menuBtn svg{width:15px;height:11px}
+#viewBtns{position:absolute;left:8px;top:6px;display:flex;gap:4px;z-index:24}
+#viewBtns button{width:30px;height:24px;display:grid;place-items:center;color:var(--ash);border-radius:2px}
+#viewBtns button.on{background:var(--bone);color:#14100c}
+#viewBtns svg{width:14px;height:14px;display:block}
+#toast{position:absolute;left:0;right:0;top:calc(var(--yE) + 60px);text-align:center;font-size:17px;font-weight:900;letter-spacing:.3em;text-indent:.3em;opacity:0;pointer-events:none;text-shadow:0 0 14px #000,0 0 30px #000;z-index:20}
+#toast.show{animation:toast 1.6s ease-out}
+
+/* 手札を広げる(上へスワイプ)/ 自機の中を見る(下へスワイプ) */
+#shaker.zoomout #world{filter:brightness(.5)}
+#shaker.selfview #world{transform:scale(.7) translateY(34%);filter:brightness(.4)}
+#shaker.selfview #parts,#shaker.selfview #hand,#shaker.selfview .pile,#shaker.selfview #redraw,#shaker.selfview #waitBtn,#shaker.selfview #handCnt{opacity:0;pointer-events:none;transform:translateY(24px)}
+#shaker.executing #pvGo{display:none}
+#shaker.shake{animation:shake .3s linear}
+
+/* ================= 演出 ================= */
+#fx,#floats{position:absolute;inset:0;pointer-events:none}
+#floats{z-index:22}
+.float{position:absolute;transform:translate(-50%,-50%);font:800 18px/1 var(--f-num);white-space:nowrap;text-shadow:0 2px 8px #000,0 0 2px #000;animation:rise .9s ease-out forwards;color:var(--bone)}
+.float.foe{color:var(--foe2)} .float.cy{color:var(--frost);font-size:16px} .float.dot{color:#ffb766;font-size:14px} .float.dim{color:var(--ash);font-size:14px}
+.float.big{font-size:28px;letter-spacing:.06em}
+.float.dm{animation:dmpop .85s cubic-bezier(.2,.8,.2,1) forwards;color:var(--bone)}
+.float.dm.mid{color:var(--glow)}
+.float.dm.big{color:#fff;letter-spacing:.04em;text-shadow:0 0 16px var(--flame),0 2px 8px #000}
+body.hs *{animation-play-state:paused!important;transition:none!important}
+#dim{position:absolute;inset:0;background:rgba(3,2,2,.7);opacity:0;pointer-events:none}
+#flashFx{position:absolute;inset:0;opacity:0;z-index:29}
+#flashFx.just{animation:flash .4s ease-out;background:radial-gradient(circle at var(--x0) 45%,rgba(240,235,255,.85),rgba(183,160,255,.25) 30%,transparent 60%)}
+#flashFx.brk{animation:flash .34s ease-out;background:radial-gradient(circle at var(--x0) 45%,rgba(205,239,230,.5),transparent 55%)}
+#flashFx.hurt{animation:flash .3s ease-out;background:radial-gradient(ellipse at 6% 55%,rgba(255,110,40,.45),transparent 60%)}
+.ktype{position:absolute;left:50%;top:calc(var(--yE) + 74px);transform:translate(-50%,-50%);font:900 68px/1 var(--f-num);letter-spacing:.2em;white-space:nowrap;pointer-events:none;z-index:31;color:#fff}
+.ktype.just{text-shadow:0 0 26px var(--arc),0 0 60px var(--arc)}
+.ktype.cy{color:var(--frost);text-shadow:0 0 22px rgba(205,239,230,.7)}
+.vburst{position:absolute;pointer-events:none}.vburst svg{width:100%;height:100%;overflow:visible}.vburst line{stroke:currentColor;stroke-width:1.4;stroke-linecap:round}
+.vchip{position:absolute;width:5px;height:2px;pointer-events:none}
+.vseat{position:absolute;width:30px;height:12px;border-left:3px solid var(--frost);border-right:1px solid var(--frost);transform-origin:left center;pointer-events:none}
+.vslash{position:absolute;pointer-events:none}.vslash svg{width:100%;height:100%;overflow:visible}
+.vslash path{fill:none;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:1}
+.vslash .a{stroke:#fff;stroke-width:6}.vslash .b{stroke:var(--frost);stroke-width:2.5}.vslash .c{stroke:rgba(255,255,255,.5);stroke-width:1}
+.vbeam{position:absolute;height:6px;transform-origin:0 50%;pointer-events:none;background:linear-gradient(90deg,rgba(205,239,230,0),var(--frost) 18%,#fff 55%,var(--frost));border-radius:3px;box-shadow:0 0 14px rgba(205,239,230,.7)}
+.vguard{position:absolute;width:34px;height:124px;pointer-events:none;border-right:3px solid var(--frost);border-radius:0 70% 70% 0/0 50% 50% 0;background:linear-gradient(90deg,transparent 30%,rgba(205,239,230,.22));transform-origin:0 50%}
+.vpkt{position:absolute;width:9px;height:9px;margin:-4.5px 0 0 -4.5px;box-shadow:0 0 6px var(--frost);background:var(--frost);pointer-events:none;transform:rotate(45deg)}
+.vcut{position:absolute;width:240px;height:4px;transform-origin:50% 50%;pointer-events:none;background:linear-gradient(90deg,transparent,var(--arc2) 20%,#fff 50%,var(--arc2) 80%,transparent);box-shadow:0 0 16px var(--arc)}
+.vcut.cy{background:linear-gradient(90deg,transparent,var(--frost) 20%,#fff 50%,var(--frost) 80%,transparent);box-shadow:0 0 14px rgba(205,239,230,.7)}
+.vcut.red{width:180px;background:linear-gradient(90deg,transparent,var(--foe2) 20%,#fff 50%,var(--foe2) 80%,transparent);box-shadow:0 0 16px var(--flame)}
+.vfrag{position:absolute;height:10px;background:var(--frost);pointer-events:none}
+.vghost{position:absolute;pointer-events:none;transform-origin:50% 100%}
+.vghost svg{display:block;width:100%;height:100%;overflow:visible}
+.vghost svg *{fill:rgba(205,239,230,.07)!important;stroke:rgba(205,239,230,.85)!important}
+.vspeed{position:absolute;height:2px;pointer-events:none;transform-origin:100% 50%;background:linear-gradient(90deg,transparent,rgba(205,239,230,.9) 40%,#fff)}
+.vcres{position:absolute;pointer-events:none}.vcres svg{width:100%;height:100%;overflow:visible}
+.vcres .m{fill:#fff}.vcres .e{fill:none;stroke:var(--frost);stroke-width:2.5}.vcres .t{fill:none;stroke:rgba(255,255,255,.6);stroke-width:1.2}
+.vstar{position:absolute;pointer-events:none}.vstar svg{width:100%;height:100%;overflow:visible}.vstar path{fill:#fff}
+.vring{position:absolute;border-radius:50%;border:2px solid var(--frost);pointer-events:none}
+.vconv{position:absolute;height:1.5px;pointer-events:none;transform-origin:0 50%;background:linear-gradient(90deg,#fff,rgba(205,239,230,0))}
+.burst{position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;border:2px solid var(--frost);box-shadow:0 0 18px rgba(205,239,230,.8),inset 0 0 12px rgba(205,239,230,.5);animation:burst .5s ease-out forwards}
+.shard{position:absolute;width:9px;height:3px;background:var(--gold);transition:transform .45s ease-out,opacity .45s}
+.beam{position:absolute;height:3px;transform-origin:0 50%;border-radius:2px;background:linear-gradient(90deg,rgba(255,230,174,0),var(--glow) 25%,var(--flame));box-shadow:0 0 10px rgba(255,122,31,.8);animation:beam .3s ease-out forwards}
+.fxghost{position:absolute;width:24px;height:34px;box-shadow:inset 0 0 0 1.5px var(--flame);background:var(--iron2);transition:left .4s ease-in,top .4s ease-in,opacity .4s,transform .4s}
+.spark{position:absolute;width:4px;height:4px;border-radius:2px;background:var(--glow);transition:transform .4s ease-out,opacity .4s}
+.after{position:absolute;opacity:.35;transition:opacity .3s,transform .3s;filter:drop-shadow(0 0 4px rgba(205,239,230,.8))}
+.after svg{display:block;width:100%;height:100%}
+.pin{position:absolute;width:12px;height:12px;border:2px solid var(--frost);transform:rotate(45deg);animation:pin .6s ease-out forwards}
+.fshield{position:absolute;width:70px;height:84px;margin:-42px 0 0 -35px;border:1.5px solid rgba(190,205,215,.85);border-radius:45%;box-shadow:0 0 12px rgba(143,154,163,.5);animation:shield .5s ease-out forwards}
+.oslock{position:absolute;width:26px;height:26px;margin:-13px 0 0 -13px;border:2px solid var(--frost);transform:rotate(45deg);pointer-events:none;animation:lock .26s ease-out forwards}
+.osbreak{position:absolute;left:var(--x0);top:calc(var(--yE) - 12px);width:calc(var(--x1) - var(--x0));height:calc(var(--yS) - var(--yE) + 24px);pointer-events:none;background:repeating-linear-gradient(180deg,rgba(255,122,31,.3) 0 2px,transparent 2px 9px);animation:brk .4s steps(4) forwards}
+#wipe{position:absolute;left:-14%;top:0;width:128%;height:100%;z-index:95;pointer-events:auto;transform:translateX(-112%) skewX(-14deg);background:linear-gradient(90deg,#0a0807,#070605 40%,#120c08 92%,var(--flame) 99.6%,var(--glow))}
+#wipe[hidden]{display:none}
+
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{from{opacity:.62}to{opacity:1}}
+@keyframes blink{50%{opacity:.25}}
+@keyframes shake{20%{transform:translate(-3px,1px)}40%{transform:translate(3px,-1px)}60%{transform:translate(-2px,1px)}80%{transform:translate(2px,0)}}
+@keyframes jolt{0%{transform:translateX(3px)}100%{transform:none}}
+@keyframes barbreak{0%{opacity:1;transform:none}40%{opacity:1;transform:scaleY(2.2)}100%{opacity:0;transform:scaleY(.2) translateY(-6px)}}
+@keyframes lunge{35%{transform:translateX(72px) rotate(8deg)}100%{transform:none}}
+@keyframes recoil{25%{transform:translateX(-7px) rotate(-3deg)}100%{transform:none}}
+@keyframes dhit{0%{filter:brightness(3)}25%{transform:translateX(-5px) skewX(4deg)}50%{transform:translateX(4px)}75%{transform:translateX(-2px)}100%{transform:none;filter:none}}
+@keyframes glitch{25%{transform:translateX(3px)}50%{transform:translateX(-3px);filter:brightness(1.8)}75%{transform:translateX(2px)}100%{transform:none}}
+@keyframes foeAtk{30%{transform:translateX(8px)}50%{transform:translateX(-30px)}100%{transform:none}}
+@keyframes ehit{0%{filter:brightness(4)}50%{transform:translateX(5px)}100%{transform:none;filter:none}}
+@keyframes ejust{0%{filter:brightness(5)}30%{transform:translateX(18px)}100%{transform:none;filter:none}}
+@keyframes flashB{0%{filter:brightness(3.5)}100%{filter:none}}
+@keyframes flash{0%{opacity:1}100%{opacity:0}}
+@keyframes mkIn{0%{transform:scale(.3);opacity:0}100%{transform:none;opacity:1}}
+@keyframes mkScan{0%{filter:brightness(3)}100%{filter:none}}
+@keyframes rescan{0%{opacity:1;transform:translateX(0)}100%{opacity:0;transform:translateX(calc(var(--x1) - var(--x0)))}}
+@keyframes rise{0%{opacity:0;margin-top:4px;letter-spacing:.3em}8%{opacity:1;letter-spacing:0}100%{opacity:0;margin-top:-26px}}
+@keyframes dmpop{0%{opacity:0;transform:translate(-50%,-50%) scale(2.2)}9%{opacity:1;transform:translate(-50%,-50%) scale(.9)}17%{transform:translate(-50%,-55%) scale(1.08)}26%{transform:translate(-50%,-56%) scale(1)}70%{opacity:1;transform:translate(-50%,-80%)}100%{opacity:0;transform:translate(-50%,-120%)}}
+@keyframes burst{0%{transform:scale(.3);opacity:1}100%{transform:scale(1.6);opacity:0}}
+@keyframes beam{0%{opacity:1}100%{opacity:0;transform-origin:0 50%}}
+@keyframes pin{0%{transform:rotate(45deg) scale(2);opacity:0}30%{transform:rotate(45deg) scale(1);opacity:1}100%{transform:rotate(45deg) scale(1);opacity:0}}
+@keyframes shield{0%{transform:scale(.6);opacity:0}30%{transform:scale(1.08);opacity:1}100%{transform:scale(1);opacity:0}}
+@keyframes lock{0%{transform:rotate(45deg) scale(1.8);opacity:1}100%{transform:rotate(45deg) scale(.6);opacity:0}}
+@keyframes brk{0%{opacity:1}100%{opacity:0}}
+@keyframes toast{0%{opacity:0;letter-spacing:.7em}14%{opacity:1;letter-spacing:.3em}70%{opacity:1}100%{opacity:0}}
+@keyframes sayIn{0%{opacity:0;margin-top:6px}6%{opacity:1;margin-top:0}88%{opacity:1}100%{opacity:0}}
+@keyframes enterIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.enter{animation:enterIn .3s var(--ez-out)}
+@media (prefers-reduced-motion:reduce){
+  .mk.ch .ring,.mk.danger .dk,.foe.tgt .reticle,.eu.tgt .tg,.pip.loss,.hpb s{animation:none}
+  #hand .card,.mk,.wb,.sm{transition-duration:.01s}
+  .enter{animation:none}
+}

@@ -64,6 +64,7 @@
 
       <div id="parts"></div>
       <button id="menuBtn" type="button" data-act="menu" aria-label="メニュー"></button>
+      <div id="viewBtns"><button type="button" data-act="view" data-arg="hand" aria-label="手札を広げる"></button><button type="button" data-act="view" data-arg="self" aria-label="自機の状態"></button></div>
 
       <div id="handShade"></div>
       <button class="pile" id="pileDraw" type="button" aria-label="山札"><span class="ic" id="icDeck"></span><b id="nDraw">0</b></button>
@@ -364,6 +365,7 @@ function buildStatic(){
   $('#parts').innerHTML = SLOTS.map((p, j) => `<button class="part" type="button" data-p="${p.id}" style="top:${LAY.y0 + j * LAY.dy}px" aria-label="${p.fn}"><span class="ph"><span class="pico">${IC[p.id]}</span><span class="pname">${p.fn}</span><span class="pnum"></span></span><span class="pips"></span></button>`).join('');
   $('#icDeck').innerHTML = IC.deck; $('#icDisc').innerHTML = IC.disc; $('#icCache').innerHTML = IC.cache; $('#icHand').innerHTML = IC.hand;
   $('#menuBtn').innerHTML = IC.menu; $('#icWait').innerHTML = IC.wait; $('#pvCut').innerHTML = IC.x;
+  { const vb = document.querySelectorAll('#viewBtns button'); vb[0].innerHTML = IC.hand; vb[1].innerHTML = IC.core; }
 }
 // 敵の置き場所(0.54.0): 線路の右から画面の右端までの区画。本体の絵は床に立たせ、ユニットの輪(残りの弧と数字)は絵の中の在りか(units の pt)に置く。
 //   ユニットごとに絵を持つ敵(小隊・群れ)は、データの並び(at の左が前)を保ったまま、区画に収まる隊形(FORM)に並べる。
@@ -885,6 +887,7 @@ function renderSide(){
   $('#handShade').classList.toggle('on', UI.view === 'hand');
   $('#shaker').classList.toggle('zoomout', UI.view === 'hand');
   $('#shaker').classList.toggle('selfview', UI.view === 'self');
+  document.querySelectorAll('#viewBtns button').forEach(el => el.classList.toggle('on', UI.view === el.dataset.arg));
   if(UI.view === 'self'){ if(!UI.line) UI.line = monologue(); renderInner(); } else UI.line = null;
 }
 
@@ -1715,10 +1718,17 @@ function newRun(){
 }
 const nodeKey = n => n.type === 'boss' ? 'boss' : n.lane + '-' + n.idx;
 // 地図の列: 入口・部屋・ボス。部屋数から等間隔に
-const MAPY = [118, 196, 274];
 // 0.42.1: 列の間隔は一定(MAPGAP)。区画が増えて画面に収まらない分は横にスクロールする(.mscroll、スクロールバーは出さない)
-const MAPGAP = 84, mapX = i => 44 + i * MAPGAP, mapW = () => mapX(AREA().rooms + 1) + 44;
-function nodePos(n){ return n.type === 'boss' ? {x: mapX(AREA().rooms + 1), y: MAPY[1]} : {x: mapX(n.idx + 1), y: MAPY[n.lane]}; }
+// 0.54.0: 地図は塔を斜めに登る。区画が進むごとに MAPRISE だけ上がり、3本の道は MAPLANE ずつ離れて並ぶ。横に送ると視点も一緒に登る(mapFollow)
+const MAPGAP = 88, MAPRISE = 15, MAPLANE = 60, mapX = i => 76 + i * MAPGAP, mapW = () => mapX(AREA().rooms + 1) + 120;
+const mapBase = () => (AREA().rooms + 1) * MAPRISE + 2 * MAPLANE + 40, mapYof = (i, lane) => mapBase() - i * MAPRISE - (2 - lane) * MAPLANE;
+function nodePos(n){ return n.type === 'boss' ? {x: mapX(AREA().rooms + 1), y: mapYof(AREA().rooms + 1, 1)} : {x: mapX(n.idx + 1), y: mapYof(n.idx + 1, n.lane)}; }
+function mapFollow(sc, jump){
+  const cv = sc.firstElementChild; if(!cv) return; const col = (sc.scrollLeft + sc.clientWidth / 2 - mapX(0)) / MAPGAP;
+  if(jump) cv.style.transition = 'none';
+  cv.style.transform = `translateY(${Math.round((sc.clientHeight + 30) / 2 - mapYof(col, 1))}px)`;
+  if(jump){ cv.getBoundingClientRect(); cv.style.transition = ''; }
+}
 function encFoes(enc){ const c = {}; for(const f of ENC[enc].foes){ const nm = FOES[f].name; c[nm] = (c[nm] || 0) + 1; } return Object.entries(c).map(([n, k]) => k > 1 ? `${n}×${k}` : n).join('・'); }
 function showMap(){
   UI.screen = 'map'; UI.view = 'normal'; sel = null; PV = null; $('#titleScr').hidden = true;
@@ -1730,7 +1740,8 @@ function showMap(){
   const ln = (a, c, cls) => { lines += `<line x1="${a.x}" y1="${a.y}" x2="${c.x}" y2="${c.y}" class="${cls}"/>`; };
   // 今いる部屋から次に行ける部屋への線は光らせる
   const nx = (fromK, to) => fromK === atKey && reach.has(nodeKey(to)) ? ' nx' + (UI.mapSel === nodeKey(to) ? ' route' : '') : '';
-  const st = {x: mapX(0), y: MAPY[1]};
+  const st = {x: mapX(0), y: mapYof(0, 1)};
+  for(let l = 0; l < 3; l++) lines += `<line x1="${mapX(.4)}" y1="${mapYof(.4, l)}" x2="${mapX(AREA().rooms + .6)}" y2="${mapYof(AREA().rooms + .6, l)}" class="beam"/>`;
   for(const row of m.nodes){
     const n0 = row[0]; ln(st, nodePos(n0), (visited.has(nodeKey(n0)) ? 'ed vis' : 'ed') + nx('start', n0));
     for(let i = 0; i < row.length - 1; i++){
@@ -1754,17 +1765,17 @@ function showMap(){
   const fresh = $('#mapScr').hidden;
   $('#mapScr').innerHTML = `${topBar(AREA().name)}
     <div class="mscroll"><div class="mcanvas" style="width:${mapW()}px">
-    <svg class="medges" width="${mapW()}" height="390" viewBox="0 0 ${mapW()} 390" aria-hidden="true">${lines}</svg>
+    <svg class="medges" width="${mapW()}" height="${mapBase() + 60}" viewBox="0 0 ${mapW()} ${mapBase() + 60}" aria-hidden="true">${lines}</svg>
     <span class="mn start${atKey === 'start' ? ' here' : ''}" style="left:${st.x}px;top:${st.y}px"><span class="ic">${IC.start}</span></span>${all.map(btn).join('')}
     </div></div>
     <div class="minfo${s ? ' has' : ''}">${info || `<span class="mi-leg">${['battle', 'elite', 'rest', 'shop', 'event', 'duct', 'boss'].map(t => `<span class="k-${t}"><span class="ic">${IC[t]}</span>${DATA.rooms[t].name}</span>`).join('')}</span>`}<span class="sp"></span><button class="btn" type="button" data-act="go" ${s && reach.has(UI.mapSel) ? '' : 'disabled'}>決定</button></div>`;
-  $('#mapScr').hidden = false; $('#mapScr').classList.remove('leave');
+  $('#mapScr').hidden = false; $('#mapScr').classList.remove('leave'); $('#mapScr').style.setProperty('--mapheat', (((run.heat || 0) + 10) / 20).toFixed(2));
   // 横のスクロール: 描き直しても位置を保つ。新しく開いたときは、今いる所が左から1/3あたりに来るように
   { const sc = $('#mapScr .mscroll'); if(sc){
       if(fresh || UI.mapScroll == null){ const hp = atKey === 'start' ? st : nodePos(all.find(n => nodeKey(n) === atKey) || {type:'boss'}); sc.scrollLeft = Math.max(0, hp.x - sc.clientWidth / 3); }
       else sc.scrollLeft = UI.mapScroll;
-      UI.mapScroll = sc.scrollLeft;
-      sc.addEventListener('scroll', () => { UI.mapScroll = sc.scrollLeft; }, {passive:true});
+      UI.mapScroll = sc.scrollLeft; mapFollow(sc, true);
+      sc.addEventListener('scroll', () => { UI.mapScroll = sc.scrollLeft; mapFollow(sc); }, {passive:true});
       sc.addEventListener('wheel', e => { if(Math.abs(e.deltaY) > Math.abs(e.deltaX)){ sc.scrollLeft += e.deltaY; e.preventDefault(); } }, {passive:false}); // マウスのホイールでも横に動く
   } }
   if(fresh) enter($('#mapScr'));
@@ -2290,9 +2301,9 @@ function infoFoe(i, uid){
   const g = GEOM.get(i); let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
   const add = (a, b, c, d) => { x0 = Math.min(x0, a); y0 = Math.min(y0, b); x1 = Math.max(x1, c); y1 = Math.max(y1, d); };
   if(g.main){ const z = sprSize(g.main.kind, g.main.s); add(g.main.x - z.w / 2, g.main.y - z.h / 2, g.main.x + z.w / 2, g.main.y + z.h / 2); }
-  for(const u of Object.values(g.units)){ if(u.spr) add(u.sx, u.sy, u.sx + u.w, u.sy + u.h); if(u.lst) add(u.cx - 14, u.cy - 14, u.cx + 14, u.cy + 14); else add(u.x - 36, u.y, u.x + 36, u.y + 26); }
-  const z = Math.min(FOCUS.scale, 340 / (x1 - x0), 330 / (y1 - y0)), cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
-  $('#world').style.transform = `translate(${FOCUS.x - z * cx}px, ${FOCUS.y - z * cy}px) scale(${z})`;
+  for(const u of Object.values(g.units)){ if(u.spr) add(u.sx, u.sy, u.sx + u.w, u.sy + u.h); if(!u.one) add(u.x - 24, u.y - 34, u.x + 24, u.y + 34); }
+  const z = Math.min(FOCUS.scale, (LAY.W * .4) / (x1 - x0), (LAY.H - 70) / (y1 - y0)), cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+  $('#world').style.transform = `translate(${LAY.W * .76 - z * cx}px, ${LAY.H / 2 - z * cy}px) scale(${z})`;
   $('#world').style.transformOrigin = '0 0';
   $('#shaker').classList.add('focus'); pulse($('#focus'), 'scan', 600);
   document.querySelectorAll('#foes [data-f]').forEach(el => el.classList.toggle('fo', +el.dataset.f === i));
@@ -2473,15 +2484,17 @@ function showDebugResult(won){
 function showRules(first){
   showOv(`<h2>遊び方</h2><ul>
     <li>時間はカードを使ったときだけ進む。カード左上の数字が、かかるサイクル。0は即時。</li>
-    ${!RULE.econ ? `<li>手札は3サイクルごとに1枚届く(最大${RULE.handMax}枚)。届く時刻はタイムラインの下の段。軽いカードを続けると手札が減り、重いカードの間に手札がたまる。</li>`
+    ${!RULE.econ ? `<li>手札は3サイクルごとに1枚届く(最大${RULE.handMax}枚)。届く時刻は線路のいちばん下の自機の行。軽いカードを続けると手札が減り、重いカードの間に手札がたまる。</li>`
       : RULE.econ.type === 'turn' ? `<li>${RULE.econ.len}サイクルごとに区切り(点線)。区切りで手札を捨てて${RULE.econ.hand}枚引き、ブロックも消える。右下の上段は区切りまで待つ。</li>`
       : `<li>手札は自動では届かない。好きなときに右下のリフレッシュ(${RULE.econ.r}サイクル)で、手札を全部捨てて${RULE.econ.hand}枚引く。リフレッシュ中もブロックは残り、新しい手札が来るとすべて失う。</li>`}
-    <li>奥の画面に敵の行動の予定が流れてくる。数字はダメージ、下の印は狙う部位。紫の丸は不安定な行動、砂時計は自分へのディレイ。</li>
+    <li>自機と敵のあいだの線路に、敵の行動の予定が右から流れてくる。5本の線路は自機の部位(上から演算・武装・出力・耐久・機動)で、攻撃は狙う部位の線路の上を来る。数字はダメージ。近いほど白く熱い。紫の輪は不安定な行動、砂時計は自分へのディレイ。</li>
     <li>カードが発動する前に攻撃を受けるとブレイクされる。ブロックで全部防ぐか、菱形のあるカード(アトミック)ならブレイクされない。不安定な行動と同じサイクルにカードでダメージを与えると、ブレイクする(行動が止まる。発動が重なればJUST、時限が当たってもよい)。</li>
     <li>目の印の敵は、重いカードを使い始めると撃ってくる。鎖の印の敵は、仲間と同時に攻撃すると強くなる。</li>
-    <li>予定の下の帯は、その間にカードが発動したときに効く。<b>体勢</b>は一度に数字以上のダメージでブレイク。<b>防壁</b>は数字までダメージを防がれる。<b>反撃</b>は攻撃するたびに撃ち返される。<b>隙</b>はダメージ1.5倍。</li>
+    <li>いちばん上の敵の行の帯は、その間にカードが発動したときに効く。<b>体勢</b>は一度に数字以上のダメージでブレイク。<b>防壁</b>は数字までダメージを防がれる。<b>反撃</b>は攻撃するたびに撃ち返される。<b>隙</b>はダメージ1.5倍。</li>
     ${!RULE.econ ? `<li>右下は手札の入れ替え(枚数ぶんのサイクル)${RULE.freeWait ? 'と、1サイクルの待機' : '。手札がないときは1サイクルの待機'}。</li>` : RULE.freeWait || RULE.econ.type === 'turn' ? '<li>右下の下段は1サイクルの待機。</li>' : ''}
-    <li>上スワイプで手札を広げ、下スワイプで自分の内側を見る。長押しでカードと敵の詳細。タイムラインを押すとキャラが透ける。</li>
+    <li>カードを選ぶと、発動までの時間が冷たい帯で出る。もう一度押すか、帯の先の丸い札を押すと使う。発動の前に止められるなら、帯はそこで切れる。</li>
+    <li>上スワイプで手札を広げ、下スワイプで自分の内側を見る(マウスはホイールか左上のボタン)。長押し(右クリック)でカードと敵の詳細。予定の印を押すと行動の中身。</li>
+    <li>キー: 数字でカード、Enter で使う、R リフレッシュ、W 待機、Tab 狙い、↑↓ 見方、F 敵の詳細、Esc 戻る。</li>
   </ul><div class="row">${first ? '<button class="btn ghost" type="button" data-act="debug">デバッグ</button>' : ''}<button class="btn" type="button" data-act="close">${first ? 'はじめる' : '閉じる'}</button></div>`, !first);
 }
 function showMenu(){
@@ -2509,6 +2522,7 @@ function act(a, arg, el){
     case 'refClose': popRef(true); break;
     case 'foeClose': closeFocus(); break;
     case 'menu': if(!busy) showMenu(); break;
+    case 'view': shiftView(arg); break;
     case 'rules': showRules(false); break;
     case 'deck': infoDeck(); break;
     case 'unit': infoUnit('parts'); break;
@@ -2606,15 +2620,72 @@ stage.addEventListener('pointerup', ev => {
   const dy = ev.clientY - swipe.y, dx = ev.clientX - swipe.x, s = LAY.s || 1;
   swipe = null;
   if(inBattle() && $('#ov').hidden && $('#ref').hidden && !busy && !UI.focus && Math.abs(dy) > 34 * s && Math.abs(dy) > Math.abs(dx) * 1.3){
-    let v = UI.view;
-    if(dy < 0) v = v === 'self' ? 'normal' : v === 'normal' ? 'hand' : v;
-    else v = v === 'hand' ? 'normal' : v === 'normal' ? 'self' : v;
-    if(v !== UI.view){ UI.view = v; if(v === 'self'){ sel = null; PV = null; } renderAll(); }
+    shiftView(dy < 0 ? 'up' : 'down');
     swallow = true; setTimeout(() => { swallow = false; }, 350);
   }
 });
 ['pointercancel','pointerleave'].forEach(n => stage.addEventListener(n, () => { clearTimeout(lpTimer); }));
-stage.addEventListener('contextmenu', e => e.preventDefault());
+/* 見方の切り替え(0.54.0): 上 = 手札を広げる / 下 = 自機の中を見る。スワイプ・ホイール・左上のボタン・矢印キーのどれでも */
+function shiftView(to){
+  if(!inBattle() || busy || !$('#ov').hidden || !$('#ref').hidden || UI.focus) return;
+  let v = UI.view;
+  if(to === 'up') v = v === 'self' ? 'normal' : v === 'normal' ? 'hand' : v;
+  else if(to === 'down') v = v === 'hand' ? 'normal' : v === 'normal' ? 'self' : v;
+  else v = v === to ? 'normal' : to;
+  if(v !== UI.view){ UI.view = v; if(v === 'self'){ sel = null; PV = null; } hideMovePop(); renderAll(); if(window.SND) SND.play('ui'); }
+}
+/* 右クリック = 長押し(カードの拡大・敵の詳細) */
+stage.addEventListener('contextmenu', ev => {
+  ev.preventDefault(); clearTimeout(lpTimer);
+  const ck = ev.target.closest('.card') && ev.target.closest('.card').querySelector('.ck');
+  if(ck && $('#ref').hidden){ UI.refs = []; pushRef('card:' + ck.dataset.ck); return; }
+  if(!inBattle() || busy || !$('#ov').hidden || !$('#ref').hidden || UI.view === 'self' || UI.focus) return;
+  const f = ev.target.closest('.foe[data-f],.eu[data-f]'); if(f) infoFoe(+f.dataset.f, f.dataset.u && f.dataset.u !== '*' ? f.dataset.u : null);
+});
+let wheelAt = 0;
+stage.addEventListener('wheel', ev => {
+  if(!inBattle() || Math.abs(ev.deltaY) < 8 || ev.target.closest('#focus,#inner,#ov,#ref')) return;
+  const now = Date.now(); if(now - wheelAt < 320) return; wheelAt = now;
+  shiftView(ev.deltaY < 0 ? 'up' : 'down');
+}, {passive: true});
+/* キー(0.54.0): 押すのと同じ所を押したことにする。数字 = カード・選択肢 / Enter = 決定・使う / Esc = 戻る / R = リフレッシュ・入れ替え / W = 待機 /
+   ←→ = カードを移る / Tab = 狙いを移る / ↑↓ = 見方の切り替え / F = 敵の詳細 / D = デッキ / M = メニュー */
+addEventListener('keydown', ev => {
+  if(ev.metaKey || ev.ctrlKey || ev.altKey) return;
+  const k = ev.key, vis = s => { const e = $(s); return !!e && !e.hidden; }, press = el => { if(el && !el.disabled){ el.click(); return true; } return false; };
+  const top = vis('#ref') ? '#ref' : vis('#ov2') ? '#ov2' : vis('#ov') ? '#ov' : UI.focus ? '#focus' : vis('#titleScr') ? '#titleScr' : vis('#roomScr') ? '#roomScr' : vis('#mapScr') ? '#mapScr' : inBattle() ? null : '#stage';
+  if(k === 'Escape' || k === 'Backspace'){
+    ev.preventDefault();
+    if(top === '#ref'){ popRef(); return; }
+    if(top === '#focus'){ closeFocus(); return; }
+    if(top){ if(press($(top + ' .btn.ghost')) || press($(top + ' [data-act="close"]'))) return; if(top === '#ov' && $('#ov').dataset.closable){ hideOv(); return; } if(top === '#mapScr' && UI.mapSel){ UI.mapSel = null; showMap(); return; } if(top !== '#titleScr' && top !== '#ov' && top !== '#ov2') act('menu'); return; }
+    if(UI.view !== 'normal'){ shiftView(UI.view); return; }
+    if(PICK){ PICK = null; sel = null; PV = null; renderAll(); return; }
+    if(sel){ sel = null; PV = null; renderAll(); return; }
+    act('menu'); return;
+  }
+  if(WIPING || UI.going) return;
+  if(top){
+    if(k === 'Enter' || k === ' '){ ev.preventDefault(); const bs = [...document.querySelectorAll(top + ' .btn:not(.ghost), ' + top + ' .tt-b.main')].filter(b => !b.disabled); press(bs[bs.length - 1]); return; }
+    if(k >= '1' && k <= '9'){ const os = [...document.querySelectorAll(top + ' [data-act="pick"], ' + top + ' .mn.reach, ' + top + ' .tt-b, ' + top + ' .mlist .opt, ' + top + ' .fm, ' + top + ' [data-act="dbgPick"]')]; press(os[+k - 1]); return; }
+    if(top === '#mapScr' && (k === 'm' || k === 'M')) act('menu');
+    if((top === '#mapScr' || top === '#roomScr') && (k === 'd' || k === 'D')) act('deck');
+    return;
+  }
+  // 戦闘
+  const b = S.b, n = b.hand.length, cardAt = i => document.querySelector(`#hand .card[data-i="${i}"]`);
+  if(k >= '1' && k <= '9'){ press(cardAt(+k - 1)); return; }
+  if(k === 'Enter' || k === ' '){ ev.preventDefault(); if(PICK) pickOk(); else if(sel && !busy) execute(); return; }
+  if(k === 'r' || k === 'R'){ press($('#redraw')); return; }
+  if(k === 'w' || k === 'W'){ const w = $('#waitBtn'); if(w && w.offsetParent) press(w); return; }
+  if(k === 'ArrowLeft' || k === 'ArrowRight'){ ev.preventDefault(); if(!n || busy) return; const i = sel && sel.kind === 'card' ? (sel.i + (k === 'ArrowRight' ? 1 : n - 1)) % n : (k === 'ArrowRight' ? 0 : n - 1); if(!(sel && sel.kind === 'card' && sel.i === i)){ if(PICK) return; sel = null; onCard(i); } return; }
+  if(k === 'ArrowUp' || k === 'ArrowDown'){ ev.preventDefault(); shiftView(k === 'ArrowUp' ? 'up' : 'down'); return; }
+  if(k === 'Tab'){ ev.preventDefault(); if(busy || !sel || sel.kind !== 'card' || !CARDS[sel.k].tgt) return; const e = b.foes[tFoe(sel.target)] || b.foes.find(f => f.alive); if(!e) return; const live = EN.liveUids(e).filter(u => !EN.dotShort(b, CARDS[sel.k], e, u)); if(live.length < 2) return; const cur = tUnit(sel.target), nx = live[(live.indexOf(cur) + (ev.shiftKey ? live.length - 1 : 1)) % live.length]; sel.target = e.i + '.' + nx; lastTarget = sel.target; recalc(); return; }
+  if(busy) return;
+  if(k === 'f' || k === 'F'){ const e = b.foes.find(f => f.alive); if(e) infoFoe(e.i); }
+  else if(k === 'd' || k === 'D') infoDeck();
+  else if(k === 'm' || k === 'M') act('menu');
+});
 stage.addEventListener('click', ev => {
   if(longFired){ longFired = false; return; }
   if(swallow){ swallow = false; return; }
@@ -2636,6 +2707,7 @@ stage.addEventListener('click', ev => {
     if(q){ QUEUED = q; skipNow(); }
     return;
   }
+  if(inBattle() && !busy && UI.view === 'self'){ if(!t.closest('#inner')) shiftView('self'); return; }
   if(!inBattle() || busy || UI.view === 'self') return;
   // タイムラインを押すと透かす(何も選んでいないとき)。透かしている間は、ほかを押すと戻る
   const mk = t.closest('.mk[data-mk]'); if(mk){ if(UI.mvKey === mk.dataset.mk) hideMovePop(); else showMovePop(mk.dataset.mk, mk); return; }
@@ -2653,11 +2725,13 @@ stage.addEventListener('click', ev => {
   const p = t.closest('#parts .part'); if(p){ infoPart(p.dataset.p); return; }
   if(t.closest('.pile')){ infoDeck(); return; }
   if(sel){ sel = null; PV = null; renderAll(); }
+  else if(UI.view === 'hand') shiftView('hand');
 });
 
 function fit(){
   layout(); buildStatic();
   if(S && S.b && UI.screen === 'battle'){ clearMarks(); buildFoes(); renderAll(); }
+  const ms = document.querySelector('#mapScr:not([hidden]) .mscroll'); if(ms) mapFollow(ms, true);
 }
 addEventListener('resize', fit);
 // ボタンにフォーカスが移ったときなどに、画面がずれないようにする

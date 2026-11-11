@@ -4,7 +4,11 @@
 
 ## ファイル
 
-- `index.html` ゲーム本体の画面と演出
+- `index.html` ゲーム本体の画面の骨組みと処理(進行・演出)
+- `css/app.css` 見た目すべて(0.54.0 から)。決まりは `docs/visual-guide.md`
+- `js/audio.js` 音(効果音と曲。Web Audio で作る)。試聴は `tools/audio/index.html`
+- `assets/` 同梱の素材(字体)。出どころは `assets/CREDITS.md`
+- `docs/visual-guide.md` 見た目と音の決まり(色・字体・配置・部品・動き・音)
 - `js/engine.js` ルールの処理(戦闘、手札の到着、地図の生成)。画面を持たないので、シミュレータからも使える
 - `text/` ゲーム内の文章(カード・キーワード・パーツ・敵・イベント・セリフ・用語)の CSV。表計算ソフトで直接編集し、`node tools/text.js` で `data/text.js` に書き出す。書き方は `text/README.md`
 - `data/` ゲームのデータ(数値と仕組み。名前や説明の文は text/ にある)。中身の一覧は企画書とは別のデータ一覧の資料にもまとめている
@@ -26,8 +30,8 @@
   - `solo.js`: 敵1体の遭遇で、戦闘の長さと損傷が目安になる耐久と攻撃の倍率を探す。`node tools/lab/solo.js 16`
   - `k7tune.js`: 敵を変えずに、キャラのカードの数値を探す(標準デッキの損傷が常時供給と同じになる倍率)。`node tools/lab/k7tune.js 5 '[[0.5,1.55]]'`(最後に turn を付けると固定ターン)
 - `manifest.webmanifest` アプリ設定(全画面・横向き)
-- `sw.js` オフライン用。データファイルを増やしたら CORE に足す
-- `icons/` アイコン(仮)
+- `sw.js` オフライン用。ファイルを増やしたら CORE に足す(`tools/publish/mkapp.py`・`stage.sh` の写すファイルにも)
+- `icons/` アイコン(`tools/icons/icon.svg` から `node tools/icons/mkicons.js` で作る)
 
 ## バージョン
 

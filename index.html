@@ -1062,7 +1062,7 @@ function chips(x, y, color, n, spread, up){
 }
 /* カードを使う: 持ち上がって(溜め)、タイムラインの自分の帯へ縮みながら吸い込まれ、帯の頭に括弧が噛む */
 function castFly(el){
-  if(!el) return; if(RM){ el.remove(); return; }
+  if(!el) return; if(RM){ el.remove(); return; } leaveHand(el);
   el.style.transition = 'none'; el.style.zIndex = 40;
   const L = parseFloat(el.style.left) || 0, T = parseFloat(el.style.top) || 0, tf = el.style.transform && el.style.transform !== 'none' ? el.style.transform : 'translate(0,0)';
   const dx = NOW + 6 - (L + 48), dy = STRIP_Y - (T + 136);
@@ -1603,8 +1603,10 @@ function hideMovePop(){ if($('#mvpop').hidden) return; $('#mvpop').hidden = true
 /* 0.54.0: 自機と敵は線路の外に立つので、透かす必要がなくなった(呼び出しは残す) */
 function setPeek(on){}
 const peeking = () => false;
+// 手札から離れていく札は、飛んでいる間も押せないようにする(古い data-i のまま押すと、別の札や無い札を指してしまう)
+function leaveHand(el){ el.removeAttribute('data-i'); el.disabled = true; el.style.pointerEvents = 'none'; el.classList.remove('sel'); }
 function flyCard(el, x, y){
-  if(!el) return;
+  if(!el) return; leaveHand(el);
   el.style.left = x + 'px'; el.style.top = y + 'px'; el.style.transform = 'scale(.25) rotate(12deg)'; el.style.opacity = '0';
   setTimeout(() => el.remove(), 260);
 }

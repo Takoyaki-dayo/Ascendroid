@@ -7,11 +7,28 @@ const { chromium } = require('playwright');
   const b = await chromium.launch();
   const [vw, vh] = (process.env.SIZE || '876x390').split('x').map(Number);
   const p = await (await b.newContext({ viewport: { width: vw, height: vh }, reducedMotion: process.env.MOTION ? 'no-preference' : 'reduce' })).newPage();
+  // 押した記録(失敗したときに直前の流れを出す)。ページの処理は変えない(捕まえて記録するだけ)
+  await p.addInitScript(() => { window.__trace = []; const st = () => { try{ return {busy, sel: sel && (sel.kind + ':' + (sel.i != null ? sel.i : '')), pick: !!PICK, q: QUEUED && QUEUED.kind, hand: S && S.b ? S.b.hand.length : -1, T: S && S.b ? S.b.T : null}; }catch(e){ return {}; } };
+    addEventListener('click', ev => { const t = ev.target.closest && ev.target.closest('[data-i],[id],[data-act]'); window.__trace.push(Object.assign({at: 'click', el: t ? (t.id || '') + (t.dataset.i != null ? '[i=' + t.dataset.i + ']' : '') + (t.dataset.act ? '[' + t.dataset.act + ']' : '') : '?'}, st())); if(window.__trace.length > 40) window.__trace.shift(); }, true);
+    addEventListener('click', () => { window.__trace.push(Object.assign({at: 'after'}, st())); }, false); });
   const errs = []; p.on('pageerror', e => { if(!/ServiceWorker/.test(e.message)) errs.push(e.message + ' @' + (e.stack || '').split('\n')[1]); }); p.on('console', m => { if(m.type() === 'error' && !/serviceWorker|sw\.js|ServiceWorker/.test(m.text())) errs.push('console: ' + m.text()); });
   await p.goto('file://' + file); await p.waitForTimeout(400); await p.evaluate(() => { try{ localStorage.clear(); }catch(e){} }); await p.reload(); await p.waitForTimeout(400); await p.click('[data-act="newGame"]'); await p.waitForTimeout(300); const areaLog = [];
   const vis = sel => p.evaluate(s => { const el = document.querySelector(s); return !!el && !el.hidden && el.offsetParent !== null; }, sel);
   const has = sel => p.$(sel).then(x => !!x);
-  const click = async sel => { await p.click(sel); await p.waitForTimeout(60); };
+  // 押せなかったら、そのときの画面と状態を残してから止める(原因を後で追えるように)
+  const click = async sel => {
+    try{ await p.click(sel, {timeout: 15000}); }
+    catch(e){
+      const st = await p.evaluate(s => { const el = document.querySelector(s), r = el && el.getBoundingClientRect(), top = r && document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+        return {selector: s, exists: !!el, rect: r && [r.left, r.top, r.width, r.height].map(Math.round), top: top ? top.tagName + '#' + top.id + '.' + String(top.className).slice(0, 60) : null,
+          busy, view: UI.view, focus: !!UI.focus, pick: !!PICK, ov: !$('#ov').hidden, ref: !$('#ref').hidden, screen: UI.screen, T: S.b && S.b.T, hand: S.b && S.b.hand.map(c => c.k), sel: typeof sel !== 'undefined' ? sel : null}; }, sel).catch(x => ({evalError: String(x)}));
+      console.log('TRACE', JSON.stringify(await p.evaluate(() => window.__trace.slice(-24)).catch(() => null)));
+      console.log('CLICK FAILED', JSON.stringify(st), '\n' + String(e.message).split('\n').filter(l => /intercepts|stable|visible|viewport|enabled/.test(l)).slice(0, 4).join('\n'));
+      if(shots) await p.screenshot({path: `${shots}/zz-click-failed.png`}).catch(() => {});
+      throw e;
+    }
+    await p.waitForTimeout(60);
+  };
   let nstep = 0; const log = []; let shot = 0, battles = 0, rooms = [], losses = 0;
   const snap = async name => { if(shots){ await p.screenshot({path: `${shots}/${String(++shot).padStart(2,'0')}-${name}.png`}); } };
   let snapped = new Set();

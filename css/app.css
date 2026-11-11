@@ -838,3 +838,4 @@ body.hs *{animation-play-state:paused!important;transition:none!important}
 /* 送れる所は指で縦に送れるようにする(舞台そのものは touch-action:none)。決定の列は、長い一覧でも下に貼り付く */
 .box,.cards.udeck,#focus,.mem,.rs-main,.dbg-grid{touch-action:pan-y;overscroll-behavior:contain}
 .box>.row:last-child{position:sticky;bottom:-6px;z-index:2;margin-top:0;padding:16px 0 8px;background:linear-gradient(180deg,transparent,rgba(5,4,3,.97) 38%)}
+#shaker.focus #toast,#shaker.selfview #toast{display:none}

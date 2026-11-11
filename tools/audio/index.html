@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ascendroid 音の試聴</title>
+<style>
+/* 効果音と曲をまとめて聴くページ。音そのものは js/audio.js(ゲーム本体と同じファイル)が作る */
+:root{color-scheme:dark;--soot:#070605;--iron:#15120f;--ash:#958b80;--bone:#f1e8da;--frost:#cdefe6;--flame:#ff7a1f}
+html,body{margin:0;background:var(--soot);color:var(--bone);font-family:"Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic",system-ui,sans-serif}
+main{max-width:920px;margin:0 auto;padding:20px max(16px,env(safe-area-inset-right,0px)) 40px max(16px,env(safe-area-inset-left,0px))}
+h1{font-size:18px;letter-spacing:.2em;margin:0 0 4px} h2{font-size:13px;letter-spacing:.2em;color:var(--ash);margin:22px 0 8px}
+p{font-size:12px;line-height:1.7;color:var(--ash);margin:0 0 8px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}
+button{font:inherit;color:inherit;border:0;cursor:pointer;height:46px;padding:0 12px;background:var(--iron);border-radius:2px;font-size:13px;font-weight:700;text-align:left}
+button:active{filter:brightness(1.5)}
+button.on{background:var(--bone);color:#14100c}
+button.wide{background:var(--flame);color:#14100c}
+.ctl{display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ash)}
+input[type=range]{width:200px;accent-color:#cdefe6}
+code{color:var(--frost)}
+</style>
+</head>
+<body>
+<main>
+<h1>Ascendroid 音の試聴</h1>
+<p>押すと鳴ります(最初の1回は、押した瞬間に音の準備をします)。方向は「硬く、電子的に」。歪ませた矩形波と鋸波、FM の金属音、粗い雑音、短い遅延で作っています。素材のファイルはありません。</p>
+<div class="ctl"><label for="vol">音量</label><input type="range" id="vol" min="0" max="100" step="5"><button id="tSfx" style="height:34px">効果音</button><button id="tBgm" style="height:34px">曲</button></div>
+<h2>流れで聴く</h2>
+<div class="grid"><button class="wide" id="seq1">戦闘のひと続き</button><button class="wide" id="seq2">JUST まで</button><button class="wide" id="seq3">被弾と機能停止</button></div>
+<h2>効果音</h2>
+<div class="grid" id="sfx"></div>
+<h2>曲(場面ごと)</h2>
+<div class="grid" id="bgm"></div>
+<p style="margin-top:10px">戦闘の曲は、敵の攻撃が近いほど低音が開き、刻みが強くなります。<span class="ctl" style="display:inline-flex"><label for="heat">近さ</label><input type="range" id="heat" min="0" max="100" value="0"></span></p>
+</main>
+<script src="../../js/audio.js"></script>
+<script>
+const $ = s => document.querySelector(s);
+const NAMES = {title: 'タイトル', map: '地図', room: '部屋(整備・ショップ・イベント)', battle: '通常戦', elite: 'エリート', boss: 'ボス'};
+$('#sfx').innerHTML = SND.LIST.map(([k, n], i) => `<button data-i="${i}">${n}</button>`).join('');
+$('#bgm').innerHTML = ['title', 'map', 'room', 'battle', 'elite', 'boss'].map(k => `<button data-m="${k}">${NAMES[k]}</button>`).join('') + '<button data-m="">止める</button>';
+const sync = () => { $('#vol').value = Math.round(SND.cfg.vol * 100); $('#tSfx').classList.toggle('on', SND.cfg.sfx); $('#tBgm').classList.toggle('on', SND.cfg.bgm); };
+sync();
+$('#vol').oninput = e => SND.set({vol: e.target.value / 100});
+$('#heat').oninput = e => SND.heat(e.target.value / 100);
+$('#tSfx').onclick = () => { SND.set({sfx: !SND.cfg.sfx}); sync(); };
+$('#tBgm').onclick = () => { SND.set({bgm: !SND.cfg.bgm}); sync(); };
+$('#sfx').onclick = e => { const b = e.target.closest('button'); if(!b) return; SND.unlock(); const [k, , a] = SND.LIST[+b.dataset.i]; setTimeout(() => SND.play(k, a), 30); };
+$('#bgm').onclick = e => { const b = e.target.closest('button'); if(!b) return; SND.unlock(); SND.music(b.dataset.m || null); document.querySelectorAll('#bgm button').forEach(x => x.classList.toggle('on', x === b && !!b.dataset.m)); };
+const seq = list => { SND.unlock(); for(const [t, k, a] of list) setTimeout(() => SND.play(k, a), t + 40); };
+$('#seq1').onclick = () => seq([[0, 'select'], [300, 'tick'], [420, 'melee', 0], [900, 'select'], [1200, 'tick'], [1320, 'tick'], [1440, 'tick'], [1560, 'melee', 1], [2300, 'foeMove'], [2700, 'select'], [3000, 'tick'], [3120, 'block'], [3500, 'tick'], [3620, 'absorb'], [4100, 'refresh']]);
+$('#seq2').onclick = () => seq([[0, 'charge'], [1100, 'select'], [1400, 'tick'], [1520, 'tick'], [1640, 'tick'], [1760, 'tick'], [1880, 'just'], [3000, 'select'], [3300, 'tick'], [3420, 'ranged', 1], [3800, 'kill'], [5400, 'win']]);
+$('#seq3').onclick = () => seq([[0, 'select'], [300, 'tick'], [420, 'tick'], [540, 'hurt', false], [700, 'interrupt'], [1500, 'tick'], [1620, 'hurt', true], [2400, 'tick'], [2520, 'hurt', true], [2900, 'lose']]);
+</script>
+</body>
+</html>

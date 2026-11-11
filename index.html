@@ -101,6 +101,7 @@
 <script src="data/attrs.js"></script>
 <script src="data/text.js"></script>
 <script src="js/engine.js"></script>
+<script src="js/audio.js"></script>
 <script>
 const APP_VERSION = '0.54.0';
 const $ = s => document.querySelector(s);
@@ -122,6 +123,8 @@ const sleep = ms => new Promise(r => { if(SKIP) return r(); const o = {r}; o.t =
 /* 演出の後から起きる効果は、同じ行動の演出中で、打ち切られていないときだけ出す */
 const later = (fn, ms) => { const id = EXEC_ID; setTimeout(() => { if(id === EXEC_ID && !SKIP) fn(); }, ms); };
 const T_TICK = 110, T_SWIFT = 70;
+/* 音(js/audio.js)。無くても動く */
+const snd = (n, a) => { if(window.SND) SND.play(n, a); }, bgm = st => { if(window.SND) SND.music(st); };
 const CARD = {W: 96, H: 136, gap: 6, x0: 152, low: 300, up: 246, right: 736};
 
 const IC = {
@@ -724,6 +727,7 @@ function renderMarks(){
   for(const e of b.foes){
     if(!e.alive) continue;
     const by0 = LAY.yE + 13, list = EN.upcoming(e), multi = e.uids.length > 1;
+    { const cm = list.find(m => m.a.ch && m.t <= 4 && !m.hit), ck = cm ? e.i + ':' + (e.seq + cm.k) : null; if(ck && UI.chWarn !== ck){ UI.chWarn = ck; snd('charge'); } }
     for(const m of list){
       const key = e.i + '-' + (e.seq + m.k) + '-' + m.left; seen.add(key);
       const a = m.a, sy = syn.has(e.i + '@' + m.t), atk = a.kind !== 'delay' && a.d > 0;
@@ -800,7 +804,7 @@ function threatRail(){
   for(const ln of document.querySelectorAll('#lanes .lane[data-lane]')) ln.classList.toggle('aim', t != null && t <= VIEW && ln.dataset.lane === p);
   if(t == null || t > VIEW){ el.style.opacity = '0'; st.style.setProperty('--threat', '0'); LAY.threat = 0; return; }
   el.style.opacity = '1'; el.style.top = laneY(p) + 'px'; el.style.width = Math.max(0, xs(t) - NOW - 15) + 'px'; el.classList.toggle('near', t <= 2);
-  LAY.threat = Math.max(0, Math.min(1, 1 - (t - 1) / 8)); st.style.setProperty('--threat', LAY.threat.toFixed(2));
+  LAY.threat = Math.max(0, Math.min(1, 1 - (t - 1) / 8)); st.style.setProperty('--threat', LAY.threat.toFixed(2)); if(window.SND) SND.heat(LAY.threat);
 }
 function renderStrip(){
   const b = S.b, seen = new Set(), room = b.handMax - b.hand.length;
@@ -942,7 +946,7 @@ function osHit(p){ const el = fxEl('oslock', g2(p.x), g2(p.y - 6)); setTimeout((
 let WIPING = false;
 function wipe(fn){
   if(RM || WIPING){ fn(); return; }
-  WIPING = true; let w = $('#wipe'); if(!w){ w = document.createElement('div'); w.id = 'wipe'; $('#stage').appendChild(w); }
+  WIPING = true; snd('wipe'); let w = $('#wipe'); if(!w){ w = document.createElement('div'); w.id = 'wipe'; $('#stage').appendChild(w); }
   w.hidden = false;
   anim(w, [{transform: 'translateX(-112%) skewX(-14deg)'}, {transform: 'translateX(0) skewX(-14deg)'}], {duration: 170, easing: EZ.in, fill: 'forwards'});
   setTimeout(() => {
@@ -1128,7 +1132,7 @@ function pulse(el, cls, ms){ if(!el) return; el.classList.remove(cls); void el.o
 function foeSay(i, key){
   const e = S && S.b && S.b.foes[i]; if(!e) return;
   const t0 = (FOES[e.key].say || {})[key], t = Array.isArray(t0) ? t0[Math.floor(Math.random() * t0.length)] : t0; if(!t) return; // 0.33.0: 複数あればどれか
-  e._said = e._said || {}; if(e._said[key]) return; e._said[key] = true;
+  e._said = e._said || {}; if(e._said[key]) return; e._said[key] = true; snd('say');
   const g = GEOM.get(i); let x, y;
   if(g && g.main){ const z = sprSize(g.main.kind, g.main.s); x = g.main.x; y = g.main.y - z.h / 2 + 4; }
   else { const c = foeCenter(i); x = c.x; y = c.y - 64; }
@@ -1373,11 +1377,16 @@ function cardMotion(k, ti){
 }
 // 耐久バーの上(ダメージの数字を出す場所)
 function unitTop(i, uid){ const g = GEOM.get(i); if(!g) return foeCenter(i); const u = g.units[g.multi ? uid : '*'] || g.units['*']; return u ? (u.lst ? {x: u.cx, y: u.cy - 18} : {x: u.x, y: u.y - 8}) : foeCenter(i); }
+// カードが当たった瞬間の音。種類と重さで決める
+function cardSnd(k, evs){
+  const c = k && CARDS[k]; if(!c) return; const t = cardType(c), w = weightOf(c);
+  if(t === 'melee') snd('melee', w); else if(t === 'ranged') snd('ranged', w); else if(t === 'block' || t === 'parry') snd('block'); else if(t === 'delay') snd('delay'); else if(t === 'draw') snd('draw'); else if(t !== 'junk') snd('select');
+}
 function cardFx(x){
   switch(x.kind){
     case 'dmg': { const p = unitTop(x.e, x.unit), big = x.n >= 20, mid = x.n >= 10; dmgFloat(p.x + (Math.random() - .5) * 34, p.y + (Math.random() - .5) * 16, x.n, big ? 'big' : mid ? 'mid' : ''); if(big) hitStop(70); else if(x.n >= 14) hitStop(40); pulse(unitEl(x.e, x.unit), 'flash', 260); knock(unitSpr(x.e, x.unit), 10 + Math.min(18, x.n * .7)); if(!big && x.n < 14) burstFx(p.x, p.y + 30, '#fff', 22); break; }
-    case 'kill': splitFx(x.e); freeze(90); break;
-    case 'unitBreak': { const p = unitCenter(x.e, x.unit); pulse(unitEl(x.e, x.unit), 'flash', 420); burstFx(p.x, p.y, 'var(--foe2)', 40); chips(p.x, p.y, 'var(--foe2)', 10, 50, false); flashFx('brk'); rescan('UNIT'); break; }
+    case 'kill': snd('kill'); splitFx(x.e); freeze(90); break;
+    case 'unitBreak': { snd('unitBreak'); const p = unitCenter(x.e, x.unit); pulse(unitEl(x.e, x.unit), 'flash', 420); burstFx(p.x, p.y, 'var(--foe2)', 40); chips(p.x, p.y, 'var(--foe2)', 10, 50, false); flashFx('brk'); rescan('UNIT'); break; }
     case 'frenzy': { const p = foeCenter(x.e); floatAt(p.x, p.y - 70, '▲' + x.n, 'foe'); break; }
     case 'immune': { const p = unitTop(x.e, x.unit); floatAt(p.x, p.y, DATA.ui['fx.immune'], 'cy'); break; }
     case 'capped': { const p = unitTop(x.e, x.unit); floatAt(p.x + 24, p.y - 16, DATA.ui['fx.capped'], 'cy'); break; }
@@ -1393,7 +1402,7 @@ function cardFx(x){
     case 'amp': floatAt(LAY.me.x + 10, LAY.me.y - 30, '▲' + x.n, 'cy'); break;
     case 'selfCrack': floatAt(DROID.x + 10, DROID.y - 92, DATA.kwName.crack + '+' + x.n, 'foe'); break;
     case 'selfDmg': floatAt(DROID.x + 10, DROID.y - 80, '−' + x.n, 'foe'); pulse($('#droid'), 'glitch', 320); break;
-    case 'heal': if(x.n) floatAt(DROID.x + 10, DROID.y - 80, '+' + x.n, 'cy'); break;
+    case 'heal': if(x.n) snd('heal'); if(x.n) floatAt(DROID.x + 10, DROID.y - 80, '+' + x.n, 'cy'); break;
     case 'grow': floatAt(LAY.me.x + 10, LAY.me.y - 30, '▲' + x.n, 'cy'); break;
     case 'delay':
       if(x.anger){ const p = foeCenter(x.e); floatAt(p.x, p.y - 70, '▲' + x.anger, 'foe'); pulse(foeEl(x.e), 'ehit', 280); foeSay(x.e, 'anger'); }
@@ -1405,8 +1414,8 @@ function cardFx(x){
     case 'charge': floatAt(LAY.me.x + 30, LAY.me.y - 10, '+' + x.n, 'cy'); break;
     case 'draw': if(x.n) floatAt(LAY.pile.x, LAY.pile.y - 34, '+' + x.n, 'cy'); break;
     case 'timerSet': floatAt(xs(x.t), STRIP_Y - 10, '◆', 'cy'); break;
-    case 'guarded': { const p = foeCenter(x.e); const el = fxEl('fshield', p.x, p.y - 10); setTimeout(() => el.remove(), 520); floatAt(p.x + 26, p.y - 46, '防' + x.n, ''); break; }
-    case 'armored': { const p = unitCenter(x.e, x.unit); floatAt(p.x + 26, p.y - 36, '装' + x.n, ''); break; }
+    case 'guarded': { snd('absorb'); const p = foeCenter(x.e); const el = fxEl('fshield', p.x, p.y - 10); setTimeout(() => el.remove(), 520); floatAt(p.x + 26, p.y - 46, '防' + x.n, ''); break; }
+    case 'armored': { snd('absorb'); const p = unitCenter(x.e, x.unit); floatAt(p.x + 26, p.y - 36, '装' + x.n, ''); break; }
     case 'vulnHit': { const p = unitCenter(x.e, x.unit); floatAt(p.x - 26, p.y - 36, '×1.5', 'cy'); break; }
     case 'break': justFx(x.e, 'BREAK'); break;
     case 'counter': { const p = foeCenter(x.e); floatAt(p.x, p.y - 84, '返', 'foe'); beam({x: DROID.sx, y: DROID.sy}, {x: p.x, y: p.y - 10}); hitMeFx(x.res); break; }
@@ -1419,9 +1428,9 @@ function hitMeFx(r){
   if(r.partLoss){ floatAt(NOW - 34, y - 14, '−' + r.partLoss, 'foe'); pulse(document.querySelector(`.part[data-p="${r.part}"]`), 'flash', 320); chips(NOW - 34, y, 'var(--foe)', Math.min(6, 2 + r.partLoss), 30, false); }
   if(r.broke) sparks(DROID.x, DROID.y - 30);
   if(r.bodyLoss) floatAt(LAY.me.x, LAY.floor + 2, '−' + r.bodyLoss, 'foe big');
-  if(r.hurt){ knock($('#droid'), -14 - Math.min(10, r.raw * .4), 360); burstFx(DROID.x + 4, DROID.y - 34, 'var(--foe2)', 30); flashFx('hurt');
+  if(r.hurt){ snd('hurt', r.raw >= 10); knock($('#droid'), -14 - Math.min(10, r.raw * .4), 360); burstFx(DROID.x + 4, DROID.y - 34, 'var(--foe2)', 30); flashFx('hurt');
     if(r.raw >= 10){ freeze(Math.min(90, 30 + r.raw * 3)); anim($('#shaker'), [{transform: 'translateX(-8px)'}, {transform: 'translateX(5px)'}, {transform: 'translateX(-2px)'}, {transform: 'none'}], {duration: 260, easing: 'linear'}); } }
-  else { guardFx(); burstFx(NOW - 6, y, 'var(--cy)', 26); }
+  else { snd('absorb'); guardFx(); burstFx(NOW - 6, y, 'var(--cy)', 26); }
 }
 async function foeFx(i, r){
   const e = S.b.foes[i];
@@ -1442,7 +1451,7 @@ async function foeFx(i, r){
     floatAt(dk ? LAY.pile.x + 40 : CARD.x0 + 60, LAY.H - 110, nm + '+' + (r.junk.n || 1), 'foe'); if(dk) pulse(dk, 'flash', 360); }
   if(r.shatter && r.shatter.length) floatAt(CARD.x0 + 60, LAY.H - 110, CARDS.shard.name + '+' + r.shatter.length, 'foe');
   if(r.kind === 'move'){
-    const p = foeCenter(i);
+    snd('foeMove'); const p = foeCenter(i);
     if(r.buff) floatAt(p.x, p.y - 70, '▲' + r.buff, 'foe');
     if(r.armor){ const q = unitCenter(i, r.by); const el = fxEl('fshield', q.x, q.y - 10); setTimeout(() => el.remove(), 520); floatAt(q.x, q.y - 50, '装+' + r.armor, ''); }
     if(r.heal) floatAt(p.x, p.y - 70, '+' + r.heal, 'cy');
@@ -1453,11 +1462,11 @@ async function foeFx(i, r){
     return;
   }
   if(r.kind === 'delay'){
-    if(r.applied){ pulse($('#droid'), 'glitch', 320); floatAt(xs(1), STRIP_Y - 18, '+' + r.v, 'foe'); if(r.swift) setTimeout(afterimage, 120); }
+    snd('delay'); if(r.applied){ pulse($('#droid'), 'glitch', 320); floatAt(xs(1), STRIP_Y - 18, '+' + r.v, 'foe'); if(r.swift) setTimeout(afterimage, 120); }
     return;
   }
   if(r.kind === 'parried'){
-    guardFx(); const p = foeCenter(i); beam(p, {x: DROID.sx + 10, y: DROID.sy + 20});
+    snd('just'); guardFx(); const p = foeCenter(i); beam(p, {x: DROID.sx + 10, y: DROID.sy + 20});
     for(const x of r.ev) cardFx(x);
     floatAt(DROID.x + 10, DROID.y - 92, DATA.kwName.just, 'cy');
     return;
@@ -1466,7 +1475,7 @@ async function foeFx(i, r){
 }
 function justFx(i, tag){
   /* 0.49.0: 時間が止まる。世界は暗く沈み、紫の斬線が予定を断ち、敵は大きく弾かれ、文字が差し込む。画面全体は光らせない */
-  freeze(160); const y = LAY.y0 + 2 * LAY.dy, br = tag === 'BREAK';
+  freeze(160); const y = LAY.y0 + 2 * LAY.dy, br = tag === 'BREAK'; snd(br ? 'brk' : 'just');
   anim($('#dim'), [{opacity: 0}, {opacity: 1, offset: .12}, {opacity: 1, offset: .5}, {opacity: 0}], {duration: 560, easing: 'linear'});
   const cut = fxNode('vcut' + (br ? ' cy' : ''), NOW - 110, y - 2, {}, 560); anim(cut, [{transform: 'rotate(-16deg) scaleX(0)', opacity: 1}, {transform: 'rotate(-16deg) scaleX(1)', opacity: 1, offset: .16}, {transform: 'rotate(-16deg) scaleX(1.05) scaleY(.3)', opacity: 0}], {duration: 520, easing: EZ.out});
   chips(NOW, y, br ? 'var(--cy)' : 'var(--just2)', 12, 70, false);
@@ -1475,6 +1484,7 @@ function justFx(i, tag){
   flashFx(br ? 'brk' : 'just'); rescan(tag || 'JUST');
 }
 function interruptFx(){
+  snd('interrupt');
   const bar = $('#selfBar'); bar.hidden = false; bar.className = 'np broken';
   setTimeout(() => bar.classList.remove('broken'), 400);
   anim($('#droid'), [{transform: 'none'}, {transform: 'translateX(-14px) skewX(6deg)', offset: .15}, {transform: 'translateX(-4px)', offset: .5}, {transform: 'none'}], {duration: 420, easing: EZ.out});
@@ -1532,19 +1542,19 @@ function onCard(i){
   const k = S.b.hand[i].k, c = CARDS[k];
   if(EN.spendShort(S.b, c) || EN.needShort(S.b, c)) return; // 決まった量の充電・対象の侵食が足りない
   if(sel && sel.kind === 'card' && sel.i === i){ execute(); return; }
-  sel = {kind:'card', i, k, target: c.tgt ? defaultTarget(c) : null}; recalc();
+  sel = {kind:'card', i, k, target: c.tgt ? defaultTarget(c) : null}; recalc(); snd('select');
 }
 function onWait(){
   if(S.b.choose || PICK) return;
   if(sel && sel.kind === 'wait'){ execute(); return; }
-  sel = {kind:'wait'}; recalc();
+  sel = {kind:'wait'}; recalc(); snd('select');
 }
 function onRedraw(){
   if(S.b.choose || PICK) return;
   if(!RULE.econ && RULE.freeWait && !S.b.hand.length) return;
   const kind = rdKind();
   if(sel && sel.kind === kind){ execute(); return; }
-  sel = {kind}; recalc();
+  sel = {kind}; recalc(); snd('select');
 }
 // 敵(本体の絵か、ユニットのバー・絵)を押したとき。カードを選んでいれば狙いを変え、もう一度で使う。選んでいなければ詳細
 function onFoe(i, uid){
@@ -1604,20 +1614,20 @@ function phaseCheck(){ for(const e of S.b.foes){ if(e.phased && !e._phaseShown &
 async function showEvent(ev, k, ti){
   if(ev.type === 'card' || ev.type === 'timer' || ev.type === 'dot' || ev.type === 'foe') setTimeout(phaseCheck, 0);
   switch(ev.type){
-    case 'tick': if(!ev.real) afterimage(); else anim($('#nowLine'), [{transform: 'scaleX(2.6)', filter: 'brightness(1.8)'}, {transform: 'none', filter: 'none'}], {duration: 180, easing: EZ.out}); renderAll(); await sleep(ev.real ? T_TICK : T_SWIFT); break;
+    case 'tick': snd('tick'); if(!ev.real) afterimage(); else anim($('#nowLine'), [{transform: 'scaleX(2.6)', filter: 'brightness(1.8)'}, {transform: 'none', filter: 'none'}], {duration: 180, easing: EZ.out}); renderAll(); await sleep(ev.real ? T_TICK : T_SWIFT); break;
     case 'react': { const p = foeCenter(ev.e); floatAt(p.x, p.y - 70, '!', 'foe'); pulse(foeEl(ev.e), 'ehit', 200); renderAll(); await sleep(180); break; }
     case 'just': justFx(ev.e, 'JUST'); renderAll(); await sleep(460); break;
     case 'card': {
       /* 0.51.0: 動きのあるカードは、動きが当たりの瞬間に hit を呼び、終わるまで待つ(ヒットストップで延びた分も)。動きのないカードはすぐ当たる */
       /* 0.52.0: 打ち切られても当たりは必ず出す(決めの前に切られたら、切られた瞬間に出す) */
-      const hit = () => { if(hit.done) return; hit.done = true; for(const x of ev.ev) cardFx(x); renderAll(); };
+      const hit = () => { if(hit.done) return; hit.done = true; cardSnd(k, ev.ev); for(const x of ev.ev) cardFx(x); renderAll(); };
       IMPACT = 0; MOT = {hit}; const run = k && !SKIP ? cardMotion(k, ti) : null; MOT = null;
       if(run){ await Promise.race([run, sleep(2000)]); hit(); await sleep(40); }
       else { if(IMPACT && !RM && !SKIP) later(hit, IMPACT); else hit(); await sleep(Math.max(320, IMPACT + 200)); }
       IMPACT = 0; break;
     }
     case 'dot': for(const x of ev.ev) cardFx(x); renderAll(); await sleep(220); break;
-    case 'timer': { const p = unitCenter(ev.t.e, ev.t.unit); const el = fxEl('burst', p.x, p.y - 10); setTimeout(() => el.remove(), 520); for(const x of ev.ev) cardFx(x); renderAll(); await sleep(320); break; }
+    case 'timer': { snd('ranged', .3); const p = unitCenter(ev.t.e, ev.t.unit); const el = fxEl('burst', p.x, p.y - 10); setTimeout(() => el.remove(), 520); for(const x of ev.ev) cardFx(x); renderAll(); await sleep(320); break; }
     case 'turn': {
       const ids = new Set(S.b.hand.map(c => c.id));
       for(const [id, el] of cardEls) if(!ids.has(id)){ cardEls.delete(id); flyCard(el, LAY.pile.x - 48, LAY.pile.y - 100); }
@@ -1638,6 +1648,7 @@ async function execute(pa){
     for(const id of a.pick || []){ const el = cardEls.get(id); cardEls.delete(id); flyCard(el, LAY.pile.x - 48, LAY.pile.y - 100); }
     const cd = b.hand[a.i], el = cardEls.get(cd.id); cardEls.delete(cd.id); castFly(el);
   } else if(a.type === 'swap' || a.type === 'reload'){
+    snd('refresh');
     b.hand.forEach((cd, n) => { const el = cardEls.get(cd.id); cardEls.delete(cd.id); setTimeout(() => flyCard(el, LAY.pile.x - 48, LAY.pile.y - 100), n * 30); });
   }
   const p = EN.beginAction(S, a);
@@ -1688,7 +1699,7 @@ async function reloadApp(){
 }
 /* ---------- タイトル(0.19.0) ---------- */
 function showTitle(){
-  hideOv(); hideOv2(); closeFocus(); $('#mapScr').hidden = true; $('#roomScr').hidden = true;
+  hideOv(); hideOv2(); closeFocus(); $('#mapScr').hidden = true; $('#roomScr').hidden = true; bgm('title');
   const o = loadSave(), conf = UI.titleConfirm === true;
   let cont = '';
   if(o){
@@ -1702,7 +1713,7 @@ function showTitle(){
     <div class="tt-main">
       <h1 class="tt-logo" data-t="ASCENDROID">ASCENDROID</h1>
       <div class="tt-menu">${cont}${nw}
-        <div class="tt-sub"><button class="tt-s" type="button" data-act="rules">遊び方</button><button class="tt-s" type="button" data-act="fs">全画面</button><button class="tt-s" type="button" data-act="debug">デバッグ</button><button class="tt-s" type="button" data-act="reload">再読み込み</button></div>
+        <div class="tt-sub"><button class="tt-s" type="button" data-act="rules">遊び方</button><button class="tt-s" type="button" data-act="fs">全画面</button><button class="tt-s" type="button" data-act="audio">音</button><button class="tt-s" type="button" data-act="debug">デバッグ</button><button class="tt-s" type="button" data-act="reload">再読み込み</button></div>
       </div>
     </div>
     <span class="tt-ver">${APP_VERSION}</span>`;
@@ -1731,7 +1742,7 @@ function mapFollow(sc, jump){
 }
 function encFoes(enc){ const c = {}; for(const f of ENC[enc].foes){ const nm = FOES[f].name; c[nm] = (c[nm] || 0) + 1; } return Object.entries(c).map(([n, k]) => k > 1 ? `${n}×${k}` : n).join('・'); }
 function showMap(){
-  UI.screen = 'map'; UI.view = 'normal'; sel = null; PV = null; $('#titleScr').hidden = true;
+  UI.screen = 'map'; UI.view = 'normal'; sel = null; PV = null; $('#titleScr').hidden = true; bgm('map');
   const run = S.run, m = run.map, reach = new Set(EN.nextNodes(run).map(nodeKey)), visited = new Set(run.visited);
   const atKey = run.at ? (run.at.boss ? 'boss' : run.at.lane + '-' + run.at.idx) : 'start';
   const all = [...m.nodes.flat(), m.boss];
@@ -1810,7 +1821,7 @@ function heatChip(){ const lv = hLv(); return `<span class="hchip ${hCls(lv)}" i
 function heatHint(type){ const d = EN.heatDelta(type); if(Math.abs(d) < 0.05) return ''; const n = d >= 2 ? 2 : d > 0 ? 1 : d <= -2 ? -2 : -1; return `<span class="mi-al ${n > 0 ? 'up' : 'dn'}">${chevSvg(n)}</span>`; }
 // 段が変わったときの演出: 画面の縁が熱い色・冷たい色に光り、大きな矢印が上(下)へ抜け、新しい段の名前が出る
 function heatBanner(d){
-  const lv = hLv(), up = d > 0, host = $('#mapScr').hidden ? $('#roomScr') : $('#mapScr');
+  const lv = hLv(), up = d > 0, host = $('#mapScr').hidden ? $('#roomScr') : $('#mapScr'); snd(up ? 'heatUp' : 'heatDown');
   const fl = document.createElement('div'); fl.className = 'hflash ' + (up ? 'up' : 'dn') + ' ' + hCls(lv); host.appendChild(fl); setTimeout(() => fl.remove(), 1300);
   const el = document.createElement('div'); el.className = 'hbanner ' + (up ? 'up' : 'dn') + ' ' + hCls(lv);
   el.innerHTML = `<span class="hb-ch">${chevSvg(up ? Math.max(1, Math.abs(d)) : -Math.max(1, Math.abs(d)), true)}</span><span class="hb-t"><i>${DATA.ui[up ? 'heat.up' : 'heat.down']}</i><b>${hName(lv)}</b></span><span class="hb-now">${chevSvg(lv)}</span>`;
@@ -1836,7 +1847,7 @@ function topBar(title){
 // 整備・ショップ・イベントは画面ごと切り替える(左はいずれスチルを置く枠)。still なしは全幅
 function showRoom(kind, body, still){
   const fresh = $('#roomScr').hidden || $('#roomScr')._kind !== kind; $('#roomScr')._kind = kind;
-  UI.screen = 'room'; hideOv(); hideOv2(); $('#titleScr').hidden = true;
+  UI.screen = 'room'; hideOv(); hideOv2(); $('#titleScr').hidden = true; bgm('room');
   const left = typeof still === 'string' ? `<div class="rs-still info ${kind}">${still}</div>` : still ? `<div class="rs-still ${kind}"><span class="rs-ring"></span><span class="rs-glyph">${IC[kind]}</span><span class="rs-noise"></span></div>` : '';
   $('#roomScr').innerHTML = `${topBar(AREA().name)}${left}<div class="rs-main${still ? '' : ' full'}">${body}</div>`;
   $('#roomScr').hidden = false; $('#mapScr').hidden = true;
@@ -1875,7 +1886,7 @@ function startBattle(n){
   $('#mapScr').hidden = true; $('#titleScr').hidden = true;
   clearCards(); clearMarks(); buildFoes(); for(const el of document.querySelectorAll('.say')) el.remove();
   renderAll(); enter($('#shaker'));
-  toast(`${DATA.rooms[n.type].name} · ${ENC[n.enc].fam}`);
+  toast(`${DATA.rooms[n.type].name} · ${ENC[n.enc].fam}`); snd('enter'); bgm(n.type === 'boss' ? 'boss' : n.type === 'elite' ? 'elite' : 'battle');
   const bs = S.b; setTimeout(() => { if(S.b === bs && !busy) bs.foes.forEach(e => foeSay(e.i, 'start')); }, 900);
 }
 function partTiles(){
@@ -1894,10 +1905,12 @@ function onWin(){
   S.run.scrap += gain;
   const fm = fled ? `<p class="fledmsg">${fillUi('win.fled', {name: S.b.foes.find(e => e.fled).name})}</p>` : '';
   const lm = loot ? `<span class="loot">${fillUi('win.loot', {n: loot})}</span>` : '';
+  snd('win'); bgm('room');
   showOv(`<h2>戦闘終了</h2>${fm}${bodyLine()}${partTiles()}${gain || loot ? `<p class="gain"><span class="ic">${IC.scrap}</span>${gain ? '+' + gain : ''}${lm}</p>` : ''}<div class="row"><button class="btn" type="button" data-act="afterWin">次へ</button></div>`);
 }
 function onLose(){
   if(UI.node && UI.node.debug){ showDebugResult(false); return; }
+  snd('lose'); bgm(null);
   showOv(`<h2>機能停止</h2><div class="row"><button class="btn ghost" type="button" data-act="title">タイトルへ</button><button class="btn" type="button" data-act="retry">この戦闘をやり直す</button></div>`);
 }
 // 学習: 候補は全カード(パーツ専用とノイズを除く)から。倒した敵の pool のカードだけ、ごくわずかに出やすい
@@ -2497,9 +2510,15 @@ function showRules(first){
     <li>キー: 数字でカード、Enter で使う、R リフレッシュ、W 待機、Tab 狙い、↑↓ 見方、F 敵の詳細、Esc 戻る。</li>
   </ul><div class="row">${first ? '<button class="btn ghost" type="button" data-act="debug">デバッグ</button>' : ''}<button class="btn" type="button" data-act="close">${first ? 'はじめる' : '閉じる'}</button></div>`, !first);
 }
+/* 音の設定(0.54.0): 音量と、効果音・曲の入り切り。メニューとタイトルから */
+function audioRow(){ const c = window.SND ? SND.cfg : {vol: 0, sfx: false, bgm: false}; return `<div class="aset"><label for="volR">音量</label><input type="range" id="volR" min="0" max="100" step="5" value="${Math.round(c.vol * 100)}"><button type="button" class="tgl${c.sfx ? ' on' : ''}" data-act="snd" data-arg="sfx">効果音</button><button type="button" class="tgl${c.bgm ? ' on' : ''}" data-act="snd" data-arg="bgm">曲</button></div>`; }
+function bindAudio(){ const r = $('#volR'); if(r) r.oninput = () => { if(window.SND){ SND.set({vol: r.value / 100}); SND.play('ui'); } }; }
+function showAudio(){ UI.audioOnly = true; showOv(`<h2>音</h2>${audioRow()}${closeRow}`, true); bindAudio(); }
 function showMenu(){
+  UI.audioOnly = false;
   const at = S.run.at, pos = !at ? '入口' : at.boss ? 'ボス' : `部屋${at.idx + 1}/${AREA().rooms + 1}`;
-  showOv(`<h2>${AREA().name} · ${UI.screen === 'battle' && UI.node ? DATA.rooms[UI.node.type].name : pos}</h2><p class="sub">Ascendroid ${APP_VERSION} · ${CLS[clsKey()].name}</p><div class="mlist"><button class="opt" type="button" data-act="rules"><b>遊び方</b></button><button class="opt" type="button" data-act="unit"><b>機体</b></button><button class="opt" type="button" data-act="deck"><b>デッキ</b></button><button class="opt" type="button" data-act="fs"><b>全画面</b></button><button class="opt" type="button" data-act="title"><b>タイトルへ</b></button><button class="opt" type="button" data-act="debug"><b>デバッグ</b></button></div>${closeRow}`, true);
+  showOv(`<h2>${AREA().name} · ${UI.screen === 'battle' && UI.node ? DATA.rooms[UI.node.type].name : pos}</h2><p class="sub">Ascendroid ${APP_VERSION} · ${CLS[clsKey()].name}</p><div class="mlist"><button class="opt" type="button" data-act="rules"><b>遊び方</b></button><button class="opt" type="button" data-act="unit"><b>機体</b></button><button class="opt" type="button" data-act="deck"><b>デッキ</b></button><button class="opt" type="button" data-act="fs"><b>全画面</b></button><button class="opt" type="button" data-act="title"><b>タイトルへ</b></button><button class="opt" type="button" data-act="debug"><b>デバッグ</b></button></div>${audioRow()}${closeRow}`, true);
+  bindAudio();
 }
 async function goFull(){
   hideOv();
@@ -2512,6 +2531,7 @@ function showOv(html, closable, wide){ const ov = $('#ov'), head = ovHead(html),
 function hideOv(){ $('#ov').hidden = true; }
 function showOv2(html){ const fresh = $('#ov2').hidden; $('#ovbox2').innerHTML = html; $('#ov2').hidden = false; $('#ov').classList.add('under'); if(fresh) enter($('#ov2')); }
 function hideOv2(){ $('#ov2').hidden = true; $('#ov').classList.remove('under'); }
+const ACT_SND = {learn:'gain', buy:'buy', del:'remove', go:'step', swapGo:'gain', doUp:'gain', attach:'gain', takePart:'gain', pick:'select', node:'select', dbgPick:'select', rest:'heal'};
 function act(a, arg, el){
   switch(a){
     case 'close': hideOv(); break;
@@ -2523,6 +2543,8 @@ function act(a, arg, el){
     case 'foeClose': closeFocus(); break;
     case 'menu': if(!busy) showMenu(); break;
     case 'view': shiftView(arg); break;
+    case 'audio': showAudio(); break;
+    case 'snd': if(window.SND) SND.set({[arg]: !SND.cfg[arg]}); if(UI.audioOnly) showAudio(); else showMenu(); break;
     case 'rules': showRules(false); break;
     case 'deck': infoDeck(); break;
     case 'unit': infoUnit('parts'); break;
@@ -2692,7 +2714,7 @@ stage.addEventListener('click', ev => {
   /* 0.50.0: 画面の切り替え中(印が走る・面が横切る)は押しても何もしない(二度押しで部屋を2回終えないように) */
   if(WIPING || UI.going) return;
   const t = ev.target, a = t.closest('[data-act]');
-  if(a && !a.disabled){ act(a.dataset.act, a.dataset.arg, a); return; }
+  if(a && !a.disabled){ snd(ACT_SND[a.dataset.act] || 'ui'); act(a.dataset.act, a.dataset.arg, a); return; }
   if(!$('#ref').hidden){ if(t === $('#ref')) popRef(); return; }
   if(!$('#ov2').hidden){ if(t === $('#ov2')) hideOv2(); return; }
   const ov = $('#ov');

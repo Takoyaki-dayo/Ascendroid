@@ -1,10 +1,13 @@
 // 試遊版を自動で1周遊ぶ: node tools/publish/play19.js <mkapp の出力>/index.html [スクショの出力先]。WEAK=1 で敵を弱くして流れだけ見る
+// 0.54.0: 操作はすべてマウス(クリックと右クリック)で行う。MOTION=1 で「動きを減らす」設定なし(既定はあり)。SIZE=1920x1080 で画面の大きさ(既定 876x390)
+// 撮るもの: 地図・戦闘(通常時・カードを選んだとき・敵の詳細)・報酬・ショップ・整備・イベントなど、初めて出た画面
 const { chromium } = require('playwright');
 (async () => {
   const file = require('path').resolve(process.argv[2]), shots = process.argv[3];
   const b = await chromium.launch();
-  const p = await (await b.newContext({ viewport: { width: 876, height: 390 }, reducedMotion: 'reduce' })).newPage();
-  const errs = []; p.on('pageerror', e => errs.push(e.message)); p.on('console', m => { if(m.type() === 'error' && !/serviceWorker|sw\.js|ServiceWorker/.test(m.text())) errs.push('console: ' + m.text()); });
+  const [vw, vh] = (process.env.SIZE || '876x390').split('x').map(Number);
+  const p = await (await b.newContext({ viewport: { width: vw, height: vh }, reducedMotion: process.env.MOTION ? 'no-preference' : 'reduce' })).newPage();
+  const errs = []; p.on('pageerror', e => { if(!/ServiceWorker/.test(e.message)) errs.push(e.message + ' @' + (e.stack || '').split('\n')[1]); }); p.on('console', m => { if(m.type() === 'error' && !/serviceWorker|sw\.js|ServiceWorker/.test(m.text())) errs.push('console: ' + m.text()); });
   await p.goto('file://' + file); await p.waitForTimeout(400); await p.evaluate(() => { try{ localStorage.clear(); }catch(e){} }); await p.reload(); await p.waitForTimeout(400); await p.click('[data-act="newGame"]'); await p.waitForTimeout(300); const areaLog = [];
   const vis = sel => p.evaluate(s => { const el = document.querySelector(s); return !!el && !el.hidden && el.offsetParent !== null; }, sel);
   const has = sel => p.$(sel).then(x => !!x);
@@ -53,7 +56,8 @@ const { chromium } = require('playwright');
     const st = await p.evaluate(() => ({busy, hand: S.b ? S.b.hand.length : -1, T: S.b ? S.b.T : 0}));
     if(st.hand < 0){ log.push('no battle state'); break; }
     if(st.busy){ await p.waitForTimeout(100); continue; }
-    if(!snapped.has('battle' + battles) && st.T === 0){ snapped.add('battle' + battles); battles++; if(battles <= 2) await snap('battle'); }
+    if(!snapped.has('battle' + battles) && st.T === 0){ snapped.add('battle' + battles); battles++; if(battles <= 2) await snap('battle');
+      if(battles === 1){ await p.click('#foes .foe', {button: 'right'}); await p.waitForTimeout(500); await snap('foe-detail'); await click('[data-act="foeClose"]'); await p.waitForTimeout(300); } }
     nstep = (typeof nstep === 'number' ? nstep : 0) + 1;
     if(st.hand > 0 && nstep % 6 === 0 && await vis('#waitBtn')){ await click('#waitBtn'); if(battles <= 3 && !snapped.has('wsel' + battles)){ snapped.add('wsel' + battles); await snap('waitsel'); } await click('#waitBtn'); await p.waitForFunction(() => !busy, null, {timeout: 30000}).catch(() => log.push('timeout')); continue; }
     if(st.hand > 0 && nstep % 9 === 0 && battles <= 6){ await snap('b' + battles + '-t' + st.T); }
@@ -61,11 +65,14 @@ const { chromium } = require('playwright');
     if(st.hand > 0 && ci != null){
       const cs = `#hand .card[data-i="${ci}"]`;
       await click(cs);
-      if(battles === 1 && st.T > 6 && !snapped.has('sel')){ snapped.add('sel'); await snap('selected'); }
+      if(battles <= 2 && !snapped.has('sel' + battles)){ snapped.add('sel' + battles); await p.waitForTimeout(200); await snap('selected'); }
       if(!(await p.evaluate(() => document.querySelector('#ov').hidden))) continue;
       await click(cs);
       // 手札を選ぶ(0.35.0): 使うカード以外を必要な枚数だけ選んで決定
-      if(await p.evaluate(() => !!PICK)){ await p.evaluate(() => { const need = pickNeed(); for(const cd of S.b.hand){ if(PICK.ids.length >= need) break; if(cd.id !== PICK.cid) PICK.ids.push(cd.id); } renderAll(); }); await click('#chooseBar button'); }
+      for(let g = 0; g < 8 && await p.evaluate(() => !!PICK && !busy); g++){
+        const i = await p.evaluate(() => PICK.ids.length >= pickNeed() ? -1 : S.b.hand.findIndex(cd => cd.id !== PICK.cid && !PICK.ids.includes(cd.id)));
+        if(i < 0){ await click('#chooseBar button'); break; } await click(`#hand .card[data-i="${i}"]`);
+      }
     } else { const lab = await p.evaluate(() => document.querySelector('#redraw').getAttribute('aria-label')); const t = lab === 'リフレッシュ' ? '#redraw' : '#waitBtn'; await click(t); await click(t); }
     await p.waitForFunction(() => !busy, null, {timeout: 30000}).catch(() => log.push('timeout'));
   }

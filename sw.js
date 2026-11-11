@@ -1,6 +1,6 @@
 // Ascendroid サービスワーカー
 // 更新するときは VERSION をアプリのバージョン(index.html の APP_VERSION)と同じ値にする
-const VERSION = '0.53.0';
+const VERSION = '0.54.0';
 const CACHE = 'tower-' + VERSION;
 const CORE = [
   './',
@@ -14,6 +14,9 @@ const CORE = [
   'data/attrs.js',
   'data/text.js',
   'js/engine.js',
+  'js/audio.js',
+  'css/app.css',
+  'assets/fonts/BigShouldersDisplay-latin.woff2',
   'icons/icon-192.png',
   'icons/icon-512.png',
   'icons/maskable-512.png',

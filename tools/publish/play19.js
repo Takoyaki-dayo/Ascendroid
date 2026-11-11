@@ -16,6 +16,8 @@ const { chromium } = require('playwright');
   const snap = async name => { if(shots){ await p.screenshot({path: `${shots}/${String(++shot).padStart(2,'0')}-${name}.png`}); } };
   let snapped = new Set();
   for(let step = 0; step < 6000; step++){
+    // 画面の切り替え(面が横切る・印が走る)の途中では押さない。動きありのときに、消える途中の画面を押してしまうため
+    await p.waitForFunction(() => !WIPING && !UI.going, null, {timeout: 10000}).catch(() => log.push('wipe timeout'));
     if(process.env.WEAK){ await p.evaluate(() => { if(S && S.b && !S.b._weak){ S.b._weak = 1; for(const e of S.b.foes) for(const k of e.uids){ e.units[k].hp = Math.min(e.units[k].hp, 3); } for(const e of S.b.foes){ e.hp = e.uids.reduce((x, k) => x + (e.units[k].vital ? e.units[k].hp : 0), 0); } } }); }
     if(!(await p.evaluate(() => document.querySelector('#ov2').hidden))){ await snap('swap'); await click('[data-act="swapGo"]'); log.push('swapped'); continue; }
     const ov = !(await p.evaluate(() => document.querySelector('#ov').hidden));

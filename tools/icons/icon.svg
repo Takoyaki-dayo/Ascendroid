@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Ascendroid のアイコン: 登っていく熱(下が暗い赤、上が白熱)と、冷たい菱形(K-7)。tools/icons/mkicons.js で icons/*.png にする -->
+  <defs>
+    <radialGradient id="g" cx="50%" cy="100%" r="80%"><stop offset="0" stop-color="#b8321a" stop-opacity=".55"/><stop offset=".6" stop-color="#b8321a" stop-opacity=".08"/><stop offset="1" stop-color="#070605" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="512" height="512" fill="#070605"/>
+  <rect width="512" height="512" fill="url(#g)"/>
+  <g fill="none" stroke-linecap="square" stroke-linejoin="miter" stroke-width="30">
+    <path d="M156 330L256 244L356 330" stroke="#b8321a"/>
+    <path d="M156 256L256 170L356 256" stroke="#ff7a1f"/>
+    <path d="M156 182L256 96L356 182" stroke="#ffe6ae"/>
+  </g>
+  <rect x="233" y="367" width="46" height="46" transform="rotate(45 256 390)" fill="#cdefe6"/>
+</svg>

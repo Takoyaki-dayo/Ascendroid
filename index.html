@@ -2762,6 +2762,16 @@ fit();
 /* 0.46.0: 敵の列の軌条に、次の攻撃までの区間を刻む */
 {  const dm = document.createElement('div'); dm.id = 'dim'; dm.className = 'np'; $('#world').insertBefore(dm, $('#fx'));
   const th = document.createElement('div'); th.id = 'threat'; th.className = 'np'; $('#tl').insertBefore(th, $('#marks')); }
+/* 火の粉(0.54.0): 戦闘の背景。敵の攻撃が近いほど増える。動きを減らす設定では出さない。1秒に30コマまで */
+{ const EMB = [], cv = $('#embers'), cx = cv.getContext('2d'); let last = 0;
+  const loop = t => { requestAnimationFrame(loop);
+    if(UI.screen !== 'battle' || document.hidden || !$('#titleScr').hidden || !$('#mapScr').hidden || t - last < 33) return; last = t;
+    if(cv.width !== LAY.W || cv.height !== LAY.H){ cv.width = LAY.W; cv.height = LAY.H; }
+    const th = LAY.threat || 0;
+    if(EMB.length < 10 + th * 30 && Math.random() < .25 + th * .5) EMB.push({x: LAY.W * (.5 + Math.random() * .55), y: LAY.floor + 4, vx: -.2 - Math.random() * .6, vy: -.3 - Math.random() * .8, l: 1, s: .6 + Math.random() * 1.4});
+    cx.clearRect(0, 0, cv.width, cv.height);
+    for(let i = EMB.length - 1; i >= 0; i--){ const p = EMB[i]; p.x += p.vx; p.y += p.vy; p.vx += (Math.random() - .5) * .06; p.l -= .008 + Math.random() * .005; if(p.l <= 0){ EMB.splice(i, 1); continue; } cx.fillStyle = `rgba(255,${130 + Math.round(p.l * 90)},${40 + Math.round(p.l * 60)},${(p.l * .8).toFixed(2)})`; cx.fillRect(p.x, p.y, p.s, p.s); } };
+  if(!RM) requestAnimationFrame(loop); }
 dbgLoad(); applyEcon();
 showTitle();
 </script>

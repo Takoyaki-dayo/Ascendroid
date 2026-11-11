@@ -187,7 +187,7 @@ b{font-weight:700}
 /* ================= 自機 ================= */
 #droid{position:absolute;transform-origin:50% 100%}
 #droid::before{content:"";position:absolute;left:-90%;right:-60%;top:-12%;bottom:-8%;background:radial-gradient(closest-side at 50% 55%,rgba(150,225,212,.17),transparent 78%);pointer-events:none}
-#droid svg{position:relative;display:block;width:100%;height:100%;overflow:visible}
+#droid svg{position:relative;display:block;width:100%;height:100%;overflow:visible;filter:drop-shadow(1px 0 0 rgba(255,140,60,.4))}
 #droid svg g,.vghost svg g{transform-box:view-box}
 #droid .dpose{display:none;position:absolute;left:0;top:0}
 #droid.p-ready .pz-ready,#droid.p-strike .pz-strike,#droid.p-smear .pz-smear,#droid.p-aim .pz-aim,#droid.p-recoil .pz-recoil,#droid.p-guard .pz-guard,#droid.p-cast .pz-cast{display:block}
@@ -256,7 +256,7 @@ b{font-weight:700}
 .foe{position:absolute;transition:opacity .4s,transform .4s,filter .3s;cursor:pointer}
 .foe::before{content:"";position:absolute;left:-55%;right:-45%;top:-45%;bottom:-25%;background:radial-gradient(closest-side at 55% 58%,rgba(255,120,40,calc(.3 + var(--threat,0) * .3)),rgba(184,50,26,.13) 55%,transparent 80%);pointer-events:none}
 .foe.us::before{left:-30%;right:-30%;top:-25%;bottom:-15%;opacity:.7}
-.foe svg{position:relative;display:block;width:100%;height:100%;overflow:visible}
+.foe svg{position:relative;display:block;width:100%;height:100%;overflow:visible;filter:drop-shadow(-1px -1px 0 rgba(255,160,90,.5))}
 .foe.dead{opacity:0;pointer-events:none}
 .foe.fled{opacity:0;transform:translateX(60px)}
 .foe .reticle{position:absolute;inset:6% 4%;border:1.5px solid var(--frost);border-left-color:transparent;border-right-color:transparent;border-radius:50%;opacity:0;pointer-events:none;filter:drop-shadow(0 0 4px rgba(205,239,230,.7))}
@@ -483,7 +483,7 @@ body.hs *{animation-play-state:paused!important;transition:none!important}
 }
 
 /* ================= 重ねる画面(報酬・選択・説明) ================= */
-#ov,#ov2,#ref{position:absolute;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;background:rgba(5,4,3,.9);padding:10px 16px}
+#ov,#ov2,#ref{position:absolute;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;background:rgba(5,4,3,.965);padding:10px 16px}
 #ov2{z-index:70} #ref{z-index:80;background:rgba(5,4,3,.93)}
 #ov.under .box{filter:brightness(.4)}
 .box{position:relative;max-width:620px;width:100%;max-height:100%;overflow:auto;scrollbar-width:none;padding:6px 4px;text-align:center}
@@ -799,10 +799,9 @@ body.hs *{animation-play-state:paused!important;transition:none!important}
 
 /* ================= タイトル ================= */
 #titleScr{background:radial-gradient(60% 50% at 70% 104%,rgba(255,104,30,.5),rgba(184,50,26,.14) 50%,transparent 75%),linear-gradient(180deg,#0e0b09,var(--soot));overflow:hidden}
-.tt-tower{position:absolute;right:16%;bottom:0;width:26%;height:100%}
-.tt-tower i{position:absolute;bottom:0;left:calc(var(--i) * 5.5%);right:calc(var(--i) * 5.5%);height:calc(100% - var(--i) * 3.5%);background:linear-gradient(90deg,#050404,#0c0a08 60%,#16110c);box-shadow:1px 0 0 rgba(255,200,150,.07),inset 0 0 0 0 transparent;display:block}
-.tt-tower i:nth-child(odd){background:linear-gradient(90deg,#040303,#090706 70%,#120e0a)}
-.tt-art{position:absolute;right:calc(16% + 30%);bottom:10px;width:30px;height:76px}
+.tt-tower{position:absolute;right:8%;bottom:0;width:31%;height:114%}
+.tt-tower i{position:absolute;display:block;bottom:calc(var(--i) * 11%);height:11.3%;left:calc(var(--i) * 4.3%);right:calc(var(--i) * 4.3%);background:repeating-linear-gradient(90deg,transparent 0 11px,rgba(255,190,120,.045) 11px 12px),linear-gradient(90deg,#040303,#0b0908 55%,#18120c);box-shadow:inset 0 1px 0 rgba(255,180,110,.2),inset -1px 0 0 rgba(255,160,90,.08)}
+.tt-art{position:absolute;right:calc(8% + 33%);bottom:8px;width:26px;height:66px}
 .tt-art .droidart{width:100%;height:100%}
 .tt-main{position:absolute;left:44px;top:0;bottom:0;display:flex;flex-direction:column;justify-content:center;gap:22px}
 .tt-logo{margin:0;font:900 62px/1 var(--f-num);letter-spacing:.14em;color:var(--bone)}

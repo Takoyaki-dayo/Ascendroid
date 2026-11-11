@@ -672,7 +672,8 @@ body.hs *{animation-play-state:paused!important;transition:none!important}
 #inner{position:absolute;left:12px;right:12px;top:8px;height:min(230px,58%);z-index:27;display:grid;grid-template-columns:170px minmax(0,1fr) 220px;gap:18px;padding:10px 6px;transform:translateY(-110%);transition:transform .32s var(--ez-out);pointer-events:none}
 #shaker.selfview #inner{transform:none;pointer-events:auto}
 .face{display:flex;flex-direction:column;gap:8px;min-width:0}
-.face svg{display:none}
+.face>svg{display:none}
+#inner .sts{gap:10px;padding-left:10px} #inner .sts .st{font-size:17px} #inner .sts .st .ic svg{width:13px;height:13px}
 .mono{font-size:12px;line-height:1.7;color:var(--bone);padding-left:10px;box-shadow:inset 2px 0 0 var(--frost)}
 .diag{display:flex;flex-direction:column;gap:4px;min-width:0}
 .drow{display:grid;grid-template-columns:14px 30px minmax(0,1fr) 74px 20px;align-items:center;column-gap:7px}
@@ -839,3 +840,16 @@ body.hs *{animation-play-state:paused!important;transition:none!important}
 .box,.cards.udeck,#focus,.mem,.rs-main,.dbg-grid{touch-action:pan-y;overscroll-behavior:contain}
 .box>.row:last-child{position:sticky;bottom:-6px;z-index:2;margin-top:0;padding:16px 0 8px;background:linear-gradient(180deg,transparent,rgba(5,4,3,.97) 38%)}
 #shaker.focus #toast,#shaker.selfview #toast{display:none}
+/* 自機の状態を見ている間も、左上の切り替えボタンは押せる(戻る場所が元の場所と同じ) */
+#shaker.selfview #viewBtns{z-index:28}
+#inner .face{padding-top:30px}
+/* 選ぶ一覧と拡大では文を切らない: 札の高さを文に合わせる(文は text/*.csv で伸び縮みするので、決め打ちの高さにしない) */
+.cards .card,.czoom .zw .card{height:auto;min-height:136px}
+.cards .card .ctx,.czoom .zw .card .ctx{flex:none;overflow:visible}
+.czoom .zw{height:auto;min-height:272px}
+@supports (zoom:2){
+  .cards .card{transform:none;zoom:1.3;margin:0 2px 7px}
+  .rs-main .shop .cards .card{transform:none;zoom:1.12;margin:0 4px 3px}
+  .czoom .zw{width:auto;min-height:0}
+  .czoom .zw .card{position:relative;transform:none;zoom:1.75}
+}

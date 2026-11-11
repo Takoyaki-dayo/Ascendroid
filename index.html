@@ -2763,14 +2763,18 @@ fit();
 {  const dm = document.createElement('div'); dm.id = 'dim'; dm.className = 'np'; $('#world').insertBefore(dm, $('#fx'));
   const th = document.createElement('div'); th.id = 'threat'; th.className = 'np'; $('#tl').insertBefore(th, $('#marks')); }
 /* 火の粉(0.54.0): 戦闘の背景。敵の攻撃が近いほど増える。動きを減らす設定では出さない。1秒に30コマまで */
-{ const EMB = [], cv = $('#embers'), cx = cv.getContext('2d'); let last = 0;
+{ const EMB = [], cv = $('#embers'), cx = cv.getContext('2d'); let last = 0, seed = 0x5eed;
+  // 見た目だけの乱数。Math.random を引かない(進行の乱数の並びに混ざらないように)
+  const rnd = () => { seed = seed * 1664525 + 1013904223 >>> 0; return seed / 4294967296; };
   const loop = t => { requestAnimationFrame(loop);
     if(UI.screen !== 'battle' || document.hidden || !$('#titleScr').hidden || !$('#mapScr').hidden || t - last < 33) return; last = t;
-    if(cv.width !== LAY.W || cv.height !== LAY.H){ cv.width = LAY.W; cv.height = LAY.H; }
+    // 粒が通るのは敵の足元から左上へ 150px ほどの範囲だけ。その範囲だけのキャンバスにする(全面だと重ねる手間が大きい)
+    const ox = Math.round(LAY.W * .5 - 140), oy = LAY.floor - 160, w = LAY.W - ox, h = 172;
+    if(cv.width !== w || cv.height !== h || cv._o !== ox + ',' + oy){ cv.width = w; cv.height = h; cv._o = ox + ',' + oy; Object.assign(cv.style, {left: ox + 'px', top: oy + 'px', width: w + 'px', height: h + 'px'}); }
     const th = LAY.threat || 0;
-    if(EMB.length < 10 + th * 30 && Math.random() < .25 + th * .5) EMB.push({x: LAY.W * (.5 + Math.random() * .55), y: LAY.floor + 4, vx: -.2 - Math.random() * .6, vy: -.3 - Math.random() * .8, l: 1, s: .6 + Math.random() * 1.4});
+    if(EMB.length < 10 + th * 30 && rnd() < .25 + th * .5) EMB.push({x: LAY.W * (.5 + rnd() * .55), y: LAY.floor + 4, vx: -.2 - rnd() * .6, vy: -.3 - rnd() * .8, l: 1, s: .6 + rnd() * 1.4});
     cx.clearRect(0, 0, cv.width, cv.height);
-    for(let i = EMB.length - 1; i >= 0; i--){ const p = EMB[i]; p.x += p.vx; p.y += p.vy; p.vx += (Math.random() - .5) * .06; p.l -= .008 + Math.random() * .005; if(p.l <= 0){ EMB.splice(i, 1); continue; } cx.fillStyle = `rgba(255,${130 + Math.round(p.l * 90)},${40 + Math.round(p.l * 60)},${(p.l * .8).toFixed(2)})`; cx.fillRect(p.x, p.y, p.s, p.s); } };
+    for(let i = EMB.length - 1; i >= 0; i--){ const p = EMB[i]; p.x += p.vx; p.y += p.vy; p.vx += (rnd() - .5) * .06; p.l -= .008 + rnd() * .005; if(p.l <= 0){ EMB.splice(i, 1); continue; } cx.fillStyle = `rgba(255,${130 + Math.round(p.l * 90)},${40 + Math.round(p.l * 60)},${(p.l * .8).toFixed(2)})`; cx.fillRect(p.x - ox, p.y - oy, p.s, p.s); } };
   if(!RM) requestAnimationFrame(loop); }
 dbgLoad(); applyEcon();
 showTitle();

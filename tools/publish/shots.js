@@ -1,6 +1,7 @@
 // 主な画面を決まった大きさで撮る(依頼 6章の5)。
 //   node tools/publish/shots.js [index.html の場所] [出す先=docs/shots] [大きさ=844x390,1920x1080]
-// 乱数を固定して同じ画面を撮る。操作はマウスだけ(クリックと右クリック)。
+// 乱数を固定して同じ画面を撮る。撮るための道具なので、画面へは関数を呼んで直に移る(enterRoom・onWin など)。閉じるのに Esc も使う。
+// マウスだけで遊べることの確かめは play19.js(クリックと右クリックだけ)のほう。
 const { chromium } = require('playwright');
 const path = require('path'), fs = require('fs');
 const src = path.resolve(process.argv[2] || 'index.html');

@@ -80,7 +80,7 @@ const { chromium } = require('playwright');
     nstep = (typeof nstep === 'number' ? nstep : 0) + 1;
     if(st.hand > 0 && nstep % 6 === 0 && await vis('#waitBtn')){ await click('#waitBtn'); if(battles <= 3 && !snapped.has('wsel' + battles)){ snapped.add('wsel' + battles); await snap('waitsel'); } await click('#waitBtn'); await p.waitForFunction(() => !busy, null, {timeout: 30000}).catch(() => log.push('timeout')); continue; }
     if(st.hand > 0 && nstep % 9 === 0 && battles <= 6){ await snap('b' + battles + '-t' + st.T); }
-    const ci = await p.evaluate(() => { const el = document.querySelector('#hand .card:not(.off)'); return el ? el.dataset.i : null; });
+    const ci = await p.evaluate(() => { const el = document.querySelector('#hand .card[data-i]:not(.off)'); return el ? el.dataset.i : null; });
     if(st.hand > 0 && ci != null){
       const cs = `#hand .card[data-i="${ci}"]`;
       await click(cs);
